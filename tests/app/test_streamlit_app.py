@@ -11,7 +11,9 @@ from schema.models import OpenAIModelName
 
 def test_app_simple_non_streaming(mock_agent_client):
     """Test the full app - happy path"""
-    at = AppTest.from_file("../../src/streamlit_app.py").run()
+    # The first Streamlit import loads the complete multi-agent dependency graph.
+    # On Windows cold starts can exceed ten seconds while later runs reuse modules.
+    at = AppTest.from_file("../../src/streamlit_app.py").run(timeout=30)
 
     WELCOME_START = "Hello! I'm an AI agent. Ask me anything!"
     PROMPT = "Know any jokes?"

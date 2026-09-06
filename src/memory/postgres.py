@@ -67,7 +67,8 @@ async def get_postgres_saver():
     ) as pool:
         try:
             checkpointer = AsyncPostgresSaver(pool)  # type: ignore[bad-argument-type]
-            await checkpointer.setup()
+            if settings.POSTGRES_AUTO_SETUP:
+                await checkpointer.setup()
             yield checkpointer
         finally:
             await pool.close()
@@ -96,7 +97,8 @@ async def get_postgres_store():
     ) as pool:
         try:
             store = AsyncPostgresStore(pool)  # type: ignore[bad-argument-type]
-            await store.setup()
+            if settings.POSTGRES_AUTO_SETUP:
+                await store.setup()
             yield store
         finally:
             await pool.close()

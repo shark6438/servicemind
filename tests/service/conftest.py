@@ -8,6 +8,12 @@ from langgraph.types import StateSnapshot
 from service import app
 
 
+@pytest.fixture(autouse=True)
+def disable_deployment_auth_by_default(monkeypatch):
+    """Upstream contract tests are transport-agnostic unless auth is under test."""
+    monkeypatch.setattr("service.service.settings.AUTH_SECRET", None)
+
+
 @pytest.fixture
 def test_client():
     """Fixture to create a FastAPI test client."""

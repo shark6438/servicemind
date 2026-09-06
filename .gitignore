@@ -2,6 +2,7 @@
 .streamlit/secrets.toml
 checkpoints.db
 checkpoints.db-*
+.runtime/
 
 # Langgraph
 .langgraph_api/
@@ -177,6 +178,9 @@ cython_debug/
 # Data
 *.docx
 *.pdf
+data/phase4/raw/
+data/phase4/indexes/
+data/phase4/models/
 
 # Chroma db
 *.db

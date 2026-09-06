@@ -52,6 +52,12 @@ from service.utils import (
     messages_from_checkpoint,
     remove_tool_calls,
 )
+from servicemind.api import phase2_router
+from servicemind.harness.recovery import recover_incomplete_runs
+from servicemind.observability.tracing import configure_telemetry, shutdown_telemetry
+from servicemind.orchestration.supervisor_workflow import configure_supervisor_checkpointer
+from servicemind.orchestration.workflow import configure_phase2_checkpointer
+from servicemind.persistence.database import close_database
 
 warnings.filterwarnings("ignore", category=LangChainBetaWarning)
 logger = logging.getLogger(__name__)
@@ -68,9 +74,11 @@ def verify_bearer(
         Depends(HTTPBearer(description="Please provide AUTH_SECRET api key.", auto_error=False)),
     ],
 ) -> None:
-    if not settings.AUTH_SECRET:
+    if settings.AUTH_SECRET is None:
         return
     auth_secret = settings.AUTH_SECRET.get_secret_value()
+    if not auth_secret:
+        return
     if not http_auth or http_auth.credentials != auth_secret:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -82,16 +90,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     and agents with async loading - for example for starting up MCP clients.
     """
     try:
+        configure_telemetry()
         # Initialize both checkpointer (for short-term memory) and store (for long-term memory)
         async with initialize_database() as saver, initialize_store() as store:
             # Set up both components
-            if hasattr(saver, "setup"):  # ignore: union-attr
+            if settings.POSTGRES_AUTO_SETUP and hasattr(saver, "setup"):  # ignore: union-attr
                 await saver.setup()
             # Only setup store for Postgres as InMemoryStore doesn't need setup
-            if hasattr(store, "setup"):  # ignore: union-attr
+            if settings.POSTGRES_AUTO_SETUP and hasattr(store, "setup"):  # ignore: union-attr
                 await store.setup()
+            configure_phase2_checkpointer(saver)
+            configure_supervisor_checkpointer(saver)
 
-            if not settings.AUTH_SECRET:
+            if settings.AUTH_SECRET is None or not settings.AUTH_SECRET.get_secret_value():
                 logger.warning(
                     "AUTH_SECRET is not configured — all API endpoints are unauthenticated. "
                     "Set AUTH_SECRET in your environment to enable bearer token authentication."
@@ -112,10 +123,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                 agent.checkpointer = saver
                 # Set store for long-term memory (cross-conversation knowledge)
                 agent.store = store
+            if settings.DATABASE_TYPE == "postgres":
+                recovered = await recover_incomplete_runs()
+                if recovered:
+                    logger.info("Recovered %s incomplete ServiceMind runs", recovered)
             yield
     except Exception as e:
         logger.error(f"Error during database/store/agents initialization: {e}")
         raise
+    finally:
+        await close_database()
+        shutdown_telemetry()
 
 
 app = FastAPI(lifespan=lifespan, generate_unique_id_function=custom_generate_unique_id)
@@ -492,3 +510,4 @@ async def health_check():
 
 
 app.include_router(router)
+app.include_router(phase2_router)

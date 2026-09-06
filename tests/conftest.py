@@ -25,5 +25,13 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture
 def mock_env():
     """Fixture to ensure environment is clean for each test."""
-    with patch.dict(os.environ, {}, clear=True):
+    # Keep the platform-level variables that pathlib uses to resolve the home
+    # directory. Clearing USERPROFILE/HOMEDRIVE/HOMEPATH makes Path.home()
+    # fail on Windows, which prevents Streamlit's AppTest runner from starting.
+    platform_env = {
+        key: os.environ[key]
+        for key in ("HOME", "USERPROFILE", "HOMEDRIVE", "HOMEPATH")
+        if key in os.environ
+    }
+    with patch.dict(os.environ, platform_env, clear=True):
         yield

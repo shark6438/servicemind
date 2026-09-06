@@ -1,0 +1,177 @@
+name: servicemind-glpi
+
+services:
+  database:
+    image: mariadb:11.8
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${GLPI_DB_NAME}
+      MARIADB_USER: ${GLPI_DB_USER}
+      MARIADB_PASSWORD: ${GLPI_DB_PASSWORD}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - glpi_database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  glpi:
+    image: glpi/glpi:11.0.8
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      GLPI_DB_HOST: database
+      GLPI_DB_PORT: 3306
+      GLPI_DB_NAME: ${GLPI_DB_NAME}
+      GLPI_DB_USER: ${GLPI_DB_USER}
+      GLPI_DB_PASSWORD: ${GLPI_DB_PASSWORD}
+      GLPI_SKIP_AUTOINSTALL: "false"
+      GLPI_SKIP_AUTOUPDATE: "false"
+      GLPI_CRONTAB_ENABLED: "1"
+    ports:
+      - "127.0.0.1:8088:80"
+    volumes:
+      - glpi_application:/var/glpi
+      - ./local_define.php:/var/www/glpi/config/local_define.php:ro
+
+  servicemind-postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${SERVICEMIND_DB_NAME}
+      POSTGRES_USER: ${SERVICEMIND_DB_USER}
+      POSTGRES_PASSWORD: ${SERVICEMIND_DB_PASSWORD}
+      SERVICEMIND_RUNTIME_USER: ${SERVICEMIND_RUNTIME_USER}
+      SERVICEMIND_RUNTIME_PASSWORD: ${SERVICEMIND_RUNTIME_PASSWORD}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - servicemind_database:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SERVICEMIND_DB_USER} -d ${SERVICEMIND_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  keycloak-database:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME}
+      POSTGRES_USER: ${KEYCLOAK_DB_USER}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+    volumes:
+      - keycloak_database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KEYCLOAK_DB_USER} -d ${KEYCLOAK_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.3
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm"]
+    depends_on:
+      keycloak-database:
+        condition: service_healthy
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-database:5432/${KEYCLOAK_DB_NAME}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: http://127.0.0.1:8090
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      JAVA_OPTS_KC_HEAP: -Xms128m -Xmx512m
+      ACME_ANALYST_PASSWORD: ${ACME_ANALYST_PASSWORD}
+      ACME_APPROVER_PASSWORD: ${ACME_APPROVER_PASSWORD}
+      GLOBEX_ANALYST_PASSWORD: ${GLOBEX_ANALYST_PASSWORD}
+    ports:
+      - "127.0.0.1:8090:8080"
+      - "127.0.0.1:9001:9000"
+    volumes:
+      - ./keycloak/servicemind-realm.json:/opt/keycloak/data/import/servicemind-realm.json:ro
+
+  opensearch:
+    image: opensearchproject/opensearch:3.8.0
+    profiles: ["rag"]
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      bootstrap.memory_lock: "true"
+      OPENSEARCH_JAVA_OPTS: -Xms1g -Xmx1g
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${SERVICEMIND_RUNTIME_PASSWORD}
+      plugins.security.ssl.http.enabled: "true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - servicemind_opensearch:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -k -u admin:${SERVICEMIND_RUNTIME_PASSWORD} https://localhost:9200/_cluster/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  rag-embedding:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3
+    profiles: ["rag"]
+    restart: unless-stopped
+    command: ["--model-id", "BAAI/bge-m3", "--revision", "main", "--tokenization-workers", "4", "--max-concurrent-requests", "16", "--max-batch-tokens", "4096", "--max-client-batch-size", "16"]
+    ports:
+      - "127.0.0.1:8085:80"
+    volumes:
+      - servicemind_embedding_models:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 120s
+
+  rag-reranker:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3
+    profiles: ["rag"]
+    restart: unless-stopped
+    command: ["--model-id", "BAAI/bge-reranker-v2-m3", "--revision", "main", "--tokenization-workers", "2", "--max-concurrent-requests", "8", "--max-batch-tokens", "1024", "--max-client-batch-size", "8"]
+    ports:
+      - "127.0.0.1:8086:80"
+    volumes:
+      - servicemind_reranker_models:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 120s
+
+volumes:
+  glpi_application:
+  glpi_database:
+  servicemind_database:
+  keycloak_database:
+  servicemind_opensearch:
+  servicemind_embedding_models:
+  servicemind_reranker_models:

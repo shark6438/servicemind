@@ -1,0 +1,119 @@
+{
+  "realm": "servicemind",
+  "enabled": true,
+  "displayName": "ServiceMind",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "rememberMe": false,
+  "roles": {
+    "realm": [
+      {"name": "viewer"},
+      {"name": "analyst"},
+      {"name": "operator"},
+      {"name": "approver"},
+      {"name": "tenant_admin"}
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "servicemind-api",
+      "name": "ServiceMind API",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://127.0.0.1:8501/*"],
+      "webOrigins": ["http://127.0.0.1:8501"],
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "tenant-id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "tenant_id",
+            "claim.name": "tenant_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "glpi-entity-ids",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "glpi_entity_ids",
+            "claim.name": "glpi_entity_ids",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "servicemind-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "servicemind-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "acme-analyst",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Acme",
+      "lastName": "Analyst",
+      "email": "acme-analyst@example.local",
+      "requiredActions": [],
+      "attributes": {
+        "tenant_id": ["11111111-1111-4111-8111-111111111111"],
+        "glpi_entity_ids": ["1"]
+      },
+      "credentials": [{"type": "password", "value": "${ACME_ANALYST_PASSWORD}", "temporary": false}],
+      "realmRoles": ["viewer", "analyst"]
+    },
+    {
+      "username": "acme-approver",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Acme",
+      "lastName": "Approver",
+      "email": "acme-approver@example.local",
+      "requiredActions": [],
+      "attributes": {
+        "tenant_id": ["11111111-1111-4111-8111-111111111111"],
+        "glpi_entity_ids": ["1"]
+      },
+      "credentials": [{"type": "password", "value": "${ACME_APPROVER_PASSWORD}", "temporary": false}],
+      "realmRoles": ["viewer", "analyst", "operator", "approver"]
+    },
+    {
+      "username": "globex-analyst",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Globex",
+      "lastName": "Analyst",
+      "email": "globex-analyst@example.local",
+      "requiredActions": [],
+      "attributes": {
+        "tenant_id": ["22222222-2222-4222-8222-222222222222"],
+        "glpi_entity_ids": ["2"]
+      },
+      "credentials": [{"type": "password", "value": "${GLOBEX_ANALYST_PASSWORD}", "temporary": false}],
+      "realmRoles": ["viewer", "analyst"]
+    }
+  ]
+}

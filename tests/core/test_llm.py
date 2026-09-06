@@ -12,6 +12,7 @@ from pydantic import SecretStr
 from core.llm import get_model
 from schema.models import (
     AnthropicModelName,
+    DeepseekModelName,
     FakeModelName,
     GroqModelName,
     OllamaModelName,
@@ -52,7 +53,17 @@ def test_get_model_groq():
         model = get_model(GroqModelName.GPT_OSS_20B)
         assert isinstance(model, ChatGroq)
         assert model.model_name == "openai/gpt-oss-20b"
-        assert model.temperature == 0.5
+    assert model.temperature == 0.5
+
+
+def test_get_model_deepseek_uses_deterministic_non_thinking_mode():
+    with patch("core.settings.settings.DEEPSEEK_API_KEY", SecretStr("test_key")):
+        model = _get_model_uncached(DeepseekModelName.DEEPSEEK_V4_FLASH)
+        assert isinstance(model, ChatOpenAI)
+        assert model.model_name == "deepseek-v4-flash"
+        assert model.temperature == 0
+        assert model.streaming is False
+        assert model.extra_body == {"thinking": {"type": "disabled"}}
 
 
 def test_get_model_groq_guard():

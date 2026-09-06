@@ -107,6 +107,55 @@ class Settings(BaseSettings):
     GITHUB_PAT: SecretStr | None = None
     MCP_GITHUB_SERVER_URL: str = "https://api.githubcopilot.com/mcp/"
 
+    # ServiceMind GLPI integration
+    GLPI_BASE_URL: str | None = None
+    GLPI_API_VERSION: str = "v2.3"
+    GLPI_CLIENT_ID: SecretStr | None = None
+    GLPI_CLIENT_SECRET: SecretStr | None = None
+    GLPI_USERNAME: str | None = None
+    GLPI_PASSWORD: SecretStr | None = None
+    GLPI_ENTITY_ID: int = 0
+    GLPI_PROFILE_ID: int = 6
+    GLPI_TIMEOUT_SECONDS: float = 15.0
+    GLPI_TRUST_ENV: bool = False
+
+    # ServiceMind Phase 2 enterprise runtime
+    SERVICEMIND_DATABASE_URL: SecretStr | None = None
+    SERVICEMIND_MIGRATION_DATABASE_URL: SecretStr | None = None
+    SERVICEMIND_CREDENTIAL_KEY: SecretStr | None = None
+    SERVICEMIND_OIDC_ISSUER: str | None = None
+    SERVICEMIND_OIDC_AUDIENCE: str = "servicemind-api"
+    SERVICEMIND_OIDC_JWKS_URL: str | None = None
+    SERVICEMIND_ACME_GLPI_USERNAME: str | None = None
+    SERVICEMIND_ACME_GLPI_PASSWORD: SecretStr | None = None
+    SERVICEMIND_GLOBEX_GLPI_USERNAME: str | None = None
+    SERVICEMIND_GLOBEX_GLPI_PASSWORD: SecretStr | None = None
+    SERVICEMIND_ACME_WEBHOOK_SECRET: SecretStr | None = None
+    SERVICEMIND_GLOBEX_WEBHOOK_SECRET: SecretStr | None = None
+    SERVICEMIND_OTEL_ENDPOINT: str | None = None
+    SERVICEMIND_OTEL_SERVICE_NAME: str = "servicemind-api"
+    SERVICEMIND_MAX_TASKS: int = 12
+    SERVICEMIND_MAX_PARALLEL: int = 4
+    SERVICEMIND_MAX_REPLANS: int = 2
+    SERVICEMIND_MAX_STEPS: int = 64
+    SERVICEMIND_MAX_MODEL_CALLS: int = 32
+    SERVICEMIND_MAX_TOOL_CALLS: int = 32
+    SERVICEMIND_RUN_DEADLINE_SECONDS: int = 600
+    SERVICEMIND_RAG_ENABLED: bool = False
+    SERVICEMIND_RAG_REQUIRED: bool = False
+    SERVICEMIND_OPENSEARCH_URL: str = "https://127.0.0.1:9200"
+    SERVICEMIND_OPENSEARCH_USERNAME: str = "admin"
+    SERVICEMIND_OPENSEARCH_PASSWORD: SecretStr | None = None
+    SERVICEMIND_OPENSEARCH_VERIFY_CERTS: bool = False
+    SERVICEMIND_EMBEDDING_MODEL: str = "BAAI/bge-m3"
+    SERVICEMIND_EMBEDDING_REVISION: str = "main"
+    SERVICEMIND_RERANKER_MODEL: str = "BAAI/bge-reranker-v2-m3"
+    SERVICEMIND_RERANKER_REVISION: str = "main"
+    SERVICEMIND_MODEL_DEVICE: str | None = None
+    SERVICEMIND_RAG_CONTEXT_TOKENS: int = 8000
+    SERVICEMIND_EMBEDDING_URL: str | None = None
+    SERVICEMIND_RERANKER_URL: str | None = None
+
     LANGCHAIN_TRACING_V2: bool = False
     LANGCHAIN_PROJECT: str = "default"
     LANGCHAIN_ENDPOINT: Annotated[str, BeforeValidator(check_str_is_http)] = (
@@ -134,6 +183,7 @@ class Settings(BaseSettings):
     POSTGRES_APPLICATION_NAME: str = "agent-service-toolkit"
     POSTGRES_MIN_CONNECTIONS_PER_POOL: int = 1
     POSTGRES_MAX_CONNECTIONS_PER_POOL: int = 1
+    POSTGRES_AUTO_SETUP: bool = True
 
     # MongoDB Configuration
     MONGO_HOST: str | None = None

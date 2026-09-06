@@ -1,0 +1,142 @@
+{
+  "manifest_version": "1.0",
+  "frozen_at": "2026-09-06",
+  "production_sources": [
+    {
+      "id": "glpi-knowledge-base",
+      "version": "local-glpi-11",
+      "license": "tenant-owned",
+      "authority": "internal_knowledge",
+      "production_allowed": true,
+      "download_status": "live_connector_required",
+      "notes": "Index only through the caller's GLPI Entity/Group/Profile/User ACL."
+    },
+    {
+      "id": "servicemind-internal-runbooks",
+      "version": "phase3-baseline",
+      "license": "project-owned",
+      "authority": "internal_knowledge",
+      "production_allowed": true,
+      "download_status": "already_in_repository",
+      "path": "src/servicemind/agents/knowledge.py"
+    },
+    {
+      "id": "pagerduty-incident-response-docs",
+      "source_uri": "https://github.com/PagerDuty/incident-response-docs",
+      "revision": "464fc9d3e47e19e9d8da17cec1a41dc09624e95a",
+      "license": "Apache-2.0",
+      "authority": "external_best_practice",
+      "production_allowed": true,
+      "download_status": "verified",
+      "archive_sha256": "2c72fcf83dbfe4a06fc612268e048236563fb98ec978f2d43dbc5d754f976f13",
+      "path": "data/phase4/raw/production/incident-response-docs-master",
+      "ingestion_scope": "Markdown under docs; exclude images, slide decks, build files, and external links."
+    },
+    {
+      "id": "mendeley-help-desk-tickets-v3",
+      "source_uri": "https://data.mendeley.com/datasets/btm76zndnt/3",
+      "version": "3",
+      "doi": "10.17632/btm76zndnt.3",
+      "license": "CC-BY-4.0",
+      "authority": "public_historical_case",
+      "production_allowed": true,
+      "download_status": "verified",
+      "path": "data/phase4/raw/production/mendeley-helpdesk-v3",
+      "ingestion_scope": "Only 360 issue IDs with matched sample_utterances are text-case candidates; remaining 66,331 records are structured analytics only.",
+      "files": {
+        "db.png": "44fce9a0449d706f2ae2eb85803358c76c1ead9f9caeefcff0a6ea6ae417f84d",
+        "EXAMPLE.md": "71de05944e1f1a3240d22716b292eb0586e00423b15bdf1a7513c6f66d945696",
+        "FEATURES.md": "e9443bffac53623293274f8fc1860aec0cadde58056c9b31476d67005a60d495",
+        "holidays_by_country.csv": "f97e9df840ea5ec74f9ffeadf3956e06f315197212d0d41469c6db92b5be68b2",
+        "issues_change_history.csv": "93f6d99893bac6eb755c075dc4a3c3f655cab7c6b4e2d54a3dca0b26e4b6a3c6",
+        "issues.csv": "eab3b8857bc19bd917e0767fb9c30b7714d5468b25c5a1c1cd71a760e9602f02",
+        "issues_snapshot.csv": "89975cd7e0868408ea7b0a701758d54a439255d7814fd3aa14b198f9ea543948",
+        "issues_snapshot_sample.xlsx": "f9b4d947e231ad518d97774bc74d99f44324e472a83198ee0656c6880edb5e92",
+        "process-flow.png": "e2961ba10b7b86d5af7025d7f4917d02d641c11ee03ec2aa63c4382740e7f5bf",
+        "sample_utterances.csv": "6486067634164a8d9fc361887b9b700965e704c9b03c87ef4e19275cccf30196"
+      }
+    }
+  ],
+  "reference_sources": [
+    {
+      "id": "uci-incident-management-498",
+      "doi": "10.24432/C57S4H",
+      "license": "CC-BY-4.0",
+      "production_allowed": false,
+      "download_status": "verified",
+      "csv_sha256": "fd184bbfd62329cfe093e99da2ea7071905f2ead91900b448eb2635870821bef",
+      "path": "data/phase4/raw/reference/uci-incident-management-498"
+    },
+    {
+      "id": "ibm-enterprise-itsm-graph-rag",
+      "source_uri": "https://github.com/IBM/enterprise-itsm-graph-rag",
+      "revision": "cac6b71896612dd40a6c1bd8d989a5c973422106",
+      "license": "Apache-2.0",
+      "production_allowed": false,
+      "synthetic": true,
+      "download_status": "verified",
+      "archive_sha256": "d1ba75c1b8cbba936db63ef5f12f0746a3ae51dd8c67f577051f4d40d57a6b18",
+      "path": "data/phase4/raw/reference/enterprise-itsm-graph-rag-main"
+    }
+  ],
+  "evaluation_sources": [
+    {
+      "id": "techqa-rag-eval",
+      "revision": "0b5bbc84b7f07d6d09d063130e90b716d8d4a32a",
+      "license": "Apache-2.0",
+      "production_allowed": false,
+      "download_status": "verified",
+      "path": "data/phase4/raw/eval/techqa-rag-eval"
+    },
+    {
+      "id": "semantic-similarity-7426225",
+      "doi": "10.5281/zenodo.7426225",
+      "license": "CC-BY-4.0",
+      "production_allowed": false,
+      "download_status": "verified",
+      "standard_qrels": false,
+      "path": "data/phase4/raw/eval/semantic-similarity-7426225"
+    },
+    {
+      "id": "classification-7648117",
+      "doi": "10.5281/zenodo.7648117",
+      "license": "CC-BY-4.0",
+      "production_allowed": false,
+      "download_status": "verified",
+      "path": "data/phase4/raw/eval/classification-7648117"
+    },
+    {
+      "id": "enterpriseops-gym-itsm",
+      "revision": "c8e538eae8a6205294f0a86675fefdc1fac408f6",
+      "license": "Apache-2.0",
+      "production_allowed": false,
+      "download_status": "verified",
+      "path": "data/phase4/raw/eval/enterpriseops-gym-itsm",
+      "scope": "ITSM parquet only; 103 tasks in each of four tool-set modes."
+    },
+    {
+      "id": "agentdojo",
+      "revision": "089ed468cf3ed0322acc66b0211f26d9d90dbf60",
+      "license": "MIT",
+      "production_allowed": false,
+      "download_status": "verified",
+      "archive_sha256": "b1cbd20962cca3dafb9317a4117db65cd61a56c7f480ff0df2357d3f6c77849c",
+      "path": "data/phase4/raw/eval/agentdojo-main"
+    },
+    {
+      "id": "servicenow-itsm-safety-bench",
+      "source_uri": "https://github.com/ServiceNow/ServiceNow-itsm-safety-bench",
+      "license": "NOASSERTION",
+      "production_allowed": false,
+      "upstream_confirmed": true,
+      "download_status": "pending_current_network_access",
+      "required_before_ci": [
+        "download repository",
+        "record exact commit",
+        "verify repository or dataset license",
+        "run upstream 274-test suite",
+        "adapt ServiceNow fields and tools to ServiceMind Unified ITSM Schema"
+      ]
+    }
+  ]
+}

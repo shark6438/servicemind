@@ -1,0 +1,1 @@
+"""ServiceMind ITSM domain contracts."""

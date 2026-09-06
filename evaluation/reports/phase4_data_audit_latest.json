@@ -1,0 +1,251 @@
+{
+  "audited_at": "2026-09-06T02:27:21.922883+00:00",
+  "production": {
+    "pagerduty": {
+      "present": true,
+      "file_count": 207,
+      "bytes": 178311779
+    },
+    "mendeley_v3": {
+      "present": true,
+      "file_count": 10,
+      "bytes": 72106324,
+      "doi": "10.17632/btm76zndnt.3",
+      "issues": 66691,
+      "issue_columns": [
+        "id",
+        "started",
+        "ended",
+        "issue_num",
+        "issue_proj",
+        "issue_reporter",
+        "issue_assignee",
+        "issue_contr_count",
+        "issue_type",
+        "issue_priority",
+        "issue_created",
+        "issue_resolution_date",
+        "issue_resolution",
+        "issue_status",
+        "issue_comments_count",
+        "last_change_date",
+        "wf_in_review",
+        "wfe_in_review",
+        "wf_deployment",
+        "wfe_deployment",
+        "wf_resolved",
+        "wfe_resolved",
+        "wf_open",
+        "wfe_open",
+        "wf_monitoring",
+        "wfe_monitoring",
+        "wf_done",
+        "wfe_done",
+        "wf_pending_customer_approval",
+        "wfe_pending_customer_approval",
+        "wf_rejected",
+        "wfe_rejected",
+        "wf_testing_monitoring",
+        "wfe_testing_monitoring",
+        "wf_in_progress",
+        "wfe_in_progress",
+        "wf_reopened",
+        "wfe_reopened",
+        "wf_to_do",
+        "wfe_to_do",
+        "wf_validation",
+        "wfe_validation",
+        "wf_resolved_under_monitoring",
+        "wfe_resolved_under_monitoring",
+        "wf_closed",
+        "wfe_closed",
+        "wf_waiting",
+        "wfe_waiting",
+        "wf_cancelled",
+        "wfe_cancelled",
+        "wf_under_review",
+        "wfe_under_review",
+        "wf_approved",
+        "wfe_approved",
+        "wf_pending_deployment",
+        "wfe_pending_deployment",
+        "wf_total_time",
+        "processing_steps"
+      ],
+      "history_events": 257508,
+      "utterances": 30104,
+      "utterance_cases": 360,
+      "matched_text_cases": 360,
+      "resolutions": {
+        "Done": 62034,
+        "Won't Do": 2991,
+        "nan": 853,
+        "Duplicate": 661,
+        "Cannot Reproduce": 152
+      },
+      "safe_ingestion_scope": "Only the 360 cases with matched utterances are text-case candidates."
+    }
+  },
+  "reference": {
+    "uci_498": {
+      "present": true,
+      "bytes": 46212397,
+      "sha256": "fd184bbfd62329cfe093e99da2ea7071905f2ead91900b448eb2635870821bef",
+      "events": 141712,
+      "incidents": 24918,
+      "columns": [
+        "number",
+        "incident_state",
+        "active",
+        "reassignment_count",
+        "reopen_count",
+        "sys_mod_count",
+        "made_sla",
+        "caller_id",
+        "opened_by",
+        "opened_at",
+        "sys_created_by",
+        "sys_created_at",
+        "sys_updated_by",
+        "sys_updated_at",
+        "contact_type",
+        "location",
+        "category",
+        "subcategory",
+        "u_symptom",
+        "cmdb_ci",
+        "impact",
+        "urgency",
+        "priority",
+        "assignment_group",
+        "assigned_to",
+        "knowledge",
+        "u_priority_confirmation",
+        "notify",
+        "problem_id",
+        "rfc",
+        "vendor",
+        "caused_by",
+        "closed_code",
+        "resolved_by",
+        "resolved_at",
+        "closed_at"
+      ],
+      "contains_ticket_text": false
+    },
+    "ibm_graph_rag": {
+      "present": true,
+      "file_count": 24,
+      "bytes": 1243149
+    }
+  },
+  "eval": {
+    "techqa": {
+      "present": true,
+      "file_count": 3,
+      "bytes": 49835672,
+      "revision": "0b5bbc84b7f07d6d09d063130e90b716d8d4a32a",
+      "qa_records": 910,
+      "corpus_files": 28481,
+      "corpus_sha256": "c06aa287dcc1abf8db6b49b8495df095db73342d729f6451ac330785245d10be"
+    },
+    "classification": {
+      "present": true,
+      "file_count": 6,
+      "bytes": 419429,
+      "doi": "10.5281/zenodo.7648117",
+      "records": 2229,
+      "categories": {
+        "Support general": 762,
+        "Fileservice": 684,
+        "Software": 222,
+        "O365": 219,
+        "Active Directory": 133,
+        "Computer-Services": 106,
+        "EOL": 103
+      }
+    },
+    "semantic_similarity": {
+      "present": true,
+      "file_count": 6,
+      "bytes": 102043,
+      "doi": "10.5281/zenodo.7426225",
+      "records": 300,
+      "languages": {
+        "eng": 207,
+        "por": 51,
+        "deu": 22,
+        "spa": 19,
+        "fra": 1
+      },
+      "label_columns": {
+        "group_1_labeled.csv": [
+          "id",
+          "x",
+          "y"
+        ],
+        "group_2_labeled.csv": [
+          "id",
+          "x",
+          "y"
+        ],
+        "group_3_labeled.csv": [
+          "id",
+          "x",
+          "y"
+        ]
+      },
+      "standard_qrels": false
+    },
+    "enterpriseops_itsm": {
+      "present": true,
+      "file_count": 5,
+      "bytes": 535779,
+      "revision": "c8e538eae8a6205294f0a86675fefdc1fac408f6",
+      "mode_records": {
+        "oracle": 103,
+        "plus_10_tools": 103,
+        "plus_15_tools": 103,
+        "plus_5_tools": 103
+      },
+      "total_mode_rows": 412,
+      "tool_count_distribution": {
+        "4": 7,
+        "5": 11,
+        "6": 34,
+        "7": 16,
+        "8": 10,
+        "9": 18,
+        "10": 20,
+        "11": 36,
+        "12": 17,
+        "13": 12,
+        "14": 19,
+        "15": 20,
+        "16": 35,
+        "17": 17,
+        "18": 11,
+        "19": 19,
+        "20": 20,
+        "21": 36,
+        "22": 17,
+        "23": 11,
+        "24": 12,
+        "25": 10,
+        "26": 2,
+        "28": 1,
+        "29": 1
+      }
+    },
+    "agentdojo": {
+      "present": true,
+      "file_count": 26857,
+      "bytes": 290275807
+    },
+    "itsm_safety_bench": {
+      "upstream_confirmed": true,
+      "downloaded": false,
+      "reason": "Current GitHub/codeload edge returned 404; license not yet pinned."
+    }
+  }
+}
