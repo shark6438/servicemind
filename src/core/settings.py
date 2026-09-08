@@ -148,13 +148,63 @@ class Settings(BaseSettings):
     SERVICEMIND_OPENSEARCH_PASSWORD: SecretStr | None = None
     SERVICEMIND_OPENSEARCH_VERIFY_CERTS: bool = False
     SERVICEMIND_EMBEDDING_MODEL: str = "BAAI/bge-m3"
+    #: MUST be pinned to a concrete commit hash in production. Floating "main" silently
+    #: changes the vector space; previously indexed chunks lose Recall.
     SERVICEMIND_EMBEDDING_REVISION: str = "main"
     SERVICEMIND_RERANKER_MODEL: str = "BAAI/bge-reranker-v2-m3"
+    #: MUST be pinned alongside SERVICEMIND_EMBEDDING_REVISION (see comment above).
     SERVICEMIND_RERANKER_REVISION: str = "main"
     SERVICEMIND_MODEL_DEVICE: str | None = None
+    #: huggingface_hub cache roots for the in-process fallback providers (the repo's
+    #: pre-fetched snapshots live under ``data/phase4/models/{embedding,reranker}``).
+    #: When both cache dir and revision are pinned, in-process load is fully offline.
+    SERVICEMIND_EMBEDDING_CACHE_DIR: str | None = None
+    SERVICEMIND_RERANKER_CACHE_DIR: str | None = None
+    #: Graph-RAG (Phase 4 baseline 4.2): optional structural retrieval over the
+    #: Neo4j projection (Ticket/Ci/Service/Problem/Change). Text hybrid retrieval
+    #: remains the primary channel; graph findings are a side channel.
+    SERVICEMIND_GRAPH_RAG_ENABLED: bool = False
+    NEO4J_URI: str = "bolt://127.0.0.1:7687"
+    NEO4J_USER: str = "neo4j"
+    NEO4J_PASSWORD: SecretStr | None = None
     SERVICEMIND_RAG_CONTEXT_TOKENS: int = 8000
+    # Context packer diversity ceilings (Phase 4 baseline §7). A single document
+    # must not crowd the context, and no single source may drown every other source;
+    # selection still only packs parents whose rerank earned them a place.
+    SERVICEMIND_RAG_MAX_PARENTS_PER_DOCUMENT: int = 2
+    SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE: int = 4
+    #: Multi-query fan-out (hybrid only): add one BM25 sub-query per LLM rewrite to
+    #: the unchanged single dense anchor, inside one OpenSearch ``hybrid`` query that
+    #: the cluster RRF merges (OpenSearch caps ``hybrid`` at 5 arms, so rewrites
+    #: expand lexical coverage rather than duplicating dense vectors). The rewrite
+    #: stage always runs; disable to revert to today's single-query two-arm request
+    #: when the extra lexical arms' latency is unwanted.
+    SERVICEMIND_RAG_MULTI_QUERY: bool = True
     SERVICEMIND_EMBEDDING_URL: str | None = None
     SERVICEMIND_RERANKER_URL: str | None = None
+
+    # ServiceMind Phase 5 governance. Long-term memory and context injection are
+    # feature-gated independently so rollout and rollback never require a schema
+    # downgrade. The Model Gateway path itself is always used; this flag controls
+    # durable per-call audit persistence.
+    SERVICEMIND_MEMORY_ENABLED: bool = False
+    SERVICEMIND_MEMORY_AUTO_ACTIVATION_CONFIDENCE: float = 0.9
+    SERVICEMIND_MEMORY_VECTOR_ENABLED: bool = False
+    SERVICEMIND_MEMORY_CANDIDATE_CEILING: int = Field(default=100, ge=1, le=500)
+    SERVICEMIND_CONTEXT_ENABLED: bool = False
+    SERVICEMIND_CONTEXT_MAX_INPUT_TOKENS: int = 12_000
+    SERVICEMIND_SKILLS_ENABLED: bool = False
+    SERVICEMIND_SKILLS_DIR: str = "skills"
+    SERVICEMIND_MODEL_GATEWAY_AUDIT_ENABLED: bool = False
+    SERVICEMIND_MODEL_ALLOWED_PROVIDERS: str = (
+        "deepseek,openai,azure,anthropic,google,vertexai,groq,aws,ollama,openrouter,fake"
+    )
+    SERVICEMIND_MODEL_ALLOWED_MODELS: str = "*"
+    SERVICEMIND_TENANT_MODEL_ALLOWLIST_JSON: str = "{}"
+    SERVICEMIND_MODEL_MAX_RETRIES: int = 1
+    SERVICEMIND_MODEL_TIMEOUT_SECONDS: float = 30
+    SERVICEMIND_MODEL_MAX_COST_USD_PER_CALL: float = Field(default=0.05, gt=0, le=10)
+    SERVICEMIND_SEMANTIC_CACHE_ENABLED: bool = False
 
     LANGCHAIN_TRACING_V2: bool = False
     LANGCHAIN_PROJECT: str = "default"

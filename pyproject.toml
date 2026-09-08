@@ -44,6 +44,7 @@ dependencies = [
     "langsmith ~=0.10.2",
     "numexpr ~=2.14.1",
     "numpy ~=2.5.0",
+    "neo4j >=5.26,<6",
     "onnxruntime ~= 1.27.0",
     "opentelemetry-exporter-otlp-proto-http ~=1.44.0",
     "opentelemetry-sdk ~=1.44.0",
@@ -107,12 +108,22 @@ extend-select = ["I", "U"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+testpaths = ["tests"]
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.pytest_env]
 OPENAI_API_KEY = "sk-fake-openai-key"
 DATABASE_TYPE = "sqlite"
 POSTGRES_AUTO_SETUP = "true"
+SERVICEMIND_MEMORY_ENABLED = "false"
+SERVICEMIND_MEMORY_VECTOR_ENABLED = "false"
+SERVICEMIND_CONTEXT_ENABLED = "false"
+SERVICEMIND_SKILLS_ENABLED = "false"
+SERVICEMIND_MODEL_GATEWAY_AUDIT_ENABLED = "false"
+SERVICEMIND_SEMANTIC_CACHE_ENABLED = "false"
+SERVICEMIND_MODEL_ALLOWED_PROVIDERS = "deepseek,openai,azure,anthropic,google,vertexai,groq,aws,ollama,openrouter,fake"
+SERVICEMIND_MODEL_ALLOWED_MODELS = "*"
+SERVICEMIND_TENANT_MODEL_ALLOWLIST_JSON = "{}"
 
 [tool.pymarkdown]
 # Docs use long, unwrapped prose lines rather than hard-wrapping at a fixed

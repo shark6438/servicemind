@@ -12,7 +12,14 @@ from servicemind.domain.evidence import Evidence, EvidenceSourceType
 from servicemind.domain.models import ExecutionResult
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
 from servicemind.domain.supervisor import SupervisorAction, SupervisorDecision
-from servicemind.domain.task import AgentName, Budget, ErrorPolicy, Task, TaskPlan
+from servicemind.domain.task import (
+    AgentName,
+    Budget,
+    ErrorPolicy,
+    Task,
+    TaskPlan,
+    TaskStatus,
+)
 from servicemind.orchestration.dispatcher import TaskDispatcher
 from servicemind.orchestration.registry import supervisor_contract
 from servicemind.orchestration.router import FastPathRouter
@@ -225,10 +232,15 @@ class FakePlanner:
 
 
 class StateDrivenSupervisor:
-    def __init__(self, invalid_first: bool = False) -> None:
+    def __init__(
+        self,
+        invalid_first: bool = False,
+        override: dict[int, SupervisorAction] | None = None,
+    ) -> None:
         self.calls = 0
         self.feedback: list[str | None] = []
         self.invalid_first = invalid_first
+        self.override = override or {}
 
     async def decide(self, state_view, *, policy_feedback=None):
         self.calls += 1
@@ -240,6 +252,16 @@ class StateDrivenSupervisor:
                 confidence=1,
             )
         legal = set(state_view["legal_actions"])
+        forced = self.override.get(self.calls)
+        if forced is not None:
+            if forced.value not in legal:
+                raise AssertionError(f"{forced.value} is not legal: {sorted(legal)}")
+            return SupervisorDecision(
+                action=forced,
+                selected_task_ids=[],
+                rationale_summary=f"Forced {forced.value} decision.",
+                confidence=1,
+            )
         for action in (
             SupervisorAction.PLAN,
             SupervisorAction.DISPATCH,
@@ -262,14 +284,9 @@ class StateDrivenSupervisor:
                             item["task_id"]
                             for item in state_view["ready_tasks"]
                             if item["agent"]
-                            == (
-                                "analysis"
-                                if action is SupervisorAction.ANALYZE
-                                else "reviewer"
-                            )
+                            == ("analysis" if action is SupervisorAction.ANALYZE else "reviewer")
                         ][:1]
-                        if action
-                        in {SupervisorAction.ANALYZE, SupervisorAction.REVIEW}
+                        if action in {SupervisorAction.ANALYZE, SupervisorAction.REVIEW}
                         else []
                     ),
                     rationale_summary=f"Progress workflow with {action.value}.",
@@ -285,9 +302,7 @@ class CountingAction:
 
     def propose_from_handoff(self, handoff, analysis, *, ticket_id):
         self.calls += 1
-        return self.delegate.propose_from_handoff(
-            handoff, analysis, ticket_id=ticket_id
-        )
+        return self.delegate.propose_from_handoff(handoff, analysis, ticket_id=ticket_id)
 
 
 class FakeExecutor:
@@ -368,6 +383,43 @@ def test_supervisor_policy_rejects_handoff_before_review() -> None:
         SupervisorPolicy().validate(decision, state)
 
 
+def test_supervisor_policy_rejects_parallel_dispatch_without_tool_budget() -> None:
+    state = initial("Analyze VPN with the relevant runbook")
+    due = datetime.now(UTC) + timedelta(minutes=5)
+    budget = Budget(max_tool_calls=1, deadline=due)
+    plan = TaskPlan(
+        goal=state["goal"],
+        tasks=[
+            Task(
+                task_id="T1",
+                agent=AgentName.DATA,
+                task_type="get_ticket",
+                deadline=due,
+            ),
+            Task(
+                task_id="T2",
+                agent=AgentName.KNOWLEDGE,
+                task_type="retrieve_knowledge",
+                deadline=due,
+            ),
+        ],
+        max_parallel=2,
+        max_steps=budget.max_steps,
+        max_replans=budget.max_replans,
+        deadline=due,
+        budget=budget,
+    )
+    state["task_plan"] = plan.model_dump(mode="json", by_alias=True)
+    decision = SupervisorDecision(
+        action=SupervisorAction.DISPATCH,
+        selected_task_ids=["T1", "T2"],
+        rationale_summary="Run both evidence tasks.",
+        confidence=1,
+    )
+    with pytest.raises(SupervisorPolicyError, match="fewer remaining tool calls"):
+        SupervisorPolicy().validate(decision, state)
+
+
 @pytest.mark.asyncio
 async def test_real_supervisor_node_drives_dynamic_loop() -> None:
     supervisor = StateDrivenSupervisor()
@@ -426,7 +478,9 @@ async def test_handoff_changes_control_owner_and_enters_existing_harness() -> No
     assert interrupted["control_owner"] == "human"
     assert "handoff:supervisor->action" in interrupted["trajectory"]
     assert action.calls == 1
-    handoff_events = [payload for event, payload in FakeRepository.events if event == "control.handoff"]
+    handoff_events = [
+        payload for event, payload in FakeRepository.events if event == "control.handoff"
+    ]
     assert len(handoff_events) == 1
     assert handoff_events[0]["from"] == "supervisor"
     assert handoff_events[0]["to"] == "action"
@@ -446,3 +500,146 @@ async def test_handoff_changes_control_owner_and_enters_existing_harness() -> No
     assert executor.calls == 1
     assert completed["final_result"]["execution"]["verified"] is True
     assert completed["final_result"]["control_owner"] == "none"
+
+
+# ---------------------------------------------------------------------------
+# Orchestration audit regressions (2026-09-08): pre-review REPLAN crash, plan/
+# revision double-failure terminal handling, and ESCALATE human-override loop.
+# ---------------------------------------------------------------------------
+
+
+def minimal_plan() -> TaskPlan:
+    due = datetime.now(UTC) + timedelta(minutes=5)
+    budget = Budget(deadline=due)
+    tasks = [
+        Task(
+            task_id="T1",
+            agent=AgentName.DATA,
+            task_type="get_ticket",
+            input={"objective": "Read ticket", "ticket_id": 2},
+            error_policy=ErrorPolicy.RETRY,
+            deadline=due,
+        )
+    ]
+    return TaskPlan(
+        goal="Analyze VPN incident",
+        tasks=tasks,
+        max_parallel=2,
+        max_steps=budget.max_steps,
+        max_replans=budget.max_replans,
+        deadline=due,
+        budget=budget,
+    )
+
+
+def test_policy_escalate_allows_finalize_but_human_continue_is_terminal() -> None:
+    """A human "continue" on an escalation must not re-enter the interrupt loop."""
+    plan = minimal_plan()
+    review = ReviewResult(
+        decision=ReviewDecision.ESCALATE,
+        risk_level=RiskLevel.HIGH,
+        feedback="Reviewer could not resolve the blocking finding.",
+    )
+    state = initial("Analyze VPN incident")
+    state["task_plan"] = plan.model_dump(mode="json", by_alias=True)
+    state["review_result"] = review.model_dump(mode="json")
+    policy = SupervisorPolicy()
+    assert policy.legal_actions(state) == {
+        SupervisorAction.ESCALATE,
+        SupervisorAction.FINALIZE,
+    }
+    state["human_review"] = {"decision": "continue"}
+    assert policy.legal_actions(state) == {SupervisorAction.FINALIZE}
+
+
+@pytest.mark.asyncio
+async def test_supervisor_replan_before_any_review_does_not_crash() -> None:
+    """A pre-review REPLAN (legal when evidence is still un-joined) previously hit
+    ``_review(state)`` on an empty payload and crashed the graph with a raw
+    validation error. The revision node now tolerates a missing review and the run
+    must complete normally through to a passed review."""
+    supervisor = StateDrivenSupervisor(override={2: SupervisorAction.REPLAN})
+    graph = build_supervisor_graph(services(supervisor=supervisor))
+    result = await graph.ainvoke(initial("Analyze VPN with the relevant runbook"))
+    assert result["final_result"]["review"]["decision"] == "passed"
+    assert result["plan_revision"] >= 1
+    decisions = [
+        item.removeprefix("decision:")
+        for item in result["trajectory"]
+        if item.startswith("decision:")
+    ]
+    assert decisions[0] == "plan"
+    assert decisions[1] == "replan"
+
+
+class BrokenReplanner(FakePlanner):
+    async def revise_plan(self, **kwargs):
+        raise ValueError("replanner model returned an invalid revision")
+
+
+@pytest.mark.asyncio
+async def test_replan_double_failure_finalizes_without_raw_runtime_error() -> None:
+    """A replanner that fails validation twice must end the run through the normal
+    finalizer (persisted, run.failed) instead of escaping the node and erroring
+    the whole graph."""
+    supervisor = StateDrivenSupervisor(override={2: SupervisorAction.REPLAN})
+    graph = build_supervisor_graph(services(supervisor=supervisor, planner=BrokenReplanner()))
+    result = await graph.ainvoke(initial("Analyze VPN incident"))
+    assert result["final_result"]["termination_code"] == "critical_error"
+    event_types = [event for event, _ in FakeRepository.events]
+    assert event_types[-1] == "run.failed"
+
+
+def write_plan(*, action_done: bool = False) -> TaskPlan:
+    due = datetime.now(UTC) + timedelta(minutes=5)
+    budget = Budget(deadline=due)
+
+    def task(
+        task_id: str, agent: AgentName, task_type: str, depends: list[str], done: bool
+    ) -> Task:
+        return Task(
+            task_id=task_id,
+            agent=agent,
+            task_type=task_type,
+            input={"objective": f"Run {task_type}", "ticket_id": 2},
+            depends_on=depends,
+            status=TaskStatus.SUCCESS if done else TaskStatus.PENDING,
+            deadline=due,
+        )
+
+    tasks = [
+        task("T1", AgentName.DATA, "get_ticket", [], done=True),
+        task("T2", AgentName.ANALYSIS, "analyze_ticket", ["T1"], done=True),
+        task("T3", AgentName.REVIEWER, "review_analysis", ["T2"], done=True),
+        task("T4", AgentName.ACTION, "propose_followup", ["T3"], done=action_done),
+    ]
+    return TaskPlan(
+        goal="Analyze and prepare a reviewed work note",
+        tasks=tasks,
+        max_parallel=2,
+        max_steps=budget.max_steps,
+        max_replans=budget.max_replans,
+        deadline=due,
+        budget=budget,
+    )
+
+
+def test_policy_handoff_requires_a_ready_action_task() -> None:
+    """A passed write review may only offer HANDOFF_ACTION once an Action task is
+    actually ready; otherwise the graph would raise inside handoff_node."""
+    review = ReviewResult(
+        decision=ReviewDecision.PASSED,
+        risk_level=RiskLevel.LOW,
+        feedback="Reviewed and passed.",
+    )
+    state = initial("Analyze and prepare a reviewed private work note", write=True)
+    policy = SupervisorPolicy()
+
+    state["task_plan"] = write_plan(action_done=False).model_dump(mode="json", by_alias=True)
+    state["review_result"] = review.model_dump(mode="json")
+    assert SupervisorAction.HANDOFF_ACTION in policy.legal_actions(state)
+
+    state["task_plan"] = write_plan(action_done=True).model_dump(mode="json", by_alias=True)
+    legal = policy.legal_actions(state)
+    assert SupervisorAction.HANDOFF_ACTION not in legal
+    assert legal == {SupervisorAction.REPLAN}

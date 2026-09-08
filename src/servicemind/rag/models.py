@@ -2,11 +2,49 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 from collections.abc import Callable
-from typing import Protocol
+from pathlib import Path
+from typing import Any, Protocol
 
 import httpx
 import numpy as np
+
+logger = logging.getLogger("servicemind.rag.models")
+
+
+def _local_snapshot(model_name: str, revision: str, cache_folder: str | None) -> str | None:
+    """Resolve a pinned revision to its on-disk HF snapshot directory, if present.
+
+    ``sentence_transformers.SentenceTransformer("BAAI/bge-m3", cache_folder=...)`` does
+    not forward ``cache_folder`` into transformers' ``AutoConfig``; config resolution
+    falls back to the default HF cache (``~/.cache/huggingface``) and, offline, can hit a
+    partial/poisoned entry -- surfacing ``Unrecognized model ... config.json`` even though
+    our ``cache_folder`` snapshot is complete. When a pinned snapshot exists under
+    ``cache_folder`` we hand the *path* to sentence-transformers instead of the repo id, so
+    model, tokenizer and config all load from local weights with no hub contact at all.
+    Returns ``None`` when no matching snapshot directory exists (unpinned revisions,
+    cache folder absent, or a snapshot still being fetched).
+    """
+    if not cache_folder or not revision or revision in {"", "main"}:
+        return None
+    snapshot = (
+        Path(cache_folder) / f"models--{model_name.replace('/', '--')}" / "snapshots" / revision
+    )
+    if (snapshot / "config.json").is_file():
+        return str(snapshot)
+    return None
+
+
+#: A new model revision means an incompatible vector space. Indices must never mix
+#: vectors produced by two revisions, and production config MUST pin a concrete
+#: commit hash (e.g. ``git ls-remote https://huggingface.co/BAAI/bge-m3 refs/heads/main``)
+#: instead of floating "main".
+_UNPINNED_REVISION_WARNING = (
+    "Embedding/Reranker revision is '%s' (unpinned). Production RAG config must pin a "
+    "concrete commit hash; floating 'main' silently changes the vector space on upstream "
+    "releases and destroys Recall of previously indexed chunks."
+)
 
 
 class EmbeddingProvider(Protocol):
@@ -35,25 +73,53 @@ class BgeM3EmbeddingProvider:
         *,
         model_revision: str = "main",
         device: str | None = None,
+        cache_folder: str | None = None,
+        local_files_only: bool = False,
     ) -> None:
         self.model_revision = model_revision
         self.device = device
-        self._model = None
+        self.cache_folder = cache_folder
+        self.local_files_only = local_files_only
+        self._model: Any = None
         self._lock = asyncio.Lock()
 
-    async def _load(self):
+    async def _load(self) -> Any:
         if self._model is None:
             async with self._lock:
                 if self._model is None:
+                    if self.model_revision in {"", "main"}:
+                        logger.warning(_UNPINNED_REVISION_WARNING, self.model_revision)
+                    if self.cache_folder and not self.local_files_only:
+                        logger.warning(
+                            "In-process BGE provider given cache_folder=%s without "
+                            "local_files_only; offline datacenters must pin it to avoid "
+                            "hub HEAD requests.",
+                            self.cache_folder,
+                        )
                     from sentence_transformers import SentenceTransformer
 
-                    self._model = await asyncio.to_thread(
-                        SentenceTransformer,
-                        self.model_name,
-                        revision=self.model_revision,
-                        device=self.device,
-                        trust_remote_code=False,
+                    # Prefer an absolute local snapshot path so offline datacenters never
+                    # touch the hub during AutoConfig resolution (see _local_snapshot).
+                    local_path = _local_snapshot(
+                        self.model_name, self.model_revision, self.cache_folder
                     )
+                    if local_path:
+                        self._model = await asyncio.to_thread(
+                            SentenceTransformer,
+                            local_path,
+                            device=self.device,
+                            trust_remote_code=False,
+                        )
+                    else:
+                        self._model = await asyncio.to_thread(
+                            SentenceTransformer,
+                            self.model_name,
+                            revision=self.model_revision,
+                            device=self.device,
+                            cache_folder=self.cache_folder,
+                            local_files_only=self.local_files_only,
+                            trust_remote_code=False,
+                        )
         return self._model
 
     async def embed_documents(self, texts: list[str]) -> list[list[float]]:
@@ -82,25 +148,44 @@ class BgeM3Reranker:
         *,
         model_revision: str = "main",
         device: str | None = None,
+        cache_folder: str | None = None,
+        local_files_only: bool = False,
     ) -> None:
         self.model_revision = model_revision
         self.device = device
-        self._model = None
+        self.cache_folder = cache_folder
+        self.local_files_only = local_files_only
+        self._model: Any = None
         self._lock = asyncio.Lock()
 
-    async def _load(self):
+    async def _load(self) -> Any:
         if self._model is None:
             async with self._lock:
                 if self._model is None:
+                    if self.model_revision in {"", "main"}:
+                        logger.warning(_UNPINNED_REVISION_WARNING, self.model_revision)
                     from sentence_transformers import CrossEncoder
 
-                    self._model = await asyncio.to_thread(
-                        CrossEncoder,
-                        self.model_name,
-                        revision=self.model_revision,
-                        device=self.device,
-                        trust_remote_code=False,
+                    local_path = _local_snapshot(
+                        self.model_name, self.model_revision, self.cache_folder
                     )
+                    if local_path:
+                        self._model = await asyncio.to_thread(
+                            CrossEncoder,
+                            local_path,
+                            device=self.device,
+                            trust_remote_code=False,
+                        )
+                    else:
+                        self._model = await asyncio.to_thread(
+                            CrossEncoder,
+                            self.model_name,
+                            revision=self.model_revision,
+                            device=self.device,
+                            cache_folder=self.cache_folder,
+                            local_files_only=self.local_files_only,
+                            trust_remote_code=False,
+                        )
         return self._model
 
     async def score(self, query: str, documents: list[str]) -> list[float]:

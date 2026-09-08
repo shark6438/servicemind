@@ -1,5 +1,7 @@
 # ServiceMind Phase 4 RAG 技术基线
 
+> **冻结设计基线说明。** 本文保留 2026-09-06 的设计与历史环境信息。当前数据治理、代理评测和最终关闭状态以 `PHASE4_ENGINEERING_CLOSURE_V1_2.md` 为准；Mendeley 已退出生产，Phase 4 为工程关闭且未签发企业前沿质量认证。
+
 状态：主干冻结
 
 冻结日期：2026-09-06
@@ -7,7 +9,7 @@
 ## 1. 不再变更的主链
 
 ```text
-GLPI KB / Internal Runbook / PagerDuty / Mendeley Cases
+GLPI KB / Internal Runbook / PagerDuty
   -> structure recovery
   -> structure-aware semantic chunking
   -> searchable child chunks + stored parent chunks
@@ -84,7 +86,7 @@ Phase 4.2 使用 `neo4j:5.26.30-community`。Neo4j 是 GLPI/Unified Schema 的�
 - PDF/DOCX/PPTX/XLSX/复杂 HTML：Docling 2.x，固定 package 和 model revision。
 - GLPI KB HTML：HTML sanitizer + DoclingDocument-compatible adapter。
 - Markdown：AST parser，保留 heading/list/table/code block。
-- CSV ticket cases：专用 Mendeley adapter，不通过通用文档 parser 猜字段。
+- CSV ticket cases：专用 Mendeley adapter，不通过通用文档 parser 猜字段；只用于 reference/eval。
 
 落库格式使用 lossless JSON，不以 Markdown 作为标准中间格式，因为 Markdown 无法无损保留合并单元格。
 
@@ -187,7 +189,7 @@ Context Packer 约束：
 
 官方数据有 66,691 个 issue、257,508 条 change history、30,104 条 utterance；utterance 只覆盖 360 个 issue。
 
-- 生产 Historical Case Index 只接收这 360 个可关联文本案例。
+- reference/eval Historical Case Index 只接收这 360 个可关联文本案例；生产 active alias 不接收。
 - 其余 66,331 条仅进入结构化分析，不生成伪造的 case text。
 - `issue_resolution` 是状态标签，不等于自然语言解决方案。
 - 每个案例必须显示 `public_historical_case`、CC-BY-4.0、DOI 和低于内部案例的 authority。
@@ -235,7 +237,7 @@ AgentDojo 已下载为可用的通用 Prompt Injection 补充，但不取代 ITS
 - GLPI/Seed Pack 图投影和参数化 Graph Retrieval。
 - Graph Evidence 与文本 Evidence 合流。
 
-### Phase 4.3
+### 原 Phase 4.3 评测计划（最终转入 Phase 7）
 
 - ServiceMind GLPI Gold Set。
 - TechQA、Classification、Semantic Similarity 辅助评测。
@@ -256,3 +258,23 @@ AgentDojo 已下载为可用的通用 Prompt Injection 补充，但不取代 ITS
 - Dense-only、BM25-only、Hybrid、Hybrid+Reranker 都有独立可重复基线。
 - Knowledge Agent 不拥有 GLPI 写工具。
 - Eval corpus 不在任何生产 index alias 中。
+
+### §11 验收状态（2026-09-08）
+
+下表是治理修正前的小规模验收快照。15 条本地 gold 已被确认存在天花板效应；最终状态对照 `docs/PHASE4_ENGINEERING_CLOSURE_V1_2.md` 和 400 条 TechQA 代理报告。
+
+| 门槛 | 状态 |
+| --- | --- |
+| ACL 泄漏为 0 | PASS（globex 活体 0 条） |
+| 无效 Citation 为 0 | PASS（100/100 evidence 活体引文完整性 0 无效） |
+| 删除/取消发布/ACL 变更可传播 | PASS（index lifecycle / repository 测试级） |
+| Parser 顺序保持率 100% | PASS（golden fixture） |
+| Gold Recall@5 >= 0.85 | PASS（四基线实测 1.0） |
+| MRR@10 >= 0.75 | PASS（四基线实测 1.0） |
+| Grounded citation >= 0.95 | PASS（实测 1.0） |
+| 无答案 abstention >= 0.95 | **PASS** — agent 层语义实测 **1.0**（3/3 无答案查询正确拒答、零编造；2026-09-08 live `deepseek-v4-flash`，真实 acme 语料，`scripts/verify_phase4_abstention_live.py`） |
+| 四基线独立可重复 | PASS |
+| Knowledge Agent 无 GLPI 写工具 | PASS |
+| Eval corpus 不在生产 alias | PASS |
+
+> 说明：评测 harness 的 `abstention_rate` 是检索层指标（unanswerable query 的 ranked 是否为空）。OpenSearch top-k 恒返回 k 条，故该指标对所有 baseline 恒为 0.0、`answered_unanswerable=3`，并非模型答错。§11 门槛指的是 **agent 层语义 abstention**：2026-09-08 已授权并用 live DeepSeek 实测 PASS（见 `docs/PHASE4_ENTERPRISE_ACCEPTANCE.md` §8.3/§5.4）——3/3 无答案查询（秘密索取/PII 索取/未来预测）由语义 judge 判定证据不支持而显式拒答、零编造，5 条可答 control 全部给据作答。

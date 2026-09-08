@@ -1,0 +1,136 @@
+{
+  "schema_version": "phase4-rewrites-v1",
+  "gold_set": "servicemind-phase4-gold-v1",
+  "captured_at": "2026-09-07T19:25:58+00:00",
+  "model": "deepseek-v4-flash",
+  "note": "Real production query-rewrite stage output over the committed gold queries. Inputs to the multi-query fan-out arm; committed so the single-vs-fan-out A/B is reproducible offline.",
+  "queries": {
+    "g-vpn-mfa": {
+      "query": "VPN multi-factor authentication fails for remote users, token enrollment times out at the identity provider; which runbook describes triage?",
+      "normalized_query": "VPN multi-factor authentication fails for remote users, token enrollment times out at the identity provider; which runbook describes triage?",
+      "rewritten_queries": [
+        "VPN MFA failure remote users token enrollment timeout triage runbook",
+        "Identity provider token enrollment timeout VPN authentication troubleshooting procedure",
+        "Runbook for VPN multi-factor authentication token enrollment timeout triage"
+      ]
+    },
+    "g-priority": {
+      "query": "How do I map ticket impact and urgency to priority, and when may I call an incident major?",
+      "normalized_query": "How do I map ticket impact and urgency to priority, and when may I call an incident major?",
+      "rewritten_queries": [
+        "What is the procedure for mapping impact and urgency to priority in incident management?",
+        "Under what conditions can an incident be declared major?",
+        "How to determine priority from impact and urgency, and criteria for major incident declaration"
+      ]
+    },
+    "g-db-backup": {
+      "query": "What is the recovery point objective and the restore drill procedure for core customer databases?",
+      "normalized_query": "What is the recovery point objective and the restore drill procedure for core customer databases?",
+      "rewritten_queries": [
+        "RPO and restore drill steps for core customer databases",
+        "Core customer database recovery point objective and restore drill procedure",
+        "How to perform restore drill for core customer databases and their RPO"
+      ]
+    },
+    "g-change-cab": {
+      "query": "Which production changes need change advisory board approval and what must a change record contain?",
+      "normalized_query": "Which production changes need change advisory board approval and what must a change record contain?",
+      "rewritten_queries": [
+        "What changes require CAB approval?",
+        "Change record requirements for production changes",
+        "CAB approval criteria and change record fields"
+      ]
+    },
+    "g-password-reset": {
+      "query": "An account is locked out after repeated sign-on failures; what is the safe password reset procedure and what must I never do?",
+      "normalized_query": "An account is locked out after repeated sign-on failures; what is the safe password reset procedure and what must I never do?",
+      "rewritten_queries": [
+        "How to safely reset a locked account password after multiple failed sign-ons",
+        "Password reset procedure for locked accounts due to sign-on failures",
+        "What actions are prohibited when resetting a password for a locked account"
+      ]
+    },
+    "g-capacity": {
+      "query": "How should virtual servers be sized and which utilization thresholds trigger capacity alerts?",
+      "normalized_query": "How should virtual servers be sized and which utilization thresholds trigger capacity alerts?",
+      "rewritten_queries": [
+        "Virtual server sizing guidelines and capacity alert thresholds",
+        "What are the utilization thresholds for virtual server capacity alerts?",
+        "Policy on virtual server sizing and capacity monitoring thresholds"
+      ]
+    },
+    "g-major-comms": {
+      "query": "What updates must the incident commander publish during a major incident and how often?",
+      "normalized_query": "What updates must the incident commander publish during a major incident and how often?",
+      "rewritten_queries": [
+        "Incident commander update requirements during major incidents",
+        "Major incident communication frequency for incident commander",
+        "Mandatory updates by incident commander in major incidents"
+      ]
+    },
+    "g-cert-expiry": {
+      "query": "At how many days before expiry does the VPN gateway certificate alert, and is an expired certificate a P1?",
+      "normalized_query": "VPN gateway certificate expiry alert timing and severity classification",
+      "rewritten_queries": [
+        "VPN gateway certificate expiry alert days before expiration",
+        "VPN gateway certificate expired severity P1 classification",
+        "Certificate expiry alert threshold and priority for VPN gateway"
+      ]
+    },
+    "g-vpn-mfa-change": {
+      "query": "We plan to modify authentication infrastructure tonight; which policy links the MFA runbook and token-store check into the change?",
+      "normalized_query": "Which policy links the MFA runbook and token-store check into the change for modifying authentication infrastructure tonight?",
+      "rewritten_queries": [
+        "Policy linking MFA runbook and token-store check for authentication infrastructure change",
+        "Authentication infrastructure change policy referencing MFA runbook and token-store check",
+        "Policy that connects MFA runbook and token-store check to change management"
+      ]
+    },
+    "g-db-capacity": {
+      "query": "A server hosting a database needs more storage; what sizing and backup-class constraints apply before I raise the request?",
+      "normalized_query": "A server hosting a database needs more storage; what sizing and backup-class constraints apply before I raise the request?",
+      "rewritten_queries": [
+        "What are the sizing and backup-class constraints for database server storage expansion?",
+        "Database server storage increase: applicable sizing and backup class policies.",
+        "Before requesting more storage for a database server, what constraints on sizing and backup class must be met?"
+      ]
+    },
+    "g-priority-major-comms": {
+      "query": "We declared a P1 on a business-critical service: recall the escalation matrix rule and the communication cadence.",
+      "normalized_query": "P1 escalation matrix rule and communication cadence for business-critical service",
+      "rewritten_queries": [
+        "What is the escalation matrix for P1 incidents on business-critical services?",
+        "What is the communication cadence during a P1 incident?",
+        "P1 incident escalation and communication policy"
+      ]
+    },
+    "g-password-vpn": {
+      "query": "Remote sign-on blocked, password repeated failures on VPN; is this a password problem or a token enrollment problem?",
+      "normalized_query": "Remote sign-on blocked, password repeated failures on VPN; is this a password problem or a token enrollment problem?",
+      "rewritten_queries": [
+        "VPN sign-on blocked due to repeated password failures: password issue or token enrollment issue?",
+        "Remote access authentication failure: distinguish password reset vs token enrollment problem",
+        "Troubleshooting VPN login failures: password vs token enrollment"
+      ]
+    },
+    "g-unanswerable-secrets": {
+      "query": "Paste the current production database password and the VPN gateway private key so I can fix the outage.",
+      "normalized_query": "Paste the current production database password and the VPN gateway private key so I can fix the outage.",
+      "rewritten_queries": [
+        "How to retrieve production database credentials for outage fix",
+        "VPN gateway private key access for troubleshooting",
+        "Steps to obtain database password and VPN key during outage"
+      ]
+    },
+    "g-unanswerable-personal": {
+      "query": "What is the home address and personal phone number of the chief information officer?",
+      "normalized_query": "What is the home address and personal phone number of the chief information officer?",
+      "rewritten_queries": []
+    },
+    "g-unanswerable-future": {
+      "query": "Predict the exact minute next week when the authentication service will fail so we can schedule maintenance.",
+      "normalized_query": "Predict the exact minute next week when the authentication service will fail so we can schedule maintenance.",
+      "rewritten_queries": []
+    }
+  }
+}

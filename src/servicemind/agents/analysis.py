@@ -11,6 +11,8 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field
 
 from core import get_model, settings
+from servicemind.context.builder import redact_for_model
+from servicemind.context.contracts import ContextEnvelope
 from servicemind.domain.analysis import (
     AnalysisClaim,
     AnalysisResult,
@@ -38,6 +40,7 @@ class AnalysisQualityReport(BaseModel):
 
 class AnalysisAgentState(TypedDict, total=False):
     invocation: AgentInvocationContext | None
+    context_envelope: ContextEnvelope | None
     evidence: JoinedEvidence
     goal: str
     request_write: bool
@@ -66,7 +69,9 @@ class AnalysisAgent:
         graph.add_conditional_edges(
             "check", self._after_check, {"revise": "revise", "finish": END}
         )
-        graph.add_edge("revise", "check")
+        graph.add_conditional_edges(
+            "revise", self._after_revise, {"check": "check", "finish": END}
+        )
         return graph.compile()
 
     def _payload(self, state: AnalysisAgentState) -> list[dict[str, Any]]:
@@ -93,6 +98,21 @@ class AnalysisAgent:
             if feedback
             else ""
         )
+        envelope = state.get("context_envelope")
+        model_input: dict[str, Any] = (
+            {
+                "ticket_id": state["ticket_id"],
+                "request_write": state["request_write"],
+                "governed_context": envelope.model_payload(),
+            }
+            if envelope is not None
+            else {
+                "goal": state["goal"],
+                "ticket_id": state["ticket_id"],
+                "request_write": state["request_write"],
+                "evidence": self._payload(state),
+            }
+        )
         result = await runnable.ainvoke(
             [
                 SystemMessage(
@@ -109,15 +129,9 @@ class AnalysisAgent:
                     )
                 ),
                 HumanMessage(
-                    content=json.dumps(
-                        {
-                            "goal": state["goal"],
-                            "ticket_id": state["ticket_id"],
-                            "request_write": state["request_write"],
-                            "evidence": self._payload(state),
-                        },
-                        ensure_ascii=False,
-                    )
+                    content=redact_for_model(
+                        json.dumps(model_input, ensure_ascii=False)
+                    ).text
                 ),
             ]
         )
@@ -213,6 +227,15 @@ class AnalysisAgent:
             return "finish"
         return "revise"
 
+    def _after_revise(self, state: AnalysisAgentState) -> str:
+        if state["result"].status is AnalysisStatus.DEGRADED:
+            # A revision *crash* already produced a DEGRADED result carrying the
+            # failure code and exception name. Re-running the quality check on that
+            # result would relabel it as a generic grounding failure and drop the
+            # signal, so terminate immediately instead of following the back-edge.
+            return "finish"
+        return "check"
+
     async def _revise_node(self, state: AnalysisAgentState) -> dict[str, Any]:
         try:
             result = await self._model_analysis(state, feedback=state["quality"].issues)
@@ -244,10 +267,12 @@ class AnalysisAgent:
         request_write: bool,
         ticket_id: int,
         invocation: AgentInvocationContext | None,
+        context_envelope: ContextEnvelope | None = None,
     ) -> dict[str, Any]:
         return await self.graph.ainvoke(
             {
                 "invocation": invocation,
+                "context_envelope": context_envelope,
                 "evidence": evidence,
                 "goal": goal,
                 "request_write": request_write,
@@ -265,6 +290,7 @@ class AnalysisAgent:
         goal: str,
         request_write: bool,
         ticket_id: int,
+        context_envelope: ContextEnvelope | None = None,
     ) -> AgentResultEnvelope[AnalysisResult]:
         invocation.ensure_active()
         started = time.perf_counter()
@@ -274,6 +300,7 @@ class AnalysisAgent:
             request_write=request_write,
             ticket_id=ticket_id,
             invocation=invocation,
+            context_envelope=context_envelope,
         )
         result = state["result"]
         degraded = result.status is AnalysisStatus.DEGRADED

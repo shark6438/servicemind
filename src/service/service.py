@@ -1,9 +1,10 @@
+import asyncio
 import inspect
 import json
 import logging
 import warnings
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import Annotated, Any
 from uuid import UUID, uuid4
 
@@ -89,6 +90,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Configurable lifespan that initializes the appropriate database checkpointer, store,
     and agents with async loading - for example for starting up MCP clients.
     """
+    recovery_task: asyncio.Task[None] | None = None
+
+    async def recover_in_background() -> None:
+        try:
+            recovered = await recover_incomplete_runs()
+            if recovered:
+                logger.info("Recovered %s incomplete ServiceMind runs", recovered)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("Background recovery worker failed")
+
     try:
         configure_telemetry()
         # Initialize both checkpointer (for short-term memory) and store (for long-term memory)
@@ -124,14 +137,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                 # Set store for long-term memory (cross-conversation knowledge)
                 agent.store = store
             if settings.DATABASE_TYPE == "postgres":
-                recovered = await recover_incomplete_runs()
-                if recovered:
-                    logger.info("Recovered %s incomplete ServiceMind runs", recovered)
+                # Recovery can involve GLPI, RAG and model calls. Run it under the
+                # application lifecycle without blocking readiness for every queued
+                # historical run.
+                recovery_task = asyncio.create_task(
+                    recover_in_background(), name="servicemind-startup-recovery"
+                )
             yield
     except Exception as e:
         logger.error(f"Error during database/store/agents initialization: {e}")
         raise
     finally:
+        if recovery_task is not None and not recovery_task.done():
+            recovery_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await recovery_task
         await close_database()
         shutdown_telemetry()
 

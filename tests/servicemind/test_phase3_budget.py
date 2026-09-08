@@ -18,9 +18,7 @@ def test_budget_snapshot_tracks_all_enforced_counters() -> None:
         max_tool_calls=6,
         deadline=datetime.now(UTC) + timedelta(minutes=5),
     )
-    control = RuntimeControl(
-        total_steps=4, replan_count=1, model_call_count=2, tool_call_count=3
-    )
+    control = RuntimeControl(total_steps=4, replan_count=1, model_call_count=2, tool_call_count=3)
     snapshot = BudgetController().snapshot(budget, control)
     assert snapshot.remaining_steps == 6
     assert snapshot.remaining_replans == 1
@@ -50,6 +48,22 @@ def test_budget_snapshot_tracks_all_enforced_counters() -> None:
             Budget(deadline=datetime.now(UTC) + timedelta(hours=1)),
             RuntimeControl(consecutive_failures=3),
             BudgetExceededCode.LOOP_GUARD_TRIGGERED,
+        ),
+        (
+            Budget(
+                max_model_calls=2,
+                deadline=datetime.now(UTC) + timedelta(hours=1),
+            ),
+            RuntimeControl(model_call_count=2),
+            BudgetExceededCode.BUDGET_EXCEEDED,
+        ),
+        (
+            Budget(
+                max_tool_calls=3,
+                deadline=datetime.now(UTC) + timedelta(hours=1),
+            ),
+            RuntimeControl(tool_call_count=3),
+            BudgetExceededCode.BUDGET_EXCEEDED,
         ),
     ],
 )

@@ -11,6 +11,12 @@ class ReviewDecision(StrEnum):
     REPLAN = "replan"
     REJECT = "reject"
     ESCALATE = "escalate"
+    # Terminal "cannot answer from available evidence": the reviewer is done probing
+    # (evidence retrieval already ran its extra round) and will neither fabricate an
+    # answer nor hand the case to a human -- the honest outcome is an explicit
+    # abstention. Distinct from ESCALATE (needs a person), RETRIEVE_MORE (another
+    # retrieval round is still worth it) and REPLAN (a re-synthesis could repair it).
+    ABSTAIN = "abstain"
 
 
 class RiskLevel(StrEnum):
@@ -33,6 +39,7 @@ class ReviewFinding(BaseModel):
         "tenant_scope",
         "action_consistency",
         "runtime",
+        "citation",
     ]
     reason_code: str = Field(min_length=1, max_length=100)
     explanation: str = Field(min_length=1, max_length=1000)

@@ -1,0 +1,64 @@
+{
+  "schema_version": "phase4-engineering-closure-v1.2",
+  "decided_at": "2026-09-08",
+  "status": "engineering_closed_with_quality_exception",
+  "phase5_eligible": true,
+  "enterprise_frontier_quality_certified": false,
+  "evidence_constraints": {
+    "tenant_production_query_logs_available": false,
+    "itsm_expert_qrels_available": false,
+    "expert_signoff_available": false,
+    "substitute": "pinned_public_proxy_and_automated_engineering_evidence"
+  },
+  "production": {
+    "postgresql": {
+      "documents": 39,
+      "parents": 441,
+      "children": 466,
+      "sources": {
+        "servicemind_internal_runbook": 3,
+        "pagerduty_incident_response_docs": 36,
+        "mendeley_help_desk_tickets_v3": 0
+      }
+    },
+    "opensearch_active_alias": {
+      "parents": 441,
+      "children": 466
+    }
+  },
+  "proxy_evaluation": {
+    "report": "evaluation/reports/phase4_proxy_release_latest.json",
+    "status": "failed",
+    "queries_total": 400,
+    "queries_scored_for_retrieval": 280,
+    "hybrid_bge_rerank": {
+      "recall_at_5": 0.6536,
+      "recall_at_10": 0.7,
+      "recall_at_20": 0.7536,
+      "mrr_at_10": 0.5541,
+      "ndcg_at_10": 0.5896
+    },
+    "failed_gates": [
+      "recall_at_5",
+      "recall_at_10",
+      "mrr_at_10",
+      "ndcg_at_10"
+    ]
+  },
+  "verification": {
+    "tests": {
+      "passed": 364,
+      "skipped": 6,
+      "failed": 0
+    },
+    "phase4_rag_live_smoke": "passed",
+    "external_dataset_integrity": "passed"
+  },
+  "deferred_release_evidence": [
+    "tenant-domain graded qrels and expert agreement",
+    "claim-to-citation-span semantic completeness audit",
+    "EnterpriseOps-Gym GLPI final-state adapter benchmark",
+    "AgentDojo and ServiceMind adversarial security benchmark",
+    "100k/500k/1m chunk capacity and high-availability test"
+  ]
+}

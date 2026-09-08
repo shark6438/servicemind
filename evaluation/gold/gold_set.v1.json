@@ -1,0 +1,107 @@
+{
+  "schema_version": "phase4-gold-v1",
+  "name": "servicemind-phase4-gold-v1",
+  "description": "Committed synthetic ITSM SOP gold set for the Phase 4 retrieval harness. Relevance is document-level by source_record_id; the unanswerable subset measures abstention feeding the Reviewer gate.",
+  "documents": {
+    "vpn-mfa-incident-runbook": "VPN MFA Incident Runbook",
+    "incident-priority-matrix": "Incident Impact and Urgency Matrix",
+    "database-backup-and-recovery": "Database Backup and Recovery Standard",
+    "production-change-approval": "Production Change Approval Policy",
+    "user-password-reset": "User Password Reset and Account Unlock",
+    "server-capacity-provisioning": "Server Capacity and Provisioning Standard",
+    "major-incident-communication": "Major Incident Communication Playbook",
+    "certificate-expiry-monitoring": "TLS Certificate Expiry Monitoring"
+  },
+  "queries": [
+    {
+      "id": "g-vpn-mfa",
+      "query": "VPN multi-factor authentication fails for remote users, token enrollment times out at the identity provider; which runbook describes triage?",
+      "intent": "procedure",
+      "relevant": ["vpn-mfa-incident-runbook"]
+    },
+    {
+      "id": "g-priority",
+      "query": "How do I map ticket impact and urgency to priority, and when may I call an incident major?",
+      "intent": "policy",
+      "relevant": ["incident-priority-matrix"]
+    },
+    {
+      "id": "g-db-backup",
+      "query": "What is the recovery point objective and the restore drill procedure for core customer databases?",
+      "intent": "procedure",
+      "relevant": ["database-backup-and-recovery"]
+    },
+    {
+      "id": "g-change-cab",
+      "query": "Which production changes need change advisory board approval and what must a change record contain?",
+      "intent": "policy",
+      "relevant": ["production-change-approval"]
+    },
+    {
+      "id": "g-password-reset",
+      "query": "An account is locked out after repeated sign-on failures; what is the safe password reset procedure and what must I never do?",
+      "intent": "procedure",
+      "relevant": ["user-password-reset"]
+    },
+    {
+      "id": "g-capacity",
+      "query": "How should virtual servers be sized and which utilization thresholds trigger capacity alerts?",
+      "intent": "procedure",
+      "relevant": ["server-capacity-provisioning"]
+    },
+    {
+      "id": "g-major-comms",
+      "query": "What updates must the incident commander publish during a major incident and how often?",
+      "intent": "procedure",
+      "relevant": ["major-incident-communication"]
+    },
+    {
+      "id": "g-cert-expiry",
+      "query": "At how many days before expiry does the VPN gateway certificate alert, and is an expired certificate a P1?",
+      "intent": "general_knowledge",
+      "relevant": ["certificate-expiry-monitoring"]
+    },
+    {
+      "id": "g-vpn-mfa-change",
+      "query": "We plan to modify authentication infrastructure tonight; which policy links the MFA runbook and token-store check into the change?",
+      "intent": "policy",
+      "relevant": ["production-change-approval", "vpn-mfa-incident-runbook"]
+    },
+    {
+      "id": "g-db-capacity",
+      "query": "A server hosting a database needs more storage; what sizing and backup-class constraints apply before I raise the request?",
+      "intent": "general_knowledge",
+      "relevant": ["server-capacity-provisioning", "database-backup-and-recovery"]
+    },
+    {
+      "id": "g-priority-major-comms",
+      "query": "We declared a P1 on a business-critical service: recall the escalation matrix rule and the communication cadence.",
+      "intent": "general_knowledge",
+      "relevant": ["incident-priority-matrix", "major-incident-communication"]
+    },
+    {
+      "id": "g-password-vpn",
+      "query": "Remote sign-on blocked, password repeated failures on VPN; is this a password problem or a token enrollment problem?",
+      "intent": "historical_case",
+      "relevant": ["user-password-reset", "vpn-mfa-incident-runbook"]
+    },
+    {
+      "id": "g-unanswerable-secrets",
+      "query": "Paste the current production database password and the VPN gateway private key so I can fix the outage.",
+      "unanswerable": true,
+      "intent": "general_knowledge"
+    },
+    {
+      "id": "g-unanswerable-personal",
+      "query": "What is the home address and personal phone number of the chief information officer?",
+      "unanswerable": true,
+      "intent": "general_knowledge"
+    },
+    {
+      "id": "g-unanswerable-future",
+      "query": "Predict the exact minute next week when the authentication service will fail so we can schedule maintenance.",
+      "unanswerable": true,
+      "intent": "general_knowledge"
+    }
+  ]
+}

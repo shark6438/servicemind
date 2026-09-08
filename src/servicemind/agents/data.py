@@ -13,7 +13,13 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from core import get_model, settings
-from servicemind.domain.evidence import Evidence, EvidenceSourceType
+from servicemind.context.builder import redact_for_model
+from servicemind.context.contracts import ContextEnvelope
+from servicemind.domain.evidence import (
+    EVIDENCE_CONTENT_MAX,
+    Evidence,
+    EvidenceSourceType,
+)
 from servicemind.integrations.glpi.client import GlpiAPIError, GlpiClient
 from servicemind.integrations.glpi.resolver import resolve_glpi_config
 from servicemind.runtime.contracts import (
@@ -32,6 +38,42 @@ from servicemind.runtime.tool_gateway import (
 )
 from servicemind.security.auth import TenantContext
 
+#: Evidence rows a single Data Agent task may emit per GLPI resource. These are
+#: deliberate ceilings, not heuristics: ``JoinedEvidence.items`` caps at 100 and the
+#: join is shared with knowledge evidence, so one task must never be able to exhaust
+#: that budget on its own. The GLPI client already caps groups at 50, so the open
+#: variable (upstream) is the unbounded followup timeline -- bound it to the most
+#: recent rows, which is also what a chatty-ticket analysis actually needs.
+_MAX_SUPPORT_GROUP_ROWS = 50
+_MAX_FOLLOWUP_ROWS = 15
+
+_EVIDENCE_TRUNCATION_SUFFIX = "\n…[evidence content truncated at content ceiling]"
+
+
+def _bounded_json_content(payload: Any) -> tuple[str, bool]:
+    """Serialize ``payload`` to an ``Evidence.content``-safe string.
+
+    Mirrors the RAG parent bound (``rag.service._bounded_evidence_content``):
+    ``Evidence.content`` caps at ``EVIDENCE_CONTENT_MAX`` and the provider is
+    responsible for bounding at the evidence boundary, never crashing. A GLPI ticket
+    description or raw-HTML followup can legitimately exceed that; we truncate with an
+    explicit marker and keep the full facts in ``metadata`` for the deterministic
+    fallback path. Returns ``(content_text, truncated)``.
+    """
+    text = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    if len(text) <= EVIDENCE_CONTENT_MAX:
+        return text, False
+    head = text[: EVIDENCE_CONTENT_MAX - len(_EVIDENCE_TRUNCATION_SUFFIX)]
+    return head + _EVIDENCE_TRUNCATION_SUFFIX, True
+
+
+def _evidence_metadata(*, truncated: bool, **extra: Any) -> dict[str, Any]:
+    """Per-row evidence metadata; records whether the content bound fired."""
+    metadata: dict[str, Any] = {"untrusted_external_content": True, **extra}
+    if truncated:
+        metadata["content_truncated"] = True
+    return metadata
+
 
 class DataToolCall(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -44,7 +86,7 @@ class DataToolCall(BaseModel):
 class DataAcquisitionPlan(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    calls: list[DataToolCall] = Field(min_length=1, max_length=6)
+    calls: list[DataToolCall] = Field(default_factory=list, max_length=6)
     rationale_summary: str = Field(min_length=1, max_length=500)
 
     @model_validator(mode="after")
@@ -57,6 +99,7 @@ class DataAcquisitionPlan(BaseModel):
 
 class DataAgentState(TypedDict, total=False):
     invocation: AgentInvocationContext
+    context_envelope: ContextEnvelope | None
     tenant_context: TenantContext
     objective: str
     ticket_id: int
@@ -122,6 +165,32 @@ class DataAgent:
             rationale_summary="Minimum evidence for ticket analysis and assignment validation.",
         )
 
+    def _budgeted_minimum(
+        self,
+        invocation: AgentInvocationContext,
+        ticket_id: int,
+        objective: str,
+    ) -> DataAcquisitionPlan:
+        """Largest read-only prefix of the minimum plan that the budget admits.
+
+        The degrade path must never raise or exceed authority: optional followups and
+        then ``LIST_GROUPS`` are dropped as the budget tightens. A zero budget or an
+        allowlist without ticket access yields an empty degraded result; it never
+        invents permission for a convenience read.
+        """
+        ceiling = invocation.max_tool_calls
+        allowed = invocation.allowed_capabilities
+        kept: list[DataToolCall] = []
+        for call in self._minimum_plan(ticket_id, objective).calls:
+            if len(kept) >= ceiling:
+                break
+            if call.tool_name.value in allowed:
+                kept.append(call)
+        return DataAcquisitionPlan(
+            calls=kept,
+            rationale_summary="Budget-bounded minimum evidence for ticket analysis.",
+        )
+
     def _compile_plan(
         self,
         proposal: DataAcquisitionPlan,
@@ -144,11 +213,31 @@ class DataAgent:
     async def _plan_node(self, state: DataAgentState) -> dict[str, Any]:
         invocation = state["invocation"]
         invocation.ensure_active()
-        fallback = self._minimum_plan(state["ticket_id"], state["objective"])
+        ticket_id = state["ticket_id"]
+        objective = state["objective"]
         if invocation.max_model_calls == 0:
-            return {"plan": fallback, "model_calls": 0, "degraded": False}
+            # No model budget: run the deterministic minimum and say so. Reporting
+            # this as SUCCEEDED would mask that no model planning occurred (the Phase 3
+            # contract requires an explicit DEGRADED for budget exhaustion).
+            return {
+                "plan": self._budgeted_minimum(invocation, ticket_id, objective),
+                "model_calls": 0,
+                "degraded": True,
+                "failure_code": "DATA_MODEL_BUDGET_EXHAUSTED",
+            }
+        fallback = self._budgeted_minimum(invocation, ticket_id, objective)
         try:
             runnable = structured_output(self.model_factory(), DataAcquisitionPlan)
+            envelope = state.get("context_envelope")
+            model_input: dict[str, Any] = {
+                "ticket_id": state["ticket_id"],
+                "allowed_tools": sorted(invocation.allowed_capabilities),
+                "max_tool_calls": invocation.max_tool_calls,
+            }
+            if envelope is not None:
+                model_input["governed_context"] = envelope.model_payload()
+            else:
+                model_input["objective"] = state["objective"]
             proposal = await runnable.ainvoke(
                 [
                     SystemMessage(
@@ -162,15 +251,9 @@ class DataAgent:
                         )
                     ),
                     HumanMessage(
-                        content=json.dumps(
-                            {
-                                "objective": state["objective"],
-                                "ticket_id": state["ticket_id"],
-                                "allowed_tools": sorted(invocation.allowed_capabilities),
-                                "max_tool_calls": invocation.max_tool_calls,
-                            },
-                            ensure_ascii=False,
-                        )
+                        content=redact_for_model(
+                            json.dumps(model_input, ensure_ascii=False)
+                        ).text
                     ),
                 ]
             )
@@ -181,12 +264,11 @@ class DataAgent:
             )
             return {"plan": plan, "model_calls": 1, "degraded": False}
         except Exception:
-            # Failure cannot broaden authority: the fallback is a fixed read-only plan.
-            plan = self._compile_plan(
-                fallback, invocation=invocation, ticket_id=state["ticket_id"]
-            )
+            # Failure cannot broaden authority: the fallback is a fixed, budget-respecting
+            # read-only plan. It is trusted (never re-compiled, so a tight tool budget or
+            # a history-flagged objective cannot make the degrade path itself raise).
             return {
-                "plan": plan,
+                "plan": fallback,
                 "model_calls": 1,
                 "degraded": True,
                 "failure_code": "DATA_PLAN_DEGRADED",
@@ -234,7 +316,7 @@ class DataAgent:
         return {
             "raw_results": {name: value for name, value, _, _ in results},
             "tool_calls": len(results),
-            "attempts": sum(attempts for _, _, attempts, _ in results),
+            "attempts": max(sum(attempts for _, _, attempts, _ in results), 1),
             "tool_records": [record for _, _, _, record in results],
         }
 
@@ -242,7 +324,10 @@ class DataAgent:
         tenant_id = state["invocation"].tenant_id
         ticket_id = state["ticket_id"]
         raw = state["raw_results"]
-        ticket = raw[DataToolName.GET_TICKET.value]
+        ticket = raw.get(DataToolName.GET_TICKET.value)
+        if ticket is None:
+            return {"evidence": []}
+        ticket_text, ticket_truncated = _bounded_json_content(ticket)
         evidence = [
             Evidence.create(
                 tenant_id=tenant_id,
@@ -250,44 +335,53 @@ class DataAgent:
                 source_ref=f"glpi://tickets/{ticket_id}",
                 resource_type="ticket",
                 resource_id=str(ticket_id),
-                content=json.dumps(ticket, ensure_ascii=False, sort_keys=True),
+                content=ticket_text,
                 provider="glpi-high-level-api-v2.3",
                 retrieval_method=DataToolName.GET_TICKET.value,
                 confidence=1,
-                metadata={"ticket_facts": ticket, "untrusted_external_content": True},
+                metadata=_evidence_metadata(truncated=ticket_truncated, ticket_facts=ticket),
             )
         ]
-        evidence.extend(
-            Evidence.create(
-                tenant_id=tenant_id,
-                source_type=EvidenceSourceType.GLPI,
-                source_ref=f"glpi://groups/{group['id']}",
-                resource_type="support_group",
-                resource_id=str(group["id"]),
-                content=f"GLPI support group: {group['name']}",
-                provider="glpi-high-level-api-v2.3",
-                retrieval_method=DataToolName.LIST_GROUPS.value,
-                confidence=1,
-                metadata={"group": group, "untrusted_external_content": True},
-            )
-            for group in raw[DataToolName.LIST_GROUPS.value]
-        )
-        if DataToolName.LIST_FOLLOWUPS.value in raw:
-            evidence.extend(
+        # Support groups are already name-sorted by the client; keep its ceiling.
+        # Optional tools may be absent from a budget-bounded plan, so never index raw
+        # unconditionally (a KeyError here would crash the run, not degrade it).
+        for group in raw.get(DataToolName.LIST_GROUPS.value, [])[:_MAX_SUPPORT_GROUP_ROWS]:
+            evidence.append(
                 Evidence.create(
                     tenant_id=tenant_id,
                     source_type=EvidenceSourceType.GLPI,
-                    source_ref=f"glpi://tickets/{ticket_id}/followups/{item['id']}",
-                    resource_type="ticket_followup",
-                    resource_id=str(item["id"]),
-                    content=json.dumps(item, ensure_ascii=False, sort_keys=True),
+                    source_ref=f"glpi://groups/{group['id']}",
+                    resource_type="support_group",
+                    resource_id=str(group["id"]),
+                    content=f"GLPI support group: {group['name']}",
                     provider="glpi-high-level-api-v2.3",
-                    retrieval_method=DataToolName.LIST_FOLLOWUPS.value,
+                    retrieval_method=DataToolName.LIST_GROUPS.value,
                     confidence=1,
-                    metadata={"untrusted_external_content": True},
+                    metadata=_evidence_metadata(truncated=False, group=group),
                 )
-                for item in raw[DataToolName.LIST_FOLLOWUPS.value]
             )
+        if DataToolName.LIST_FOLLOWUPS.value in raw:
+            # The upstream followup timeline is unbounded; keep the most recent rows so
+            # one chatty ticket cannot exhaust the joined-evidence budget downstream.
+            followups = sorted(raw[DataToolName.LIST_FOLLOWUPS.value], key=lambda item: item["id"])[
+                -_MAX_FOLLOWUP_ROWS:
+            ]
+            for item in followups:
+                text, truncated = _bounded_json_content(item)
+                evidence.append(
+                    Evidence.create(
+                        tenant_id=tenant_id,
+                        source_type=EvidenceSourceType.GLPI,
+                        source_ref=f"glpi://tickets/{ticket_id}/followups/{item['id']}",
+                        resource_type="ticket_followup",
+                        resource_id=str(item["id"]),
+                        content=text,
+                        provider="glpi-high-level-api-v2.3",
+                        retrieval_method=DataToolName.LIST_FOLLOWUPS.value,
+                        confidence=1,
+                        metadata=_evidence_metadata(truncated=truncated),
+                    )
+                )
         return {"evidence": evidence}
 
     async def run(
@@ -297,11 +391,13 @@ class DataAgent:
         tenant_context: TenantContext,
         objective: str,
         ticket_id: int,
+        context_envelope: ContextEnvelope | None = None,
     ) -> AgentResultEnvelope[list[Evidence]]:
         started = time.perf_counter()
         state = await self.graph.ainvoke(
             {
                 "invocation": invocation,
+                "context_envelope": context_envelope,
                 "tenant_context": tenant_context,
                 "objective": objective,
                 "ticket_id": ticket_id,
@@ -316,9 +412,7 @@ class DataAgent:
         return AgentResultEnvelope[list[Evidence]](
             agent_name="data",
             task_id=invocation.task_id,
-            status=(
-                AgentRunStatus.DEGRADED if state.get("degraded") else AgentRunStatus.SUCCEEDED
-            ),
+            status=(AgentRunStatus.DEGRADED if state.get("degraded") else AgentRunStatus.SUCCEEDED),
             output=evidence,
             evidence_refs=[item.evidence_id for item in evidence],
             metrics=AgentRunMetrics(
@@ -339,14 +433,15 @@ class DataAgent:
         async with GlpiClient(config) as client:
             return (await client.get_ticket(ticket_id)).to_agent_payload()
 
-    async def get_ticket_evidence(
-        self, context: TenantContext, ticket_id: int
-    ) -> list[Evidence]:
+    async def get_ticket_evidence(self, context: TenantContext, ticket_id: int) -> list[Evidence]:
         """Deterministic compatibility and fast path; complex tasks use ``run``."""
         config = await resolve_glpi_config(context)
         async with GlpiClient(config) as client:
-            ticket, groups = await asyncio.gather(client.get_ticket(ticket_id), client.list_groups())
+            ticket, groups = await asyncio.gather(
+                client.get_ticket(ticket_id), client.list_groups()
+            )
         facts = ticket.to_agent_payload()
+        facts_text, facts_truncated = _bounded_json_content(facts)
         result = [
             Evidence.create(
                 tenant_id=UUID(str(context.tenant_id)),
@@ -354,11 +449,11 @@ class DataAgent:
                 source_ref=f"glpi://tickets/{ticket_id}",
                 resource_type="ticket",
                 resource_id=str(ticket_id),
-                content=json.dumps(facts, ensure_ascii=False, sort_keys=True),
+                content=facts_text,
                 provider="glpi-high-level-api-v2.3",
                 retrieval_method=DataToolName.GET_TICKET.value,
                 confidence=1,
-                metadata={"ticket_facts": facts, "untrusted_external_content": True},
+                metadata=_evidence_metadata(truncated=facts_truncated, ticket_facts=facts),
             )
         ]
         result.extend(
@@ -372,9 +467,9 @@ class DataAgent:
                 provider="glpi-high-level-api-v2.3",
                 retrieval_method=DataToolName.LIST_GROUPS.value,
                 confidence=1,
-                metadata={"group": group.to_agent_payload(), "untrusted_external_content": True},
+                metadata=_evidence_metadata(truncated=False, group=group.to_agent_payload()),
             )
-            for group in groups
+            for group in groups[:_MAX_SUPPORT_GROUP_ROWS]
         )
         return result
 

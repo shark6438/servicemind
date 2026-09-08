@@ -6,8 +6,10 @@ import hashlib
 import json
 from pathlib import Path
 
+from fetch_phase4_eval import restore_agentdojo, restore_enterpriseops, restore_techqa
+
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "data" / "phase4" / "manifests" / "sources.v1.json"
+MANIFEST = ROOT / "data" / "phase4" / "manifests" / "sources.v1.2.json"
 
 
 def digest(path: Path) -> str:
@@ -43,36 +45,26 @@ def main() -> None:
         ROOT / "data/phase4/raw/production/pagerduty-incident-response-docs-master.zip",
         by_id["pagerduty-incident-response-docs"]["archive_sha256"],
     )
-    require_hash(
-        ROOT / "data/phase4/raw/reference/ibm-enterprise-itsm-graph-rag-main.zip",
-        by_id["ibm-enterprise-itsm-graph-rag"]["archive_sha256"],
-    )
-    require_hash(
-        ROOT / "data/phase4/raw/reference/uci-incident-management-498/incident_event_log.csv",
-        by_id["uci-incident-management-498"]["csv_sha256"],
-    )
-    require_hash(
-        ROOT / "data/phase4/raw/eval/agentdojo-main.zip",
-        by_id["agentdojo"]["archive_sha256"],
-    )
-
-    required_paths = [
-        "data/phase4/raw/eval/techqa-rag-eval/train.json",
-        "data/phase4/raw/eval/techqa-rag-eval/corpus.zip",
-        "data/phase4/raw/eval/enterpriseops-gym-itsm/oracle/itsm-00000-of-00001.parquet",
-        "data/phase4/raw/eval/classification-7648117/X_train.csv",
-        "data/phase4/raw/eval/semantic-similarity-7426225/group_1.csv",
-    ]
-    missing = [path for path in required_paths if not (ROOT / path).is_file()]
-    if missing:
-        raise FileNotFoundError(f"Missing Phase 4 artifacts: {missing}")
+    external = {
+        "techqa": restore_techqa(verify_only=True),
+        "enterpriseops": restore_enterpriseops(verify_only=True),
+        "agentdojo": restore_agentdojo(verify_only=True),
+    }
 
     print(
         json.dumps(
             {
                 "status": "passed",
+                "manifest_version": manifest["manifest_version"],
                 "verified_mendeley_files": len(mendeley["files"]),
-                "verified_pinned_archives": 3,
+                "mendeley_production_allowed": mendeley["production_allowed"],
+                "external_evaluation": external,
+                "optional_missing_sources": sorted(
+                    item["id"]
+                    for group in ("reference_sources", "evaluation_sources")
+                    for item in manifest[group]
+                    if item.get("download_status", "").startswith("files_missing")
+                ),
                 "safety_bench": by_id["servicenow-itsm-safety-bench"]["download_status"],
             },
             indent=2,

@@ -25,9 +25,9 @@ class BudgetController:
             raise BudgetExceeded(BudgetExceededCode.BUDGET_EXCEEDED)
         if control.replan_count > budget.max_replans:
             raise BudgetExceeded(BudgetExceededCode.REPLAN_LIMIT_EXCEEDED)
-        if control.model_call_count > budget.max_model_calls:
+        if control.model_call_count >= budget.max_model_calls:
             raise BudgetExceeded(BudgetExceededCode.BUDGET_EXCEEDED)
-        if control.tool_call_count > budget.max_tool_calls:
+        if control.tool_call_count >= budget.max_tool_calls:
             raise BudgetExceeded(BudgetExceededCode.BUDGET_EXCEEDED)
         if control.consecutive_failures >= 3:
             raise BudgetExceeded(BudgetExceededCode.LOOP_GUARD_TRIGGERED)
@@ -36,12 +36,8 @@ class BudgetController:
         return BudgetSnapshot(
             remaining_steps=max(budget.max_steps - control.total_steps, 0),
             remaining_replans=max(budget.max_replans - control.replan_count, 0),
-            remaining_model_calls=max(
-                budget.max_model_calls - control.model_call_count, 0
-            ),
-            remaining_tool_calls=max(
-                budget.max_tool_calls - control.tool_call_count, 0
-            ),
+            remaining_model_calls=max(budget.max_model_calls - control.model_call_count, 0),
+            remaining_tool_calls=max(budget.max_tool_calls - control.tool_call_count, 0),
             deadline=budget.deadline,
         )
 

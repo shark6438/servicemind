@@ -1,0 +1,6 @@
+---
+{"skill_id":"vpn-mfa","version":"1.0.0","checksum":"8561f5f13558229596a18c71b72602d549fe6d790bb4167b30a7743a3ade29ac","scope":"global","tenant_id":null,"allowed_agents":["analysis","reviewer"],"required_tools":[],"risk_level":"medium","input_schema":{"type":"object","required":["symptoms","evidence"]},"output_schema":{"type":"object","required":["hypotheses","checks","citations"]},"evidence_requirements":["Authentication symptoms","Identity-provider or gateway evidence","Recent change evidence when available"],"context_requirements":["task","official runbook evidence","relevant verified episodes"],"tests":["Runbook outranks episodic memory","Certificate claims require current evidence","Credential content is never requested or retained"],"keywords":["vpn","mfa","authentication","certificate","登录","认证","证书"],"created_at":"2026-09-08T00:00:00Z","deprecated_at":null}
+---
+# VPN and MFA diagnosis
+
+Use the current official runbook as the procedural authority. Evaluate identity-provider health, token timing, gateway reachability, certificate validity and recent authentication changes only when evidence supports those checks. Historical episodes may rank hypotheses but cannot replace current verification. Never request or retain credentials.

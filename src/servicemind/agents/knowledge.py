@@ -52,6 +52,8 @@ class KnowledgeState(TypedDict, total=False):
     profile_ids: set[int]
     evidence: list[Evidence]
     retrieval_round: int
+    use_query_model: bool
+    model_query: str | None
 
 
 class KnowledgeAgent:
@@ -83,9 +85,24 @@ class KnowledgeAgent:
             result = await self.rag.retrieve(
                 principal=principal,
                 query=state["query"],
+                model_query=state.get("model_query"),
+                use_query_model=state.get("use_query_model", True),
                 final_k=10 if state.get("retrieval_round", 0) else 8,
+                # Fan the processed query's LLM rewrites out to their own BM25 arms
+                # on top of the single dense anchor (cluster-side RRF merges them;
+                # OpenSearch caps hybrid at 5 arms). Safe even when the rewrite stage
+                # is disabled -- _fan_out_texts then degrades to the two-arm request.
+                use_rewrites=settings.SERVICEMIND_RAG_MULTI_QUERY,
             )
-            return {"evidence": self.rag.to_evidence(state["tenant_id"], result)}
+            evidence = self.rag.to_evidence(state["tenant_id"], result)
+            if self.rag.graph_store is not None:
+                # Graph findings are a structural side channel appended after text
+                # evidence; text hybrid retrieval stays the primary knowledge source.
+                evidence = [
+                    *evidence,
+                    *await self.rag.graph_evidence(principal, result),
+                ]
+            return {"evidence": evidence}
         if settings.SERVICEMIND_RAG_REQUIRED:
             raise RuntimeError("Enterprise RAG is required but disabled")
         return {
@@ -104,6 +121,8 @@ class KnowledgeAgent:
         entity_ids: set[int] | None = None,
         group_ids: set[int] | None = None,
         profile_ids: set[int] | None = None,
+        use_query_model: bool = True,
+        model_query: str | None = None,
     ) -> list[Evidence]:
         result = await self.graph.ainvoke(
             {
@@ -114,6 +133,8 @@ class KnowledgeAgent:
                 "entity_ids": entity_ids or set(),
                 "group_ids": group_ids or set(),
                 "profile_ids": profile_ids or set(),
+                "use_query_model": use_query_model,
+                "model_query": model_query,
             }
         )
         return result["evidence"]

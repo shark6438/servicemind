@@ -1,0 +1,6 @@
+---
+{"skill_id":"major-incident","version":"1.0.0","checksum":"3325dd8b521955509596d466bae75957ca1aad3dd2f42a3f82d00bf6d8c7b512","scope":"global","tenant_id":null,"allowed_agents":["analysis","reviewer"],"required_tools":[],"risk_level":"critical","input_schema":{"type":"object","required":["impact","services","evidence"]},"output_schema":{"type":"object","required":["severity","coordination","communications","citations"]},"evidence_requirements":["Broad impact evidence","Critical service evidence","Current incident state"],"context_requirements":["task","major incident policy","verified evidence"],"tests":["Critical severity always requires human control","Unverified user count is not repeated as fact","Action is blocked until approval"],"keywords":["major","p1","critical","outage","重大","中断","大面积"],"created_at":"2026-09-08T00:00:00Z","deprecated_at":null}
+---
+# Major incident coordination
+
+Classify a major incident only from verified scope, impact and critical-service evidence. Keep human incident command in control, surface uncertain facts clearly and attach citations to severity and communication recommendations. Execution remains blocked until the required approval is recorded.

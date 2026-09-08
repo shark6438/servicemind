@@ -12,3 +12,7 @@ This directory separates source material by authority and runtime purpose.
 Downloaded files are intentionally ignored by Git. Reproducibility is provided by the
 tracked manifest and download/verification scripts. A source may enter a production index
 only when its manifest says `production_allowed: true` and its license is verified.
+Mendeley Help Desk Tickets V3 is stored under `raw/reference/` and cannot enter the
+tenant production index; `scripts/ingest_phase4_rag.py --sources mendeley` is reserved
+for an isolated evaluation tenant/index and fails closed unless the operator also supplies
+`--allow-reference-sources`.

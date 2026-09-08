@@ -6,14 +6,18 @@ from uuid import UUID, uuid4
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -37,6 +41,21 @@ class ActionStatus(StrEnum):
     APPROVED = "approved"
     REJECTED = "rejected"
     EXECUTING = "executing"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
+class IngestionJobStatus(StrEnum):
+    """Lifecycle of one (tenant, source) ingestion run in ``knowledge_ingestion_jobs``.
+
+    A run is opened as ``running`` by ``begin_ingestion_job`` (attempts += 1) and
+    closed by ``complete_ingestion_job`` as ``succeeded`` or ``failed``. Rows are
+    keyed on ``(tenant_id, source)``: the register keeps the *latest* state of each
+    source, so a crashed pipeline never orphans a half-written document set and the
+    publish gate still has PostgreSQL's ``count_pending`` as its authority.
+    """
+
+    RUNNING = "running"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
 
@@ -69,10 +88,14 @@ class TenantMembership(Base):
 
 class GlpiIntegration(Base):
     __tablename__ = "glpi_integrations"
+    __table_args__ = (
+        UniqueConstraint("tenant_id"),
+        Index("ix_glpi_integrations_tenant_id", "tenant_id"),
+    )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("tenants.id"), unique=True, nullable=False, index=True
+        PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False
     )
     base_url: Mapped[str] = mapped_column(String(500), nullable=False)
     api_version: Mapped[str] = mapped_column(String(20), default="v2.3", nullable=False)
@@ -158,8 +181,8 @@ class ActionIntentRecord(Base):
     policy_version: Mapped[str | None] = mapped_column(String(100), nullable=True)
     review_digest: Mapped[str | None] = mapped_column(String(64), nullable=True)
     evidence_digest: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    evidence_refs: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
-    idempotency_context: Mapped[dict[str, str]] = mapped_column(JSON, default=dict, nullable=False)
+    evidence_refs: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=False)
+    idempotency_context: Mapped[dict[str, str]] = mapped_column(JSONB, default=dict, nullable=False)
     requested_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     dry_run_preview: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -249,7 +272,14 @@ class IdempotencyRecord(Base):
 
 class KnowledgeDocumentRecord(Base):
     __tablename__ = "knowledge_documents"
-    __table_args__ = (UniqueConstraint("tenant_id", "source", "source_record_id"),)
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "source", "source_record_id"),
+        # The publish gate (``count_pending``) and reconciliation query inside the
+        # RLS tenant window by ``tenant_id AND index_status``. This composite is
+        # owned by migration 0006; declared here (not as column ``index=True``) so
+        # create_all and the live schema agree instead of racing over the same name.
+        Index("ix_knowledge_documents_index_status", "tenant_id", "index_status"),
+    )
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
     tenant_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True
@@ -319,12 +349,24 @@ class KnowledgeChildChunkRecord(Base):
 
 class KnowledgeIngestionJob(Base):
     __tablename__ = "knowledge_ingestion_jobs"
+    __table_args__ = (
+        # One live register row per source: re-ingesting a source advances the same
+        # row (attempts += 1) instead of appending an audit log. Source history is
+        # the documents' own (versioned) rows; this table is the status register.
+        UniqueConstraint("tenant_id", "source"),
+    )
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True
     )
     source: Mapped[str] = mapped_column(String(100), nullable=False)
-    status: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(
+        String(40),
+        default=IngestionJobStatus.RUNNING.value,
+        server_default=IngestionJobStatus.RUNNING.value,
+        nullable=False,
+        index=True,
+    )
     attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     metrics: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
@@ -333,4 +375,174 @@ class KnowledgeIngestionJob(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+class MemoryRecordRow(Base):
+    __tablename__ = "memory_records"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "idempotency_key"),
+        UniqueConstraint(
+            "tenant_id", "scope_type", "scope_id", "memory_type", "subject_key", "version"
+        ),
+        CheckConstraint(
+            "memory_type IN ('semantic', 'episodic', 'procedural')",
+            name="ck_memory_records_type",
+        ),
+        CheckConstraint(
+            "status IN ('candidate', 'quarantine', 'active', 'superseded', 'revoked', 'expired')",
+            name="ck_memory_records_status",
+        ),
+        CheckConstraint("confidence >= 0 AND confidence <= 1", name="ck_memory_confidence"),
+        CheckConstraint("importance >= 0 AND importance <= 1", name="ck_memory_importance"),
+        CheckConstraint(
+            "(scope_type = 'tenant' AND scope_id IS NULL) OR "
+            "(scope_type <> 'tenant' AND scope_id IS NOT NULL)",
+            name="ck_memory_scope_id",
+        ),
+        Index(
+            "ix_memory_records_retrieval",
+            "tenant_id",
+            "status",
+            "memory_type",
+            "scope_type",
+            "scope_id",
+        ),
+        Index(
+            "ix_memory_records_subject",
+            "tenant_id",
+            "scope_type",
+            "scope_id",
+            "memory_type",
+            "subject_key",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False
+    )
+    lineage_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    scope_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    scope_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    memory_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    semantic_subtype: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    subject_key: Mapped[str] = mapped_column(String(500), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_run_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="SET NULL"), nullable=True
+    )
+    source_trace_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    evidence_refs: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list, nullable=False)
+    supporting_episode_ids: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    importance: Mapped[float] = mapped_column(Float, nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    valid_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    provenance: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    taint_labels: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    consent_ref: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    activation_reason: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+class MemoryEventRecord(Base):
+    __tablename__ = "memory_events"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True
+    )
+    memory_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("memory_records.id", ondelete="CASCADE"), nullable=False
+    )
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    reason_codes: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class ModelInvocationRecord(Base):
+    __tablename__ = "model_invocations"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "request_id"),
+        CheckConstraint("input_tokens >= 0 AND output_tokens >= 0", name="ck_model_tokens"),
+        CheckConstraint("latency_ms >= 0 AND cost_usd >= 0", name="ck_model_accounting"),
+        Index("ix_model_invocations_run", "tenant_id", "run_id", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False
+    )
+    request_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    run_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="SET NULL"), nullable=True
+    )
+    task_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    agent_role: Mapped[str] = mapped_column(String(80), nullable=False)
+    purpose: Mapped[str] = mapped_column(String(80), nullable=False)
+    provider: Mapped[str] = mapped_column(String(80), nullable=False)
+    model: Mapped[str] = mapped_column(String(255), nullable=False)
+    model_revision: Mapped[str] = mapped_column(String(255), nullable=False)
+    route_reason: Mapped[str] = mapped_column(String(500), nullable=False)
+    prompt_version: Mapped[str] = mapped_column(String(100), nullable=False)
+    prompt_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    schema_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    input_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    output_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    latency_ms: Mapped[float] = mapped_column(Float, nullable=False)
+    cost_usd: Mapped[float] = mapped_column(Float, default=0, nullable=False)
+    token_accounting_source: Mapped[str] = mapped_column(
+        String(40), default="estimated", nullable=False
+    )
+    pricing_version: Mapped[str] = mapped_column(
+        String(100), default="unconfigured", nullable=False
+    )
+    cost_estimate: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    retries: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    fallback_from: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(40), nullable=False)
+    error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class ContextArtifactRecord(Base):
+    __tablename__ = "context_artifacts"
+    __table_args__ = (Index("ix_context_artifacts_run", "tenant_id", "run_id", "created_at"),)
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False
+    )
+    run_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="CASCADE"), nullable=False
+    )
+    task_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    agent_role: Mapped[str] = mapped_column(String(80), nullable=False)
+    contract_version: Mapped[str] = mapped_column(String(100), nullable=False)
+    input_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    selection_manifest: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False)
+    token_budget: Mapped[int] = mapped_column(Integer, nullable=False)
+    tokens_used: Mapped[int] = mapped_column(Integer, nullable=False)
+    redaction_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
     )

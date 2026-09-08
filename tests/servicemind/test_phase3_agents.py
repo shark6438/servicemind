@@ -1,4 +1,6 @@
+import hashlib
 import inspect
+import json
 from uuid import UUID, uuid4
 
 import pytest
@@ -11,10 +13,59 @@ from servicemind.agents.reviewer import ReviewerAgent
 from servicemind.domain.analysis import AnalysisResult, ProposedAction
 from servicemind.domain.evidence import Evidence, EvidenceSourceType, join_evidence
 from servicemind.domain.handoff import HandoffEnvelope
+from servicemind.domain.knowledge import Citation
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
 from servicemind.domain.task import BudgetSnapshot
 
 TENANT = UUID("11111111-1111-4111-8111-111111111111")
+
+
+def knowledge_item(
+    content: str,
+    *,
+    metadata: dict | None = None,
+    provider: str = "test",
+) -> Evidence:
+    """KNOWLEDGE evidence carrying a citation that anchors the row itself.
+
+    The reviewer gate validates every KNOWLEDGE item's ``metadata["citation"]``:
+    the citation id must be the digest of its own (document, parent, content) and it
+    must bind to the evidence (source == provider, source_uri == source_ref,
+    parent_chunk_id == resource_id). This builder reproduces the shape the RAG
+    service emits so fixtures pass the deterministic gate.
+    """
+    parent_chunk_id = uuid4()
+    document_id = uuid4()
+    content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    source_ref = f"knowledge://runbook/{content_hash[:16]}"
+    citation = Citation(
+        citation_id="cite-"
+        + hashlib.sha256(
+            json.dumps(
+                [str(document_id), str(parent_chunk_id), content_hash],
+                separators=(",", ":"),
+            ).encode()
+        ).hexdigest()[:16],
+        document_id=document_id,
+        parent_chunk_id=parent_chunk_id,
+        source=provider,
+        source_uri=source_ref,
+        source_record_id=f"{provider}://{parent_chunk_id}",
+        source_version="v1",
+        content_hash=content_hash,
+        title="Fixture runbook",
+    )
+    return Evidence.create(
+        tenant_id=TENANT,
+        source_type=EvidenceSourceType.KNOWLEDGE,
+        source_ref=source_ref,
+        resource_type="runbook",
+        resource_id=str(parent_chunk_id),
+        content=content,
+        provider=provider,
+        retrieval_method="fixture",
+        metadata={**(metadata or {}), "citation": citation.model_dump(mode="json")},
+    )
 
 
 def item(
@@ -23,6 +74,8 @@ def item(
     *,
     metadata: dict | None = None,
 ) -> Evidence:
+    if source is EvidenceSourceType.KNOWLEDGE:
+        return knowledge_item(content, metadata=metadata)
     return Evidence.create(
         tenant_id=TENANT,
         source_type=source,
@@ -57,7 +110,13 @@ def analysis(refs: list[str], **updates) -> AnalysisResult:
 
 
 @pytest.mark.asyncio
-async def test_knowledge_agent_returns_provenance_and_supplemental_fallback() -> None:
+async def test_knowledge_agent_returns_provenance_and_supplemental_fallback(monkeypatch) -> None:
+    # Hermetic: force the deterministic baseline (RAG off) so this never reaches live
+    # OpenSearch or spins up an in-process embedding model, whatever the ambient .env.
+    from core import settings
+
+    monkeypatch.setattr(settings, "SERVICEMIND_RAG_ENABLED", False)
+    monkeypatch.setattr(settings, "SERVICEMIND_RAG_REQUIRED", False)
     agent = KnowledgeAgent()
     vpn = await agent.retrieve(tenant_id=TENANT, query="VPN MFA issue")
     assert vpn and all(entry.source_type is EvidenceSourceType.KNOWLEDGE for entry in vpn)

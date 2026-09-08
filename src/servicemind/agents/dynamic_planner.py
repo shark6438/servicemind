@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from core import get_model, settings
-from servicemind.domain.review import ReviewResult
+from servicemind.domain.review import ReviewDecision, ReviewResult
 from servicemind.domain.supervisor import (
     PlanProposal,
     PlanRevisionProposal,
@@ -78,7 +78,7 @@ class DynamicPlanner:
         self,
         *,
         previous: TaskPlan,
-        review: ReviewResult,
+        review: ReviewResult | None = None,
         ticket_id: int,
         request_write: bool,
         correction: str | None = None,
@@ -103,7 +103,15 @@ class DynamicPlanner:
                             "goal": previous.goal,
                             "ticket_id": ticket_id,
                             "request_write": request_write,
-                            "review_feedback": review.model_dump(mode="json"),
+                            "review_feedback": (
+                                review.model_dump(mode="json")
+                                if review is not None
+                                else {
+                                    "decision": "replan",
+                                    "feedback": correction
+                                    or "Supervisor revised the evidence before the first review.",
+                                }
+                            ),
                             "previous_plan": previous.model_dump(mode="json", by_alias=True),
                             "completed_tasks_must_be_preserved": completed,
                             "capabilities": self._capability_catalog(),
@@ -152,6 +160,7 @@ class DynamicPlanner:
             goal=previous.goal,
             ticket_id=ticket_id,
             request_write=request_write,
+            previous=previous,
         )
         previous_by_id = {task.task_id: task for task in previous.tasks}
         for task in plan.tasks:
@@ -179,6 +188,12 @@ class DynamicPlanner:
             raise ValueError("Replan must add new Analysis and Reviewer tasks")
         if request_write and AgentName.ACTION not in new_agents:
             raise ValueError("Write replan must add a new Action task")
+        if (
+            review is not None
+            and review.decision is ReviewDecision.RETRIEVE_MORE
+            and AgentName.KNOWLEDGE not in new_agents
+        ):
+            raise ValueError("RETRIEVE_MORE replan must add a Knowledge task")
         self.validator.validate(plan)
         return plan
 
@@ -189,17 +204,25 @@ class DynamicPlanner:
         goal: str,
         ticket_id: int,
         request_write: bool,
+        previous: TaskPlan | None = None,
     ) -> TaskPlan:
-        due = datetime.now(UTC) + timedelta(
-            seconds=settings.SERVICEMIND_RUN_DEADLINE_SECONDS
-        )
-        budget = Budget(
-            max_steps=settings.SERVICEMIND_MAX_STEPS,
-            max_replans=settings.SERVICEMIND_MAX_REPLANS,
-            max_model_calls=settings.SERVICEMIND_MAX_MODEL_CALLS,
-            max_tool_calls=settings.SERVICEMIND_MAX_TOOL_CALLS,
-            deadline=due,
-        )
+        if previous is not None:
+            # A revision inherits the run's original budget and deadline instead of
+            # re-arming the clock: re-planning must not silently extend how long a
+            # run is allowed to keep retrying.
+            budget = previous.budget
+            due = previous.deadline
+        else:
+            due = datetime.now(UTC) + timedelta(
+                seconds=settings.SERVICEMIND_RUN_DEADLINE_SECONDS
+            )
+            budget = Budget(
+                max_steps=settings.SERVICEMIND_MAX_STEPS,
+                max_replans=settings.SERVICEMIND_MAX_REPLANS,
+                max_model_calls=settings.SERVICEMIND_MAX_MODEL_CALLS,
+                max_tool_calls=settings.SERVICEMIND_MAX_TOOL_CALLS,
+                deadline=due,
+            )
         tasks = []
         for proposed in proposal.tasks:
             contract = self.registry.get(proposed.agent)
@@ -228,8 +251,18 @@ class DynamicPlanner:
         )
         self.validator.validate(plan)
         agents = {task.agent for task in plan.tasks}
-        if request_write and "action" not in {agent.value for agent in agents}:
+        if request_write and AgentName.ACTION not in agents:
             raise ValueError("Write workflow plan must contain an Action task")
+        # Fail closed: any plan that reads evidence must run through Analysis *and*
+        # the Reviewer gate. Without this, a data/knowledge-only plan would join
+        # evidence and let the Supervisor finalize SUCCEEDED with nothing reviewed.
+        if agents & {AgentName.DATA, AgentName.KNOWLEDGE} and not {
+            AgentName.ANALYSIS,
+            AgentName.REVIEWER,
+        } <= agents:
+            raise ValueError(
+                "Evidence-bearing plans must contain Analysis and Reviewer tasks"
+            )
         return plan
 
     def _planner_prompt(

@@ -1,0 +1,34 @@
+{
+  "title": "Phase 4.2 \u2014 Graph-RAG side-channel coverage (live Neo4j)",
+  "status": "passed",
+  "tenant": "11111111-1111-4111-8111-111111111111",
+  "store": "neo4j",
+  "relations": [
+    "affected_service_impact",
+    "ci_runbook",
+    "known_change_scope",
+    "known_problem_change_path",
+    "same_ci_incidents"
+  ],
+  "evidence": 5,
+  "runbook_refs": [
+    "runbook://rb-vpn-mfa"
+  ],
+  "top_anchor": {
+    "key": "ticket:INC-3001",
+    "kind": "ticket",
+    "title": "VPN MFA identity-provider timeout at branch A",
+    "ref": "INC-3001"
+  },
+  "top_source_refs": [
+    "INC-3001",
+    "PRB-77",
+    "CHG-88",
+    "ci-vpn-gw",
+    "runbook://rb-vpn-mfa"
+  ],
+  "change_anchor_relations": [
+    "known_change_scope"
+  ],
+  "note": "Text Recall/MRR is measured by evaluate_phase4_retrieval.py against the text gold set; this report measures graph side-channel COVERAGE (relations + runbook refs) for identifier-anchored probes, because the text gold corpus carries no incident topology to project."
+}

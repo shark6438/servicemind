@@ -28,14 +28,57 @@ class StructureAwareSemanticChunker:
         child_target_tokens: int = 320,
         child_max_tokens: int = 480,
         parent_max_tokens: int = 1500,
+        parent_max_chars: int = 7000,
         semantic_threshold: float = 0.55,
     ) -> None:
         self.child_min_tokens = child_min_tokens
         self.child_target_tokens = child_target_tokens
         self.child_max_tokens = child_max_tokens
         self.parent_max_tokens = parent_max_tokens
+        #: Character ceiling for a stored parent. A retrieved parent is serialized
+        #: verbatim as the Evidence content row, which caps at EVIDENCE_CONTENT_MAX
+        #: (8000) chars; a parent must never exceed it or retrieval would crash on
+        #: serialization. Token budgets alone cannot guarantee this -- a single parsed
+        #: block (e.g. one whole ticket thread as a LIST block) can be tens of KB.
+        self.parent_max_chars = parent_max_chars
         self.semantic_threshold = semantic_threshold
         self.encoder = tiktoken.get_encoding("cl100k_base")
+
+    def _split_long_text(self, text: str, limit: int) -> list[str]:
+        """Bound ``text`` to ``limit`` chars, cutting at paragraph/newline boundaries.
+
+        Prefers whole paragraphs, then whole lines, and only falls back to a hard
+        character cut for a single over-long line. Every returned piece is stripped and
+        is at most ``limit`` chars (they may be far shorter -- the boundary wins).
+        """
+        paragraphs = re.split(r"(\n{2,})", text)
+        pieces: list[str] = []
+        buffer = ""
+        for chunk in paragraphs:
+            if not chunk:
+                continue
+            if re.fullmatch(r"\n{2,}", chunk):
+                buffer += chunk
+                continue
+            if buffer.strip() and len(buffer) + len(chunk) > limit:
+                pieces.append(buffer.rstrip("\n"))
+                buffer = ""
+            if len(chunk) <= limit:
+                buffer += chunk
+                continue
+            for line in chunk.split("\n"):
+                candidate = f"{buffer}\n{line}" if buffer else line
+                if buffer and len(candidate) > limit:
+                    pieces.append(buffer)
+                    buffer = ""
+                    candidate = line
+                while len(candidate) > limit:
+                    pieces.append(candidate[:limit])
+                    candidate = candidate[limit:]
+                buffer = candidate
+        if buffer.strip():
+            pieces.append(buffer.rstrip("\n"))
+        return [piece for piece in pieces if piece.strip()]
 
     def tokens(self, text: str) -> int:
         return max(len(self.encoder.encode(text)), 1)
@@ -56,16 +99,28 @@ class StructureAwareSemanticChunker:
             nonlocal current, current_tokens
             if not current:
                 return
-            parents.append(
-                ParentChunk(
-                    document_id=current[0].document_id,
-                    section_path=current_section.copy(),
-                    block_ids=[item.block_id for item in current],
-                    order=len(parents),
-                    content="\n\n".join(item.content for item in current),
-                    token_count=current_tokens,
+            content = "\n\n".join(item.content for item in current)
+            section = current_section.copy()
+            block_ids = [item.block_id for item in current]
+            if len(content) > self.parent_max_chars:
+                # A single parsed block can be arbitrarily long (one whole ticket
+                # thread); emit it as consecutive bounded parents so every parent
+                # stays below the platform evidence content ceiling.
+                pieces = self._split_long_text(content, self.parent_max_chars)
+            else:
+                pieces = [content]
+            start = len(parents)
+            for index, piece in enumerate(pieces):
+                parents.append(
+                    ParentChunk(
+                        document_id=current[0].document_id,
+                        section_path=section,
+                        block_ids=block_ids,
+                        order=start + index,
+                        content=piece,
+                        token_count=self.tokens(piece),
+                    )
                 )
-            )
             current, current_tokens = [], 0
 
         for block in blocks:

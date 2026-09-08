@@ -27,6 +27,12 @@ class Phase3State(TypedDict, total=False):
     username: str
     roles: list[str]
     allowed_glpi_entity_ids: list[int]
+    # Optional GLPI group/profile ACL carriers. They mirror the retrieval principal so
+    # dispatch can forward the full identity to the Knowledge DAG node; absent for
+    # callers that only scope on entity. Consumers read via ``state.get`` so runs that
+    # never set them are unaffected.
+    group_ids: list[int]
+    profile_ids: list[int]
     thread_id: str
     ticket_id: int
     raw_request: str
@@ -41,6 +47,8 @@ class Phase3State(TypedDict, total=False):
     evidence_dirty: bool
     dispatch_batch_id: str
     dispatch_task: dict[str, Any]
+    invocation_model_budget: int
+    invocation_tool_budget: int
     task_completions: Annotated[list[dict[str, Any]], operator.add]
     plan_revision: int
     data_evidence: Annotated[list[dict[str, Any]], operator.add]

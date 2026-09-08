@@ -1,0 +1,172 @@
+{
+  "schema_version": "phase4-proxy-release-v1.2",
+  "status": "failed",
+  "source": {
+    "dataset": "nvidia/TechQA-RAG-Eval",
+    "revision": "0b5bbc84b7f07d6d09d063130e90b716d8d4a32a",
+    "corpus_documents": 28481,
+    "label_tier": "external_silver_no_tenant_human_signoff"
+  },
+  "queries": {
+    "total": 400,
+    "answerable": 280,
+    "impossible": 120
+  },
+  "retrieval": {
+    "bm25": {
+      "recall_at_5": 0.5429,
+      "recall_at_5_ci95": [
+        0.4857,
+        0.6
+      ],
+      "recall_at_10": 0.5821,
+      "recall_at_10_ci95": [
+        0.525,
+        0.6393
+      ],
+      "recall_at_20": 0.6464,
+      "recall_at_20_ci95": [
+        0.5893,
+        0.7
+      ],
+      "mrr_at_10": 0.4527,
+      "mrr_at_10_ci95": [
+        0.3994,
+        0.5082
+      ],
+      "ndcg_at_10": 0.4839,
+      "ndcg_at_10_ci95": [
+        0.4316,
+        0.5377
+      ]
+    },
+    "dense": {
+      "recall_at_5": 0.6607,
+      "recall_at_5_ci95": [
+        0.6036,
+        0.7179
+      ],
+      "recall_at_10": 0.6964,
+      "recall_at_10_ci95": [
+        0.6429,
+        0.75
+      ],
+      "recall_at_20": 0.7429,
+      "recall_at_20_ci95": [
+        0.6893,
+        0.7929
+      ],
+      "mrr_at_10": 0.5485,
+      "mrr_at_10_ci95": [
+        0.4957,
+        0.6007
+      ],
+      "ndcg_at_10": 0.5848,
+      "ndcg_at_10_ci95": [
+        0.5328,
+        0.6353
+      ]
+    },
+    "hybrid_rrf": {
+      "recall_at_5": 0.6357,
+      "recall_at_5_ci95": [
+        0.5786,
+        0.6929
+      ],
+      "recall_at_10": 0.6929,
+      "recall_at_10_ci95": [
+        0.6393,
+        0.7464
+      ],
+      "recall_at_20": 0.7536,
+      "recall_at_20_ci95": [
+        0.7036,
+        0.8036
+      ],
+      "mrr_at_10": 0.5369,
+      "mrr_at_10_ci95": [
+        0.4848,
+        0.5898
+      ],
+      "ndcg_at_10": 0.5742,
+      "ndcg_at_10_ci95": [
+        0.5227,
+        0.6251
+      ]
+    },
+    "hybrid_bge_rerank": {
+      "recall_at_5": 0.6536,
+      "recall_at_5_ci95": [
+        0.5964,
+        0.7107
+      ],
+      "recall_at_10": 0.7,
+      "recall_at_10_ci95": [
+        0.6464,
+        0.7536
+      ],
+      "recall_at_20": 0.7536,
+      "recall_at_20_ci95": [
+        0.7036,
+        0.8036
+      ],
+      "mrr_at_10": 0.5541,
+      "mrr_at_10_ci95": [
+        0.5018,
+        0.6075
+      ],
+      "ndcg_at_10": 0.5896,
+      "ndcg_at_10_ci95": [
+        0.5383,
+        0.6415
+      ]
+    },
+    "embedding": {
+      "model": "BAAI/bge-m3",
+      "revision": "5617a9f61b028005a4858fdac845db406aefb181",
+      "backend": "ONNX Runtime CUDA exact cosine",
+      "max_length": 512
+    },
+    "reranker": {
+      "model": "BAAI/bge-reranker-v2-m3",
+      "revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e"
+    },
+    "bm25_latency_ms": {
+      "p50": 20.61,
+      "p95": 26.07
+    }
+  },
+  "gates": {
+    "recall_at_5": {
+      "actual": 0.6536,
+      "operator": ">=",
+      "threshold": 0.85,
+      "passed": false
+    },
+    "recall_at_10": {
+      "actual": 0.7,
+      "operator": ">=",
+      "threshold": 0.9,
+      "passed": false
+    },
+    "mrr_at_10": {
+      "actual": 0.5541,
+      "operator": ">=",
+      "threshold": 0.75,
+      "passed": false
+    },
+    "ndcg_at_10": {
+      "actual": 0.5896,
+      "operator": ">=",
+      "threshold": 0.8,
+      "passed": false
+    }
+  },
+  "duration_seconds": 749.57,
+  "limitations": [
+    "public technical-support distribution, not private tenant query distribution",
+    "source-provided silver labels, not independent ServiceMind human qrels",
+    "impossible labels are counted for set composition; end-to-end refusal remains a separate gate",
+    "dense ranking is exact cosine over one max-512-token vector per source document; production uses chunk-level OpenSearch HNSW"
+  ]
+}

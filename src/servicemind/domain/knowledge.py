@@ -39,6 +39,19 @@ class RetrievalIntent(StrEnum):
     GENERAL_KNOWLEDGE = "general_knowledge"
 
 
+class RetrievalMode(StrEnum):
+    """Which search channel produces the candidate set.
+
+    Baselines (evaluation) compare DENSE / BM25 / HYBRID; production defaults to
+    HYBRID (RRF fusion over dense + BM25). Mode is never a security control -- the
+    ACL pre-filter is applied identically in every mode.
+    """
+
+    DENSE = "dense"
+    BM25 = "bm25"
+    HYBRID = "hybrid"
+
+
 class KnowledgeACL(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -185,6 +198,7 @@ class RetrievalHit(BaseModel):
     authority_level: AuthorityLevel
     synthetic: bool
     content_hash: str
+    index_version: str | None = None
     acl: KnowledgeACL
 
 

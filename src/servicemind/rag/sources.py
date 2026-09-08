@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -16,7 +17,15 @@ from servicemind.domain.knowledge import (
 )
 from servicemind.integrations.glpi.client import GlpiClient
 from servicemind.integrations.glpi.resolver import resolve_glpi_config
+from servicemind.rag.parsing import (
+    DOCX_SUFFIXES,
+    PDF_SUFFIXES,
+    TEXT_SUFFIXES,
+    structure_parser,
+)
 from servicemind.security.auth import TenantContext
+
+logger = logging.getLogger("servicemind.rag.sources")
 
 
 def make_document(
@@ -144,6 +153,76 @@ class MendeleyHistoricalCaseSource:
                     authority=AuthorityLevel.PUBLIC_HISTORICAL,
                     acl=KnowledgeACL(corpus_scope=CorpusScope.GLOBAL_LICENSED),
                     metadata={"utterance_count": len(msgs)},
+                )
+            )
+        return result
+
+
+class AttachmentSource:
+    """Raw attached files (PDF/DOCX/markdown/...) from a directory, one per document.
+
+    Text formats are read verbatim. Binary attachments get their archival content
+    through ``StructureParser.file_text`` (docling, with pypdf/python-docx fallbacks
+    for the predictable offline case). Every document records its on-disk path in
+    ``metadata["source_file"]`` so ``EnterpriseRAG.ingest`` routes the structural parse
+    through the suffix-aware ``StructureParser.parse_file`` (docling with fallback)
+    instead of the lossy content-prefix sniff -- that is the wiring that lets real
+    PDF/Office attachments reach the knowledge index.
+    """
+
+    SUPPORTED = TEXT_SUFFIXES | PDF_SUFFIXES | DOCX_SUFFIXES
+
+    def __init__(
+        self,
+        root: Path,
+        *,
+        tenant_id,
+        revision: str = "phase4-v1",
+        source: str = "file_attachment",
+    ) -> None:
+        self.root, self.tenant_id = root, tenant_id
+        self.revision, self.source = revision, source
+
+    async def load(self) -> list[KnowledgeDocument]:
+        result = []
+        for path in sorted(self.root.rglob("*")):
+            if not path.is_file():
+                continue
+            suffix = path.suffix.casefold()
+            if suffix not in self.SUPPORTED:
+                continue
+            content = (
+                path.read_text(encoding="utf-8")
+                if suffix in TEXT_SUFFIXES
+                else structure_parser.file_text(path).strip()
+            )
+            if not content:
+                logger.warning("attachment %s yielded no text; skipping", path)
+                continue
+            rel = path.relative_to(self.root).as_posix()
+            title = next(
+                (line[2:].strip() for line in content.splitlines() if line.startswith("# ")),
+                path.stem,
+            )
+            result.append(
+                make_document(
+                    title=title[:1000],
+                    content=content,
+                    document_type="attached_document",
+                    source=self.source,
+                    source_version=self.revision,
+                    source_uri=f"file://{rel}",
+                    source_record_id=rel,
+                    license_name="tenant-owned",
+                    authority=AuthorityLevel.INTERNAL_KNOWLEDGE,
+                    acl=KnowledgeACL(
+                        corpus_scope=CorpusScope.TENANT, tenant_id=self.tenant_id
+                    ),
+                    metadata={
+                        "source_file": str(path),
+                        "file_format": suffix,
+                        "attachment": True,
+                    },
                 )
             )
         return result

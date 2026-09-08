@@ -1,4 +1,5 @@
 import asyncio
+import json
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -8,6 +9,7 @@ from uuid import UUID, uuid4
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, Send, interrupt
 
+from core import settings
 from servicemind.agents.action import ActionAgent, action_agent
 from servicemind.agents.analysis import AnalysisAgent, analysis_agent
 from servicemind.agents.data import DataAgent, data_agent
@@ -15,6 +17,7 @@ from servicemind.agents.dynamic_planner import DynamicPlanner, dynamic_planner
 from servicemind.agents.knowledge import KnowledgeAgent, knowledge_agent
 from servicemind.agents.reviewer import ReviewerAgent, reviewer_agent
 from servicemind.agents.supervisor import SupervisorAgent, supervisor_agent
+from servicemind.context.contracts import ContextAgent
 from servicemind.domain.analysis import AnalysisResult
 from servicemind.domain.evidence import Evidence, JoinedEvidence, join_evidence
 from servicemind.domain.handoff import HandoffEnvelope
@@ -25,9 +28,12 @@ from servicemind.domain.supervisor import ControlOwner, SupervisorAction, Superv
 from servicemind.domain.task import AgentName, RuntimeControl, Task, TaskPlan, TaskStatus
 from servicemind.harness.executor import ControlledActionExecutor, controlled_executor
 from servicemind.integrations.glpi.client import GlpiAPIError
+from servicemind.model_gateway.contracts import ModelCallContext, ModelPurpose, ModelRisk
+from servicemind.model_gateway.gateway import model_call_scope
 from servicemind.observability.tracing import phase_span
 from servicemind.orchestration.budget import BudgetExceeded, budget_controller
 from servicemind.orchestration.dispatcher import TaskDispatcher, task_dispatcher
+from servicemind.orchestration.phase5_governance import Phase5Governance, phase5_governance
 from servicemind.orchestration.registry import agent_registry
 from servicemind.orchestration.router import FastPathRouter, fast_path_router
 from servicemind.orchestration.state import Phase3State
@@ -56,6 +62,7 @@ class SupervisorRuntimeServices:
     action: ActionAgent = action_agent
     executor: ControlledActionExecutor = controlled_executor
     repository_factory: Callable[[UUID], Any] = ServiceMindRepository
+    phase5: Phase5Governance = phase5_governance
 
 
 def _context(state: Phase3State) -> TenantContext:
@@ -101,6 +108,8 @@ def _invocation(state: Phase3State, task: Task) -> AgentInvocationContext:
     control = _control(state)
     remaining_model = max(_plan(state).budget.max_model_calls - control.model_call_count, 0)
     remaining_tools = max(_plan(state).budget.max_tool_calls - control.tool_call_count, 0)
+    reserved_model = state.get("invocation_model_budget", remaining_model)
+    reserved_tools = state.get("invocation_tool_budget", remaining_tools)
     return AgentInvocationContext(
         run_id=UUID(state["run_id"]),
         tenant_id=UUID(state["tenant_id"]),
@@ -109,9 +118,28 @@ def _invocation(state: Phase3State, task: Task) -> AgentInvocationContext:
         trace_id=state.get("thread_id") or state["run_id"],
         deadline=min(task.deadline, _plan(state).budget.deadline),
         allowed_capabilities=frozenset(contract.allowed_tools),
-        max_model_calls=min(2, remaining_model),
-        max_tool_calls=min(6, remaining_tools),
+        max_model_calls=min(2, remaining_model, reserved_model),
+        max_tool_calls=min(6, remaining_tools, reserved_tools),
         policy_version="servicemind-agent-policy-v2",
+    )
+
+
+def _control_model_context(
+    state: Phase3State,
+    *,
+    agent_role: str,
+    purpose: ModelPurpose,
+    risk: ModelRisk = ModelRisk.MEDIUM,
+) -> ModelCallContext:
+    return ModelCallContext(
+        tenant_id=UUID(state["tenant_id"]),
+        run_id=UUID(state["run_id"]),
+        agent_role=agent_role,
+        purpose=purpose,
+        risk=risk,
+        policy_version="servicemind-agent-policy-v2",
+        prompt_version="2026-09-08",
+        max_cost_usd=settings.SERVICEMIND_MODEL_MAX_COST_USD_PER_CALL,
     )
 
 
@@ -140,9 +168,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
 
     async def route_node(state: Phase3State) -> dict[str, Any]:
         await repository(state).update_run(UUID(state["run_id"]), RunStatus.RUNNING)
-        decision = svc.router.route(
-            state["raw_request"], request_write=state["request_write"]
-        )
+        decision = svc.router.route(state["raw_request"], request_write=state["request_write"])
         control = _control(state)
         control.current_stage = "route"
         control.total_steps += 1
@@ -176,9 +202,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
 
     async def fast_data_node(state: Phase3State) -> dict[str, Any]:
         async with asyncio.timeout(20):
-            evidence = await svc.data.get_ticket_evidence(
-                _context(state), state["ticket_id"]
-            )
+            evidence = await svc.data.get_ticket_evidence(_context(state), state["ticket_id"])
         result = {
             "route": state["route"],
             "evidence": [item.model_dump(mode="json") for item in evidence],
@@ -191,13 +215,37 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         await repository(state).append_event(
             UUID(state["run_id"]), "run.succeeded", {"route": "simple_data_query"}
         )
-        return {"data_evidence": [item.model_dump(mode="json") for item in evidence], "final_result": result, "trajectory": ["data"]}
+        return {
+            "data_evidence": [item.model_dump(mode="json") for item in evidence],
+            "final_result": result,
+            "trajectory": ["data"],
+        }
 
     async def fast_knowledge_node(state: Phase3State) -> dict[str, Any]:
         kwargs: dict[str, Any] = {"tenant_id": UUID(state["tenant_id"]), "query": state["goal"]}
         if isinstance(svc.knowledge, KnowledgeAgent):
-            kwargs.update(user_id=state["user_id"], entity_ids=set(state["allowed_glpi_entity_ids"]))
-        evidence = await svc.knowledge.retrieve(**kwargs)
+            kwargs.update(
+                user_id=state["user_id"],
+                entity_ids=set(state["allowed_glpi_entity_ids"]),
+                group_ids=set(state.get("group_ids") or ()),
+                profile_ids=set(state.get("profile_ids") or ()),
+            )
+            context_envelope = await svc.phase5.build_fast_knowledge_context(
+                state=cast(dict[str, Any], state)
+            )
+            if context_envelope is not None:
+                kwargs["model_query"] = json.dumps(
+                    context_envelope.model_payload(), ensure_ascii=False
+                )
+        with model_call_scope(
+            _control_model_context(
+                state,
+                agent_role="knowledge",
+                purpose=ModelPurpose.RETRIEVAL_REWRITE,
+                risk=ModelRisk.LOW,
+            )
+        ):
+            evidence = await svc.knowledge.retrieve(**kwargs)
         result = {
             "route": state["route"],
             "evidence": [item.model_dump(mode="json") for item in evidence],
@@ -210,7 +258,11 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         await repository(state).append_event(
             UUID(state["run_id"]), "run.succeeded", {"route": "simple_knowledge_query"}
         )
-        return {"knowledge_evidence": [item.model_dump(mode="json") for item in evidence], "final_result": result, "trajectory": ["knowledge"]}
+        return {
+            "knowledge_evidence": [item.model_dump(mode="json") for item in evidence],
+            "final_result": result,
+            "trajectory": ["knowledge"],
+        }
 
     async def unsupported_node(state: Phase3State) -> dict[str, Any]:
         result = {
@@ -222,7 +274,16 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         await repository(state).update_run(
             UUID(state["run_id"]), RunStatus.CANCELLED, result=result
         )
-        return {"termination_code": "unsupported", "final_result": result, "trajectory": ["rejected"]}
+        await repository(state).append_event(
+            UUID(state["run_id"]),
+            "run.rejected",
+            {"route": state["route"], "reason": result["reason"]},
+        )
+        return {
+            "termination_code": "unsupported",
+            "final_result": result,
+            "trajectory": ["rejected"],
+        }
 
     def supervisor_view(state: Phase3State) -> dict[str, Any]:
         plan = _plan(state) if state.get("task_plan") else None
@@ -262,6 +323,8 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             "evidence_count": len(state.get("data_evidence", []))
             + len(state.get("knowledge_evidence", [])),
             "analysis": state.get("analysis_result"),
+            "approval": state.get("approval"),
+            "human_review": state.get("human_review"),
             "review": (
                 {
                     "review_id": str(review.review_id),
@@ -296,9 +359,16 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         decision = None
         for _ in range(2):
             control.model_call_count += 1
-            candidate = await svc.supervisor.decide(
-                supervisor_view(state), policy_feedback=feedback
-            )
+            with model_call_scope(
+                _control_model_context(
+                    state,
+                    agent_role="supervisor",
+                    purpose=ModelPurpose.CONTROL,
+                )
+            ):
+                candidate = await svc.supervisor.decide(
+                    supervisor_view(state), policy_feedback=feedback
+                )
             try:
                 svc.policy.validate(candidate, cast(dict, state))
             except SupervisorPolicyError as exc:
@@ -316,9 +386,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             decision = candidate
             break
         if decision is None:
-            control.errors.append(
-                {"node": "supervisor", "error_type": "SupervisorPolicyError"}
-            )
+            control.errors.append({"node": "supervisor", "error_type": "SupervisorPolicyError"})
             return Command(
                 update={
                     "control": control.model_dump(mode="json"),
@@ -369,12 +437,19 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         for attempt in range(2):
             attempts_used += 1
             try:
-                task_plan = await svc.planner.create_plan(
-                    goal=state["goal"],
-                    ticket_id=state["ticket_id"],
-                    request_write=state["request_write"],
-                    correction=correction,
-                )
+                with model_call_scope(
+                    _control_model_context(
+                        state,
+                        agent_role="planner",
+                        purpose=ModelPurpose.PLANNING,
+                    )
+                ):
+                    task_plan = await svc.planner.create_plan(
+                        goal=state["goal"],
+                        ticket_id=state["ticket_id"],
+                        request_write=state["request_write"],
+                        correction=correction,
+                    )
                 break
             except Exception as exc:
                 correction = f"{type(exc).__name__}: {str(exc)[:1000]}"
@@ -388,15 +463,24 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                     },
                 )
         if task_plan is None:
-            raise RuntimeError("Dynamic planner failed validation twice")
+            return Command(
+                update={
+                    "termination_code": "critical_error",
+                    "control": _control(state).model_dump(mode="json"),
+                    "trajectory": [
+                        "planner",
+                        f"decision:{SupervisorAction.FINALIZE.value}",
+                    ],
+                },
+                goto="finalize",
+            )
         await repository(state).append_event(
             UUID(state["run_id"]),
             "plan.validated",
             {
                 "plan_id": str(task_plan.plan_id),
                 "tasks": [
-                    {"id": task.task_id, "agent": task.agent.value}
-                    for task in task_plan.tasks
+                    {"id": task.task_id, "agent": task.agent.value} for task in task_plan.tasks
                 ],
             },
         )
@@ -418,7 +502,16 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         decision = SupervisorDecision.model_validate(state["supervisor_decision"])
         batch_id = str(uuid4())
         sends: list[Send] = []
-        for task_id in decision.selected_task_ids:
+        control = _control(state)
+        remaining_model = max(plan.budget.max_model_calls - control.model_call_count, 0)
+        remaining_tools = max(plan.budget.max_tool_calls - control.tool_call_count, 0)
+        selected_count = len(decision.selected_task_ids)
+        for index, task_id in enumerate(decision.selected_task_ids):
+            slots_left = selected_count - index
+            model_budget = min(2, (remaining_model + slots_left - 1) // slots_left)
+            tool_budget = min(6, remaining_tools // slots_left)
+            remaining_model -= model_budget
+            remaining_tools -= tool_budget
             task = next(task for task in plan.tasks if task.task_id == task_id)
             plan = svc.dispatcher.transition(plan, task_id, TaskStatus.READY)
             plan = svc.dispatcher.transition(plan, task_id, TaskStatus.RUNNING)
@@ -429,12 +522,16 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                 "username": state["username"],
                 "roles": state["roles"],
                 "allowed_glpi_entity_ids": state["allowed_glpi_entity_ids"],
+                "group_ids": state.get("group_ids", []),
+                "profile_ids": state.get("profile_ids", []),
                 "ticket_id": state["ticket_id"],
                 "goal": state["goal"],
                 "thread_id": state.get("thread_id", state["run_id"]),
                 "task_plan": plan.model_dump(mode="json", by_alias=True),
                 "dispatch_batch_id": batch_id,
                 "dispatch_task": task.model_dump(mode="json", by_alias=True),
+                "invocation_model_budget": model_budget,
+                "invocation_tool_budget": tool_budget,
                 "joined_evidence": state.get("joined_evidence", {}),
                 "review_result": state.get("review_result", {}),
                 "control": state.get("control", {}),
@@ -457,19 +554,51 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         evidence = []
         error = None
         envelope = None
-        for attempt in range(2):
+        attempts_used = 0
+        tool_budget = max(state.get("invocation_tool_budget", 2), 0)
+        attempts_allowed = (
+            0 if tool_budget == 0 else 1 if hasattr(svc.data, "run") else min(2, tool_budget)
+        )
+        if attempts_allowed == 0:
+            error = RuntimeError("Data task has no reserved tool budget")
+        for attempt in range(attempts_allowed):
+            attempts_used += 1
             try:
                 async with asyncio.timeout(20):
                     if hasattr(svc.data, "run"):
-                        envelope = await svc.data.run(
-                            invocation=_invocation(state, task),
-                            tenant_context=_context(state),
-                            objective=str(
+                        invocation = _invocation(state, task)
+                        context_envelope = await svc.phase5.build_context(
+                            state=cast(dict[str, Any], state),
+                            task=task,
+                            invocation=invocation,
+                            agent=ContextAgent.DATA,
+                        )
+                        run_kwargs: dict[str, Any] = {
+                            "invocation": invocation,
+                            "tenant_context": _context(state),
+                            "objective": str(
                                 task.task_input.get("objective") or state["goal"]
                             ),
-                            ticket_id=state["ticket_id"],
-                        )
+                            "ticket_id": state["ticket_id"],
+                        }
+                        if isinstance(svc.data, DataAgent):
+                            run_kwargs["context_envelope"] = context_envelope
+                        with model_call_scope(
+                            ModelCallContext.from_invocation(
+                                invocation,
+                                agent_role="data",
+                                purpose=ModelPurpose.DATA_PLANNING,
+                            )
+                        ):
+                            envelope = await svc.data.run(**run_kwargs)
                         evidence = envelope.output
+                        if (
+                            envelope.metrics.model_calls > state.get("invocation_model_budget", 0)
+                            or envelope.metrics.tool_calls > tool_budget
+                        ):
+                            evidence = []
+                            error = RuntimeError("Data Agent exceeded its reserved budget")
+                            break
                     else:
                         evidence = await svc.data.get_ticket_evidence(
                             _context(state), state["ticket_id"]
@@ -478,8 +607,11 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                 break
             except (GlpiAPIError, TimeoutError) as exc:
                 error = exc
-                if attempt == 0:
+                if attempt + 1 < attempts_allowed:
                     await asyncio.sleep(0.25)
+            except Exception as exc:
+                error = exc
+                break
         if envelope is not None:
             await record_agent_result(state, envelope)
         completion = {
@@ -489,9 +621,11 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             "error_type": type(error).__name__ if error else None,
             "output_refs": [item.evidence_id for item in evidence],
             "model_calls": envelope.metrics.model_calls if envelope else 0,
-            "tool_calls": envelope.metrics.tool_calls if envelope else 1,
-            "attempts": envelope.metrics.attempts if envelope else attempt + 1,
-            "agent_status": envelope.status.value if envelope else "succeeded",
+            "tool_calls": envelope.metrics.tool_calls if envelope else attempts_used,
+            "attempts": envelope.metrics.attempts if envelope else attempts_used,
+            "agent_status": (
+                envelope.status.value if envelope else "degraded" if error else "succeeded"
+            ),
         }
         return {
             "data_evidence": [item.model_dump(mode="json") for item in evidence],
@@ -507,41 +641,121 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                 }
             ],
             "agent_invocations": (
-                [envelope.model_dump(mode="json", exclude={"output"})]
-                if envelope
-                else []
+                [envelope.model_dump(mode="json", exclude={"output"})] if envelope else []
             ),
             "trajectory": [f"data:{task.task_id}"],
         }
 
     async def knowledge_task_node(state: Phase3State) -> dict[str, Any]:
+        """One knowledge DAG task: bounded retrieval with retry and observability.
+
+        Mirrors ``data_task_node`` so a knowledge fault cannot hang the graph: the
+        call runs inside ``asyncio.timeout`` with one retry, and every outcome is
+        recorded as a completion (and, when a genuine subagent envelope exists, as an
+        ``agent.completed`` event). The retrieval principal is forwarded in full --
+        user, GLPI entity, and the optional group/profile ACL -- so RLS scoping of
+        candidate chunks is identical to the requesting analyst's context.
+        """
         task = Task.model_validate(state["dispatch_task"])
         started = time.perf_counter()
         query = f"{state['goal']} {task.task_input.get('objective', '')}"
         if state.get("joined_evidence"):
             query += " " + " ".join(
                 item.content
-                for item in JoinedEvidence.model_validate(
-                    state["joined_evidence"]
-                ).items
+                for item in JoinedEvidence.model_validate(state["joined_evidence"]).items
             )
         if state.get("review_result"):
             query += " " + _review(state).feedback
-        kwargs: dict[str, Any] = {"tenant_id": UUID(state["tenant_id"]), "query": query,
-                                 "retrieval_round": _control(state).retrieval_round}
+        kwargs: dict[str, Any] = {
+            "tenant_id": UUID(state["tenant_id"]),
+            "query": query,
+            "retrieval_round": _control(state).retrieval_round,
+        }
         if isinstance(svc.knowledge, KnowledgeAgent):
-            kwargs.update(user_id=state["user_id"], entity_ids=set(state["allowed_glpi_entity_ids"]))
-        evidence = await svc.knowledge.retrieve(**kwargs)
+            kwargs.update(
+                user_id=state["user_id"],
+                entity_ids=set(state["allowed_glpi_entity_ids"]),
+                group_ids=set(state.get("group_ids") or ()),
+                profile_ids=set(state.get("profile_ids") or ()),
+                use_query_model=state.get("invocation_model_budget", 0) > 0,
+            )
+        invocation = _invocation(state, task)
+        context_envelope = await svc.phase5.build_context(
+            state=cast(dict[str, Any], state),
+            task=task,
+            invocation=invocation,
+            agent=ContextAgent.KNOWLEDGE,
+        )
+        if context_envelope is not None and isinstance(svc.knowledge, KnowledgeAgent):
+            kwargs["model_query"] = json.dumps(
+                context_envelope.model_payload(), ensure_ascii=False
+            )
+        evidence: list[Evidence] = []
+        use_query_model = bool(kwargs.get("use_query_model", False))
+        attempts_used = 0
+        tool_budget = max(state.get("invocation_tool_budget", 2), 0)
+        model_budget = max(state.get("invocation_model_budget", 0), 0)
+        attempts_allowed = min(2, tool_budget, model_budget if use_query_model else tool_budget)
+        error: BaseException | None = (
+            RuntimeError("Knowledge task has no reserved tool budget")
+            if attempts_allowed == 0
+            else None
+        )
+        for attempt in range(attempts_allowed):
+            attempts_used += 1
+            try:
+                async with asyncio.timeout(20):
+                    with model_call_scope(
+                        ModelCallContext.from_invocation(
+                            invocation,
+                            agent_role="knowledge",
+                            purpose=ModelPurpose.RETRIEVAL_REWRITE,
+                            risk=ModelRisk.LOW,
+                        )
+                    ):
+                        evidence = await svc.knowledge.retrieve(**kwargs)
+                error = None
+                break
+            except TimeoutError as exc:
+                error = exc
+                if attempt + 1 < attempts_allowed:
+                    await asyncio.sleep(0.25)
+            except Exception as exc:
+                error = exc
+                break
+        model_calls = attempts_used if use_query_model else 0
         completion = {
             "batch_id": state["dispatch_batch_id"],
             "task_id": task.task_id,
-            "status": "success",
-            "error_type": None,
+            "status": "failed" if error else "success",
+            "error_type": type(error).__name__ if error else None,
             "output_refs": [item.evidence_id for item in evidence],
+            "model_calls": model_calls,
+            "tool_calls": attempts_used,
+            "attempts": attempts_used,
+            "agent_status": "degraded" if error else "succeeded",
         }
+        await repository(state).append_event(
+            UUID(state["run_id"]),
+            "agent.completed",
+            {
+                "agent_name": "knowledge",
+                "task_id": task.task_id,
+                "status": "degraded" if error else "succeeded",
+                "evidence_refs": completion["output_refs"],
+                "metrics": {
+                    "model_calls": model_calls,
+                    "tool_calls": attempts_used,
+                    "attempts": attempts_used,
+                    "latency_ms": (time.perf_counter() - started) * 1000,
+                },
+                "policy_version": "servicemind-agent-policy-v2",
+            },
+        )
         return {
             "knowledge_evidence": [item.model_dump(mode="json") for item in evidence],
             "task_completions": [completion],
+            "branch_errors": ([completion] if error else []),
             "branch_timings": [
                 {
                     "agent": "knowledge",
@@ -561,11 +775,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             item for item in state.get("task_completions", []) if item["batch_id"] == batch
         ]
         for completion in completions:
-            status = (
-                TaskStatus.SUCCESS
-                if completion["status"] == "success"
-                else TaskStatus.FAILED
-            )
+            status = TaskStatus.SUCCESS if completion["status"] == "success" else TaskStatus.FAILED
             plan = svc.dispatcher.transition(
                 plan,
                 completion["task_id"],
@@ -638,15 +848,34 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         plan = svc.dispatcher.transition(plan, task.task_id, TaskStatus.READY)
         plan = svc.dispatcher.transition(plan, task.task_id, TaskStatus.RUNNING)
         envelope = None
-        with phase_span("servicemind.supervisor.analysis", **{"gen_ai.agent.name": "analysis-agent"}):
+        invocation = _invocation(state, task)
+        context_envelope = await svc.phase5.build_context(
+            state=cast(dict[str, Any], state),
+            task=task,
+            invocation=invocation,
+            agent=ContextAgent.ANALYSIS,
+        )
+        with phase_span(
+            "servicemind.supervisor.analysis", **{"gen_ai.agent.name": "analysis-agent"}
+        ):
             if hasattr(svc.analysis, "run"):
-                envelope = await svc.analysis.run(
-                    invocation=_invocation(state, task),
-                    evidence=_joined(state),
-                    goal=state["goal"],
-                    request_write=state["request_write"],
-                    ticket_id=state["ticket_id"],
-                )
+                run_kwargs: dict[str, Any] = {
+                    "invocation": invocation,
+                    "evidence": _joined(state),
+                    "goal": state["goal"],
+                    "request_write": state["request_write"],
+                    "ticket_id": state["ticket_id"],
+                }
+                if isinstance(svc.analysis, AnalysisAgent):
+                    run_kwargs["context_envelope"] = context_envelope
+                with model_call_scope(
+                    ModelCallContext.from_invocation(
+                        invocation,
+                        agent_role="analysis",
+                        purpose=ModelPurpose.ANALYSIS,
+                    )
+                ):
+                    envelope = await svc.analysis.run(**run_kwargs)
                 result = envelope.output
             else:
                 result = await svc.analysis.analyze_evidence(
@@ -671,9 +900,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             "control_owner": ControlOwner.SUPERVISOR.value,
             "active_agent": "analysis",
             "agent_invocations": (
-                [envelope.model_dump(mode="json", exclude={"output"})]
-                if envelope
-                else []
+                [envelope.model_dump(mode="json", exclude={"output"})] if envelope else []
             ),
             "trajectory": [f"analysis:{task.task_id}"],
         }
@@ -691,16 +918,34 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         plan = svc.dispatcher.transition(plan, task.task_id, TaskStatus.RUNNING)
         control = _control(state)
         envelope = None
+        invocation = _invocation(state, task)
+        context_envelope = await svc.phase5.build_context(
+            state=cast(dict[str, Any], state),
+            task=task,
+            invocation=invocation,
+            agent=ContextAgent.REVIEWER,
+        )
         if hasattr(svc.reviewer, "run"):
-            envelope = await svc.reviewer.run(
-                invocation=_invocation(state, task),
-                analysis=_analysis(state),
-                evidence=_joined(state),
-                request_write=state["request_write"],
-                retrieval_round=control.retrieval_round,
-                replan_count=control.replan_count,
-                max_replans=plan.max_replans,
-            )
+            run_kwargs: dict[str, Any] = {
+                "invocation": invocation,
+                "analysis": _analysis(state),
+                "evidence": _joined(state),
+                "request_write": state["request_write"],
+                "retrieval_round": control.retrieval_round,
+                "replan_count": control.replan_count,
+                "max_replans": plan.max_replans,
+            }
+            if isinstance(svc.reviewer, ReviewerAgent):
+                run_kwargs["context_envelope"] = context_envelope
+            with model_call_scope(
+                ModelCallContext.from_invocation(
+                    invocation,
+                    agent_role="reviewer",
+                    purpose=ModelPurpose.REVIEW,
+                    risk=ModelRisk.HIGH,
+                )
+            ):
+                envelope = await svc.reviewer.run(**run_kwargs)
             result = envelope.output
         else:
             result = await svc.reviewer.review(
@@ -736,9 +981,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             "control_owner": ControlOwner.SUPERVISOR.value,
             "active_agent": "reviewer",
             "agent_invocations": (
-                [envelope.model_dump(mode="json", exclude={"output"})]
-                if envelope
-                else []
+                [envelope.model_dump(mode="json", exclude={"output"})] if envelope else []
             ),
             "trajectory": [f"reviewer:{task.task_id}", f"review:{result.decision.value}"],
         }
@@ -749,21 +992,48 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             control.retrieval_round += 1
         else:
             control.replan_count += 1
-        budget_controller.check(_plan(state).budget, control)
-        review = _review(state)
+        try:
+            budget_controller.check(_plan(state).budget, control)
+        except BudgetExceeded as exc:
+            # Same terminal handling as the Supervisor node: an exhausted replan /
+            # retrieval budget ends the run with a persisted termination code rather
+            # than letting the exception escape the sub-node and error the graph.
+            return Command(
+                update={
+                    "termination_code": exc.code.value,
+                    "control": control.model_dump(mode="json"),
+                    "trajectory": [
+                        "retrieve_more" if retrieve_more else "replan",
+                        f"decision:{SupervisorAction.FINALIZE.value}",
+                    ],
+                },
+                goto="finalize",
+            )
+        # A Supervisor-triggered REPLAN may legally arrive before any review has run
+        # (e.g. evidence was gathered but is still un-joined). Tolerate that instead
+        # of crashing on state["review_result"] == {}.
+        review_payload = state.get("review_result") or {}
+        review = ReviewResult.model_validate(review_payload) if review_payload else None
         correction = None
         revised = None
         attempts_used = 0
         for attempt in range(2):
             attempts_used += 1
             try:
-                revised = await svc.planner.revise_plan(
-                    previous=_plan(state),
-                    review=review,
-                    ticket_id=state["ticket_id"],
-                    request_write=state["request_write"],
-                    correction=correction,
-                )
+                with model_call_scope(
+                    _control_model_context(
+                        state,
+                        agent_role="planner",
+                        purpose=ModelPurpose.PLANNING,
+                    )
+                ):
+                    revised = await svc.planner.revise_plan(
+                        previous=_plan(state),
+                        review=review,
+                        ticket_id=state["ticket_id"],
+                        request_write=state["request_write"],
+                        correction=correction,
+                    )
                 break
             except Exception as exc:
                 correction = f"{type(exc).__name__}: {str(exc)[:1000]}"
@@ -777,7 +1047,21 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                     },
                 )
         if revised is None:
-            raise RuntimeError("Dynamic replanner failed validation twice")
+            # Double replan validation failure is a run-level policy failure: persist
+            # it through the normal finalizer instead of raising a raw RuntimeError.
+            return Command(
+                update={
+                    "termination_code": "critical_error",
+                    "analysis_result": {},
+                    "review_result": {},
+                    "control": control.model_dump(mode="json"),
+                    "trajectory": [
+                        "retrieve_more" if retrieve_more else "replan",
+                        f"decision:{SupervisorAction.FINALIZE.value}",
+                    ],
+                },
+                goto="finalize",
+            )
         control.model_call_count += attempts_used
         control.total_steps += 1
         return {
@@ -847,6 +1131,12 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         task = _ready_by_agent(plan, svc.dispatcher, AgentName.ACTION)[0]
         plan = svc.dispatcher.transition(plan, task.task_id, TaskStatus.READY)
         plan = svc.dispatcher.transition(plan, task.task_id, TaskStatus.RUNNING)
+        await svc.phase5.build_context(
+            state=cast(dict[str, Any], state),
+            task=task,
+            invocation=_invocation(state, task),
+            agent=ContextAgent.ACTION,
+        )
         intent = svc.action.propose_from_handoff(
             HandoffEnvelope.model_validate(state["handoff_envelope"]),
             _analysis(state),
@@ -873,9 +1163,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         plan = svc.dispatcher.transition(
             plan, task.task_id, TaskStatus.SUCCESS, output_ref=str(record.id)
         )
-        await repository(state).update_run(
-            UUID(state["run_id"]), RunStatus.WAITING_APPROVAL
-        )
+        await repository(state).update_run(UUID(state["run_id"]), RunStatus.WAITING_APPROVAL)
         await repository(state).append_event(
             UUID(state["run_id"]),
             "approval.required",
@@ -915,9 +1203,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         }
 
     def approval_node(state: Phase3State) -> dict[str, Any]:
-        decision = interrupt(
-            {"type": "approval_required", "action_intent": state["action_intent"]}
-        )
+        decision = interrupt({"type": "approval_required", "action_intent": state["action_intent"]})
         return {
             "approval": ApprovalDecision.model_validate(decision).model_dump(),
             "control_owner": ControlOwner.HARNESS.value,
@@ -945,9 +1231,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         }
 
     async def escalate_node(state: Phase3State) -> dict[str, Any]:
-        await repository(state).update_run(
-            UUID(state["run_id"]), RunStatus.WAITING_REVIEW
-        )
+        await repository(state).update_run(UUID(state["run_id"]), RunStatus.WAITING_REVIEW)
         resolution = interrupt(
             {
                 "type": "review_escalation",
@@ -963,11 +1247,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         }
 
     def after_escalation(state: Phase3State) -> Literal["supervisor", "finalize"]:
-        return (
-            "supervisor"
-            if state["human_review"].get("decision") == "continue"
-            else "finalize"
-        )
+        return "supervisor" if state["human_review"].get("decision") == "continue" else "finalize"
 
     async def finalize_node(state: Phase3State) -> dict[str, Any]:
         failed = state.get("termination_code") in {
@@ -980,9 +1260,25 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             or state.get("human_review", {}).get("decision") == "stop"
             or state.get("review_result", {}).get("decision") == "reject"
         )
-        status = RunStatus.FAILED if failed else RunStatus.CANCELLED if cancelled else RunStatus.SUCCEEDED
+        # Evidence-insufficiency abstention is a *successful* terminal: the platform
+        # fulfilled its duty by refusing to fabricate, so the run is SUCCEEDED but the
+        # persisted review carries decision="abstain" and the event below is distinct
+        # (run.abstained) so metrics can count abstention-correctness as first-class.
+        abstained = state.get("review_result", {}).get("decision") == "abstain"
+        # A human who answered "continue" on an escalation accepts the reviewer's
+        # blocked outcome as the run's result. The run SUCCEEDS without executing any
+        # action, and is recorded under a distinct event so metrics can count
+        # human-resolved escalations -- it is not a pass and not a silent cancel.
+        escalation_accepted = state.get("human_review", {}).get("decision") == "continue"
+        status = (
+            RunStatus.FAILED
+            if failed
+            else RunStatus.CANCELLED
+            if cancelled
+            else RunStatus.SUCCEEDED
+        )
         plan = _plan(state) if state.get("task_plan") else None
-        if cancelled and plan:
+        if (cancelled or abstained or escalation_accepted) and plan:
             plan = svc.dispatcher.cancel_remaining(plan)
         result = {
             "route": state.get("route"),
@@ -1002,14 +1298,42 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             "termination_code": state.get("termination_code"),
             "branch_timings": state.get("branch_timings", []),
             "agent_invocations": state.get("agent_invocations", []),
+            "final_state_verified": status is RunStatus.SUCCEEDED,
             "trajectory": state.get("trajectory", []) + ["finalize"],
         }
-        await repository(state).update_run(
-            UUID(state["run_id"]), status, result=result
-        )
+        await repository(state).update_run(UUID(state["run_id"]), status, result=result)
         await repository(state).append_event(
-            UUID(state["run_id"]), f"run.{status.value}", {"status": status.value}
+            UUID(state["run_id"]),
+            "run.abstained"
+            if abstained
+            else "run.escalation_accepted"
+            if escalation_accepted
+            else f"run.{status.value}",
+            {
+                "status": status.value,
+                "decision": (
+                    "abstain" if abstained else "human_continue" if escalation_accepted else None
+                ),
+            },
         )
+        try:
+            memory_count = await svc.phase5.post_run(
+                state=cast(dict[str, Any], state),
+                result=result,
+                status=status.value,
+            )
+            if memory_count:
+                await repository(state).append_event(
+                    UUID(state["run_id"]),
+                    "memory.post_run_completed",
+                    {"record_count": memory_count},
+                )
+        except Exception as exc:
+            await repository(state).append_event(
+                UUID(state["run_id"]),
+                "memory.post_run_failed",
+                {"error_type": type(exc).__name__},
+            )
         return {"final_result": result, "trajectory": ["finalize"]}
 
     graph = StateGraph(Phase3State)
@@ -1017,7 +1341,22 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
     graph.add_node("fast_data", fast_data_node)
     graph.add_node("fast_knowledge", fast_knowledge_node)
     graph.add_node("unsupported", unsupported_node)
-    graph.add_node("supervisor", supervisor_node, destinations=("plan", "dispatch", "join_evidence", "analysis", "reviewer", "retrieve_more", "replan", "handoff", "escalate", "finalize"))
+    graph.add_node(
+        "supervisor",
+        supervisor_node,
+        destinations=(
+            "plan",
+            "dispatch",
+            "join_evidence",
+            "analysis",
+            "reviewer",
+            "retrieve_more",
+            "replan",
+            "handoff",
+            "escalate",
+            "finalize",
+        ),
+    )
     graph.add_node("plan", plan_node)
     graph.add_node("dispatch", dispatch_node, destinations=("data_task", "knowledge_task"))
     graph.add_node("data_task", data_task_node)

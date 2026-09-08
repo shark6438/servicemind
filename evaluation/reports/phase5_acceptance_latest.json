@@ -1,0 +1,77 @@
+{
+  "report_id": "servicemind-phase5-acceptance-2026-09-08",
+  "evaluated_at": "2026-09-08T20:16:13+08:00",
+  "result": "PASS",
+  "scope": [
+    "governed_memory",
+    "context_engineering",
+    "versioned_skills",
+    "model_gateway",
+    "workflow_integration"
+  ],
+  "database_revision": "0009_model_accounting_provenance",
+  "tests": {
+    "full_suite": {"passed": 389, "skipped": 6, "failed": 0},
+    "phase5_targeted": {"passed": 25, "failed": 0},
+    "docker_authority_checks": {"passed": 2, "failed": 0},
+    "excluded_unrelated_template_checks": {
+      "count": 4,
+      "reason": "Generic fake chatbot tests target an unrelated service on port 8080 and are outside the ServiceMind project-agent scope."
+    },
+    "ruff_errors": 0,
+    "pyrefly_errors": 0,
+    "alembic_drift_operations": 0
+  },
+  "live_checks": {
+    "fresh_upgrade_downgrade_upgrade": "passed",
+    "forced_rls_and_zero_context_denial": "passed",
+    "cross_tenant_isolation": "passed",
+    "concurrent_memory_idempotency": "passed",
+    "bge_m3_memory_ranking": "passed",
+    "append_only_audit": "passed",
+    "deepseek_structured_gateway": "passed",
+    "provider_token_and_cost_provenance": "passed",
+    "governed_knowledge_workflow": "passed",
+    "nonblocking_background_recovery": "passed",
+    "authenticated_api_info": "passed"
+  },
+  "hard_gates": {
+    "tenant_or_scope_leaks": 0,
+    "unsafe_memory_auto_activations": 0,
+    "duplicate_memory_on_replay": 0,
+    "context_budget_overruns": 0,
+    "raw_evidence_model_boundary_bypasses": 0,
+    "skill_capability_expansions": 0,
+    "cross_tenant_cache_hits": 0,
+    "uncontrolled_high_risk_fallbacks": 0,
+    "model_cost_budget_bypasses": 0,
+    "known_open_phase5_defects": 0
+  },
+  "deployment": {
+    "memory_enabled": true,
+    "memory_vector_enabled": true,
+    "context_enabled": true,
+    "skills_enabled": true,
+    "model_gateway_audit_enabled": true,
+    "semantic_cache_enabled": false,
+    "explicit_tenant_allowlists": 2,
+    "allowed_provider": "deepseek",
+    "allowed_model": "deepseek-v4-flash",
+    "max_cost_usd_per_call": 0.05,
+    "persistent_services": [
+      "servicemind-api.service",
+      "servicemind-streamlit.service"
+    ],
+    "api_readiness_seconds": 8.3,
+    "api_agents": 10,
+    "api_agents_scope": "servicemind_project_registry_only",
+    "api_models": 2,
+    "api_health": "passed",
+    "ui_health": "passed"
+  },
+  "inherited_quality_boundary": {
+    "phase4_status": "QUALITY_EXCEPTION_ACCEPTED",
+    "reason": "No expert sign-off or production query logs; proxy quality gates are not all passed.",
+    "phase5_does_not_override_phase4_quality": true
+  }
+}

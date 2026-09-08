@@ -1,0 +1,39 @@
+{
+  "title": "Phase 4 \u2014 docling/PDF ingest routing (live OpenSearch + real PDF)",
+  "status": "passed",
+  "pdf": "/data/shihongye/servicemind/data/phase4/raw/production/incident-response-docs-master/docs/assets/pdf/pagerduty_incident_response_training_public.pdf",
+  "pdf_kb": 77434.3,
+  "pdf_pages": 84,
+  "ingested": {
+    "documents": 1,
+    "parents": 4,
+    "children": 16,
+    "skipped": 0
+  },
+  "parsers_observed": [
+    "pypdf"
+  ],
+  "retrieval_probes": {
+    "incident commander": {
+      "items": 2,
+      "top_source_record_id": "pagerduty_incident_response_training_public.pdf",
+      "top_uri": "file://pagerduty_incident_response_training_public.pdf"
+    },
+    "severity levels": {
+      "items": 2,
+      "top_source_record_id": "pagerduty_incident_response_training_public.pdf",
+      "top_uri": "file://pagerduty_incident_response_training_public.pdf"
+    },
+    "Incident Response Training": {
+      "items": 2,
+      "top_source_record_id": "pagerduty_incident_response_training_public.pdf",
+      "top_uri": "file://pagerduty_incident_response_training_public.pdf"
+    }
+  },
+  "pdf_grounded_probes": [
+    "incident commander",
+    "severity levels",
+    "Incident Response Training"
+  ],
+  "note": "Wiring check: a real PDF attachment was routed by metadata[source_file] into StructureParser.parse_file and reached the OpenSearch index. Parser evidence records docling when its layout-model snapshot is cached, else the pypdf plain-text fallback (offline-safe). Deterministic embeddings are used here; retrieval scoring with the pinned BGE models is the evaluation harness's job."
+}

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from servicemind.domain.review import ReviewDecision, ReviewResult
 from servicemind.domain.supervisor import SupervisorAction, SupervisorDecision
-from servicemind.domain.task import AgentName, TaskPlan, TaskStatus
+from servicemind.domain.task import AgentName, RuntimeControl, TaskPlan, TaskStatus
 from servicemind.orchestration.dispatcher import TaskDispatcher, task_dispatcher
 
 
@@ -16,6 +16,11 @@ class SupervisorPolicy:
 
     def legal_actions(self, state: dict) -> set[SupervisorAction]:
         if state.get("termination_code"):
+            return {SupervisorAction.FINALIZE}
+        # A human already resolved an escalation with "continue". The Supervisor
+        # re-enters after the interrupt; offering ESCALATE again would re-interrupt
+        # the same person in a loop. The accepted outcome is terminal: finalize.
+        if (state.get("human_review") or {}).get("decision") == "continue":
             return {SupervisorAction.FINALIZE}
         plan_payload = state.get("task_plan")
         if not plan_payload:
@@ -32,7 +37,14 @@ class SupervisorPolicy:
             decision = review.decision
             if decision is ReviewDecision.PASSED:
                 if state.get("request_write"):
-                    return {SupervisorAction.HANDOFF_ACTION, SupervisorAction.REPLAN}
+                    # Handoff is only legal once a ready Action task actually exists;
+                    # otherwise the graph would reach handoff_node and raise. A replan
+                    # is always available to rebuild the missing Action task.
+                    ready = self.dispatcher.ready_tasks(plan)
+                    legal = {SupervisorAction.REPLAN}
+                    if any(task.agent is AgentName.ACTION for task in ready):
+                        legal.add(SupervisorAction.HANDOFF_ACTION)
+                    return legal
                 return {SupervisorAction.FINALIZE, SupervisorAction.REPLAN}
             if decision is ReviewDecision.RETRIEVE_MORE:
                 return {
@@ -44,6 +56,11 @@ class SupervisorPolicy:
                 return {SupervisorAction.REPLAN, SupervisorAction.ESCALATE}
             if decision is ReviewDecision.ESCALATE:
                 return {SupervisorAction.ESCALATE, SupervisorAction.FINALIZE}
+            if decision is ReviewDecision.ABSTAIN:
+                # Evidence-insufficiency abstention is a terminal, user-facing outcome:
+                # retrieval already ran its extra round and the reviewer will not
+                # fabricate. No replan loop and no human escalation -- just finalize.
+                return {SupervisorAction.FINALIZE}
             return {SupervisorAction.FINALIZE}
 
         if state.get("evidence_dirty"):
@@ -89,6 +106,15 @@ class SupervisorPolicy:
                 raise SupervisorPolicyError("DISPATCH task IDs must be unique")
             if len(selected) > plan.max_parallel:
                 raise SupervisorPolicyError("DISPATCH exceeds max_parallel")
+            control = RuntimeControl.model_validate(state.get("control", {}))
+            remaining_tools = max(
+                plan.budget.max_tool_calls - control.tool_call_count,
+                0,
+            )
+            if len(selected) > remaining_tools:
+                raise SupervisorPolicyError(
+                    "DISPATCH has fewer remaining tool calls than selected tasks"
+                )
             unknown = set(selected) - ready.keys()
             if unknown:
                 raise SupervisorPolicyError(

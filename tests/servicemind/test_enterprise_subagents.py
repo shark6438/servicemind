@@ -1,3 +1,5 @@
+import hashlib
+import json
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from uuid import UUID, uuid4
@@ -15,6 +17,7 @@ from servicemind.agents.reviewer import ReviewerAgent, SemanticReview
 from servicemind.domain.analysis import AnalysisClaim, AnalysisResult, AnalysisStatus
 from servicemind.domain.evidence import Evidence, EvidenceSourceType, join_evidence
 from servicemind.domain.handoff import HandoffEnvelope
+from servicemind.domain.knowledge import Citation
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
 from servicemind.domain.task import BudgetSnapshot
 from servicemind.harness.executor import ControlledActionExecutor
@@ -80,6 +83,46 @@ def tenant_context(tenant_id: UUID = TENANT) -> TenantContext:
 
 
 def evidence(source: EvidenceSourceType, resource_type: str, content: str) -> Evidence:
+    """One evidence fixture; KNOWLEDGE rows carry a self-consistent citation.
+
+    The reviewer gate validates every KNOWLEDGE item's ``metadata["citation"]``
+    (id == digest of its own document/parent/content and it anchors the row:
+    source == provider, source_uri == source_ref, parent_chunk_id == resource_id).
+    The builder reproduces the RAG service shape so fixture evidence passes.
+    """
+    if source is EvidenceSourceType.KNOWLEDGE:
+        parent_chunk_id = uuid4()
+        document_id = uuid4()
+        content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        source_ref = f"knowledge://test/{resource_type}"
+        citation = Citation(
+            citation_id="cite-"
+            + hashlib.sha256(
+                json.dumps(
+                    [str(document_id), str(parent_chunk_id), content_hash],
+                    separators=(",", ":"),
+                ).encode()
+            ).hexdigest()[:16],
+            document_id=document_id,
+            parent_chunk_id=parent_chunk_id,
+            source="test",
+            source_uri=source_ref,
+            source_record_id=f"test://{parent_chunk_id}",
+            source_version="v1",
+            content_hash=content_hash,
+            title="Fixture runbook",
+        )
+        return Evidence.create(
+            tenant_id=TENANT,
+            source_type=source,
+            source_ref=source_ref,
+            resource_type=resource_type,
+            resource_id=str(parent_chunk_id),
+            content=content,
+            provider="test",
+            retrieval_method="fixture",
+            metadata={"citation": citation.model_dump(mode="json")},
+        )
     return Evidence.create(
         tenant_id=TENANT,
         source_type=source,
@@ -218,7 +261,7 @@ async def test_reviewer_semantic_judge_cannot_bypass_rule_gate(monkeypatch) -> N
         max_replans=2,
     )
     assert result.output.decision is ReviewDecision.PASSED
-    assert result.output.policy_version == "servicemind-review-policy-v2"
+    assert result.output.policy_version == "servicemind-review-policy-v3"
     assert result.metrics.model_calls == 1
 
 

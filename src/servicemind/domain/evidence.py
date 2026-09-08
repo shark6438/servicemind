@@ -15,6 +15,12 @@ class EvidenceSourceType(StrEnum):
     EXTERNAL = "external"
 
 
+#: Hard ceiling on one serialized evidence row. The RAG chunker sizes parents below
+#: this so a retrieved window always serializes whole; anything that still exceeds it
+#: (legacy rows, other providers) must be bounded at the evidence boundary, never crash.
+EVIDENCE_CONTENT_MAX = 8000
+
+
 class EvidenceProvenance(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -41,7 +47,7 @@ class Evidence(BaseModel):
     source_ref: str = Field(min_length=1, max_length=500)
     resource_type: str = Field(min_length=1, max_length=100)
     resource_id: str = Field(min_length=1, max_length=255)
-    content: str = Field(min_length=1, max_length=8000)
+    content: str = Field(min_length=1, max_length=EVIDENCE_CONTENT_MAX)
     provenance: EvidenceProvenance
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     confidence: float | None = Field(default=None, ge=0, le=1)

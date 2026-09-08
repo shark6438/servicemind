@@ -1,0 +1,46 @@
+{
+  "title": "Multi-query fan-out A/B \u2014 single-query RRF vs lexical fan-out (dense anchor + N BM25 arms)",
+  "model": "bge",
+  "gold_set": "servicemind-phase4-gold-v1",
+  "rewrites": "deepseek-v4-flash",
+  "rewrites_captured_at": "2026-09-07T19:25:58+00:00",
+  "answerable": 12,
+  "unanswerable": 3,
+  "arms": {
+    "single_query": {
+      "note": "dense + BM25 on one text",
+      "recall_at": {
+        "1": 0.8333,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "mrr_at_10": 1.0,
+      "ndcg_at_10": 0.9933,
+      "precision_at_1": 1.0,
+      "mean_candidate_count": 30.0,
+      "mean_pool_distinct_parents": 30.0,
+      "mean_pool_candidate_hits": 30.0,
+      "mean_latency_ms": 2130.6,
+      "answered_unanswerable": 3
+    },
+    "fan_out": {
+      "note": "dense anchor + one BM25 arm per rewrite (<=5 arms cap)",
+      "recall_at": {
+        "1": 0.8333,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "mrr_at_10": 1.0,
+      "ndcg_at_10": 0.9933,
+      "precision_at_1": 1.0,
+      "mean_candidate_count": 30.0,
+      "mean_pool_distinct_parents": 30.0,
+      "mean_pool_candidate_hits": 30.0,
+      "mean_latency_ms": 1884.7,
+      "answered_unanswerable": 3
+    }
+  },
+  "ceiling_note": "Final-context Recall/MRR is saturated at the ceiling on the committed gold (MRR@10 == 1.0 in every baseline); equality on this surface is expected, not evidence of no benefit. The measurable, non-saturated surfaces are the candidate-pool breadth the reranker sees and the latency/candidate cost fan-out adds.",
+  "decision": "keep",
+  "decision_reason": "fan_out never regressed final-context MRR/NDCG/P@1 (regression=False) and abstention is unchanged (answered_unanswerable 3 -> 3). Re-measure against a larger, harder gold set (or the real PagerDuty/Mendeley corpus) where single-query retrieval misses relevant parents."
+}

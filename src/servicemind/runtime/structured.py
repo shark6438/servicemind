@@ -1,24 +1,23 @@
-from typing import Any, cast
+from collections.abc import Sequence
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.runnables import Runnable
 from pydantic import BaseModel
 
-from schema.models import DeepseekModelName
+from servicemind.model_gateway.contracts import ModelCallContext
+from servicemind.model_gateway.gateway import (
+    GovernedStructuredRunnable,
+    governed_structured_output,
+)
 
 
 def structured_output[SchemaT: BaseModel](
-    model: BaseChatModel, schema: type[SchemaT]
-) -> Runnable[Any, SchemaT]:
-    """Return the provider-compatible structured-output adapter.
-
-    DeepSeek V4 currently supports JSON Object mode but rejects the JSON Schema
-    response-format variant emitted by LangChain's default strategy.
-    """
-    model_name = str(getattr(model, "model_name", getattr(model, "model", "")))
-    if model_name in {item.value for item in DeepseekModelName}:
-        return cast(
-            Runnable[Any, SchemaT],
-            model.with_structured_output(schema, method="json_mode"),
-        )
-    return cast(Runnable[Any, SchemaT], model.with_structured_output(schema))
+    model: BaseChatModel,
+    schema: type[SchemaT],
+    *,
+    context: ModelCallContext | None = None,
+    fallback_models: Sequence[BaseChatModel] = (),
+) -> GovernedStructuredRunnable[SchemaT]:
+    """Return the only allowed structured model path: the governed Model Gateway."""
+    return governed_structured_output(
+        model, schema, context=context, fallback_models=fallback_models
+    )

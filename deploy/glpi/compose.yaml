@@ -37,7 +37,7 @@ services:
       GLPI_SKIP_AUTOUPDATE: "false"
       GLPI_CRONTAB_ENABLED: "1"
     ports:
-      - "127.0.0.1:8088:80"
+      - "127.0.0.1:18088:80"
     volumes:
       - glpi_application:/var/glpi
       - ./local_define.php:/var/www/glpi/config/local_define.php:ro
@@ -52,7 +52,7 @@ services:
       SERVICEMIND_RUNTIME_USER: ${SERVICEMIND_RUNTIME_USER}
       SERVICEMIND_RUNTIME_PASSWORD: ${SERVICEMIND_RUNTIME_PASSWORD}
     ports:
-      - "127.0.0.1:55432:5432"
+      - "127.0.0.1:55434:5432"
     volumes:
       - servicemind_database:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d:ro
@@ -103,7 +103,7 @@ services:
       GLOBEX_ANALYST_PASSWORD: ${GLOBEX_ANALYST_PASSWORD}
     ports:
       - "127.0.0.1:8090:8080"
-      - "127.0.0.1:9001:9000"
+      - "127.0.0.1:19001:9000"
     volumes:
       - ./keycloak/servicemind-realm.json:/opt/keycloak/data/import/servicemind-realm.json:ro
 
@@ -139,11 +139,25 @@ services:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3
     profiles: ["rag"]
     restart: unless-stopped
-    command: ["--model-id", "BAAI/bge-m3", "--revision", "main", "--tokenization-workers", "4", "--max-concurrent-requests", "16", "--max-batch-tokens", "4096", "--max-client-batch-size", "16"]
+    command: ["--model-id", "/data/models--BAAI--bge-m3/snapshots/${SERVICEMIND_EMBEDDING_REVISION}", "--tokenization-workers", "4", "--max-concurrent-requests", "16", "--max-batch-tokens", "4096", "--max-client-batch-size", "16"]
+    environment:
+      # huggingface_hub honours HF_ENDPOINT; the datacenter has no direct route to
+      # huggingface.co (TCP timeout) and must pull artifacts through the mirror.
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+      # The cache bind below is a huggingface_hub cache. TEI's downloader must be told
+      # to treat /data as that cache or it re-downloads through hf-mirror (whose
+      # resolve-cache 307 breaks Content-Range and aborts startup). Pin HF_HUB_OFFLINE
+      # so a missing artifact fails fast instead of hanging on the network.
+      HF_HUB_CACHE: /data
+      HUGGINGFACE_HUB_CACHE: /data
+      HF_HUB_OFFLINE: "1"
     ports:
       - "127.0.0.1:8085:80"
     volumes:
-      - servicemind_embedding_models:/data
+      # HuggingFace cache bind: TEI's Rust downloader cannot follow hf-mirror's
+      # resolve-cache 307 (Content-Range missing), so artifacts are pre-fetched on the
+      # host with python huggingface_hub into data/phase4/models/embedding.
+      - /home/shihongye/data1/servicemind/data/phase4/models/embedding:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 10s
@@ -155,17 +169,43 @@ services:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3
     profiles: ["rag"]
     restart: unless-stopped
-    command: ["--model-id", "BAAI/bge-reranker-v2-m3", "--revision", "main", "--tokenization-workers", "2", "--max-concurrent-requests", "8", "--max-batch-tokens", "1024", "--max-client-batch-size", "8"]
+    command: ["--model-id", "/data/models--BAAI--bge-reranker-v2-m3/snapshots/${SERVICEMIND_RERANKER_REVISION}", "--tokenization-workers", "2", "--max-concurrent-requests", "8", "--max-batch-tokens", "1024", "--max-client-batch-size", "8"]
+    environment:
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+      HF_HUB_CACHE: /data
+      HUGGINGFACE_HUB_CACHE: /data
+      HF_HUB_OFFLINE: "1"
     ports:
       - "127.0.0.1:8086:80"
     volumes:
-      - servicemind_reranker_models:/data
+      - /home/shihongye/data1/servicemind/data/phase4/models/reranker:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 10s
       timeout: 5s
       retries: 60
       start_period: 120s
+
+  neo4j:
+    image: neo4j:5.26
+    profiles: ["rag"]
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 768m
+      NEO4J_server_memory_pagecache_size: 512m
+    ports:
+      - "127.0.0.1:${SERVICEMIND_NEO4J_HTTP_PORT:-17474}:7474"
+      - "127.0.0.1:${SERVICEMIND_NEO4J_BOLT_PORT:-17687}:7687"
+    volumes:
+      - servicemind_neo4j:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u ${NEO4J_USER} -p ${NEO4J_PASSWORD} 'RETURN 1' >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
 
 volumes:
   glpi_application:
@@ -175,3 +215,4 @@ volumes:
   servicemind_opensearch:
   servicemind_embedding_models:
   servicemind_reranker_models:
+  servicemind_neo4j:
