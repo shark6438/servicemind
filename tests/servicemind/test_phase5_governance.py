@@ -156,6 +156,12 @@ def test_preference_requires_explicit_consent_and_user_scope() -> None:
 @pytest.mark.asyncio
 async def test_procedural_memory_never_auto_activates() -> None:
     repository = InMemoryMemoryRepository()
+    episodes = [await MemoryWriter(repository).write(MemoryCandidate(
+        tenant_id=TENANT_A, memory_type=MemoryType.EPISODIC,
+        subject_key=f"episode-{index}", content="Verified VPN gateway recovery",
+        source_run_id=uuid4(), source_trace_id="trace", evidence_refs=(evidence(),),
+        final_state_verified=True, confidence=1, importance=1, created_by="test",
+    )) for index in range(2)]
     candidate = MemoryCandidate(
         tenant_id=TENANT_A,
         memory_type=MemoryType.PROCEDURAL,
@@ -163,7 +169,7 @@ async def test_procedural_memory_never_auto_activates() -> None:
         content="Check current gateway certificate validity before rotating it",
         source_trace_id="trace",
         evidence_refs=(evidence(),),
-        supporting_episode_ids=(uuid4(), uuid4()),
+        supporting_episode_ids=tuple(item.memory_id for item in episodes if item is not None),
         confidence=1,
         importance=1,
         created_by="test",
@@ -211,6 +217,7 @@ async def test_memory_replay_concurrency_exact_dedup_and_conflict_lifecycle() ->
         MemoryStatus.ACTIVE,
         actor_id="expert",
         reason="conflict_resolved",
+        human_review_ref="review://conflict-resolution",
     )
     assert activated.status is MemoryStatus.ACTIVE
     old = next(item for item in repository.records if item.memory_id == results[0].memory_id)
@@ -584,6 +591,7 @@ async def test_phase5_post_run_memory_flows_back_only_through_analysis_context(
     }
     result = {
         "analysis": state["analysis_result"],
+        "final_state_verified": True,
         "review": {
             "decision": "passed",
             "confidence": 0.99,

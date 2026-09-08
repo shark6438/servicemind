@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import math
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Protocol
@@ -193,7 +194,11 @@ class BgeM3Reranker:
             return []
         model = await self._load()
         pairs = [(query, document) for document in documents]
-        values = await asyncio.to_thread(model.predict, pairs, batch_size=8)
+        import torch
+
+        values = await asyncio.to_thread(
+            model.predict, pairs, batch_size=8, activation_fn=torch.nn.Sigmoid()
+        )
         return np.asarray(values, dtype=np.float32).reshape(-1).tolist()
 
 
@@ -260,8 +265,17 @@ class TeiReranker:
                             "return_text": False,
                         },
                     )
-                for item in response.json():
-                    scores[start + int(item["index"])] = float(item["score"])
+                batch = response.json()
+                expected = len(documents[start : start + 4])
+                if len(batch) != expected or {item["index"] for item in batch} != set(
+                    range(expected)
+                ):
+                    raise ValueError("reranker returned missing, duplicate or invalid indices")
+                for item in batch:
+                    score = float(item["score"])
+                    if not math.isfinite(score) or not 0 <= score <= 1:
+                        raise ValueError("reranker must return normalized finite scores")
+                    scores[start + int(item["index"])] = score
         return scores
 
     async def _post_with_retry(self, client: httpx.AsyncClient, payload: dict) -> httpx.Response:

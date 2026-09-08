@@ -5,7 +5,14 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.engine import CursorResult
 
-from servicemind.domain.knowledge import ChildChunk, KnowledgeDocument, ParentChunk
+from servicemind.domain.knowledge import (
+    ChildChunk,
+    KnowledgeACL,
+    KnowledgeDocument,
+    ParentChunk,
+    RetrievalHit,
+    RetrievalPrincipal,
+)
 from servicemind.persistence.database import tenant_session
 from servicemind.persistence.models import (
     IngestionJobStatus,
@@ -315,6 +322,32 @@ class KnowledgeRepository:
                 )
             ).scalars()
             return {row.id: row.content for row in rows}
+
+    async def authorized_parents(
+        self, principal: RetrievalPrincipal, hits: list[RetrievalHit]
+    ) -> dict[UUID, str]:
+        if not hits:
+            return {}
+        by_parent = {hit.parent_chunk_id: hit for hit in hits}
+        async with tenant_session(principal.tenant_id) as session:
+            rows = (
+                await session.execute(
+                    select(KnowledgeParentChunkRecord, KnowledgeDocumentRecord)
+                    .join(
+                        KnowledgeDocumentRecord,
+                        KnowledgeParentChunkRecord.document_id == KnowledgeDocumentRecord.id,
+                    )
+                    .where(KnowledgeParentChunkRecord.id.in_(by_parent))
+                )
+            ).all()
+            return {
+                parent.id: parent.content
+                for parent, document in rows
+                if principal.allows(KnowledgeACL.model_validate(document.acl))
+                and document.source_version == by_parent[parent.id].source_version
+                and document.content_hash == by_parent[parent.id].content_hash
+                and document.id == by_parent[parent.id].document_id
+            }
 
     # -- Ingestion job register -------------------------------------------------
 

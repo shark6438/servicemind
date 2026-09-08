@@ -35,8 +35,11 @@ class MemoryGovernancePolicy:
     def assess(self, candidate: MemoryCandidate) -> MemoryWriteDecision:
         reasons: list[str] = []
         inspected = json.dumps(
-            {"content": candidate.content, "provenance": candidate.provenance,
-             "evidence_refs": [ref.model_dump() for ref in candidate.evidence_refs]},
+            {
+                "content": candidate.content,
+                "provenance": candidate.provenance,
+                "evidence_refs": [ref.model_dump() for ref in candidate.evidence_refs],
+            },
             ensure_ascii=False,
         )
         normalized = inspected.casefold()
@@ -50,8 +53,7 @@ class MemoryGovernancePolicy:
         if candidate.taint_labels:
             reasons.append("UNRESOLVED_TAINT")
         if PII_PATTERN.search(inspected) and not (
-            candidate.semantic_subtype is SemanticSubtype.PREFERENCE
-            and candidate.consent_ref
+            candidate.semantic_subtype is SemanticSubtype.PREFERENCE and candidate.consent_ref
         ):
             reasons.append("PII_REQUIRES_CONSENT_OR_REDACTION")
         if candidate.importance < 0.4:

@@ -20,9 +20,9 @@ from servicemind.memory.contracts import (
     MemoryWriteAction,
     MemoryWriteDecision,
 )
+from servicemind.memory.policy import MemoryGovernancePolicy
 from servicemind.persistence.database import tenant_session
 from servicemind.persistence.models import MemoryEventRecord, MemoryRecordRow
-from servicemind.memory.policy import MemoryGovernancePolicy
 
 
 class MemoryRepository(Protocol):
@@ -50,9 +50,15 @@ class MemoryRepository(Protocol):
 
 
 LEGAL_TRANSITIONS: dict[MemoryStatus, frozenset[MemoryStatus]] = {
-    MemoryStatus.CANDIDATE: frozenset({MemoryStatus.QUARANTINE, MemoryStatus.ACTIVE, MemoryStatus.REVOKED}),
-    MemoryStatus.QUARANTINE: frozenset({MemoryStatus.ACTIVE, MemoryStatus.REVOKED, MemoryStatus.EXPIRED}),
-    MemoryStatus.ACTIVE: frozenset({MemoryStatus.SUPERSEDED, MemoryStatus.REVOKED, MemoryStatus.EXPIRED}),
+    MemoryStatus.CANDIDATE: frozenset(
+        {MemoryStatus.QUARANTINE, MemoryStatus.ACTIVE, MemoryStatus.REVOKED}
+    ),
+    MemoryStatus.QUARANTINE: frozenset(
+        {MemoryStatus.ACTIVE, MemoryStatus.REVOKED, MemoryStatus.EXPIRED}
+    ),
+    MemoryStatus.ACTIVE: frozenset(
+        {MemoryStatus.SUPERSEDED, MemoryStatus.REVOKED, MemoryStatus.EXPIRED}
+    ),
     MemoryStatus.SUPERSEDED: frozenset(),
     MemoryStatus.REVOKED: frozenset(),
     MemoryStatus.EXPIRED: frozenset(),
@@ -80,44 +86,68 @@ def _status_for(decision: MemoryWriteDecision) -> MemoryStatus | None:
     return MemoryStatus.QUARANTINE
 
 
-def _validate_activation(record: MemoryRecord, review: str | None, episodes: list[MemoryRecord]) -> None:
+def _validate_activation(
+    record: MemoryRecord, review: str | None, episodes: list[MemoryRecord]
+) -> None:
     if not review or not review.strip():
         raise PermissionError("activation from quarantine requires human review")
-    proposal = MemoryCandidate.model_validate({
-        key: value for key, value in record.model_dump().items()
-        if key in MemoryCandidate.model_fields
-    } | {"final_state_verified": record.memory_type is MemoryType.EPISODIC})
+    proposal = MemoryCandidate.model_validate(
+        {
+            key: value
+            for key, value in record.model_dump().items()
+            if key in MemoryCandidate.model_fields
+        }
+        | {"final_state_verified": record.memory_type is MemoryType.EPISODIC}
+    )
     assessment = MemoryGovernancePolicy().assess(proposal)
     hard_reasons = set(assessment.reason_codes) - {
-        "PROCEDURAL_REQUIRES_HUMAN_REVIEW", "CONFIDENCE_BELOW_AUTO_ACTIVATION",
-        "CONFLICT_DETECTED", "DETERMINISTIC_POLICY_PASSED",
+        "PROCEDURAL_REQUIRES_HUMAN_REVIEW",
+        "CONFIDENCE_BELOW_AUTO_ACTIVATION",
+        "CONFLICT_DETECTED",
+        "DETERMINISTIC_POLICY_PASSED",
     }
     if hard_reasons or assessment.action is MemoryWriteAction.REJECT:
         raise PermissionError("memory activation failed safety/evidence revalidation")
     now = datetime.now(UTC)
-    if ((record.valid_to is not None and record.valid_to <= now)
-            or (record.expires_at is not None and record.expires_at <= now)):
+    if (record.valid_to is not None and record.valid_to <= now) or (
+        record.expires_at is not None and record.expires_at <= now
+    ):
         raise PermissionError("expired memory cannot be activated")
     if record.memory_type is MemoryType.PROCEDURAL:
-        valid = [episode for episode in episodes
-                 if episode.memory_id in record.supporting_episode_ids
-                 and episode.tenant_id == record.tenant_id
-                 and episode.memory_type is MemoryType.EPISODIC
-                 and episode.visible_at(now) and not episode.taint_labels
-                 and all(ref.verified for ref in episode.evidence_refs)
-                 and (episode.scope == record.scope
-                      or episode.scope.scope_type is MemoryScopeType.TENANT)]
-        if (len(valid) != len(set(record.supporting_episode_ids))
-                or len({episode.source_run_id for episode in valid} - {None}) < 2):
-            raise PermissionError("procedural memory requires distinct verified accessible episodes")
+        valid = [
+            episode
+            for episode in episodes
+            if episode.memory_id in record.supporting_episode_ids
+            and episode.tenant_id == record.tenant_id
+            and episode.memory_type is MemoryType.EPISODIC
+            and episode.visible_at(now)
+            and not episode.taint_labels
+            and all(ref.verified for ref in episode.evidence_refs)
+            and (
+                episode.scope == record.scope or episode.scope.scope_type is MemoryScopeType.TENANT
+            )
+        ]
+        if (
+            len(valid) != len(set(record.supporting_episode_ids))
+            or len({episode.source_run_id for episode in valid} - {None}) < 2
+        ):
+            raise PermissionError(
+                "procedural memory requires distinct verified accessible episodes"
+            )
 
 
 def _revocation_closure(records: list[MemoryRecord], evidence_id: str) -> set[UUID]:
-    affected = {record.memory_id for record in records
-                if any(ref.evidence_id == evidence_id for ref in record.evidence_refs)}
+    affected = {
+        record.memory_id
+        for record in records
+        if any(ref.evidence_id == evidence_id for ref in record.evidence_refs)
+    }
     while True:
-        enlarged = affected | {record.memory_id for record in records
-                               if affected.intersection(record.supporting_episode_ids)}
+        enlarged = affected | {
+            record.memory_id
+            for record in records
+            if affected.intersection(record.supporting_episode_ids)
+        }
         if enlarged == affected:
             return affected
         affected = enlarged
@@ -231,21 +261,25 @@ class InMemoryMemoryRepository:
 
     async def candidates(self, query: MemoryQuery, *, ceiling: int = 500) -> list[MemoryRecord]:
         async with self._lock:
-            eligible = [
-                record
-                for record in self._records.values()
-                if query.allows_record(record)
-            ]
-            eligible.sort(key=lambda record: (
-                -_semantic_overlap(query.text, record.content),
-                -record.updated_at.timestamp(), str(record.memory_id)))
+            eligible = [record for record in self._records.values() if query.allows_record(record)]
+            eligible.sort(
+                key=lambda record: (
+                    -_semantic_overlap(query.text, record.content),
+                    -record.updated_at.timestamp(),
+                    str(record.memory_id),
+                )
+            )
             return eligible[:ceiling]
 
     async def revalidate(self, query: MemoryQuery, ids: list[UUID]) -> set[UUID]:
         async with self._lock:
             current_query = query.model_copy(update={"at": max(query.at, datetime.now(UTC))})
-            return {memory_id for memory_id in ids if memory_id in self._records
-                    and current_query.allows_record(self._records[memory_id])}
+            return {
+                memory_id
+                for memory_id in ids
+                if memory_id in self._records
+                and current_query.allows_record(self._records[memory_id])
+            }
 
     async def transition(
         self,
@@ -377,12 +411,17 @@ class PostgresMemoryRepository:
             raise PermissionError("query tenant does not match repository tenant")
         scope_filters = [MemoryRecordRow.scope_type == "tenant"]
         for scope_type, ids in (
-            ("user", [query.user_id]), ("entity", [str(i) for i in query.entity_ids]),
-            ("group", [str(i) for i in query.group_ids]), ("service", list(query.service_ids)),
+            ("user", [query.user_id]),
+            ("entity", [str(i) for i in query.entity_ids]),
+            ("group", [str(i) for i in query.group_ids]),
+            ("service", list(query.service_ids)),
         ):
             if ids:
-                scope_filters.append(and_(MemoryRecordRow.scope_type == scope_type,
-                                          MemoryRecordRow.scope_id.in_(ids)))
+                scope_filters.append(
+                    and_(
+                        MemoryRecordRow.scope_type == scope_type, MemoryRecordRow.scope_id.in_(ids)
+                    )
+                )
         return [
             MemoryRecordRow.status == MemoryStatus.ACTIVE.value,
             MemoryRecordRow.memory_type.in_([kind.value for kind in query.memory_types]),
@@ -391,14 +430,24 @@ class PostgresMemoryRepository:
             or_(MemoryRecordRow.expires_at.is_(None), MemoryRecordRow.expires_at > query.at),
             MemoryRecordRow.taint_labels == [],
             or_(*scope_filters),
-            or_(MemoryRecordRow.created_by != "post-run-memory-middleware",
-                MemoryRecordRow.scope_type == "user"),
-            or_(MemoryRecordRow.provenance["required_entity_ids"].is_(None),
+            or_(
+                MemoryRecordRow.created_by != "post-run-memory-middleware",
+                MemoryRecordRow.scope_type == "user",
+            ),
+            or_(
+                MemoryRecordRow.provenance["required_entity_ids"].is_(None),
                 ~MemoryRecordRow.provenance.has_key("required_entity_ids"),
-                MemoryRecordRow.provenance["required_entity_ids"].contained_by(sorted(query.entity_ids))),
-            or_(MemoryRecordRow.provenance["required_group_ids"].is_(None),
+                MemoryRecordRow.provenance["required_entity_ids"].contained_by(
+                    sorted(query.entity_ids)
+                ),
+            ),
+            or_(
+                MemoryRecordRow.provenance["required_group_ids"].is_(None),
                 ~MemoryRecordRow.provenance.has_key("required_group_ids"),
-                MemoryRecordRow.provenance["required_group_ids"].contained_by(sorted(query.group_ids))),
+                MemoryRecordRow.provenance["required_group_ids"].contained_by(
+                    sorted(query.group_ids)
+                ),
+            ),
         ]
 
     async def persist(
@@ -531,9 +580,13 @@ class PostgresMemoryRepository:
     async def revalidate(self, query: MemoryQuery, ids: list[UUID]) -> set[UUID]:
         current_query = query.model_copy(update={"at": max(query.at, datetime.now(UTC))})
         async with tenant_session(self.tenant_id) as session:
-            rows = (await session.execute(select(MemoryRecordRow).where(
-                *self._read_filters(current_query), MemoryRecordRow.id.in_(ids)
-            ))).scalars()
+            rows = (
+                await session.execute(
+                    select(MemoryRecordRow).where(
+                        *self._read_filters(current_query), MemoryRecordRow.id.in_(ids)
+                    )
+                )
+            ).scalars()
             return {row.id for row in rows if current_query.allows_record(_to_domain(row))}
 
     async def transition(
@@ -549,9 +602,7 @@ class PostgresMemoryRepository:
             await self._write_lock(session)
             row = (
                 await session.execute(
-                    select(MemoryRecordRow)
-                    .where(MemoryRecordRow.id == memory_id)
-                    .with_for_update()
+                    select(MemoryRecordRow).where(MemoryRecordRow.id == memory_id).with_for_update()
                 )
             ).scalar_one()
             _validate_transition(
@@ -561,11 +612,18 @@ class PostgresMemoryRepository:
                 human_review_ref=human_review_ref,
             )
             if status is MemoryStatus.ACTIVE:
-                episodes = (await session.execute(select(MemoryRecordRow).where(
-                    MemoryRecordRow.id.in_([UUID(value) for value in row.supporting_episode_ids])
-                ))).scalars()
-                _validate_activation(_to_domain(row), human_review_ref,
-                                     [_to_domain(episode) for episode in episodes])
+                episodes = (
+                    await session.execute(
+                        select(MemoryRecordRow).where(
+                            MemoryRecordRow.id.in_(
+                                [UUID(value) for value in row.supporting_episode_ids]
+                            )
+                        )
+                    )
+                ).scalars()
+                _validate_activation(
+                    _to_domain(row), human_review_ref, [_to_domain(episode) for episode in episodes]
+                )
                 prior_active = list(
                     (
                         await session.execute(

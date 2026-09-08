@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime, timedelta
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -370,6 +370,8 @@ class Phase5Governance:
             return 0
         if not result.get("final_state_verified") or not state.get("user_id"):
             return 0
+        if state.get("request_write") and not (result.get("execution") or {}).get("verified"):
+            return 0
         tenant_id = UUID(state["tenant_id"])
         run_id = UUID(state["run_id"])
 
@@ -405,7 +407,9 @@ class Phase5Governance:
                 ensure_ascii=False,
                 sort_keys=True,
             )
-            confidence = min(float(analysis.get("confidence", 0)), float(review.get("confidence", 0)))
+            confidence = min(
+                float(analysis.get("confidence", 0)), float(review.get("confidence", 0))
+            )
             return [
                 MemoryCandidate(
                     tenant_id=tenant_id,

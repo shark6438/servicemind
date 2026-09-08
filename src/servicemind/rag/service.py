@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import time
 from collections import Counter
 from pathlib import Path
@@ -333,6 +334,8 @@ class EnterpriseRAG:
         the faithfulness anchor, independent of how many candidate arms ran).
         """
         started = time.perf_counter()
+        if not 1 <= final_k <= 50:
+            raise ValueError("final_k must be between 1 and 50")
         processed = await query_processor.process(
             query,
             use_model=use_query_model,
@@ -345,10 +348,32 @@ class EnterpriseRAG:
             mode=mode,
             use_rewrites=use_rewrites,
         )
+        candidate_count = len(hits)
+        if hits and self.repository is None:
+            raise RuntimeError("KnowledgeRepository missing; refusing OpenSearch-only parent expansion")
+        hits = [hit for hit in hits if principal.allows(hit.acl)]
+        if hits:
+            if self.repository is None:
+                raise RuntimeError(
+                    "KnowledgeRepository is required for RLS-protected parent expansion"
+                )
+            if hasattr(self.repository, "authorized_parents"):
+                parents = await self.repository.authorized_parents(principal, hits)
+            else:
+                parents = await self.repository.parents(
+                    principal.tenant_id, [hit.parent_chunk_id for hit in hits]
+                )
+            hits = [hit for hit in hits if hit.parent_chunk_id in parents]
+        else:
+            parents = {}
         if run_rerank and hits:
             scores = await self.reranker.score(
                 processed.normalized_query, [hit.child_content for hit in hits]
             )
+            if len(scores) != len(hits) or any(
+                not math.isfinite(score) or not 0 <= score <= 1 for score in scores
+            ):
+                raise ValueError("reranker must return one normalized finite score per hit")
             hits = [
                 hit.model_copy(update={"rerank_score": score})
                 for hit, score in zip(hits, scores, strict=True)
@@ -368,7 +393,15 @@ class EnterpriseRAG:
         per_document: Counter[UUID] = Counter()
         per_source: Counter[str] = Counter()
         unique: list = []
+        budget = settings.SERVICEMIND_RAG_CONTEXT_TOKENS
+        used = 0
         for hit in ranked:
+            content = parents.get(hit.parent_chunk_id)
+            if not content:
+                continue
+            count = semantic_chunker.tokens(content)
+            if used + count > budget:
+                continue
             if hit.parent_chunk_id in seen_parents:
                 continue
             if per_document[hit.document_id] >= per_document_cap:
@@ -379,20 +412,10 @@ class EnterpriseRAG:
             per_document[hit.document_id] += 1
             per_source[hit.source] += 1
             unique.append(hit)
+            used += count
             if len(unique) >= final_k:
                 break
 
-        parent_ids = [hit.parent_chunk_id for hit in unique]
-        if parent_ids:
-            repository = self.repository
-            if repository is None:
-                raise RuntimeError(
-                    "KnowledgeRepository is the RLS-protected authority for parent chunks; "
-                    "refusing OpenSearch-only parent expansion (cross-tenant leak path)."
-                )
-            parents = await repository.parents(principal.tenant_id, parent_ids)
-        else:
-            parents = {}
         items: list[ContextItem] = []
         budget = settings.SERVICEMIND_RAG_CONTEXT_TOKENS
         used = 0
@@ -418,7 +441,7 @@ class EnterpriseRAG:
             query=processed,
             items=items,
             retrieval_mode=_retrieval_mode_label(mode, run_rerank, use_rewrites),
-            candidate_count=len(hits),
+            candidate_count=candidate_count,
             latency_ms=(time.perf_counter() - started) * 1000,
         )
 

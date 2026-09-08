@@ -689,8 +689,17 @@ class OpenSearchKnowledgeIndex:
             queries: list[dict[str, Any]] = [
                 {
                     "bool": {
-                        "must": [{"knn": {"embedding": {"vector": vector, "k": dense_k,
-                                  "filter": {"bool": {"filter": filters}}}}}],
+                        "must": [
+                            {
+                                "knn": {
+                                    "embedding": {
+                                        "vector": vector,
+                                        "k": dense_k,
+                                        "filter": {"bool": {"filter": filters}},
+                                    }
+                                }
+                            }
+                        ],
                         "filter": filters,
                     }
                 }
@@ -724,8 +733,17 @@ class OpenSearchKnowledgeIndex:
                 "_source": {"excludes": ["embedding"]},
                 "query": {
                     "bool": {
-                        "must": [{"knn": {"embedding": {"vector": vector, "k": dense_k,
-                                  "filter": {"bool": {"filter": filters}}}}}],
+                        "must": [
+                            {
+                                "knn": {
+                                    "embedding": {
+                                        "vector": vector,
+                                        "k": dense_k,
+                                        "filter": {"bool": {"filter": filters}},
+                                    }
+                                }
+                            }
+                        ],
                         "filter": filters,
                     }
                 },

@@ -179,6 +179,18 @@ class RetrievalPrincipal(BaseModel):
     profile_ids: frozenset[int] = Field(default_factory=frozenset)
     query_time: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
+    def allows(self, acl: KnowledgeACL) -> bool:
+        return (
+            acl.tenant_id in {None, self.tenant_id}
+            and acl.is_active
+            and acl.effective_from <= self.query_time
+            and (acl.effective_to is None or acl.effective_to > self.query_time)
+            and (not acl.entity_ids or bool(acl.entity_ids & self.entity_ids))
+            and (not acl.group_ids or bool(acl.group_ids & self.group_ids))
+            and (not acl.profile_ids or bool(acl.profile_ids & self.profile_ids))
+            and (not acl.user_ids or self.user_id in acl.user_ids)
+        )
+
 
 class RetrievalHit(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
