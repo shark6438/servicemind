@@ -1,5 +1,5 @@
 // Minimal AG-UI client for manually validating the service's /agui endpoints,
-// built on the official @ag-ui/client SDK. See docs/AGUI.md for details.
+// built on the official @ag-ui/client SDK. See https://docs.ag-ui.com for details.
 //
 // Usage:
 //   cd scripts/agui-client
@@ -55,7 +55,7 @@ try {
         if (event.name === "on_interrupt") {
           console.log(`[interrupted] ${JSON.stringify(event.value)}`);
           console.log(
-            "resume by running the same thread with forwardedProps {command: {resume: <answer>}} - see docs/AGUI.md"
+            "resume by running the same thread with forwardedProps {command: {resume: <answer>}} - see https://docs.ag-ui.com"
           );
         }
       },

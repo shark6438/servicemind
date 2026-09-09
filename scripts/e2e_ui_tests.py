@@ -1,7 +1,6 @@
 """Browser end-to-end scenarios for the Streamlit app UI.
 
-Extends ``scripts/smoke_live_app.py`` (a single chat round-trip) with a small
-suite covering the key user journeys that Streamlit version bumps or client /
+Runs the key user journeys that Streamlit version bumps or client /
 schema changes have quietly broken before. It drives a real browser through the
 app the same way a user would, so it catches breakage that the pytest suite
 (which mocks the transport) and the docker CI health checks cannot.

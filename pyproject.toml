@@ -1,9 +1,14 @@
 [project]
-name = "agent-service-toolkit"
+name = "servicemind"
 version = "0.1.0"
-description = "Full toolkit for running an AI agent service built with LangGraph, FastAPI and Streamlit"
+description = "ServiceMind — enterprise ITSM agent platform: multi-agent orchestration, hybrid RAG / Graph-RAG, governed long-term memory, and GLPI integration"
 readme = "README.md"
-authors = [{ name = "Joshua Carroll", email = "carroll.joshk@gmail.com" }]
+authors = [
+    # Original author of the upstream AI Agent Service Toolkit this repo derives from (MIT).
+    { name = "Joshua Carroll", email = "carroll.joshk@gmail.com" },
+    # ServiceMind maintainer.
+    { name = "Shark6438", email = "2869928829@qq.com" },
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "License :: OSI Approved :: MIT License",

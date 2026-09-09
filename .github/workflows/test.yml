@@ -117,7 +117,7 @@ jobs:
           push: false
           load: true
           provenance: false
-          tags: agent-service-toolkit.service:${{ github.sha }}
+          tags: servicemind.service:${{ github.sha }}
           file: docker/Dockerfile.service
 
       - name: Build app image
@@ -127,7 +127,7 @@ jobs:
           push: false
           load: true
           provenance: false
-          tags: agent-service-toolkit.app:${{ github.sha }}
+          tags: servicemind.app:${{ github.sha }}
           file: docker/Dockerfile.app
 
       - name: Start service container
@@ -135,7 +135,7 @@ jobs:
           -e USE_FAKE_MODEL=true \
           -e PORT=80 \
           -e SERVICEMIND_DATABASE_URL='sqlite+aiosqlite:////app/sm.db' \
-          agent-service-toolkit.service:${{ github.sha }}
+          servicemind.service:${{ github.sha }}
 
       - name: Confirm service starts correctly
         run: |
@@ -151,7 +151,7 @@ jobs:
           '
 
       - name: Run app container
-        run: docker run -d --name app-container --network host -e AGENT_URL=http://0.0.0.0 agent-service-toolkit.app:${{ github.sha }}
+        run: docker run -d --name app-container --network host -e AGENT_URL=http://0.0.0.0 servicemind.app:${{ github.sha }}
 
       - name: Confirm app starts correctly
         run: |

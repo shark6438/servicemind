@@ -1,256 +1,237 @@
-# 🧰 AI Agent Service Toolkit
+# ⚙️ ServiceMind
 
-[![build status](https://github.com/JoshuaC215/agent-service-toolkit/actions/workflows/test.yml/badge.svg)](https://github.com/JoshuaC215/agent-service-toolkit/actions/workflows/test.yml) [![codecov](https://codecov.io/github/JoshuaC215/agent-service-toolkit/graph/badge.svg?token=5MTJSYWD05)](https://codecov.io/github/JoshuaC215/agent-service-toolkit) [![Python Version](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FJoshuaC215%2Fagent-service-toolkit%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)](https://github.com/JoshuaC215/agent-service-toolkit/blob/main/pyproject.toml)
-[![GitHub License](https://img.shields.io/github/license/JoshuaC215/agent-service-toolkit)](https://github.com/JoshuaC215/agent-service-toolkit/blob/main/LICENSE) [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_red.svg)](https://agent-service-toolkit.streamlit.app/)
+[![build status](https://github.com/shark6438/servicemind/actions/workflows/test.yml/badge.svg)](https://github.com/shark6438/servicemind/actions/workflows/test.yml)
+[![Python Version](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fshark6438%2Fservicemind%2Fmain%2Fpyproject.toml)](https://github.com/shark6438/servicemind/blob/main/pyproject.toml)
+[![GitHub License](https://img.shields.io/github/license/shark6438/servicemind)](https://github.com/shark6438/servicemind/blob/main/LICENSE)
 
-A full toolkit for running an AI agent service built with LangGraph, FastAPI and Streamlit.
+> **简体中文说明见 [README.zh-CN.md](README.zh-CN.md)。**
 
-It includes a [LangGraph](https://langchain-ai.github.io/langgraph/) agent, a [FastAPI](https://fastapi.tiangolo.com/) service to serve it, a client to interact with the service, and a [Streamlit](https://streamlit.io/) app that uses the client to provide a chat interface. Data structures and settings are built with [Pydantic](https://github.com/pydantic/pydantic).
+ServiceMind is an **enterprise ITSM agent platform**: an orchestrator that turns a GLPI
+ticket into a governed, auditable, multi-agent run. It layers enterprise retrieval
+(hybrid RAG over OpenSearch with cross-encoder reranking, plus structural Graph-RAG over
+Neo4j), governed long-term memory, a model gateway with cost/audit control, and human
+approval workflows on top of a LangGraph agent service.
 
-This project offers a template for you to easily build and run your own agents using the LangGraph framework. It demonstrates a complete setup from agent definition to user interface, making it easier to get started with LangGraph-based projects by providing a full, robust toolkit.
+The repo is a derivative of the 🧰 [AI Agent Service Toolkit](https://github.com/JoshuaC215/agent-service-toolkit)
+(MIT). The full upstream git history is preserved — see [Upstream, history and license](#upstream-history-and-license).
 
-**[🎥 Watch a video walkthrough of the repo and app](https://www.youtube.com/watch?v=pdYVHw_YCNY)**
+## What ServiceMind adds
 
-## Overview
+- **ITSM ticket runs** — `POST /v1/servicemind/runs` starts a governed agent run bound to
+  a GLPI ticket. Each run is tenant-scoped, role-checked, and recorded in an append-only
+  audit log. Runs that plan to change state pause for **human approval** keyed to an
+  immutable action hash; runs that cannot resolve under policy pause for human review
+  instead of guessing.
+- **GLPI integration** — read/action client for GLPI 11 (High-Level API), signed webhook
+  ingestion (`/v1/servicemind/webhooks/glpi`) with idempotent dedupe, entity scoping, and a
+  health probe. Run it against the bundled local stack in `deploy/glpi/`.
+- **Hybrid enterprise RAG (Phase 4)** — document → parent → child chunking with a semantic
+  chunker, BM25 + dense retrieval fused by reciprocal rank fusion on OpenSearch, a
+  cross-encoder rerank pass, multi-query lexical fan-out, citation-carrying evidence, and a
+  context packer with per-document/source diversity ceilings. ACLs and tenant row-level
+  security are enforced at query time.
+- **Graph-RAG (Phase 4)** — a Neo4j projection of `Ticket → CI → Service → Problem →
+  Change` relationships answers structural queries (e.g. "what else depends on this
+  service?") that text retrieval alone cannot express. Graph findings are a side channel;
+  hybrid text retrieval stays the primary channel.
+- **Governed long-term memory + context (Phase 5)** — declarative, feature-gated memory
+  with confidence-thresholded auto-activation, vector retrieval, and an input context
+  packer under a token budget, so rollout never needs a schema downgrade.
+- **Model gateway governance (Phase 5)** — provider/model allowlists (global and per-tenant),
+  per-call audit persistence, retry/timeout/cost ceilings, and a semantic cache.
+- **Skills** — versioned skills (`skills/`) the agents can be equipped with for change
+  risk, incident triage, major incidents, recurring problems, and VPN/MFA recovery.
 
-### [Try the app!](https://agent-service-toolkit.streamlit.app/)
+It also keeps the toolkit's runtime scaffold: a FastAPI service that serves both the
+ServiceMind API and the generic LangGraph agents, an `AgentClient`, and a Streamlit
+"ServiceMind Console" chat UI with voice input/output.
 
-<a href="https://agent-service-toolkit.streamlit.app/"><img src="media/app_screenshot.png" width="600" alt="App screenshot"></a>
+## Repository layout
 
-### Quickstart
+Product and scaffold live under one `src/` tree. The **product** is self-contained in
+`src/servicemind/` and is mounted onto the service in `src/service/service.py`.
 
-Run directly in python
+```text
+src/
+├── servicemind/        # The product: rag/, graphrag/, domain/, memory/, context/,
+│                       #   skills/, model_gateway/, security/, persistence/,
+│                       #   orchestration/, harness/, integrations/, observability/
+├── service/            # FastAPI shell — mounts ServiceMind API + generic agent endpoints
+├── agents/             # Inherited LangGraph agents (chatbot, research-assistant, …)
+├── core/               # Settings + model lookup (shared)
+├── schema/             # Protocol + model-name schema
+├── client/             # AgentClient (build other apps on the agent service)
+├── voice/              # STT/TTS providers for the chat UI
+├── streamlit_app.py    # ServiceMind Console (chat UI)
+└── run_service.py      # Entry point: uvicorn "service:app"
+migrations/             # Alembic migrations 0001–0010 (product schema, Postgres)
+deploy/glpi/            # Local GLPI + MariaDB + Postgres + Keycloak + OpenSearch +
+                        #   Neo4j + TEI embedding/reranker stack (docker compose)
+evaluation/             # Gold sets, retrieval/route/acceptance eval harness + reports
+skills/                 # Versioned skills the agents can be equipped with
+docker/                 # Dockerfiles (service / app), add-on compose files
+docs/                   # Phase acceptance docs + the enterprise spec
+scripts/                # Phase seed / verify / ingest / evaluate scripts
+```
+
+The service boot path (`src/service/service.py` → `src/run_service.py`) and the root
+`compose.yaml` still depend on the inherited scaffold layers (`src/agents|core|memory|
+schema|client|voice` + `streamlit_app.py`), so those layers are load-bearing and not
+"product" code — treat them as runtime infrastructure.
+
+## Architecture at a glance
+
+<img src="media/agent_architecture.png" width="700" alt="ServiceMind architecture diagram">
+
+A GLPI ticket event (or a `runs` request) enters the **service shell**; the ServiceMind
+**orchestration runtime** plans the run as a multi-step LangGraph graph. Retrieval layers
+feed the planner: **hybrid RAG** (OpenSearch + rerank, gated by tenant RLS + ACLs) and
+**Graph-RAG** (Neo4j, optional). Writes go back through **GLPI** only after an approver
+resolves the pending action. Every step transacts against **Postgres** under
+`set_config`-pinned tenant sessions, is recorded to the **append-only audit**, and the
+model calls go through the **model gateway** (allowlists, cost ceilings, audit). See
+[`docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md`](docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md)
+and [`docs/企业IT服务管理(ITSM)智能体平台.md`](docs/企业IT服务管理(ITSM)智能体平台.md).
+
+## Quickstart
+
+### Prerequisites
+
+- Python ≥ 3.12, < 3.15, and [uv](https://docs.astral.sh/uv/) (this repo pins uv in CI and
+  in the Dockerfiles; see [DEPENDENCIES.md](DEPENDENCIES.md)).
+- At least one LLM provider key in `.env` (DeepSeek is the ServiceMind default; the
+  toolkit's OpenAI/Anthropic/etc. providers remain available). `USE_FAKE_MODEL=true`
+  removes that requirement for a zero-external demo.
+
+### A. Full stack with Docker Compose
+
+The root [compose.yaml](compose.yaml) starts Postgres, the agent service, and the
+Streamlit app:
 
 ```sh
-# At least one LLM API key is required
-echo 'OPENAI_API_KEY=your_openai_api_key' >> .env
+cp .env.example .env        # then add a provider API key and SERVICEMIND_DATABASE_URL
+docker compose watch        # or: docker compose up --build
+```
 
-# uv is the recommended way to install agent-service-toolkit, but "pip install ." also works
-# For uv installation options, see: https://docs.astral.sh/uv/getting-started/installation/
-curl -LsSf https://astral.sh/uv/0.11.32/install.sh | sh
+- ServiceMind Console: <http://localhost:8501>
+- Agent service + OpenAPI docs: <http://localhost:8080/redoc>
 
-# Install dependencies. "uv sync" creates .venv automatically
+### B. Enterprise GLPI stack (recommended for ITSM features)
+
+The ServiceMind API needs Postgres 16, and full incident workflows need GLPI + Keycloak +
+OpenSearch + Neo4j + TEI. `deploy/glpi/compose.yaml` provisions the whole local stack;
+see [deploy/glpi/README.md](deploy/glpi/README.md) for commands and ports.
+
+### C. Manual run without Docker
+
+```sh
 uv sync --frozen
-source .venv/bin/activate
-python src/run_service.py
 
-# In another shell
-source .venv/bin/activate
-streamlit run src/streamlit_app.py
+# .env: set a provider key + SERVICEMIND_DATABASE_URL (Postgres recommended).
+# For a UI-only demo with no LLM key and no infra:
+#   USE_FAKE_MODEL=true
+#   SERVICEMIND_DATABASE_URL=sqlite+aiosqlite:///./servicemind.db
+cp .env.example .env
+
+# Create/extend the product schema (migrations target Postgres 16):
+uv run alembic upgrade head
+
+# Shell 1 — agent service
+uv run python src/run_service.py
+
+# Shell 2 — ServiceMind Console
+uv run streamlit run src/streamlit_app.py
 ```
 
-Run with docker
+## Configuration
+
+Everything is environment-driven through [`.env.example`](.env.example). Main groups:
+
+- **Providers** — `DEEPSEEK_API_KEY` (default provider), plus the toolkit's
+  OpenAI/Anthropic/Google/Groq/AWS/Ollama/OpenRouter/compatible keys.
+- **Runtime** — `HOST`, `PORT`, `AUTH_SECRET` (HTTP bearer), `MODE=dev` (uvicorn reload),
+  `DATABASE_TYPE`/`POSTGRES_*` for the scaffold checkpointer.
+- **ServiceMind database** — `SERVICEMIND_DATABASE_URL` (runtime, RLS-tenant-scoped) and
+  `SERVICEMIND_MIGRATION_DATABASE_URL` (alembic). Postgres 16 is required for the ITSM
+  endpoints; sqlite boots the shell for the UI demo only.
+- **GLPI** — `GLPI_BASE_URL`, `GLPI_API_VERSION`, credentials, entity/profile defaults.
+- **Phase 4 RAG / Graph-RAG** — OpenSearch URL + credentials, embedding/reranker model +
+  pinned revisions, TEI endpoints, RAG feature gates, Neo4j URI/credentials.
+- **Phase 5 governance** — `SERVICEMIND_{MEMORY,CONTEXT,SKILLS,MODEL_GATEWAY_AUDIT,
+  SEMANTIC_CACHE}_ENABLED` feature gates, model allowlists, cost/time ceilings.
+
+Feature gates are off by default; read the Phase 4/5 docs before enabling them in a
+target environment.
+
+## HTTP API reference
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /health`, `GET /info` | Liveness; available agents/models |
+| `POST /{agent_id}/invoke`, `/stream` | Generic toolkit agents (inherited) |
+| `GET/POST /threads`, `POST /history`, `POST /feedback` | Conversation state + feedback |
+| `POST /v1/servicemind/runs` | Start a governed GLPI ticket run (role `analyst`) |
+| `GET /v1/servicemind/runs/{id}` | Run state + pending action intent |
+| `POST /v1/servicemind/runs/{id}/approval` | Approve/reject a write action (role `approver`) |
+| `POST /v1/servicemind/runs/{id}/review-resolution` | Resolve a review escalation |
+| `POST /v1/servicemind/runs/{id}:cancel` | Cancel a pending/awaiting run |
+| `GET /v1/servicemind/runs/{id}/events` | SSE stream of run events |
+| `POST /v1/servicemind/webhooks/glpi` | Ingest a signed GLPI webhook (idempotent) |
+| `GET /v1/servicemind/glpi/health` | GLPI connectivity/tenant probe |
+| AG-UI endpoint | Connect any AG-UI compatible frontend |
+
+## Testing and CI
+
+The test suite is the contract. Keep it green before pushing:
 
 ```sh
-echo 'OPENAI_API_KEY=your_openai_api_key' >> .env
-docker compose watch
+uv run ruff format --check .
+uv run ruff check .
+uv run pyrefly check
+uv run pytest                                   # full offline suite
+uv run pytest tests/integration --run-docker    # docker-gated integration
 ```
 
-### Architecture Diagram
+`.github/workflows/test.yml` runs ruff, pyrefly, pytest (Python 3.12/3.13/3.14), markdown
+linting, and a docker-based integration job. For per-commit authoring conventions see
+[CLAUDE.md](CLAUDE.md).
 
-<img src="media/agent_architecture.png" width="600" alt="Agent architecture diagram">
+## Documentation index
 
-### Key Features
+- Enterprise spec (Chinese): [`docs/企业IT服务管理(ITSM)智能体平台.md`](docs/企业IT服务管理(ITSM)智能体平台.md)
+- Architecture map: [`docs/PHASE3_CURRENT_ARCHITECTURE_MAP.md`](docs/PHASE3_CURRENT_ARCHITECTURE_MAP.md)
+- Phase 4 RAG technical baseline: [`docs/PHASE4_RAG_TECHNICAL_BASELINE.md`](docs/PHASE4_RAG_TECHNICAL_BASELINE.md)
+- Phase 5 architecture & acceptance: [`docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md`](docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md)
+- Phase acceptance reports: `docs/PHASE*_ACCEPTANCE.md`, plus live reports under
+  `evaluation/reports/`
+- Local deployment notes: [`LOCAL_DEPLOYMENT.md`](LOCAL_DEPLOYMENT.md)
+- GLPI stack: [`deploy/glpi/README.md`](deploy/glpi/README.md)
+- Dependencies & environment: [`DEPENDENCIES.md`](DEPENDENCIES.md)
 
-1. **LangGraph Agent and latest features**: A customizable agent built using the LangGraph framework. Implements the latest LangGraph v1.0 features including human in the loop with `interrupt()`, flow control with `Command`, long-term memory with `Store`, and `langgraph-supervisor`.
-1. **FastAPI Service**: Serves the agent with both streaming and non-streaming endpoints.
-1. **Advanced Streaming**: A novel approach to support both token-based and message-based streaming.
-1. **AG-UI Protocol Support**: Every agent is also served over the [AG-UI protocol](https://docs.ag-ui.com) for connecting AG-UI compatible frontends like CopilotKit - see [docs](docs/AGUI.md).
-1. **Streamlit Interface**: Provides a user-friendly chat interface for interacting with the agent, including voice input and output.
-1. **Multiple Agent Support**: Run multiple agents in the service and call by URL path. Available agents and models are described in `/info`
-1. **Asynchronous Design**: Utilizes async/await for efficient handling of concurrent requests.
-1. **Content Moderation**: Implements Safeguard for content moderation (requires Groq API key).
-1. **RAG Agent**: A basic RAG agent implementation using ChromaDB - see [docs](docs/RAG_Assistant.md).
-1. **Chat History**: Lists a user's previous conversations per agent via `/threads`, with a "Previous Chats" sidebar in the Streamlit app.
-1. **Feedback Mechanism**: Includes a star-based feedback system integrated with LangSmith.
-1. **Docker Support**: Includes Dockerfiles and a docker compose file for easy development and deployment.
-1. **Testing**: Includes robust unit and integration tests for the full repo.
+## Upstream, history and license
 
-### Key Files
+This project derives from the 🧰 [AI Agent Service Toolkit](https://github.com/JoshuaC215/agent-service-toolkit)
+(`JoshuaC215/agent-service-toolkit`, MIT), a full LangGraph + FastAPI + Streamlit agent
+service toolkit by Joshua Carroll and contributors. The relationship is kept honest:
 
-The repository is structured as follows:
+- **Full git history is retained** — the repo is not a squashed rewrite. It begins at the
+  upstream lineage (~255 commits by Joshua Carroll and the toolkit's other contributors)
+  and continues with the ServiceMind commits by **Shark6438** (product work starting
+  upstream of `fe3b2dc`, September 2026). The contribution history on GitHub therefore
+  shows both the ServiceMind maintainer and the upstream authors whose code this repo
+  started from.
+- **LICENSE and copyright are preserved** — [LICENSE](LICENSE) is the upstream MIT
+  License, Copyright (c) 2024 Joshua Carroll. ServiceMind's additions are distributed
+  under the same license.
+- **Scaffold code stays attributed** — the inherited toolkit layers (`src/agents`, `src/
+  core`, `src/schema`, `src/client`, `src/voice`, `src/streamlit_app.py`, the docker
+  files, and the generic chat endpoints) remain their original authors' work.
 
-- `src/agents/`: Defines several agents with different capabilities
-- `src/schema/`: Defines the protocol schema
-- `src/core/`: Core modules including LLM definition and settings
-- `src/service/service.py`: FastAPI service to serve the agents
-- `src/client/client.py`: Client to interact with the agent service
-- `src/streamlit_app.py`: Streamlit app providing a chat interface
-- `tests/`: Unit and integration tests
-
-## Setup and Usage
-
-1. Clone the repository:
-
-   ```sh
-   git clone https://github.com/JoshuaC215/agent-service-toolkit.git
-   cd agent-service-toolkit
-   ```
-
-2. Set up environment variables:
-   Create a `.env` file in the root directory. At least one LLM API key or configuration is required. See the [`.env.example` file](./.env.example) for a full list of available environment variables, including a variety of model provider API keys, header-based authentication, LangSmith tracing, testing and development modes, and OpenWeatherMap API key.
-
-3. You can now run the agent service and the Streamlit app locally, either with Docker or just using Python. The Docker setup is recommended for simpler environment setup and immediate reloading of the services when you make changes to your code.
-
-### Additional setup for specific AI providers
-
-- [Setting up Ollama](docs/Ollama.md)
-- [Setting up VertexAI](docs/VertexAI.md)
-- [Setting up RAG with ChromaDB](docs/RAG_Assistant.md)
-
-### Building or customizing your own agent
-
-To customize the agent for your own use case:
-
-1. Add your new agent to the `src/agents` directory. You can copy `research_assistant.py` or `chatbot.py` and modify it to change the agent's behavior and tools.
-1. Import and add your new agent to the `agents` dictionary in `src/agents/agents.py`. Your agent can be called by `/<your_agent_name>/invoke` or `/<your_agent_name>/stream`.
-1. Adjust the Streamlit interface in `src/streamlit_app.py` to match your agent's capabilities.
-
-### Handling Private Credential files
-
-If your agents or chosen LLM require file-based credential files or certificates, the `privatecredentials/` has been provided for your development convenience. All contents, excluding the `.gitkeep` files, are ignored by git and docker's build process. See [Working with File-based Credentials](docs/File_Based_Credentials.md) for suggested use.
-
-### Docker Setup
-
-This project includes a Docker setup for easy development and deployment. The `compose.yaml` file defines three services: `postgres`, `agent_service` and `streamlit_app`. The `Dockerfile` for each service is in their respective directories.
-
-For local development, we recommend using [docker compose watch](https://docs.docker.com/compose/file-watch/). This feature allows for a smoother development experience by automatically updating your containers when changes are detected in your source code.
-
-1. Make sure you have Docker and Docker Compose (>= [v2.23.0](https://docs.docker.com/compose/release-notes/#2230)) installed on your system.
-
-2. Create a `.env` file from the `.env.example`. At minimum, you need to provide an LLM API key (e.g., OPENAI_API_KEY).
-
-   ```sh
-   cp .env.example .env
-   # Edit .env to add your API keys
-   ```
-
-3. Build and launch the services in watch mode:
-
-   ```sh
-   docker compose watch
-   ```
-
-   This will automatically:
-   - Start a PostgreSQL database service that the agent service connects to
-   - Start the agent service with FastAPI
-   - Start the Streamlit app for the user interface
-
-4. The services will now automatically update when you make changes to your code:
-   - Changes in the relevant python files and directories will trigger updates for the relevant services.
-   - NOTE: If you make changes to the `pyproject.toml` or `uv.lock` files, you will need to rebuild the services by running `docker compose up --build`.
-
-5. Access the Streamlit app by navigating to `http://localhost:8501` in your web browser.
-
-6. The agent service API will be available at `http://0.0.0.0:8080`. You can also use the OpenAPI docs at `http://0.0.0.0:8080/redoc`.
-
-7. Use `docker compose down` to stop the services.
-
-This setup allows you to develop and test your changes in real-time without manually restarting the services.
-
-### Building other apps on the AgentClient
-
-The repo includes a generic `src/client/client.AgentClient` that can be used to interact with the agent service. This client is designed to be flexible and can be used to build other apps on top of the agent. It supports both synchronous and asynchronous invocations, and streaming and non-streaming requests.
-
-See the `src/run_client.py` file for full examples of how to use the `AgentClient`. A quick example:
-
-```python
-from client import AgentClient
-client = AgentClient()
-
-response = client.invoke("Tell me a brief joke?")
-response.pretty_print()
-# ================================== Ai Message ==================================
-#
-# A man walked into a library and asked the librarian, "Do you have any books on Pavlov's dogs and Schrödinger's cat?"
-# The librarian replied, "It rings a bell, but I'm not sure if it's here or not."
-
-```
-
-### Development with LangGraph Studio
-
-The agent supports [LangGraph Studio](https://langchain-ai.github.io/langgraph/concepts/langgraph_studio/), the IDE for developing agents in LangGraph.
-
-`langgraph-cli[inmem]` is installed with `uv sync`. You can simply add your `.env` file to the root directory as described above, and then launch LangGraph Studio with `langgraph dev`. Customize `langgraph.json` as needed. See the [local quickstart](https://langchain-ai.github.io/langgraph/cloud/how-tos/studio/quick_start/#local-development-server) to learn more.
-
-### Local development without Docker
-
-You can also run the agent service and the Streamlit app locally without Docker, just using a Python virtual environment.
-
-1. Create a virtual environment and install dependencies:
-
-   ```sh
-   uv sync --frozen
-   source .venv/bin/activate
-   ```
-
-2. Run the FastAPI server:
-
-   ```sh
-   python src/run_service.py
-   ```
-
-3. In a separate terminal, run the Streamlit app:
-
-   ```sh
-   streamlit run src/streamlit_app.py
-   ```
-
-4. Open your browser and navigate to the URL provided by Streamlit (usually `http://localhost:8501`).
-
-## Projects built with or inspired by agent-service-toolkit
-
-The following are a few of the public projects that drew code or inspiration from this repo.
-
-- **[PolyRAG](https://github.com/QuentinFuxa/PolyRAG)** - Extends agent-service-toolkit with RAG capabilities over both PostgreSQL databases and PDF documents.
-- **[alexrisch/agent-web-kit](https://github.com/alexrisch/agent-web-kit)** - A Next.JS frontend for agent-service-toolkit
-- **[raushan-in/dapa](https://github.com/raushan-in/dapa)** - Digital Arrest Protection App (DAPA) enables users to report financial scams and frauds efficiently via a user-friendly platform.
-
-**Please create a pull request editing the README or open a discussion with any new ones to be added!** Would love to include more projects.
+ServiceMind's own additions (the `src/servicemind` product tree, migrations, GLPI stack,
+evaluation harness, skills, and the ServiceMind phase docs) are maintained by
+**Shark6438**. Thanks to the upstream toolkit and its authors for the foundation.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-**A note on how this repo is maintained:** this is a solo-maintainer project, and issues, PRs, and discussions are triaged on a roughly biweekly cycle with help from an AI maintenance agent. Thanks for your patience if responses take a week or two — I will do my best to respond to truly urgent issues (vulnerability reports, etc.) or in-progress PRs within a few days. The full automation playbooks are versioned in [`docs/maintenance/`](docs/maintenance/) if you're curious how it works.
-
-Currently the tests need to be run using the local development without Docker setup. To run the tests for the agent service:
-
-1. Ensure you're in the project root directory and have activated your virtual environment.
-
-2. Install the development dependencies and pre-commit hooks:
-
-   ```sh
-   uv sync --frozen
-   pre-commit install
-   ```
-
-3. Run the tests using pytest:
-
-   ```sh
-   pytest
-   ```
-
-### Smoke testing optional dependencies
-
-Some integrations aren't exercised by the unit suite or the default CI run because they
-need real infrastructure: the Postgres and MongoDB checkpointers, the AG-UI endpoint, and
-LangFuse tracing. `scripts/smoke_test.sh` spins up each dependency in Docker, runs the
-service against it, verifies the integration end-to-end (including a check that the
-intended backend was actually used, not a silent SQLite fallback), and tears it down.
-
-```sh
-./scripts/smoke_test.sh                 # default: postgres, mongo, agui
-./scripts/smoke_test.sh mongo           # a single target
-./scripts/smoke_test.sh langfuse        # heavy: starts LangFuse's full self-host stack
-./scripts/smoke_test.sh all             # everything, including langfuse
-```
-
-These are opt-in confidence checks for a maintainer or agent — not part of CI. Run the
-target that matches what you changed rather than the whole set. The optional add-on
-compose files live in `docker/` (e.g. `docker/compose.mongo.yaml`), layered on top of the
-default `compose.yaml` so the default stack stays lightweight.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+PRs welcome. Follow [CLAUDE.md](CLAUDE.md) conventions, keep the test suite green, and
+preserve the upstream attribution in anything you touch.
