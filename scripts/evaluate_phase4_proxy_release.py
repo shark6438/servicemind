@@ -561,6 +561,8 @@ def main() -> None:
                     "source-provided silver labels, not independent ServiceMind human qrels",
                     "impossible labels are counted for set composition; end-to-end refusal remains a separate gate",
                     "dense ranking is exact cosine over one max-512-token vector per source document; production uses chunk-level OpenSearch HNSW",
+                    "this run indexes whole source documents, not the production parent/child chunks: no semantic chunking, no hard-split overlap, and no title/section document context on the corpus side, so its numbers are a LOWER BOUND on what the production chunk pipeline scores (see scripts/evaluate_phase4_retrieval.py for the production-faithful gold run)",
+                    "the reranker scores truncated whole documents, not the production child chunks that the real pipeline reranks before parent expansion",
                 ],
             }
             REPORTS.mkdir(parents=True, exist_ok=True)

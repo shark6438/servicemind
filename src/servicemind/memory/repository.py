@@ -86,6 +86,45 @@ def _status_for(decision: MemoryWriteDecision) -> MemoryStatus | None:
     return MemoryStatus.QUARANTINE
 
 
+#: Predecessor statuses that block a subject from being re-written with the
+#: exact same content. Revocation and supersession are authoritative negative
+#: signals (human review / evidence invalidation); silently returning the dead
+#: record would both swallow the new learning and report it as stored.
+_TERMINATED_BY_AUTHORITY = frozenset({MemoryStatus.REVOKED, MemoryStatus.SUPERSEDED})
+
+
+def _subject_dedupe_outcome(
+    predecessor: MemoryStatus | None, same_content: bool
+) -> tuple[bool, MemoryStatus | None, tuple[str, ...]]:
+    """Decide how a write to a known ``subject_key`` relates to its latest version.
+
+    Returns ``(return_existing, override_status, extra_reason_codes)``.
+
+    - No predecessor: fresh write at the policy's decision.
+    - Live (``ACTIVE``) or pending-review (``QUARANTINE``) predecessor with
+      identical content: idempotent duplicate -> return the existing record.
+    - Live/pending predecessor with changed content: version conflict -> force
+      quarantine for human review (never a second live version on the same
+      subject without review).
+    - Identical content after a REVOKED/SUPERSEDED predecessor must NOT
+      resurrect the fact silently; it re-enters quarantine for human review.
+    - Any predecessor that already lapsed (EXPIRED) or a changed content after
+      an authority-terminated predecessor is fresh learning at the policy's
+      decision: nothing live conflicts and the subject must not be deadlocked
+      by its history.
+    """
+    if predecessor is None:
+        return False, None, ()
+    if predecessor in {MemoryStatus.ACTIVE, MemoryStatus.QUARANTINE}:
+        if same_content:
+            return True, None, ()
+        return False, MemoryStatus.QUARANTINE, ("VERSION_CONFLICT",)
+    if same_content and predecessor in _TERMINATED_BY_AUTHORITY:
+        return False, MemoryStatus.QUARANTINE, (f"RESURRECTION_AFTER_{predecessor.value.upper()}",)
+    return False, None, ()
+
+
+
 def _validate_activation(
     record: MemoryRecord, review: str | None, episodes: list[MemoryRecord]
 ) -> None:
@@ -220,6 +259,10 @@ class InMemoryMemoryRepository:
         if decision.action is MemoryWriteAction.REJECT:
             return None
         async with self._lock:
+            # See PostgresMemoryRepository.persist: expire lapsed rows first so
+            # same-content reaffirmations see an EXPIRED (not zombie ACTIVE)
+            # predecessor and are written as a fresh version, not deduped away.
+            self._expire_lapsed_locked()
             key = (candidate.tenant_id, candidate.idempotency_key)
             if key in self._idempotency:
                 return self._records[self._idempotency[key]]
@@ -234,15 +277,25 @@ class InMemoryMemoryRepository:
                 ),
                 key=lambda record: record.version,
             )
-            version = prior[-1].version + 1 if prior else 1
-            lineage = prior[-1].lineage_id if prior else uuid4()
-            if prior and prior[-1].content_hash == candidate.content_hash:
-                self._idempotency[key] = prior[-1].memory_id
-                return prior[-1]
+            previous = prior[-1] if prior else None
+            return_existing, override_status, extra_codes = _subject_dedupe_outcome(
+                previous.status if previous else None,
+                previous is not None and previous.content_hash == candidate.content_hash,
+            )
+            if return_existing and previous is not None:
+                self._idempotency[key] = previous.memory_id
+                return previous
+            version = previous.version + 1 if previous else 1
+            lineage = previous.lineage_id if previous else uuid4()
             effective_decision = decision
-            if prior and prior[-1].content_hash != candidate.content_hash:
-                reason_codes = [*decision.reason_codes, "VERSION_CONFLICT"]
-                if _semantic_overlap(prior[-1].content, candidate.content) >= 0.85:
+            if override_status is not None:
+                reason_codes = [*decision.reason_codes, *extra_codes]
+                if (
+                    override_status is MemoryStatus.QUARANTINE
+                    and previous is not None
+                    and previous.content_hash != candidate.content_hash
+                    and _semantic_overlap(previous.content, candidate.content) >= 0.85
+                ):
                     reason_codes.append("SEMANTIC_DUPLICATE_SUSPECTED")
                 effective_decision = MemoryWriteDecision(
                     action=MemoryWriteAction.QUARANTINE,
@@ -259,8 +312,30 @@ class InMemoryMemoryRepository:
             self._idempotency[key] = record.memory_id
             return record
 
+    def _expire_lapsed_locked(self) -> None:
+        """Lazy TTL: flip ACTIVE rows whose validity window or TTL has lapsed.
+
+        Runs on the read path so an ACTIVE row never keeps a lapsed status, and
+        so the terminal EXPIRED state is reached without a dedicated scheduler.
+        Read selection already excludes lapsed rows via ``visible_at``; this
+        transition keeps the stored status honest and mirrors the audit trail
+        the Postgres repository writes (``memory.expired`` events).
+        """
+        now = datetime.now(UTC)
+        for memory_id, current in tuple(self._records.items()):
+            if current.status is not MemoryStatus.ACTIVE:
+                continue
+            lapsed = (current.expires_at is not None and current.expires_at <= now) or (
+                current.valid_to is not None and current.valid_to <= now
+            )
+            if lapsed:
+                self._records[memory_id] = current.model_copy(
+                    update={"status": MemoryStatus.EXPIRED, "updated_at": now}
+                )
+
     async def candidates(self, query: MemoryQuery, *, ceiling: int = 500) -> list[MemoryRecord]:
         async with self._lock:
+            self._expire_lapsed_locked()
             eligible = [record for record in self._records.values() if query.allows_record(record)]
             eligible.sort(
                 key=lambda record: (
@@ -273,6 +348,7 @@ class InMemoryMemoryRepository:
 
     async def revalidate(self, query: MemoryQuery, ids: list[UUID]) -> set[UUID]:
         async with self._lock:
+            self._expire_lapsed_locked()
             current_query = query.model_copy(update={"at": max(query.at, datetime.now(UTC))})
             return {
                 memory_id
@@ -459,6 +535,11 @@ class PostgresMemoryRepository:
         if candidate.tenant_id != self.tenant_id:
             raise PermissionError("candidate tenant does not match repository tenant")
         async with tenant_session(self.tenant_id) as session:
+            # Expire first so a same-subject candidate sees the true predecessor
+            # status: an ACTIVE row whose TTL/validity has lapsed must read as
+            # EXPIRED, or an identical reaffirmation would return the lapsed row
+            # (idempotent dedupe) and report a stored memory that is not visible.
+            await self._expire_lapsed(session)
             await self._write_lock(session)
             lock_key = "|".join(
                 (
@@ -497,15 +578,24 @@ class PostgresMemoryRepository:
                     .limit(1)
                 )
             ).scalar_one_or_none()
-            if previous and previous.content_hash == candidate.content_hash:
+            return_existing, override_status, extra_codes = _subject_dedupe_outcome(
+                MemoryStatus(previous.status) if previous else None,
+                previous is not None and previous.content_hash == candidate.content_hash,
+            )
+            if return_existing and previous is not None:
                 return _to_domain(previous)
             version = previous.version + 1 if previous else 1
             lineage_id = previous.lineage_id if previous else uuid4()
             reason_codes = list(decision.reason_codes)
-            if previous and previous.content_hash != candidate.content_hash:
-                status = MemoryStatus.QUARANTINE
-                reason_codes.append("VERSION_CONFLICT")
-                if _semantic_overlap(previous.content, candidate.content) >= 0.85:
+            if override_status is not None:
+                status = override_status
+                reason_codes = [*reason_codes, *extra_codes]
+                if (
+                    override_status is MemoryStatus.QUARANTINE
+                    and previous is not None
+                    and previous.content_hash != candidate.content_hash
+                    and _semantic_overlap(previous.content, candidate.content) >= 0.85
+                ):
                     reason_codes.append("SEMANTIC_DUPLICATE_SUSPECTED")
             row = MemoryRecordRow(
                 tenant_id=self.tenant_id,
@@ -554,10 +644,57 @@ class PostgresMemoryRepository:
             await session.flush()
             return _to_domain(row)
 
+    async def _expire_lapsed(self, session) -> int:
+        """Lazy TTL transition: ACTIVE -> EXPIRED once valid_to/expires_at lapse.
+
+        Invoked at the top of the read path so a stored row never keeps an ACTIVE
+        status past its validity window (no scheduler dependency), and so the
+        transition is always audited with an append-only ``memory.expired`` event.
+        Read selection already excludes lapsed rows via ``visible_at``; this makes
+        the terminal state real in the database.
+        """
+        now = datetime.now(UTC)
+        rows = (
+            await session.execute(
+                select(MemoryRecordRow)
+                .where(
+                    MemoryRecordRow.status == MemoryStatus.ACTIVE.value,
+                    or_(
+                        and_(
+                            MemoryRecordRow.expires_at.is_not(None),
+                            MemoryRecordRow.expires_at <= now,
+                        ),
+                        and_(
+                            MemoryRecordRow.valid_to.is_not(None),
+                            MemoryRecordRow.valid_to <= now,
+                        ),
+                    ),
+                )
+                .with_for_update(skip_locked=True)
+            )
+        ).scalars()
+        count = 0
+        for row in rows:
+            row.status = MemoryStatus.EXPIRED.value
+            row.updated_at = now
+            session.add(
+                MemoryEventRecord(
+                    tenant_id=self.tenant_id,
+                    memory_id=row.id,
+                    actor_id="ttl-maintenance",
+                    event_type="memory.expired",
+                    reason_codes=["TTL_ELAPSED"],
+                    payload={"expired_at": now.isoformat()},
+                )
+            )
+            count += 1
+        return count
+
     async def candidates(self, query: MemoryQuery, *, ceiling: int = 500) -> list[MemoryRecord]:
         if query.tenant_id != self.tenant_id:
             raise PermissionError("query tenant does not match repository tenant")
         async with tenant_session(self.tenant_id) as session:
+            await self._expire_lapsed(session)
             rows = (
                 await session.execute(
                     select(MemoryRecordRow)
@@ -580,6 +717,7 @@ class PostgresMemoryRepository:
     async def revalidate(self, query: MemoryQuery, ids: list[UUID]) -> set[UUID]:
         current_query = query.model_copy(update={"at": max(query.at, datetime.now(UTC))})
         async with tenant_session(self.tenant_id) as session:
+            await self._expire_lapsed(session)
             rows = (
                 await session.execute(
                     select(MemoryRecordRow).where(

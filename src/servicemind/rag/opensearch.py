@@ -19,6 +19,7 @@ from servicemind.domain.knowledge import (
     RetrievalMode,
     RetrievalPrincipal,
 )
+from servicemind.rag.chunking import SECTION_CONTEXT_SEP, child_embedding_text
 from servicemind.rag.models import EmbeddingProvider
 
 logger = logging.getLogger("servicemind.rag.opensearch")
@@ -29,7 +30,14 @@ logger = logging.getLogger("servicemind.rag.opensearch")
 #: identity of a generation is a digest of exactly those inputs plus the mapping
 #: schema. Concrete indices embed this digest; a fixed "active" alias per tenant
 #: points at the current generation and is flipped atomically (blue-green publish).
-SCHEMA_VERSION = "v1"
+#
+#: v2: children are now embedded from ``title / section_path / content`` instead of
+#: the isolated content (the dense channel gained document + section context) and the
+#: index gained an indexed ``section_heading`` field for lexical section matches.
+#: Both change the meaning of every stored vector and token stream, so the schema
+#: version MUST advance: a corpus indexed as v1 and a corpus indexed as v2 would
+#: otherwise be co-resident in one generation with incompatible doc-side embeddings.
+SCHEMA_VERSION = "v2"
 
 _GENERATION_SUFFIX = re.compile(r"-(?:children|parents)-([^/]+)$")
 
@@ -151,6 +159,12 @@ class OpenSearchKnowledgeIndex:
                     "parent_chunk_id": {"type": "keyword"},
                     "document_id": {"type": "keyword"},
                     "text": {"type": "text"},
+                    #: Parser section headings the chunk lives under, joined as one
+                    #: text value. A query naming a section heading is often answered
+                    #: by a body that never repeats the heading verbatim; indexing the
+                    #: path gives the lexical channel that anchor (the dense channel
+                    #: gets the same context through ``child_embedding_text``).
+                    "section_heading": {"type": "text"},
                     "embedding": {
                         "type": "knn_vector",
                         "dimension": self.dimension,
@@ -432,7 +446,15 @@ class OpenSearchKnowledgeIndex:
                 refresh=False,
                 raise_on_error=True,
             )
-        vectors = await embedding.embed_documents([x.content for x in children])
+        # The dense vector is computed over title/section/content so a topical query
+        # can match a child whose isolated body shares no terms with it. The stored
+        # ``text`` (BM25 + reranker + parent preview) keeps the pure body.
+        vectors = await embedding.embed_documents(
+            [
+                child_embedding_text(document.title, chunk.section_path, chunk.content)
+                for chunk in children
+            ]
+        )
         acl = document.acl
         actions: list[dict[str, Any]] = []
         for chunk, vector in zip(children, vectors, strict=True):
@@ -446,6 +468,9 @@ class OpenSearchKnowledgeIndex:
                         "parent_chunk_id": str(chunk.parent_chunk_id),
                         "document_id": str(document.document_id),
                         "text": chunk.content,
+                        "section_heading": SECTION_CONTEXT_SEP.join(
+                            value for value in chunk.section_path if value and value.strip()
+                        ),
                         "embedding": vector,
                         "title": document.title,
                         "source": document.provenance.source,
@@ -656,11 +681,17 @@ class OpenSearchKnowledgeIndex:
         *,
         mode: RetrievalMode = RetrievalMode.HYBRID,
         use_rewrites: bool = False,
-        dense_k: int = 40,
-        bm25_k: int = 40,
-        candidate_k: int = 30,
+        dense_k: int = 60,
+        bm25_k: int = 60,
+        candidate_k: int = 40,
     ) -> list[RetrievalHit]:
         """Search the tenant's active generation under the compiled ACL pre-filter.
+
+        ``dense_k`` / ``bm25_k`` bound each candidate arm; ``candidate_k`` is how
+        many RRF-fused rows survive to the cross-encoder rerank. The arms are kept
+        wider than ``candidate_k`` so RRF has material to merge and the reranker can
+        promote an item that neither channel alone ranked top -- the rerank pool is
+        the recall ceiling, so it must not be smaller than the per-arm depth.
 
         ``mode`` selects the candidate channel (dense / bm25 / hybrid+RRF) -- the
         evaluation harness and agent both need it; ACL filtering is identical in all
@@ -711,7 +742,7 @@ class OpenSearchKnowledgeIndex:
                             {
                                 "multi_match": {
                                     "query": text,
-                                    "fields": ["text^2", "title"],
+                                    "fields": ["text^2", "title", "section_heading^1.5"],
                                 }
                             }
                         ],
@@ -757,7 +788,7 @@ class OpenSearchKnowledgeIndex:
                             {
                                 "multi_match": {
                                     "query": query.normalized_query,
-                                    "fields": ["text^2", "title"],
+                                    "fields": ["text^2", "title", "section_heading^1.5"],
                                 }
                             }
                         ],

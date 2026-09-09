@@ -180,6 +180,16 @@ class Settings(BaseSettings):
     #: stage always runs; disable to revert to today's single-query two-arm request
     #: when the extra lexical arms' latency is unwanted.
     SERVICEMIND_RAG_MULTI_QUERY: bool = True
+    #: Candidate funnel for hybrid retrieval (RRF). The dense and BM25 arms each
+    #: fetch ``_ARM_K`` hits and RRF fuses them down to ``_CANDIDATE_K`` rows that
+    #: reach the cross-encoder rerank. Keeping the arms wider than the fused pool
+    #: gives the reranker material to promote items neither channel ranked alone;
+    #: ``candidate_k`` is therefore the effective recall ceiling and costs one
+    #: rerank score per row. Operators raise the funnel for large corpora, lower it
+    #: to bound rerank latency.
+    SERVICEMIND_RAG_DENSE_K: int = Field(default=60, ge=1)
+    SERVICEMIND_RAG_BM25_K: int = Field(default=60, ge=1)
+    SERVICEMIND_RAG_CANDIDATE_K: int = Field(default=40, ge=1)
     SERVICEMIND_EMBEDDING_URL: str | None = None
     SERVICEMIND_RERANKER_URL: str | None = None
 

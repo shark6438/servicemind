@@ -68,10 +68,19 @@ class MemoryRepository:
 
 
 def _reranker() -> CallableReranker:
-    # Deterministic token-overlap stand-in keeps the harness offline; swap for the
-    # BGE cross-encoder when --model bge (the acceptance run).
+    # Deterministic Jaccard token-overlap stand-in keeps the harness offline; swap
+    # for the BGE cross-encoder when --model bge (the acceptance run). It MUST be a
+    # normalized [0,1] score: ``EnterpriseRAG.retrieve`` rejects any hit whose score
+    # falls outside that range, and a raw overlap count would fail that guard as soon
+    # as a candidate shares more than one term with the query.
     return CallableReranker(
-        lambda query, text: len(set(query.casefold().split()) & set(text.casefold().split()))
+        lambda query, text: (
+            len(set(query.casefold().split()) & set(text.casefold().split()))
+            / max(
+                len(set(query.casefold().split()) | set(text.casefold().split())),
+                1,
+            )
+        )
     )
 
 

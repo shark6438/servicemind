@@ -11,7 +11,10 @@ from servicemind.domain.knowledge import (
     RetrievalHit,
     RetrievalPrincipal,
 )
-from servicemind.rag.chunking import StructureAwareSemanticChunker
+from servicemind.rag.chunking import (
+    child_embedding_text,
+    StructureAwareSemanticChunker,
+)
 from servicemind.rag.models import CallableReranker, DeterministicEmbeddingProvider
 from servicemind.rag.opensearch import OpenSearchKnowledgeIndex
 from servicemind.rag.parsing import StructureParser
@@ -368,3 +371,157 @@ async def test_retrieve_forwards_use_rewrites_and_labels_multi_query() -> None:
     )
     assert seen["use_rewrites"] is True
     assert result.retrieval_mode == "dense_bm25_mq_rrf_no_rerank_parent"
+
+
+# ---------------------------------------------------------------------------
+# Slice hardening: doc-context dense vectors, hard-split overlap, RRF funnel.
+# ---------------------------------------------------------------------------
+
+def test_child_embedding_text_prepends_document_and_section_context() -> None:
+    """Dense channel sees title + section headings ahead of the pure body.
+
+    A topical query must be able to reach a child whose isolated body never states
+    the topic; the stored ``text`` stays pure, only the embedding input gains the
+    document context (see ``OpenSearchKnowledgeIndex.replace_document``).
+    """
+    value = child_embedding_text(
+        "MFA outage runbook",
+        ["Authentication", "802.1X"],
+        "Renew the supplicant certificate.",
+    )
+    assert value.startswith("MFA outage runbook / Authentication / 802.1X\n")
+    assert value.endswith("Renew the supplicant certificate.")
+    # No document/section context -> body untouched; an empty prefix must never be
+    # manufactured (it would shift every vector of a contextless corpus).
+    assert child_embedding_text("", [], "body only") == "body only"
+    assert child_embedding_text("   ", ["  "], "body only") == "body only"
+
+
+def _seam(left: str, right: str) -> int:
+    """Longest suffix of ``left`` that is a prefix of ``right`` (token-seam overlap)."""
+    for size in range(min(len(left), len(right)), 0, -1):
+        if left[-size:] == right[:size]:
+            return size
+    return 0
+
+
+def test_hard_split_windows_overlap_across_cut_seams() -> None:
+    """Adjacent hard-split windows must share the seam instead of dropping it.
+
+    Hard splits cut on pure token boundaries (tables, code fences, oversized
+    segments); with zero overlap a concept that straddles the boundary appears in
+    neither child's vector. The overlap stride must reproduce the seam text.
+    """
+    chunker = StructureAwareSemanticChunker(
+        child_min_tokens=8, child_target_tokens=20, child_max_tokens=40, child_overlap_tokens=16
+    )
+    text = ("authn verify --entity okta --verbose " * 200).strip()
+    pieces = chunker._hard_split(text)
+    assert len(pieces) > 4
+    seams = [_seam(left, right) for left, right in zip(pieces, pieces[1:])]
+    assert all(seam >= 8 for seam in seams), seams
+
+
+def test_child_overlap_must_stay_below_window_width() -> None:
+    with pytest.raises(ValueError, match="child_overlap_tokens"):
+        StructureAwareSemanticChunker(child_max_tokens=20, child_overlap_tokens=20)
+
+
+@pytest.mark.asyncio
+async def test_code_fence_children_carry_overlap_through_public_pipeline() -> None:
+    """A code block longer than one window produces overlapping children end to end."""
+    value = document(
+        "# VPN\n\n```\n" + ("authn verify --entity okta --retry " * 100) + "\n```\n"
+    )
+    blocks = StructureParser().parse_markdown(value)
+    chunker = StructureAwareSemanticChunker(
+        child_min_tokens=10, child_target_tokens=30, child_max_tokens=60, child_overlap_tokens=24
+    )
+    parents = chunker.build_parents(blocks)
+    code_parents = [parent for parent in parents if "```" in parent.content]
+    assert code_parents, "the fenced block must survive as a parent"
+    children = await chunker.build_children(value, parents, DeterministicEmbeddingProvider())
+    by_parent: dict = {}
+    for child in children:
+        by_parent.setdefault(child.parent_chunk_id, []).append(child)
+    for parent_id, siblings in by_parent.items():
+        if parent_id not in {parent.parent_chunk_id for parent in code_parents}:
+            continue
+        if len(siblings) < 2:
+            continue
+        for left, right in zip(siblings, siblings[1:]):
+            assert _seam(left.content, right.content) >= 8
+
+
+def test_doc_context_embeddings_anchor_a_topical_query() -> None:
+    """The embedding-input change must actually move vectors toward a topical query.
+
+    Uses the deterministic (bag-of-token-hashes) provider, so the comparison is
+    about token presence, not model quality. The body vocabulary is filtered to share
+    NO hash bucket with the topic word ``mfa``, so a body-only vector is exactly
+    orthogonal to the query; only once title/section context enters the embedded
+    text does the topic word anchor a positive cosine.
+    """
+    import asyncio
+    import hashlib
+    import math
+
+    def cosine(left, right):
+        dot = sum(a * b for a, b in zip(left, right))
+        return dot / (math.sqrt(sum(x * x for x in left)) * math.sqrt(sum(x * x for x in right)))
+
+    def bucket(word: str) -> int:
+        return int.from_bytes(hashlib.sha256(word.encode()).digest()[:4], "big") % 16
+
+    topic_bucket = bucket("mfa")
+    candidates = [
+        "renew", "certificate", "then", "validate", "responder", "trust",
+        "anchor", "rotate", "key", "session", "ticket", "gateway", "token",
+        "request", "client", "register", "enroll", "replay", "nonce", "claim",
+    ]
+    safe = [word for word in candidates if bucket(word) != topic_bucket]
+    assert len(safe) >= 6, "test vocabulary must provide collision-free filler words"
+    body = " ".join(safe) * 30
+
+    async def run() -> None:
+        provider = DeterministicEmbeddingProvider()
+        query = await provider.embed_query("mfa")
+        pure = (await provider.embed_documents([body]))[0]
+        contextual = (await provider.embed_documents(
+            [child_embedding_text("MFA outage runbook", ["802.1X"], body)]
+        ))[0]
+        assert cosine(pure, query) == 0.0  # topic absent from the pure body vector
+        assert cosine(contextual, query) > 0.0  # title/section anchors the vector
+
+    asyncio.run(run())
+
+
+@pytest.mark.asyncio
+async def test_retrieve_forwards_rrf_funnel_from_settings(monkeypatch) -> None:
+    """dense_k/bm25_k/candidate_k default from settings and reach the index."""
+    from core import settings
+
+    monkeypatch.setattr(settings, "SERVICEMIND_RAG_DENSE_K", 5)
+    monkeypatch.setattr(settings, "SERVICEMIND_RAG_BM25_K", 6)
+    monkeypatch.setattr(settings, "SERVICEMIND_RAG_CANDIDATE_K", 7)
+    seen: dict = {}
+
+    class _CapturingFunnel(FakeIndex):
+        async def search(self, query, principal, embedding, *, mode=None, **kwargs):
+            seen.update(kwargs)
+            return await super().search(query, principal, embedding, mode=mode)
+
+    rag = EnterpriseRAG(
+        index=_CapturingFunnel([]),  # type: ignore[arg-type]
+        embedding=DeterministicEmbeddingProvider(),
+        reranker=CallableReranker(lambda query, text: 0),
+    )
+    await rag.retrieve(
+        principal=RetrievalPrincipal(tenant_id=TENANT, user_id="u1"),
+        query="anything",
+        use_query_model=False,
+        run_rerank=False,
+    )
+    assert seen["dense_k"] == 5
+    assert seen["bm25_k"] == 6
+    assert seen["candidate_k"] == 7

@@ -384,6 +384,34 @@ def test_single_mode_searches_carry_acl_filter_but_no_pipeline() -> None:
     assert bm25_body["query"]["bool"]["filter"]
 
 
+def test_child_mapping_indexes_section_heading_for_lexical_matches() -> None:
+    """The schema exposes the chunk's section path as its own analyzed field.
+
+    A query that names a heading is often answered by a body that never repeats it
+    verbatim; indexing the heading path lets the BM25 channel anchor on it while the
+    dense channel gets the same context via ``child_embedding_text``.
+    """
+    index = OpenSearchKnowledgeIndex(object(), dimension=16)  # type: ignore[arg-type]
+    props = index._child_index_body()["mappings"]["properties"]
+    assert props["section_heading"]["type"] == "text"
+    assert "text" in props
+    assert "title" in props
+
+
+def test_lexical_arms_score_section_heading_beside_body_and_title() -> None:
+    """Both BM25-only and the hybrid lexical arms search body, title and section."""
+    bm25_body, _ = _hit_index_body(RetrievalMode.BM25)
+    fields = bm25_body["query"]["bool"]["must"][0]["multi_match"]["fields"]
+    assert "text^2" in fields
+    assert "title" in fields
+    assert "section_heading^1.5" in fields
+    hybrid_body, _ = _hit_index_body(RetrievalMode.HYBRID)
+    arm_fields = hybrid_body["query"]["hybrid"]["queries"][1]["bool"]["must"][0][
+        "multi_match"
+    ]["fields"]
+    assert "section_heading^1.5" in arm_fields
+
+
 # ------------------------------------------------------------ multi-query fan-out
 
 

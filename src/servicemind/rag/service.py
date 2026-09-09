@@ -320,6 +320,9 @@ class EnterpriseRAG:
         mode: RetrievalMode = RetrievalMode.HYBRID,
         run_rerank: bool = True,
         use_rewrites: bool = False,
+        dense_k: int | None = None,
+        bm25_k: int | None = None,
+        candidate_k: int | None = None,
     ) -> KnowledgeRAGResult:
         """End-to-end retrieval: query process -> candidate generation (``mode``) ->
         optional cross-encoder rerank -> parent expansion + context packing.
@@ -332,6 +335,9 @@ class EnterpriseRAG:
         the single dense anchor -- see ``OpenSearchKnowledgeIndex.search``); the
         rerank step still scores against the normalized query (the cross-encoder is
         the faithfulness anchor, independent of how many candidate arms ran).
+        ``dense_k`` / ``bm25_k`` / ``candidate_k`` size the RRF funnel that feeds the
+        reranker and default to ``SERVICEMIND_RAG_{DENSE_K,BM25_K,CANDIDATE_K}``;
+        raising ``candidate_k`` raises the recall ceiling at rerank cost.
         """
         started = time.perf_counter()
         if not 1 <= final_k <= 50:
@@ -347,6 +353,17 @@ class EnterpriseRAG:
             self.embedding,
             mode=mode,
             use_rewrites=use_rewrites,
+            dense_k=(
+                dense_k
+                if dense_k is not None
+                else settings.SERVICEMIND_RAG_DENSE_K
+            ),
+            bm25_k=bm25_k if bm25_k is not None else settings.SERVICEMIND_RAG_BM25_K,
+            candidate_k=(
+                candidate_k
+                if candidate_k is not None
+                else settings.SERVICEMIND_RAG_CANDIDATE_K
+            ),
         )
         candidate_count = len(hits)
         if hits and self.repository is None:

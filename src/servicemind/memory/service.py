@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import math
 import re
 from collections import OrderedDict
@@ -15,10 +16,44 @@ from servicemind.memory.contracts import (
     MemoryRecord,
     MemorySelection,
 )
-from servicemind.memory.policy import MemoryGovernancePolicy
+from servicemind.memory.policy import INJECTION_MARKERS, MemoryGovernancePolicy
 from servicemind.memory.repository import MemoryRepository
 
+logger = logging.getLogger("servicemind.memory.service")
+
 TOKEN = re.compile(r"[a-z0-9_\-]+|[\u4e00-\u9fff]", re.I)
+
+#: Read-side injection tripwire (defense-in-depth over the write-time phrase
+#: table). The write policy scans the serialized candidate once at write time;
+#: this rescan protects the model boundary against records written before a
+#: marker existed or markers smuggled through a field the policy does not scan.
+#: It is a deterministic tripwire, not an obfuscation boundary -- a hit hard
+#: blocks the record from ever reaching a prompt (never downgraded to trusted).
+_READ_INJECTION_MARKERS = (
+    *INJECTION_MARKERS,
+    "ignore your instructions",
+    "ignore all previous",
+    "ignore all prior",
+    "disregard previous",
+    "disregard all prior",
+    "override the system",
+    "you are now",
+    "act as the system",
+    "act as the assistant",
+    "developer message",
+    "system message",
+    "forget previous",
+    "\u5ffd\u7565\u7cfb\u7edf\u63d0\u793a",
+    "\u65e0\u89c6\u4e4b\u524d",
+    "\u73b0\u5728\u626e\u6f14",
+    "\u8df3\u8fc7\u5ba1\u6279",
+    "\u7ed5\u8fc7\u5ba1\u6279",
+)
+
+
+def _carries_injection(content: str) -> bool:
+    lowered = content.casefold()
+    return any(marker in lowered for marker in _READ_INJECTION_MARKERS)
 
 
 class MemoryEmbeddingProvider(Protocol):
@@ -143,6 +178,14 @@ class MemoryRetriever:
                 or not record.visible_at(query.at)
                 or record.taint_labels
             ):
+                continue
+            if _carries_injection(record.content):
+                # Hard block at the model boundary: a stored memory that trips the
+                # read-side injection scan must never enter a prompt as trusted.
+                logger.warning(
+                    "memory record blocked at read boundary by injection tripwire; memory_id=%s",
+                    record.memory_id,
+                )
                 continue
             semantic = (
                 _cosine(query_vector, document_vectors[index])

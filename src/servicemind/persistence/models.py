@@ -443,8 +443,12 @@ class MemoryRecordRow(Base):
     valid_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False)
-    provenance: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
-    taint_labels: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    # JSONB (not JSON): the governance read path narrows by jsonb operators
+    # (`?`, `@>`, `[]` equality) over these columns (memory/repository.py
+    # ``_read_filters``); generic JSON columns have no such operators and the
+    # ACL pre-filter was an AttributeError at expression build time.
+    provenance: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, nullable=False)
+    taint_labels: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=False)
     consent_ref: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_by: Mapped[str] = mapped_column(String(255), nullable=False)
     idempotency_key: Mapped[str] = mapped_column(String(64), nullable=False)

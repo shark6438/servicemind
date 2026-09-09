@@ -248,7 +248,11 @@ class Phase5Governance:
                 )
                 for evidence in joined.items
             )
-            if settings.SERVICEMIND_MEMORY_ENABLED:
+            # Only ANALYSIS may consume long-term memory: the ContextBuilder
+            # allowlist grants MEMORY to ANALYSIS, not REVIEWER (which verifies
+            # against task/evidence only). Retrieving for REVIEWER would pay a
+            # Postgres query + embedding pass for items the builder rejects.
+            if settings.SERVICEMIND_MEMORY_ENABLED and agent is ContextAgent.ANALYSIS:
                 memories = await MemoryRetriever(
                     self.memory_repository_factory(tenant_id),
                     embedding=self.memory_embedding,

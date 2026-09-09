@@ -20,6 +20,46 @@ class AsyncEmbeddingProvider(Protocol):
     async def embed_documents(self, texts: list[str]) -> list[list[float]]: ...
 
 
+#: Token-width of the overlap kept between consecutive hard-split child windows.
+#: Hard splits (tables, code fences, and any segment that outgrows
+#: ``child_max_tokens``) cut on pure token boundaries, which can land mid-sentence
+#: or mid-statement. A zero-overlap cut means the concept straddling the seam is
+#: represented in neither neighbouring child vector, so retrieval of that content
+#: fails even though a parent expansion would have supplied it. Carrying the tail
+#: of the previous window into the next child gives both sides of the seam a
+#: faithful vector without changing what the parent holds.
+DEFAULT_CHILD_OVERLAP_TOKENS = 48
+
+#: Join used to serialise document + section context ahead of child content for the
+#: dense channel (see :func:`child_embedding_text`). This is a document-layout
+#: separator, never part of a query; the query side embeds the normalized query as-is.
+SECTION_CONTEXT_SEP = " / "
+
+
+def child_embedding_text(
+    document_title: str, section_path: Sequence[str], content: str
+) -> str:
+    """Compose the text a child chunk should be embedded from.
+
+    The stored child text stays the *pure* body content (BM25 and the reranker keep
+    seeing the exact body), but a single sentence embedded in isolation has no
+    topical anchor: a query like "MFA broken" cannot match a child that only ever
+    says "renew the client certificate ... validate the responder", because none of
+    the query's topic words occur in that body. Prepending the document title and
+    the parsed section headings (``section_path`` already exists on every chunk --
+    this is not inferred text) gives the dense vector the document context it is
+    otherwise missing. Queries are embedded unchanged, so only the corpus side moves.
+    """
+    context = [
+        part.strip()
+        for part in (*((document_title,) if document_title else ()), *section_path)
+        if part and part.strip()
+    ]
+    if not context:
+        return content
+    return f"{SECTION_CONTEXT_SEP.join(context)}\n{content}"
+
+
 class StructureAwareSemanticChunker:
     def __init__(
         self,
@@ -30,6 +70,7 @@ class StructureAwareSemanticChunker:
         parent_max_tokens: int = 1500,
         parent_max_chars: int = 7000,
         semantic_threshold: float = 0.55,
+        child_overlap_tokens: int = DEFAULT_CHILD_OVERLAP_TOKENS,
     ) -> None:
         self.child_min_tokens = child_min_tokens
         self.child_target_tokens = child_target_tokens
@@ -42,6 +83,12 @@ class StructureAwareSemanticChunker:
         #: block (e.g. one whole ticket thread as a LIST block) can be tens of KB.
         self.parent_max_chars = parent_max_chars
         self.semantic_threshold = semantic_threshold
+        self.child_overlap_tokens = child_overlap_tokens
+        if not 0 <= child_overlap_tokens < child_max_tokens:
+            raise ValueError(
+                "child_overlap_tokens must be in [0, child_max_tokens) "
+                "so windows always advance"
+            )
         self.encoder = tiktoken.get_encoding("cl100k_base")
 
     def _split_long_text(self, text: str, limit: int) -> list[str]:
@@ -139,10 +186,19 @@ class StructureAwareSemanticChunker:
 
     def _hard_split(self, text: str) -> list[str]:
         tokens = self.encoder.encode(text)
-        return [
-            self.encoder.decode(tokens[index : index + self.child_max_tokens])
-            for index in range(0, len(tokens), self.child_max_tokens)
-        ]
+        limit = self.child_max_tokens
+        # Overlap only when the text actually spans multiple windows; the stride is
+        # ``limit - overlap`` so adjacent windows share the seam (see class docstring).
+        stride = max(limit - self.child_overlap_tokens, 1)
+        pieces: list[str] = []
+        start = 0
+        while start < len(tokens):
+            window = tokens[start : start + limit]
+            pieces.append(self.encoder.decode(window))
+            if len(window) < limit:
+                break
+            start += stride
+        return pieces
 
     async def _semantic_segments(self, text: str, embedding: AsyncEmbeddingProvider) -> list[str]:
         sentences = [
