@@ -17,6 +17,29 @@ jobs:
       matrix:
         python-version: ["3.12", "3.13", "3.14"]
 
+    # The ServiceMind suite (tests/service, tests/servicemind) imports
+    # src/servicemind/persistence at collection time, which raises unless
+    # SERVICEMIND_DATABASE_URL is set, and most of it queries an applied schema.
+    # Local runs get both from a gitignored .env; CI must supply them explicitly.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: servicemind_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      SERVICEMIND_DATABASE_URL: "postgresql+psycopg://postgres:postgres@localhost:5432/servicemind_test"
+      OPENAI_API_KEY: "sk-fake-openai-key"
+
     steps:
     - uses: actions/checkout@v7
     - name: Set up Python ${{ matrix.python-version }}
@@ -40,6 +63,10 @@ jobs:
     - name: Type check with pyrefly
       run: |
         uv run pyrefly check
+
+    - name: Migrate ServiceMind test database
+      run: |
+        uv run alembic upgrade head
 
     - name: Test with pytest
       run: |

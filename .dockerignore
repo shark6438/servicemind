@@ -11,3 +11,10 @@ venv
 .venv
 *.db
 privatecredentials/*
+# Local-only data (model snapshots, raw corpora, indexes) must not enter the
+# build context: tracked sample data under data/ is small, the gitignored
+# phase-4 material is multi-GB.
+data/
+node_modules/
+coverage.xml
+coverage_html_report/
