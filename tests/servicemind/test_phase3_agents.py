@@ -137,9 +137,7 @@ async def test_analysis_fallback_uses_joined_evidence_and_only_safe_action() -> 
         join_evidence(TENANT, [data, knowledge]), ticket_id=2, request_write=True
     )
     assert result.evidence_refs == [data.evidence_id, knowledge.evidence_id]
-    assert [action.operation for action in result.proposed_actions] == [
-        "append_ticket_followup"
-    ]
+    assert [action.operation for action in result.proposed_actions] == ["append_ticket_followup"]
 
 
 @pytest.mark.asyncio

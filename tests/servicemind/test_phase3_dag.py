@@ -131,9 +131,6 @@ def test_self_dependency_is_rejected_by_contract() -> None:
 def test_limits_are_enforced() -> None:
     with pytest.raises(PlanValidationError, match="MAX_PARALLEL"):
         DagValidator().validate(plan(valid_tasks(), max_parallel=5))
-    many = [
-        task(f"T{index}", AgentName.DATA, "get_ticket")
-        for index in range(1, 14)
-    ]
+    many = [task(f"T{index}", AgentName.DATA, "get_ticket") for index in range(1, 14)]
     with pytest.raises(PlanValidationError, match="MAX_TASKS"):
         DagValidator(limits=DagLimits(max_tasks=12)).validate(plan(many))

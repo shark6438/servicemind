@@ -98,8 +98,7 @@ def audit_classification() -> dict:
         "doi": "10.5281/zenodo.7648117",
         "records": len(labels),
         "categories": {
-            str(key): int(value)
-            for key, value in labels["category_truth"].value_counts().items()
+            str(key): int(value) for key, value in labels["category_truth"].value_counts().items()
         },
     }
 
@@ -150,16 +149,12 @@ def main() -> None:
     report = {
         "audited_at": datetime.now(UTC).isoformat(),
         "production": {
-            "pagerduty": tree_stats(
-                DATA / "production" / "incident-response-docs-master" / "docs"
-            ),
+            "pagerduty": tree_stats(DATA / "production" / "incident-response-docs-master" / "docs"),
             "mendeley_v3": audit_mendeley(),
         },
         "reference": {
             "uci_498": audit_uci(),
-            "ibm_graph_rag": tree_stats(
-                DATA / "reference" / "enterprise-itsm-graph-rag-main"
-            ),
+            "ibm_graph_rag": tree_stats(DATA / "reference" / "enterprise-itsm-graph-rag-main"),
         },
         "eval": {
             "techqa": audit_techqa(),

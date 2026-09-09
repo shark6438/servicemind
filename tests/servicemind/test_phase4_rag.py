@@ -12,8 +12,8 @@ from servicemind.domain.knowledge import (
     RetrievalPrincipal,
 )
 from servicemind.rag.chunking import (
-    child_embedding_text,
     StructureAwareSemanticChunker,
+    child_embedding_text,
 )
 from servicemind.rag.models import CallableReranker, DeterministicEmbeddingProvider
 from servicemind.rag.opensearch import OpenSearchKnowledgeIndex
@@ -249,6 +249,7 @@ def test_acl_rejects_invalid_effective_window() -> None:
 # Slice 1: retrieval modes, rerank switch and context-packer diversity ceilings.
 # ---------------------------------------------------------------------------
 
+
 def make_hit(document_value, text: str, parent_id: UUID, score: float) -> RetrievalHit:
     return RetrievalHit(
         child_chunk_id=UUID(int=sum(ord(char) for char in text) or 1),
@@ -377,6 +378,7 @@ async def test_retrieve_forwards_use_rewrites_and_labels_multi_query() -> None:
 # Slice hardening: doc-context dense vectors, hard-split overlap, RRF funnel.
 # ---------------------------------------------------------------------------
 
+
 def test_child_embedding_text_prepends_document_and_section_context() -> None:
     """Dense channel sees title + section headings ahead of the pure body.
 
@@ -430,9 +432,7 @@ def test_child_overlap_must_stay_below_window_width() -> None:
 @pytest.mark.asyncio
 async def test_code_fence_children_carry_overlap_through_public_pipeline() -> None:
     """A code block longer than one window produces overlapping children end to end."""
-    value = document(
-        "# VPN\n\n```\n" + ("authn verify --entity okta --retry " * 100) + "\n```\n"
-    )
+    value = document("# VPN\n\n```\n" + ("authn verify --entity okta --retry " * 100) + "\n```\n")
     blocks = StructureParser().parse_markdown(value)
     chunker = StructureAwareSemanticChunker(
         child_min_tokens=10, child_target_tokens=30, child_max_tokens=60, child_overlap_tokens=24
@@ -475,9 +475,26 @@ def test_doc_context_embeddings_anchor_a_topical_query() -> None:
 
     topic_bucket = bucket("mfa")
     candidates = [
-        "renew", "certificate", "then", "validate", "responder", "trust",
-        "anchor", "rotate", "key", "session", "ticket", "gateway", "token",
-        "request", "client", "register", "enroll", "replay", "nonce", "claim",
+        "renew",
+        "certificate",
+        "then",
+        "validate",
+        "responder",
+        "trust",
+        "anchor",
+        "rotate",
+        "key",
+        "session",
+        "ticket",
+        "gateway",
+        "token",
+        "request",
+        "client",
+        "register",
+        "enroll",
+        "replay",
+        "nonce",
+        "claim",
     ]
     safe = [word for word in candidates if bucket(word) != topic_bucket]
     assert len(safe) >= 6, "test vocabulary must provide collision-free filler words"
@@ -487,9 +504,11 @@ def test_doc_context_embeddings_anchor_a_topical_query() -> None:
         provider = DeterministicEmbeddingProvider()
         query = await provider.embed_query("mfa")
         pure = (await provider.embed_documents([body]))[0]
-        contextual = (await provider.embed_documents(
-            [child_embedding_text("MFA outage runbook", ["802.1X"], body)]
-        ))[0]
+        contextual = (
+            await provider.embed_documents(
+                [child_embedding_text("MFA outage runbook", ["802.1X"], body)]
+            )
+        )[0]
         assert cosine(pure, query) == 0.0  # topic absent from the pure body vector
         assert cosine(contextual, query) > 0.0  # title/section anchors the vector
 

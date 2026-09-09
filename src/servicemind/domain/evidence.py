@@ -70,7 +70,14 @@ class Evidence(BaseModel):
     ) -> Self:
         content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
         identity = "|".join(
-            [str(tenant_id), source_type.value, source_ref, resource_type, resource_id, content_hash]
+            [
+                str(tenant_id),
+                source_type.value,
+                source_ref,
+                resource_type,
+                resource_id,
+                content_hash,
+            ]
         )
         evidence_id = f"ev-{hashlib.sha256(identity.encode()).hexdigest()[:16]}"
         return cls(

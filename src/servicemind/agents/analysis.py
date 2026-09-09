@@ -66,12 +66,8 @@ class AnalysisAgent:
         graph.add_node("revise", self._revise_node)
         graph.add_edge(START, "draft")
         graph.add_edge("draft", "check")
-        graph.add_conditional_edges(
-            "check", self._after_check, {"revise": "revise", "finish": END}
-        )
-        graph.add_conditional_edges(
-            "revise", self._after_revise, {"check": "check", "finish": END}
-        )
+        graph.add_conditional_edges("check", self._after_check, {"revise": "revise", "finish": END})
+        graph.add_conditional_edges("revise", self._after_revise, {"check": "check", "finish": END})
         return graph.compile()
 
     def _payload(self, state: AnalysisAgentState) -> list[dict[str, Any]]:
@@ -129,9 +125,7 @@ class AnalysisAgent:
                     )
                 ),
                 HumanMessage(
-                    content=redact_for_model(
-                        json.dumps(model_input, ensure_ascii=False)
-                    ).text
+                    content=redact_for_model(json.dumps(model_input, ensure_ascii=False)).text
                 ),
             ]
         )
@@ -191,8 +185,7 @@ class AnalysisAgent:
         group_text = " ".join(
             item.content
             for item in state["evidence"].items
-            if item.source_type is EvidenceSourceType.GLPI
-            and item.resource_type == "support_group"
+            if item.source_type is EvidenceSourceType.GLPI and item.resource_type == "support_group"
         ).casefold()
         if result.recommended_group.casefold() not in group_text:
             issues.append("Recommended group is absent from tenant-scoped GLPI evidence")
@@ -202,12 +195,9 @@ class AnalysisAgent:
         report = self._quality(state)
         invocation = state.get("invocation")
         model_budget_exhausted = (
-            invocation is not None
-            and state.get("model_calls", 0) >= invocation.max_model_calls
+            invocation is not None and state.get("model_calls", 0) >= invocation.max_model_calls
         )
-        if not report.passed and (
-            state.get("revision_count", 0) >= 1 or model_budget_exhausted
-        ):
+        if not report.passed and (state.get("revision_count", 0) >= 1 or model_budget_exhausted):
             result = state["result"].model_copy(
                 update={
                     "status": AnalysisStatus.DEGRADED,
@@ -333,7 +323,9 @@ class AnalysisAgent:
                         )
                     ),
                     HumanMessage(
-                        content=json.dumps({"goal": goal, "ticket_facts": facts}, ensure_ascii=False)
+                        content=json.dumps(
+                            {"goal": goal, "ticket_facts": facts}, ensure_ascii=False
+                        )
                     ),
                 ]
             )

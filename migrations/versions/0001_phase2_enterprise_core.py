@@ -33,9 +33,7 @@ def _uuid(name: str, *, primary_key: bool = False, nullable: bool = False) -> sa
 
 
 def _created_at(name: str = "created_at") -> sa.Column:
-    return sa.Column(
-        name, sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
-    )
+    return sa.Column(name, sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False)
 
 
 def upgrade() -> None:

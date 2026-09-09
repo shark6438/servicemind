@@ -47,8 +47,7 @@ def main() -> None:
         assert revision is not None and revision[0] == "0009_model_accounting_provenance"
         assert table_count is not None and table_count[0] == 4
         print(
-            "PASS phase5 fresh migration: upgrade -> full downgrade -> upgrade, "
-            "head=0009, tables=4"
+            "PASS phase5 fresh migration: upgrade -> full downgrade -> upgrade, head=0009, tables=4"
         )
     finally:
         with psycopg.connect(admin_url, autocommit=True) as connection:

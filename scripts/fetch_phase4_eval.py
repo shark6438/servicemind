@@ -52,9 +52,7 @@ ENTERPRISEOPS_FILES: Final = {
 }
 
 AGENTDOJO_REVISION: Final = "089ed468cf3ed0322acc66b0211f26d9d90dbf60"
-AGENTDOJO_ARCHIVE_SHA256: Final = (
-    "b1cbd20962cca3dafb9317a4117db65cd61a56c7f480ff0df2357d3f6c77849c"
-)
+AGENTDOJO_ARCHIVE_SHA256: Final = "b1cbd20962cca3dafb9317a4117db65cd61a56c7f480ff0df2357d3f6c77849c"
 
 
 def sha256_of(path: Path) -> str:
@@ -103,17 +101,18 @@ def download_verified(url: str, target: Path, expected: str, *, verify_only: boo
 
 def restore_techqa(*, verify_only: bool) -> dict[str, object]:
     target = EVAL_ROOT / "techqa-rag-eval"
-    base = (
-        "https://huggingface.co/datasets/nvidia/TechQA-RAG-Eval/resolve/"
-        f"{TECHQA_REVISION}"
-    )
+    base = f"https://huggingface.co/datasets/nvidia/TechQA-RAG-Eval/resolve/{TECHQA_REVISION}"
     for relative, digest in TECHQA_FILES.items():
-        download_verified(f"{base}/{relative}?download=true", target / relative, digest, verify_only=verify_only)
+        download_verified(
+            f"{base}/{relative}?download=true", target / relative, digest, verify_only=verify_only
+        )
     rows = json.loads((target / "train.json").read_text(encoding="utf-8"))
     with zipfile.ZipFile(target / "corpus.zip") as archive:
         corpus_files = sum(not item.is_dir() for item in archive.infolist())
     if len(rows) != 910 or corpus_files != 28_481:
-        raise RuntimeError(f"unexpected TechQA shape: rows={len(rows)}, corpus_files={corpus_files}")
+        raise RuntimeError(
+            f"unexpected TechQA shape: rows={len(rows)}, corpus_files={corpus_files}"
+        )
     return {
         "revision": TECHQA_REVISION,
         "rows": len(rows),
@@ -130,7 +129,9 @@ def restore_enterpriseops(*, verify_only: bool) -> dict[str, object]:
         f"{ENTERPRISEOPS_REVISION}"
     )
     for relative, digest in ENTERPRISEOPS_FILES.items():
-        download_verified(f"{base}/{relative}?download=true", target / relative, digest, verify_only=verify_only)
+        download_verified(
+            f"{base}/{relative}?download=true", target / relative, digest, verify_only=verify_only
+        )
 
     import pandas as pd
 
@@ -203,9 +204,7 @@ def main() -> None:
         "enterpriseops": restore_enterpriseops,
         "agentdojo": restore_agentdojo,
     }
-    result = {
-        name: restorers[name](verify_only=args.verify_only) for name in args.sources
-    }
+    result = {name: restorers[name](verify_only=args.verify_only) for name in args.sources}
     print(json.dumps({"status": "passed", "sources": result}, indent=2))
 
 

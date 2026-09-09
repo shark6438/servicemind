@@ -218,9 +218,7 @@ async def test_analysis_subgraph_revises_once_until_claims_are_grounded(monkeypa
     draft = model_analysis(joined.evidence_refs).model_copy(update={"claims": []})
     revised = model_analysis(joined.evidence_refs)
     runnable = FakeRunnable(draft, revised)
-    monkeypatch.setattr(
-        analysis_module, "structured_output", lambda model, schema: runnable
-    )
+    monkeypatch.setattr(analysis_module, "structured_output", lambda model, schema: runnable)
     result = await AnalysisAgent(model_factory=lambda: object()).run(
         invocation=invocation("T2"),
         evidence=joined,
@@ -249,9 +247,7 @@ async def test_reviewer_semantic_judge_cannot_bypass_rule_gate(monkeypatch) -> N
     monkeypatch.setattr(
         reviewer_module, "structured_output", lambda model, schema: FakeRunnable(semantic)
     )
-    result = await ReviewerAgent(
-        enable_semantic_review=True, model_factory=lambda: object()
-    ).run(
+    result = await ReviewerAgent(enable_semantic_review=True, model_factory=lambda: object()).run(
         invocation=invocation("T3", max_model_calls=1),
         analysis=model_analysis(joined.evidence_refs),
         evidence=joined,

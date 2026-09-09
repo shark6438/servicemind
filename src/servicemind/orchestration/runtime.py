@@ -49,9 +49,7 @@ async def start_run(run: AgentRun, context: TenantContext) -> Phase3State:
     return await supervisor_graph.ainvoke(state, config=run_config(run, context))  # type: ignore[return-value]
 
 
-async def continue_incomplete_run(
-    run: AgentRun, context: TenantContext
-) -> Phase3State:
+async def continue_incomplete_run(run: AgentRun, context: TenantContext) -> Phase3State:
     """Resume an existing checkpoint, or start only when no checkpoint exists."""
     config = run_config(run, context)
     snapshot = await supervisor_graph.aget_state(config)

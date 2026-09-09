@@ -57,7 +57,6 @@ def _citation_digest(document_id, parent_chunk_id, content_hash: str) -> str:
     return f"cite-{hashlib.sha256(value.encode()).hexdigest()[:16]}"
 
 
-
 class SemanticReview(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -232,9 +231,7 @@ class ReviewerAgent:
                 "error",
                 "citation",
                 "CITATION_EVIDENCE_MISMATCH",
-                "Citation does not anchor this evidence row: "
-                + "; ".join(mismatches)
-                + ".",
+                "Citation does not anchor this evidence row: " + "; ".join(mismatches) + ".",
                 evidence_refs=[item.evidence_id],
             )
         return None
@@ -407,8 +404,7 @@ class ReviewerAgent:
         group_text = " ".join(
             item.content
             for item in evidence.items
-            if item.source_type is EvidenceSourceType.GLPI
-            and item.resource_type == "support_group"
+            if item.source_type is EvidenceSourceType.GLPI and item.resource_type == "support_group"
         ).casefold()
         if analysis.recommended_group.casefold() not in group_text:
             decision = (
@@ -565,9 +561,7 @@ class ReviewerAgent:
                         )
                     ),
                     HumanMessage(
-                        content=redact_for_model(
-                            json.dumps(model_input, ensure_ascii=False)
-                        ).text
+                        content=redact_for_model(json.dumps(model_input, ensure_ascii=False)).text
                     ),
                 ]
             )
@@ -641,9 +635,7 @@ class ReviewerAgent:
             unsupported = semantic.unsupported_claim_ids or [
                 "analysis claim unsupported by cited evidence (claims_supported=false)"
             ]
-            details = (
-                f"Unsupported claim(s): {', '.join(unsupported)}. " if unsupported else ""
-            )
+            details = f"Unsupported claim(s): {', '.join(unsupported)}. " if unsupported else ""
             findings.append(
                 self._finding(
                     "semantic.grounding",

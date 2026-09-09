@@ -69,9 +69,7 @@ class DagValidator:
             )
         missing = sorted(set(task.depends_on) - tasks.keys())
         if missing:
-            raise PlanValidationError(
-                "MISSING_DEPENDENCY", f"{task.task_id} references {missing}"
-            )
+            raise PlanValidationError("MISSING_DEPENDENCY", f"{task.task_id} references {missing}")
         if task.task_id in task.depends_on:
             raise PlanValidationError("SELF_DEPENDENCY", task.task_id)
 
@@ -111,9 +109,7 @@ class DagValidator:
                     f"{action.task_id} must depend on reviewer",
                 )
 
-    def _has_ancestor(
-        self, task: Task, agent: AgentName, tasks: dict[str, Task]
-    ) -> bool:
+    def _has_ancestor(self, task: Task, agent: AgentName, tasks: dict[str, Task]) -> bool:
         pending = list(task.depends_on)
         seen: set[str] = set()
         while pending:

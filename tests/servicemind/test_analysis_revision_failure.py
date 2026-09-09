@@ -6,6 +6,7 @@ grounding failure. Previously the unconditional ``revise -> check`` back-edge
 re-ran the quality check on the degraded draft and relabeled the outcome as a
 generic ``ANALYSIS_GROUNDING_FAILED``, dropping the failure signal.
 """
+
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
@@ -115,9 +116,7 @@ async def test_revision_model_crash_is_reported_as_revision_failure(monkeypatch)
     )
     draft = model_analysis(joined.evidence_refs).model_copy(update={"claims": []})
     runnable = CrashAfterFirst(draft)
-    monkeypatch.setattr(
-        analysis_module, "structured_output", lambda model, schema: runnable
-    )
+    monkeypatch.setattr(analysis_module, "structured_output", lambda model, schema: runnable)
     result = await AnalysisAgent(model_factory=lambda: object()).run(
         invocation=invocation(),
         evidence=joined,
@@ -128,7 +127,5 @@ async def test_revision_model_crash_is_reported_as_revision_failure(monkeypatch)
     assert result.status is AgentRunStatus.DEGRADED
     assert result.failure_code == "ANALYSIS_REVISION_FAILURE"
     assert result.output.status is AnalysisStatus.DEGRADED
-    assert any(
-        "RuntimeError" in item for item in result.output.validation_feedback
-    )
+    assert any("RuntimeError" in item for item in result.output.validation_feedback)
     assert result.metrics.model_calls == 2  # draft + one revision attempt

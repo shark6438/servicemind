@@ -180,9 +180,7 @@ class StateSupervisor:
             elif action in {SupervisorAction.ANALYZE, SupervisorAction.REVIEW}:
                 target = "analysis" if action is SupervisorAction.ANALYZE else "reviewer"
                 selected = [
-                    item["task_id"]
-                    for item in state_view["ready_tasks"]
-                    if item["agent"] == target
+                    item["task_id"] for item in state_view["ready_tasks"] if item["agent"] == target
                 ][:1]
             return SupervisorDecision(
                 action=action,
@@ -195,9 +193,7 @@ class StateSupervisor:
 
 class NoopExecutor:
     async def execute(self, context, intent):
-        return ExecutionResult(
-            tool_name="noop", followup_id=1, ticket_id=2, verified=True
-        )
+        return ExecutionResult(tool_name="noop", followup_id=1, ticket_id=2, verified=True)
 
 
 def initial(thread_id: str) -> dict:

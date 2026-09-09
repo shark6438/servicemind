@@ -51,8 +51,12 @@ def upgrade() -> None:
         sa.Column("created_by", sa.String(255), nullable=False),
         sa.Column("idempotency_key", sa.String(64), nullable=False),
         sa.Column("activation_reason", sa.String(1000)),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.UniqueConstraint("tenant_id", "idempotency_key"),
         sa.UniqueConstraint(
             "tenant_id", "scope_type", "scope_id", "memory_type", "subject_key", "version"
@@ -96,7 +100,9 @@ def upgrade() -> None:
         sa.Column("event_type", sa.String(80), nullable=False),
         sa.Column("reason_codes", sa.JSON(), nullable=False),
         sa.Column("payload", sa.JSON(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
     op.create_index("ix_memory_events_tenant_id", "memory_events", ["tenant_id"])
 
@@ -125,7 +131,9 @@ def upgrade() -> None:
         sa.Column("fallback_from", sa.String(255)),
         sa.Column("status", sa.String(40), nullable=False),
         sa.Column("error_code", sa.String(100)),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.UniqueConstraint("tenant_id", "request_id"),
         sa.CheckConstraint("input_tokens >= 0 AND output_tokens >= 0", name="ck_model_tokens"),
         sa.CheckConstraint("latency_ms >= 0 AND cost_usd >= 0", name="ck_model_accounting"),
@@ -150,7 +158,9 @@ def upgrade() -> None:
         sa.Column("token_budget", sa.Integer(), nullable=False),
         sa.Column("tokens_used", sa.Integer(), nullable=False),
         sa.Column("redaction_count", sa.Integer(), server_default="0", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
     op.create_index(
         "ix_context_artifacts_run",

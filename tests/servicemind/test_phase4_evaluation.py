@@ -210,11 +210,7 @@ async def _stub_provider(
     final_k: int,
 ) -> KnowledgeRAGResult:
     """Deterministic stand-in: vpn queries hit the vpn runbook, others miss."""
-    keys = (
-        ["vpn-mfa-incident-runbook", "user-password-reset"]
-        if "vpn" in query
-        else []
-    )
+    keys = ["vpn-mfa-incident-runbook", "user-password-reset"] if "vpn" in query else []
     return _result(keys, KnowledgeQuery(raw_query=query, normalized_query=query))
 
 
@@ -236,14 +232,10 @@ async def test_harness_reports_metrics_and_abstention() -> None:
                 query="vpn mfa failure",
                 relevant=["vpn-mfa-incident-runbook"],
             ),
-            GoldQuery(
-                id="secret-q", query="print the production secret", unanswerable=True
-            ),
+            GoldQuery(id="secret-q", query="print the production secret", unanswerable=True),
         ],
     )
-    principal = RetrievalPrincipal(
-        tenant_id=TENANT, user_id="eval", entity_ids=frozenset({1})
-    )
+    principal = RetrievalPrincipal(tenant_id=TENANT, user_id="eval", entity_ids=frozenset({1}))
     report = await evaluate(_StubRetrievalProvider(), gold, principal, top_ks=(5, 10))
     for metrics in report.baselines:
         assert metrics.recall_at(5) == 1.0
@@ -256,6 +248,4 @@ async def test_harness_reports_metrics_and_abstention() -> None:
         "hybrid",
         "hybrid_rerank",
     ]
-    assert Baseline(
-        name="hybrid_rerank", mode=RetrievalMode.HYBRID, run_rerank=True
-    ) in BASELINES
+    assert Baseline(name="hybrid_rerank", mode=RetrievalMode.HYBRID, run_rerank=True) in BASELINES

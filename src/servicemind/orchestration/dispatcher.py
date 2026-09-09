@@ -14,9 +14,7 @@ class TaskDispatcher:
     """Maintain task state from dependencies; the LLM never decides task completion."""
 
     def ready_tasks(self, plan: TaskPlan) -> list[Task]:
-        successful = {
-            task.task_id for task in plan.tasks if task.status is TaskStatus.SUCCESS
-        }
+        successful = {task.task_id for task in plan.tasks if task.status is TaskStatus.SUCCESS}
         running = sum(task.status is TaskStatus.RUNNING for task in plan.tasks)
         capacity = max(plan.max_parallel - running, 0)
         ready = [

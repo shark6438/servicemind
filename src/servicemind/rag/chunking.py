@@ -4,6 +4,7 @@ import hashlib
 import math
 import re
 from collections.abc import Sequence
+from functools import cached_property
 from typing import Protocol
 
 import tiktoken
@@ -36,9 +37,7 @@ DEFAULT_CHILD_OVERLAP_TOKENS = 48
 SECTION_CONTEXT_SEP = " / "
 
 
-def child_embedding_text(
-    document_title: str, section_path: Sequence[str], content: str
-) -> str:
+def child_embedding_text(document_title: str, section_path: Sequence[str], content: str) -> str:
     """Compose the text a child chunk should be embedded from.
 
     The stored child text stays the *pure* body content (BM25 and the reranker keep
@@ -86,10 +85,16 @@ class StructureAwareSemanticChunker:
         self.child_overlap_tokens = child_overlap_tokens
         if not 0 <= child_overlap_tokens < child_max_tokens:
             raise ValueError(
-                "child_overlap_tokens must be in [0, child_max_tokens) "
-                "so windows always advance"
+                "child_overlap_tokens must be in [0, child_max_tokens) so windows always advance"
             )
-        self.encoder = tiktoken.get_encoding("cl100k_base")
+
+    @cached_property
+    def encoder(self) -> tiktoken.Encoding:
+        # tiktoken may download the cl100k_base BPE table on first use and then
+        # caches it; keeping it out of __init__ means constructing the chunker
+        # (including the module-level ``semantic_chunker`` singleton) never blocks
+        # on the network.
+        return tiktoken.get_encoding("cl100k_base")
 
     def _split_long_text(self, text: str, limit: int) -> list[str]:
         """Bound ``text`` to ``limit`` chars, cutting at paragraph/newline boundaries.

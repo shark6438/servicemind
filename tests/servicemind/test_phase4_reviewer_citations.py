@@ -329,9 +329,7 @@ class RoundAwareKnowledge:
         self.rounds.append(retrieval_round)
         if retrieval_round >= 1:
             return [
-                knowledge_evidence(
-                    "Network Team owns VPN gateway faults and owns the runbook."
-                )
+                knowledge_evidence("Network Team owns VPN gateway faults and owns the runbook.")
             ]
         return []
 
@@ -400,14 +398,9 @@ class StateDrivenSupervisor:
                             item["task_id"]
                             for item in state_view["ready_tasks"]
                             if item["agent"]
-                            == (
-                                "analysis"
-                                if action is SupervisorAction.ANALYZE
-                                else "reviewer"
-                            )
+                            == ("analysis" if action is SupervisorAction.ANALYZE else "reviewer")
                         ][:1]
-                        if action
-                        in {SupervisorAction.ANALYZE, SupervisorAction.REVIEW}
+                        if action in {SupervisorAction.ANALYZE, SupervisorAction.REVIEW}
                         else []
                     ),
                     rationale_summary=f"Progress workflow with {action.value}.",

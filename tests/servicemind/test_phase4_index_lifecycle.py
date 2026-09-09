@@ -406,9 +406,9 @@ def test_lexical_arms_score_section_heading_beside_body_and_title() -> None:
     assert "title" in fields
     assert "section_heading^1.5" in fields
     hybrid_body, _ = _hit_index_body(RetrievalMode.HYBRID)
-    arm_fields = hybrid_body["query"]["hybrid"]["queries"][1]["bool"]["must"][0][
-        "multi_match"
-    ]["fields"]
+    arm_fields = hybrid_body["query"]["hybrid"]["queries"][1]["bool"]["must"][0]["multi_match"][
+        "fields"
+    ]
     assert "section_heading^1.5" in arm_fields
 
 

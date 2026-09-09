@@ -271,9 +271,7 @@ async def test_replan_keeps_original_deadline(monkeypatch) -> None:
     import servicemind.agents.dynamic_planner as dp
 
     monkeypatch.setattr(dp, "get_model", lambda _: object())
-    monkeypatch.setattr(
-        dp, "structured_output", lambda model, schema: FakeRunnable(revision())
-    )
+    monkeypatch.setattr(dp, "structured_output", lambda model, schema: FakeRunnable(revision()))
     previous = completed_plan()
     due = previous.deadline
     review = ReviewResult(
@@ -300,9 +298,7 @@ async def test_revise_plan_without_prior_review_keeps_deadline(monkeypatch) -> N
     import servicemind.agents.dynamic_planner as dp
 
     monkeypatch.setattr(dp, "get_model", lambda _: object())
-    monkeypatch.setattr(
-        dp, "structured_output", lambda model, schema: FakeRunnable(revision())
-    )
+    monkeypatch.setattr(dp, "structured_output", lambda model, schema: FakeRunnable(revision()))
     previous = completed_plan()
     due = previous.deadline
     revised = await DynamicPlanner().revise_plan(

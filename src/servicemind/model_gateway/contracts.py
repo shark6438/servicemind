@@ -116,5 +116,7 @@ class ModelInvocationAudit(BaseModel):
 
 def stable_hash(value: Any) -> str:
     return hashlib.sha256(
-        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode()
+        json.dumps(
+            value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str
+        ).encode()
     ).hexdigest()

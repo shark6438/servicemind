@@ -158,12 +158,24 @@ def test_preference_requires_explicit_consent_and_user_scope() -> None:
 @pytest.mark.asyncio
 async def test_procedural_memory_never_auto_activates() -> None:
     repository = InMemoryMemoryRepository()
-    episodes = [await MemoryWriter(repository).write(MemoryCandidate(
-        tenant_id=TENANT_A, memory_type=MemoryType.EPISODIC,
-        subject_key=f"episode-{index}", content="Verified VPN gateway recovery",
-        source_run_id=uuid4(), source_trace_id="trace", evidence_refs=(evidence(),),
-        final_state_verified=True, confidence=1, importance=1, created_by="test",
-    )) for index in range(2)]
+    episodes = [
+        await MemoryWriter(repository).write(
+            MemoryCandidate(
+                tenant_id=TENANT_A,
+                memory_type=MemoryType.EPISODIC,
+                subject_key=f"episode-{index}",
+                content="Verified VPN gateway recovery",
+                source_run_id=uuid4(),
+                source_trace_id="trace",
+                evidence_refs=(evidence(),),
+                final_state_verified=True,
+                confidence=1,
+                importance=1,
+                created_by="test",
+            )
+        )
+        for index in range(2)
+    ]
     candidate = MemoryCandidate(
         tenant_id=TENANT_A,
         memory_type=MemoryType.PROCEDURAL,
@@ -338,9 +350,7 @@ async def test_memory_revoked_subject_relearn_requires_review_not_silent_dedupe(
         )
         == 1
     )
-    reaffirmed = await writer.write(
-        fact_candidate(subject_key="vpn-owner", source_run_id=uuid4())
-    )
+    reaffirmed = await writer.write(fact_candidate(subject_key="vpn-owner", source_run_id=uuid4()))
     assert reaffirmed is not None
     assert reaffirmed.memory_id != original.memory_id
     assert reaffirmed.status is MemoryStatus.QUARANTINE
@@ -501,9 +511,7 @@ class CountingEmbeddingProvider:
     async def embed_documents(self, texts: list[str]) -> list[list[float]]:
         self.calls += 1
         return [
-            [1.0, 0.0]
-            if "identity" in text.casefold() or "mfa" in text.casefold()
-            else [0.0, 1.0]
+            [1.0, 0.0] if "identity" in text.casefold() or "mfa" in text.casefold() else [0.0, 1.0]
             for text in texts
         ]
 
@@ -955,8 +963,12 @@ async def test_model_gateway_timeout_has_explicit_terminal() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("failure", [RuntimeError("429 rate limit"), RuntimeError("503 unavailable")])
-async def test_model_gateway_retries_only_transient_provider_failures(failure: RuntimeError) -> None:
+@pytest.mark.parametrize(
+    "failure", [RuntimeError("429 rate limit"), RuntimeError("503 unavailable")]
+)
+async def test_model_gateway_retries_only_transient_provider_failures(
+    failure: RuntimeError,
+) -> None:
     model = StubModel(failure, {"value": 3})
     gateway = ModelGateway(
         policy=ModelRoutePolicy(allowed_providers=("unknown",)),
@@ -1011,9 +1023,7 @@ async def test_model_gateway_cost_budget_is_a_hard_terminal_gate() -> None:
 async def test_model_gateway_tenant_allowlist_is_an_intersection() -> None:
     policy = ModelRoutePolicy(
         allowed_providers=("unknown",),
-        tenant_allowlists={
-            str(TENANT_A): {"providers": ["deepseek"], "models": ["stub-v1"]}
-        },
+        tenant_allowlists={str(TENANT_A): {"providers": ["deepseek"], "models": ["stub-v1"]}},
     )
     gateway = ModelGateway(policy=policy, max_retries=0)
     with pytest.raises(PermissionError, match="provider is not allowlisted"):
@@ -1026,9 +1036,7 @@ async def test_model_gateway_tenant_allowlist_is_an_intersection() -> None:
 async def test_model_gateway_configured_tenant_map_denies_unregistered_tenant() -> None:
     policy = ModelRoutePolicy(
         allowed_providers=("unknown",),
-        tenant_allowlists={
-            str(TENANT_A): {"providers": ["unknown"], "models": ["stub-v1"]}
-        },
+        tenant_allowlists={str(TENANT_A): {"providers": ["unknown"], "models": ["stub-v1"]}},
     )
     gateway = ModelGateway(policy=policy, max_retries=0)
     with pytest.raises(PermissionError, match="no model allowlist entry"):

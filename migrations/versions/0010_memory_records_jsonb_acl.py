@@ -12,7 +12,6 @@ Revision ID: 0010_memory_records_jsonb_acl
 Revises: 0009_model_accounting_provenance
 """
 
-import sqlalchemy as sa
 from alembic import op
 
 revision = "0010_memory_records_jsonb_acl"
@@ -34,6 +33,5 @@ def upgrade() -> None:
 def downgrade() -> None:
     for column in _JSONB_COLUMNS:
         op.execute(
-            f'ALTER TABLE "memory_records" '
-            f'ALTER COLUMN "{column}" TYPE json USING "{column}"::json'
+            f'ALTER TABLE "memory_records" ALTER COLUMN "{column}" TYPE json USING "{column}"::json'
         )

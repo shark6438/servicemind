@@ -50,9 +50,7 @@ class DynamicPlanner:
         result = await runnable.ainvoke(
             [
                 SystemMessage(
-                    content=self._planner_prompt(
-                        request_write, correction, PlanProposal
-                    )
+                    content=self._planner_prompt(request_write, correction, PlanProposal)
                 ),
                 HumanMessage(
                     content=json.dumps(
@@ -93,9 +91,7 @@ class DynamicPlanner:
         result = await runnable.ainvoke(
             [
                 SystemMessage(
-                    content=self._planner_prompt(
-                        request_write, correction, PlanRevisionProposal
-                    )
+                    content=self._planner_prompt(request_write, correction, PlanRevisionProposal)
                 ),
                 HumanMessage(
                     content=json.dumps(
@@ -123,14 +119,10 @@ class DynamicPlanner:
         )
         proposal = PlanRevisionProposal.model_validate(result)
         completed_by_id = {
-            task.task_id: task
-            for task in previous.tasks
-            if task.status is TaskStatus.SUCCESS
+            task.task_id: task for task in previous.tasks if task.status is TaskStatus.SUCCESS
         }
         if set(proposal.preserved_task_ids) != set(completed_by_id):
-            raise ValueError(
-                "Replan preserved_task_ids must exactly match completed tasks"
-            )
+            raise ValueError("Replan preserved_task_ids must exactly match completed tasks")
         proposal_by_id = {task.task_id: task for task in proposal.tasks}
         for task_id, old in completed_by_id.items():
             proposed = proposal_by_id.get(task_id)
@@ -148,9 +140,7 @@ class DynamicPlanner:
             )
             for task in completed_by_id.values()
         ]
-        new_tasks = [
-            task for task in proposal.tasks if task.task_id not in completed_by_id
-        ]
+        new_tasks = [task for task in proposal.tasks if task.task_id not in completed_by_id]
         plan = self.compile_proposal(
             PlanProposal(
                 rationale_summary=proposal.rationale_summary,
@@ -171,16 +161,12 @@ class DynamicPlanner:
                 task.status = TaskStatus.SUCCESS
                 task.output_ref = old.output_ref
                 task.attempts = old.attempts
-        missing = {
-            task.task_id
-            for task in previous.tasks
-            if task.status is TaskStatus.SUCCESS
-        } - {task.task_id for task in plan.tasks}
+        missing = {task.task_id for task in previous.tasks if task.status is TaskStatus.SUCCESS} - {
+            task.task_id for task in plan.tasks
+        }
         if missing:
             raise ValueError(f"Replan dropped completed tasks: {sorted(missing)}")
-        new_agents = {
-            task.agent for task in plan.tasks if task.task_id not in completed_by_id
-        }
+        new_agents = {task.agent for task in plan.tasks if task.task_id not in completed_by_id}
         required_new = {AgentName.ANALYSIS, AgentName.REVIEWER}
         if not new_agents & {AgentName.DATA, AgentName.KNOWLEDGE}:
             raise ValueError("Replan must add at least one evidence task")
@@ -213,9 +199,7 @@ class DynamicPlanner:
             budget = previous.budget
             due = previous.deadline
         else:
-            due = datetime.now(UTC) + timedelta(
-                seconds=settings.SERVICEMIND_RUN_DEADLINE_SECONDS
-            )
+            due = datetime.now(UTC) + timedelta(seconds=settings.SERVICEMIND_RUN_DEADLINE_SECONDS)
             budget = Budget(
                 max_steps=settings.SERVICEMIND_MAX_STEPS,
                 max_replans=settings.SERVICEMIND_MAX_REPLANS,
@@ -256,13 +240,15 @@ class DynamicPlanner:
         # Fail closed: any plan that reads evidence must run through Analysis *and*
         # the Reviewer gate. Without this, a data/knowledge-only plan would join
         # evidence and let the Supervisor finalize SUCCEEDED with nothing reviewed.
-        if agents & {AgentName.DATA, AgentName.KNOWLEDGE} and not {
-            AgentName.ANALYSIS,
-            AgentName.REVIEWER,
-        } <= agents:
-            raise ValueError(
-                "Evidence-bearing plans must contain Analysis and Reviewer tasks"
-            )
+        if (
+            agents & {AgentName.DATA, AgentName.KNOWLEDGE}
+            and not {
+                AgentName.ANALYSIS,
+                AgentName.REVIEWER,
+            }
+            <= agents
+        ):
+            raise ValueError("Evidence-bearing plans must contain Analysis and Reviewer tasks")
         return plan
 
     def _planner_prompt(

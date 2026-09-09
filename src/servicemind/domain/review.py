@@ -69,9 +69,7 @@ class ReviewResult(BaseModel):
     @model_validator(mode="after")
     def passed_review_must_be_clean(self) -> Self:
         blocking = [
-            finding
-            for finding in self.findings
-            if finding.severity in {"error", "critical"}
+            finding for finding in self.findings if finding.severity in {"error", "critical"}
         ]
         if self.decision is ReviewDecision.PASSED and (self.degraded or blocking):
             raise ValueError("A degraded or blocking review cannot be marked passed")

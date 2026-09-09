@@ -165,8 +165,7 @@ def _metric_values(outcomes: list[Outcome], ranking: str, metric: str, k: int) -
         elif metric == "ndcg":
             dcg = sum(gain / math.log2(rank + 1) for rank, gain in enumerate(gains, 1))
             ideal = sum(
-                1.0 / math.log2(rank + 1)
-                for rank in range(1, min(k, len(outcome.relevant)) + 1)
+                1.0 / math.log2(rank + 1) for rank in range(1, min(k, len(outcome.relevant)) + 1)
             )
             values.append(dcg / ideal if ideal else 0.0)
         else:
@@ -214,9 +213,7 @@ def _reranker(device: str) -> tuple[Callable[[list[tuple[str, str]]], np.ndarray
     )
     if len(snapshots) != 1:
         raise RuntimeError(f"expected one pinned reranker snapshot, found {snapshots}")
-    model = CrossEncoder(
-        str(snapshots[0]), device=device, max_length=512, trust_remote_code=False
-    )
+    model = CrossEncoder(str(snapshots[0]), device=device, max_length=512, trust_remote_code=False)
 
     def predict(pairs: list[tuple[str, str]]) -> np.ndarray:
         return np.asarray(model.predict(pairs, batch_size=32, show_progress_bar=True)).reshape(-1)
@@ -229,9 +226,7 @@ def _embedding_session() -> tuple[Any, Any, str]:
     from transformers import AutoTokenizer
 
     snapshots = sorted(
-        (ROOT / "data" / "phase4" / "models" / "embedding").glob(
-            "models--BAAI--bge-m3/snapshots/*"
-        )
+        (ROOT / "data" / "phase4" / "models" / "embedding").glob("models--BAAI--bge-m3/snapshots/*")
     )
     if len(snapshots) != 1:
         raise RuntimeError(f"expected one pinned embedding snapshot, found {snapshots}")
@@ -328,8 +323,7 @@ def _rrf(left: list[str], right: list[str], *, k: int = 30) -> list[str]:
         for rank, doc_id in enumerate(ranking, 1):
             scores[doc_id] = scores.get(doc_id, 0.0) + 1.0 / (60 + rank)
     return [
-        doc_id
-        for doc_id, _ in sorted(scores.items(), key=lambda item: (-item[1], item[0]))[:k]
+        doc_id for doc_id, _ in sorted(scores.items(), key=lambda item: (-item[1], item[0]))[:k]
     ]
 
 
@@ -366,8 +360,11 @@ def _markdown(payload: dict[str, Any]) -> str:
             "",
             "## Gates",
             "",
-            *[f"- {'PASS' if item['passed'] else 'FAIL'}: {name} {item['actual']} "
-              f"{item['operator']} {item['threshold']}" for name, item in gates.items()],
+            *[
+                f"- {'PASS' if item['passed'] else 'FAIL'}: {name} {item['actual']} "
+                f"{item['operator']} {item['threshold']}"
+                for name, item in gates.items()
+            ],
             "",
             "## Scope",
             "",
@@ -402,15 +399,17 @@ def main() -> None:
     index = f"sm-techqa-proxy-{uuid.uuid4().hex[:8]}"
     outcomes: list[Outcome] = []
     started = time.perf_counter()
-    with httpx.Client(
-        base_url=url, auth=auth, verify=False, timeout=60, trust_env=False
-    ) as client:
+    with httpx.Client(base_url=url, auth=auth, verify=False, timeout=60, trust_env=False) as client:
         _request(
             client,
             "PUT",
             f"/{index}",
             json_body={
-                "settings": {"number_of_shards": 1, "number_of_replicas": 0, "refresh_interval": "-1"},
+                "settings": {
+                    "number_of_shards": 1,
+                    "number_of_replicas": 0,
+                    "refresh_interval": "-1",
+                },
                 "mappings": {
                     "dynamic": "strict",
                     "properties": {
@@ -425,7 +424,9 @@ def main() -> None:
             documents = _corpus_documents()
             _bulk_index(client, index, documents)
             _request(client, "POST", f"/{index}/_refresh")
-            _request(client, "PUT", f"/{index}/_settings", json_body={"index.refresh_interval": "1s"})
+            _request(
+                client, "PUT", f"/{index}/_settings", json_body={"index.refresh_interval": "1s"}
+            )
 
             provisional: list[tuple[dict[str, Any], list[str], float]] = []
             for row in answerable:
@@ -465,9 +466,7 @@ def main() -> None:
             )
             hybrid_rankings = [
                 _rrf(bm25_hits, dense_hits)
-                for (_, bm25_hits, _), dense_hits in zip(
-                    provisional, dense_rankings, strict=True
-                )
+                for (_, bm25_hits, _), dense_hits in zip(provisional, dense_rankings, strict=True)
             ]
 
             predict, reranker_name, reranker_revision = _reranker(args.device)

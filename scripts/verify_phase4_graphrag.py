@@ -22,7 +22,9 @@ from servicemind.graphrag.retrieval import GraphRetriever, to_graph_evidence
 from servicemind.rag.query import query_processor
 
 TENANT = UUID("11111111-1111-4111-8111-111111111111")
-REPORT_PATH = Path(__file__).resolve().parents[1] / "evaluation" / "reports" / "phase4_graphrag_live.json"
+REPORT_PATH = (
+    Path(__file__).resolve().parents[1] / "evaluation" / "reports" / "phase4_graphrag_live.json"
+)
 
 
 def _demo_records() -> list[IncidentRecord]:

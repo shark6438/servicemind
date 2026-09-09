@@ -16,9 +16,7 @@ GLOBEX = UUID("22222222-2222-4222-8222-222222222222")
 
 async def visible_entities(tenant_id: UUID) -> list[int]:
     async with tenant_session(tenant_id) as session:
-        return list(
-            (await session.execute(select(GlpiIntegration.entity_id))).scalars()
-        )
+        return list((await session.execute(select(GlpiIntegration.entity_id))).scalars())
 
 
 async def verify_append_only_audit() -> None:
@@ -45,9 +43,7 @@ async def main() -> None:
     assert await visible_entities(ACME) == [1]
     assert await visible_entities(GLOBEX) == [2]
     async with global_session() as session:
-        without_tenant = (
-            await session.execute(select(GlpiIntegration.entity_id))
-        ).scalars().all()
+        without_tenant = (await session.execute(select(GlpiIntegration.entity_id))).scalars().all()
         revision = (
             await session.execute(text("SELECT version_num FROM alembic_version"))
         ).scalar_one()

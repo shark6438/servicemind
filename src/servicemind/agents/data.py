@@ -251,9 +251,7 @@ class DataAgent:
                         )
                     ),
                     HumanMessage(
-                        content=redact_for_model(
-                            json.dumps(model_input, ensure_ascii=False)
-                        ).text
+                        content=redact_for_model(json.dumps(model_input, ensure_ascii=False)).text
                     ),
                 ]
             )

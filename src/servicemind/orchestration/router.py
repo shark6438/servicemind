@@ -43,9 +43,7 @@ class FastPathRouter:
                 reason_code="forbidden_operation",
                 confidence=1,
             )
-        if request_write or any(
-            re.search(pattern, normalized) for pattern in COMPLEX_PATTERNS
-        ):
+        if request_write or any(re.search(pattern, normalized) for pattern in COMPLEX_PATTERNS):
             return RouteDecision(
                 route=RouteType.COMPLEX_WORKFLOW,
                 required_capabilities=[

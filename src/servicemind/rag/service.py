@@ -353,21 +353,17 @@ class EnterpriseRAG:
             self.embedding,
             mode=mode,
             use_rewrites=use_rewrites,
-            dense_k=(
-                dense_k
-                if dense_k is not None
-                else settings.SERVICEMIND_RAG_DENSE_K
-            ),
+            dense_k=(dense_k if dense_k is not None else settings.SERVICEMIND_RAG_DENSE_K),
             bm25_k=bm25_k if bm25_k is not None else settings.SERVICEMIND_RAG_BM25_K,
             candidate_k=(
-                candidate_k
-                if candidate_k is not None
-                else settings.SERVICEMIND_RAG_CANDIDATE_K
+                candidate_k if candidate_k is not None else settings.SERVICEMIND_RAG_CANDIDATE_K
             ),
         )
         candidate_count = len(hits)
         if hits and self.repository is None:
-            raise RuntimeError("KnowledgeRepository missing; refusing OpenSearch-only parent expansion")
+            raise RuntimeError(
+                "KnowledgeRepository missing; refusing OpenSearch-only parent expansion"
+            )
         hits = [hit for hit in hits if principal.allows(hit.acl)]
         if hits:
             if self.repository is None:

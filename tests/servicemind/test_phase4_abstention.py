@@ -605,11 +605,7 @@ class StateDrivenSupervisor:
                             item["task_id"]
                             for item in state_view["ready_tasks"]
                             if item["agent"]
-                            == (
-                                "analysis"
-                                if action is SupervisorAction.ANALYZE
-                                else "reviewer"
-                            )
+                            == ("analysis" if action is SupervisorAction.ANALYZE else "reviewer")
                         ][:1]
                         if action in {SupervisorAction.ANALYZE, SupervisorAction.REVIEW}
                         else []

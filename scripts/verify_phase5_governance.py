@@ -221,7 +221,9 @@ async def main() -> None:
     await PostgresModelAuditSink().record(model_audit)
 
     async with global_session() as session:
-        revision = (await session.execute(text("SELECT version_num FROM alembic_version"))).scalar_one()
+        revision = (
+            await session.execute(text("SELECT version_num FROM alembic_version"))
+        ).scalar_one()
         rls = dict(
             (
                 await session.execute(
@@ -277,9 +279,7 @@ async def main() -> None:
         checks = set(
             (
                 await session.execute(
-                    text(
-                        "SELECT conname FROM pg_constraint WHERE conname = ANY(:constraints)"
-                    ),
+                    text("SELECT conname FROM pg_constraint WHERE conname = ANY(:constraints)"),
                     {
                         "constraints": [
                             "ck_memory_records_type",

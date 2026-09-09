@@ -215,9 +215,7 @@ class AttachmentSource:
                     source_record_id=rel,
                     license_name="tenant-owned",
                     authority=AuthorityLevel.INTERNAL_KNOWLEDGE,
-                    acl=KnowledgeACL(
-                        corpus_scope=CorpusScope.TENANT, tenant_id=self.tenant_id
-                    ),
+                    acl=KnowledgeACL(corpus_scope=CorpusScope.TENANT, tenant_id=self.tenant_id),
                     metadata={
                         "source_file": str(path),
                         "file_format": suffix,

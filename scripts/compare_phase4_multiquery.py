@@ -241,11 +241,7 @@ async def main() -> None:
                 per_arm[name][-1].update({f"pool_{k}": v for k, v in probe[name].items()})
 
         def _mean(rows, key, only_answerable=False):
-            values = [
-                row[key]
-                for row in rows
-                if not (only_answerable and row["unanswerable"])
-            ]
+            values = [row[key] for row in rows if not (only_answerable and row["unanswerable"])]
             return statistics.fmean(values) if values else 0.0
 
         report_arms: dict[str, dict] = {}
@@ -264,15 +260,21 @@ async def main() -> None:
                     for k in top_ks
                 },
                 "mrr_at_10": round(
-                    statistics.fmean(mrr_at_k(r["keys"], set(r["relevant"]), 10) for r in answerable),
+                    statistics.fmean(
+                        mrr_at_k(r["keys"], set(r["relevant"]), 10) for r in answerable
+                    ),
                     4,
                 ),
                 "ndcg_at_10": round(
-                    statistics.fmean(ndcg_at_k(r["keys"], set(r["relevant"]), 10) for r in answerable),
+                    statistics.fmean(
+                        ndcg_at_k(r["keys"], set(r["relevant"]), 10) for r in answerable
+                    ),
                     4,
                 ),
                 "precision_at_1": round(
-                    statistics.fmean(precision_at_k(r["keys"], set(r["relevant"]), 1) for r in answerable),
+                    statistics.fmean(
+                        precision_at_k(r["keys"], set(r["relevant"]), 1) for r in answerable
+                    ),
                     4,
                 ),
                 "mean_candidate_count": round(_mean(rows, "candidate_count"), 1),
@@ -288,17 +290,10 @@ async def main() -> None:
         # demonstrated on a saturated gold set (MRR@10 == 1.0 already), which the
         # report states explicitly instead of manufacturing a difference.
         regression = any(
-            (fan[k] - single[k]) < -1e-9
-            for k in ("mrr_at_10", "ndcg_at_10", "precision_at_1")
+            (fan[k] - single[k]) < -1e-9 for k in ("mrr_at_10", "ndcg_at_10", "precision_at_1")
         )
-        abstention_same = (
-            fan["answered_unanswerable"] == single["answered_unanswerable"]
-        )
-        decision = (
-            "keep"
-            if not regression and abstention_same
-            else "investigate"
-        )
+        abstention_same = fan["answered_unanswerable"] == single["answered_unanswerable"]
+        decision = "keep" if not regression and abstention_same else "investigate"
 
         REPORTS_DIR.mkdir(parents=True, exist_ok=True)
         payload = {
@@ -338,8 +333,7 @@ async def main() -> None:
             f"unanswerable={len(gold.unanswerable)}). Rewrites: {sidecar.get('model')} "
             f"captured {sidecar.get('captured_at')}.",
             "",
-            "| arm | Recall@k | MRR@10 | NDCG@10 | P@1 | candidates | pool parents | "
-            "latency(ms) |",
+            "| arm | Recall@k | MRR@10 | NDCG@10 | P@1 | candidates | pool parents | latency(ms) |",
             "|---|---|---|---|---|---|---|---|",
         ]
         for name in arms:

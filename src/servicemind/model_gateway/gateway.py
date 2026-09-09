@@ -5,6 +5,7 @@ import time
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
+from functools import cached_property
 from typing import Any
 from uuid import UUID
 
@@ -57,9 +58,7 @@ def _model_identity(model: BaseChatModel) -> tuple[str, str, str]:
         if marker in module and provider == "unknown":
             provider = value
     revision = str(
-        getattr(model, "model_version", None)
-        or getattr(model, "model_revision", None)
-        or name
+        getattr(model, "model_version", None) or getattr(model, "model_revision", None) or name
     )
     return provider, name, revision
 
@@ -143,7 +142,13 @@ class ModelGateway:
         }
         self._failures: dict[str, int] = {}
         self._open_until: dict[str, float] = {}
-        self._encoding = tiktoken.get_encoding("cl100k_base")
+
+    @cached_property
+    def _encoding(self) -> tiktoken.Encoding:
+        # tiktoken downloads the cl100k_base BPE file on first use and caches
+        # it; keep that out of __init__ so constructing the gateway (and thus
+        # importing this module) never blocks on the network.
+        return tiktoken.get_encoding("cl100k_base")
 
     def structured[SchemaT: BaseModel](
         self,
@@ -277,9 +282,7 @@ class ModelGateway:
                         provider_usage=usage,
                     )
                     if cost_exceeded:
-                        raise ModelCostBudgetExceeded(
-                            "model invocation exceeded its cost budget"
-                        )
+                        raise ModelCostBudgetExceeded("model invocation exceeded its cost budget")
                     return result
                 except ModelCostBudgetExceeded:
                     raise
@@ -345,8 +348,7 @@ class ModelGateway:
         pricing_version = (
             "internal-semantic-cache-v1"
             if status == "cache_hit"
-            else
-            "deepseek-2026-08-16-peak-cache-miss"
+            else "deepseek-2026-08-16-peak-cache-miss"
             if route.model in {"deepseek-v4-flash", "deepseek-v4-pro"}
             else "unconfigured"
         )
@@ -396,13 +398,17 @@ class GovernedStructuredRunnable[SchemaT: BaseModel]:
         self.fallback_models = fallback_models
 
     async def ainvoke(self, messages: Any, config: Any = None, **kwargs: Any) -> SchemaT:
-        context = self.context or _active_context.get() or ModelCallContext(
-            tenant_id=UUID(int=0),
-            agent_role="unscoped",
-            purpose=ModelPurpose.ANALYSIS,
-            risk=ModelRisk.MEDIUM,
-            policy_version="legacy-unscoped-v1",
-            prompt_version="legacy-unscoped-v1",
+        context = (
+            self.context
+            or _active_context.get()
+            or ModelCallContext(
+                tenant_id=UUID(int=0),
+                agent_role="unscoped",
+                purpose=ModelPurpose.ANALYSIS,
+                risk=ModelRisk.MEDIUM,
+                policy_version="legacy-unscoped-v1",
+                prompt_version="legacy-unscoped-v1",
+            )
         )
         return await self.gateway.invoke(
             self.model,
@@ -415,7 +421,19 @@ class GovernedStructuredRunnable[SchemaT: BaseModel]:
         )
 
 
-default_model_gateway = ModelGateway()
+_default_model_gateway: ModelGateway | None = None
+
+
+def default_model_gateway() -> ModelGateway:
+    """Return the process-wide ModelGateway, building it lazily on first use.
+
+    Constructing the gateway touches tiktoken's BPE table, which can download
+    on first run; deferring construction keeps module import offline and fast.
+    """
+    global _default_model_gateway
+    if _default_model_gateway is None:
+        _default_model_gateway = ModelGateway()
+    return _default_model_gateway
 
 
 def governed_structured_output[SchemaT: BaseModel](
@@ -425,6 +443,6 @@ def governed_structured_output[SchemaT: BaseModel](
     context: ModelCallContext | None = None,
     fallback_models: Sequence[BaseChatModel] = (),
 ) -> GovernedStructuredRunnable[SchemaT]:
-    return default_model_gateway.structured(
+    return default_model_gateway().structured(
         model, schema, context=context, fallback_models=fallback_models
     )

@@ -84,9 +84,7 @@ class ActionAgent:
             arguments=arguments,
             risk_level=cast(
                 Literal["low", "medium", "high"],
-                "high"
-                if handoff.risk_level.value == "critical"
-                else handoff.risk_level.value,
+                "high" if handoff.risk_level.value == "critical" else handoff.risk_level.value,
             ),
             action_hash=action_hash,
             tenant_id=handoff.tenant_id,

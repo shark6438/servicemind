@@ -137,8 +137,13 @@ def download_to_file(url: str, target: Path, *, retries: int = 3) -> None:
 def pause_with_steps(message: str, steps: list[str]) -> None:
     """Print a human-executable remediation plan and exit non-zero (the pause contract)."""
     print(f"\nERROR: {message}", file=sys.stderr)
-    print("The Phase 4 production corpus is incomplete. Run these steps by hand, then", file=sys.stderr)
-    print("re-run this script; nothing else will proceed until the checksums match.", file=sys.stderr)
+    print(
+        "The Phase 4 production corpus is incomplete. Run these steps by hand, then",
+        file=sys.stderr,
+    )
+    print(
+        "re-run this script; nothing else will proceed until the checksums match.", file=sys.stderr
+    )
     print("\nExecutable steps:", file=sys.stderr)
     for step in steps:
         print(f"  $ {step}", file=sys.stderr)
@@ -269,7 +274,9 @@ def download_pagerduty(item: dict[str, Any]) -> tuple[Path, Path]:
                 raise ValueError(f"unsafe symlink member: {name}")
             members.append(name)
         common_root = Path(members[0].split("/", 1)[0])
-        assert all(Path(name).parts[0] == common_root.as_posix() for name in members), "not single-root zip"
+        assert all(Path(name).parts[0] == common_root.as_posix() for name in members), (
+            "not single-root zip"
+        )
         tmp = extracted_root.parent / f".{extracted_root.name}.tmp"
         if tmp.exists():
             shutil.rmtree(tmp)

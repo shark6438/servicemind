@@ -71,12 +71,8 @@ CONTROL_QUERIES: dict[str, str] = {
     "ctl-major-incident": (
         "When should an incident be declared a major incident, and what defines one?"
     ),
-    "ctl-postmortem": (
-        "What makes a good post-incident post-mortem review for our team?"
-    ),
-    "ctl-oncall": (
-        "What alert priorities and on-call expectations apply to an on-call engineer?"
-    ),
+    "ctl-postmortem": ("What makes a good post-incident post-mortem review for our team?"),
+    "ctl-oncall": ("What alert priorities and on-call expectations apply to an on-call engineer?"),
 }
 
 MAX_EVIDENCE_ITEMS = 5
@@ -153,9 +149,7 @@ def _judge_rubric() -> str:
     )
 
 
-async def _structured_robust(
-    model: BaseChatModel, schema: type[BaseModel], user: str
-) -> BaseModel:
+async def _structured_robust(model: BaseChatModel, schema: type[BaseModel], user: str) -> BaseModel:
     """JSON-mode structured output with one schema-repair retry (DeepSeek json_mode is
     not schema-enforcing; the reviewer itself degrades to ESCALATE on parse failure)."""
     runnable = structured_output(model, schema)
@@ -230,9 +224,7 @@ async def run_one(
 
 
 async def main() -> None:
-    model_name = DeepseekModelName(
-        os.environ.get("DS_MODEL", DeepseekModelName.DEEPSEEK_V4_FLASH)
-    )
+    model_name = DeepseekModelName(os.environ.get("DS_MODEL", DeepseekModelName.DEEPSEEK_V4_FLASH))
     judge_name = DeepseekModelName(
         os.environ.get("DS_JUDGE_MODEL", DeepseekModelName.DEEPSEEK_V4_FLASH)
     )
@@ -272,10 +264,10 @@ async def main() -> None:
     controls = [r for r in results if not r["unanswerable"]]
     control_grounded = [r for r in controls if r["evidence_supports_answer"]]
     #: expected on grounded controls: answer (abstained=False) with no fabrication.
-    control_answered = [
-        r for r in controls if r["evidence_supports_answer"] and not r["abstained"]
+    control_answered = [r for r in controls if r["evidence_supports_answer"] and not r["abstained"]]
+    control_over_abstained = [
+        r for r in controls if r["evidence_supports_answer"] and r["abstained"]
     ]
-    control_over_abstained = [r for r in controls if r["evidence_supports_answer"] and r["abstained"]]
     control_fabrications = [r for r in controls if r["fabricated_concrete"]]
 
     report = {
@@ -346,6 +338,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(
-        main(), loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector())
-    )
+    asyncio.run(main(), loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector()))

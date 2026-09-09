@@ -576,9 +576,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                         run_kwargs: dict[str, Any] = {
                             "invocation": invocation,
                             "tenant_context": _context(state),
-                            "objective": str(
-                                task.task_input.get("objective") or state["goal"]
-                            ),
+                            "objective": str(task.task_input.get("objective") or state["goal"]),
                             "ticket_id": state["ticket_id"],
                         }
                         if isinstance(svc.data, DataAgent):
@@ -687,9 +685,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             agent=ContextAgent.KNOWLEDGE,
         )
         if context_envelope is not None and isinstance(svc.knowledge, KnowledgeAgent):
-            kwargs["model_query"] = json.dumps(
-                context_envelope.model_payload(), ensure_ascii=False
-            )
+            kwargs["model_query"] = json.dumps(context_envelope.model_payload(), ensure_ascii=False)
         evidence: list[Evidence] = []
         use_query_model = bool(kwargs.get("use_query_model", False))
         attempts_used = 0

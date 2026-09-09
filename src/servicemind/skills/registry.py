@@ -56,15 +56,15 @@ class SkillRegistry:
         manifest = SkillManifest.model_validate(manifest_value)
         body = _normalise_body(body)
         unsigned = {key: value for key, value in manifest_value.items() if key != "checksum"}
-        canonical = json.dumps(
-            unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-        )
+        canonical = json.dumps(unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         actual = hashlib.sha256(f"{canonical}\n{body}".encode()).hexdigest()
         if actual != manifest.checksum:
             raise ValueError(f"skill checksum mismatch: {manifest.skill_id}@{manifest.version}")
         lowered = body.casefold()
         if any(marker in lowered for marker in UNSAFE_INSTRUCTIONS):
-            raise PermissionError(f"skill contains a policy bypass instruction: {manifest.skill_id}")
+            raise PermissionError(
+                f"skill contains a policy bypass instruction: {manifest.skill_id}"
+            )
         return manifest, body
 
     def metadata(self, *, tenant_id: UUID, agent: ContextAgent) -> tuple[SkillManifest, ...]:
@@ -72,10 +72,7 @@ class SkillRegistry:
             manifest
             for manifest, _ in self._skills.values()
             if agent in manifest.allowed_agents
-            and (
-                manifest.scope is SkillScope.GLOBAL
-                or manifest.tenant_id == str(tenant_id)
-            )
+            and (manifest.scope is SkillScope.GLOBAL or manifest.tenant_id == str(tenant_id))
             and manifest.deprecated_at is None
         )
 

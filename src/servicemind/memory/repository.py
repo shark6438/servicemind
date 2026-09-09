@@ -124,7 +124,6 @@ def _subject_dedupe_outcome(
     return False, None, ()
 
 
-
 def _validate_activation(
     record: MemoryRecord, review: str | None, episodes: list[MemoryRecord]
 ) -> None:

@@ -50,8 +50,8 @@ ROLE_SOURCES: dict[ContextAgent, frozenset[ContextSource]] = {
 
 SECRET_ASSIGNMENT = re.compile(
     r"(?i)\b(password|passwd|secret|api[_ -]?key|private[_ -]?key|access[_ -]?token)\b"
-    r'''(?P<key_quote>["']?)\s*(?P<separator>[:=])\s*'''
-    r'''(?P<value_quote>["']?)([^\s"',;}]{4,})'''
+    r"""(?P<key_quote>["']?)\s*(?P<separator>[:=])\s*"""
+    r"""(?P<value_quote>["']?)([^\s"',;}]{4,})"""
 )
 SECRET_BLOB = re.compile(
     r"(?i)(?:"
@@ -91,12 +91,37 @@ def redact_for_model(value: str) -> Redaction:
     return Redaction(text=value, count=count + blob_count + email_count + phone_count)
 
 
+_default_encoding: tiktoken.Encoding | None = None
+
+
+def _default_token_counter() -> Callable[[str], int]:
+    """Return a cl100k_base-backed token counter, building the encoder lazily.
+
+    tiktoken downloads the cl100k_base BPE table on first use and then caches it;
+    the shared encoder is only resolved when this helper is first *called*, so
+    importing or constructing a :class:`ContextBuilder` never blocks on the
+    network.
+    """
+    global _default_encoding
+    if _default_encoding is None:
+        _default_encoding = tiktoken.get_encoding("cl100k_base")
+    return lambda value: len(_default_encoding.encode(value))
+
+
+class _DeferredTokenCounter:
+    """Callable that resolves the shared encoder on first invocation, not at
+    :class:`ContextBuilder` construction (which happens at import time for the
+    module-level ``phase5_governance`` singleton)."""
+
+    def __call__(self, value: str) -> int:
+        return _default_token_counter()(value)
+
+
 class ContextBuilder:
     """Build a minimal, role-scoped and token-bounded model input envelope."""
 
     def __init__(self, token_counter: Callable[[str], int] | None = None) -> None:
-        encoding = tiktoken.get_encoding("cl100k_base")
-        self._token_counter = token_counter or (lambda value: len(encoding.encode(value)))
+        self._token_counter = token_counter or _DeferredTokenCounter()
 
     def build(
         self,
@@ -160,8 +185,7 @@ class ContextBuilder:
             content = item.content
             if item.external_ref and self._token_counter(content) > 4096:
                 content = (
-                    f"[OFFLOADED content_hash={item.content_hash} "
-                    f"external_ref={item.external_ref}]"
+                    f"[OFFLOADED content_hash={item.content_hash} external_ref={item.external_ref}]"
                 )
             redaction = redact_for_model(content)
             redaction_count += redaction.count

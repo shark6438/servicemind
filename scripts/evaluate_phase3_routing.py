@@ -14,9 +14,7 @@ def main() -> None:
     report = evaluate_cases(load_cases(DATASET))
     report["dataset"] = str(DATASET.relative_to(PROJECT_ROOT))
     REPORT.parent.mkdir(parents=True, exist_ok=True)
-    REPORT.write_text(
-        json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-    )
+    REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
     if report["samples"] < 100:
         raise SystemExit("Routing dataset must contain at least 100 samples")

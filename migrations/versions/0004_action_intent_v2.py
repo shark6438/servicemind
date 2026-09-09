@@ -22,9 +22,7 @@ def upgrade() -> None:
     op.add_column(
         "action_intents", sa.Column("policy_version", sa.String(length=100), nullable=True)
     )
-    op.add_column(
-        "action_intents", sa.Column("review_digest", sa.String(length=64), nullable=True)
-    )
+    op.add_column("action_intents", sa.Column("review_digest", sa.String(length=64), nullable=True))
     op.add_column(
         "action_intents", sa.Column("evidence_digest", sa.String(length=64), nullable=True)
     )
@@ -46,9 +44,7 @@ def upgrade() -> None:
             nullable=False,
         ),
     )
-    op.add_column(
-        "action_intents", sa.Column("requested_by", sa.String(length=255), nullable=True)
-    )
+    op.add_column("action_intents", sa.Column("requested_by", sa.String(length=255), nullable=True))
     op.add_column(
         "action_intents", sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True)
     )

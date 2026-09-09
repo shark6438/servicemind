@@ -26,14 +26,10 @@ def configure_telemetry() -> bool:
     if _provider is not None:
         return True
     _provider = TracerProvider(
-        resource=Resource.create(
-            {SERVICE_NAME: settings.SERVICEMIND_OTEL_SERVICE_NAME}
-        )
+        resource=Resource.create({SERVICE_NAME: settings.SERVICEMIND_OTEL_SERVICE_NAME})
     )
     _provider.add_span_processor(
-        BatchSpanProcessor(
-            OTLPSpanExporter(endpoint=settings.SERVICEMIND_OTEL_ENDPOINT)
-        )
+        BatchSpanProcessor(OTLPSpanExporter(endpoint=settings.SERVICEMIND_OTEL_ENDPOINT))
     )
     trace.set_tracer_provider(_provider)
     tracer = trace.get_tracer("servicemind.phase2")

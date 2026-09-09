@@ -109,9 +109,7 @@ def _backward(sub: GraphSubgraph, key: str, kind: EdgeKind) -> list[tuple[GraphE
     return out
 
 
-def _runbooks_forward(
-    sub: GraphSubgraph, keys: list[str]
-) -> list[tuple[GraphEdge, GraphNode]]:
+def _runbooks_forward(sub: GraphSubgraph, keys: list[str]) -> list[tuple[GraphEdge, GraphNode]]:
     """Distinct runbooks reached by ``ci:HAS_RUNBOOK->runbook`` from any of ``keys``."""
     seen: set[str] = set()
     out: list[tuple[GraphEdge, GraphNode]] = []
@@ -174,11 +172,7 @@ class GraphRetriever:
             max_nodes=self.max_nodes,
         )
         provider = f"{store.label}-graph"
-        findings = [
-            finding
-            for anchor in anchors
-            for finding in self._find(anchor, sub, provider)
-        ]
+        findings = [finding for anchor in anchors for finding in self._find(anchor, sub, provider)]
         findings.sort(key=lambda f: (-len(f.edges), f.relation, f.anchor.key))
         return findings[: self.max_findings]
 
@@ -220,9 +214,7 @@ class GraphRetriever:
                         provider,
                     )
                 )
-            services = [
-                node for _, node in _forward(sub, anchor.key, EdgeKind.DEPENDS_ON)
-            ]
+            services = [node for _, node in _forward(sub, anchor.key, EdgeKind.DEPENDS_ON)]
             if services:
                 dependencies = _forward(sub, anchor.key, EdgeKind.DEPENDS_ON)
                 findings.append(
@@ -253,9 +245,7 @@ class GraphRetriever:
                     seen_keys.add(node.key)
                     unique_tickets.append((edge, node))
             if unique_tickets:
-                incident_names = ", ".join(
-                    _label(node) for _, node in unique_tickets[:6]
-                )
+                incident_names = ", ".join(_label(node) for _, node in unique_tickets[:6])
                 ci_names = ", ".join(node.title for node in cus[:4])
                 finding_nodes = [node for _, node in unique_tickets[:8]]
                 finding_nodes.extend(cus[:4])
@@ -285,9 +275,14 @@ class GraphRetriever:
                 if node.kind is NodeKind.TICKET and node.key != anchor.key
             ]
             related: list[GraphNode] = [ci, *siblings]
-            edges = [edge, *[
-                e for e, _ in _backward(sub, ci.key, EdgeKind.AFFECTS) if e.source_key != anchor.key
-            ]]
+            edges = [
+                edge,
+                *[
+                    e
+                    for e, _ in _backward(sub, ci.key, EdgeKind.AFFECTS)
+                    if e.source_key != anchor.key
+                ],
+            ]
             if siblings:
                 findings.append(
                     self._build(
@@ -314,9 +309,7 @@ class GraphRetriever:
                         "Declare user-facing impact on those services and follow their "
                         "runbooks.",
                         [ci, *services],
-                        [edge, *[
-                            e for e, _ in _forward(sub, ci.key, EdgeKind.DEPENDS_ON)
-                        ]],
+                        [edge, *[e for e, _ in _forward(sub, ci.key, EdgeKind.DEPENDS_ON)]],
                         provider,
                     )
                 )
@@ -352,36 +345,28 @@ class GraphRetriever:
         self, anchor: GraphNode, sub: GraphSubgraph, provider: str
     ) -> list[GraphFinding]:
         """A Change anchor: which problem it resolved, linked incidents, CIs and runbooks."""
-        problems = [
-            node for _, node in _backward(sub, anchor.key, EdgeKind.RESOLVED_BY)
-        ]
+        problems = [node for _, node in _backward(sub, anchor.key, EdgeKind.RESOLVED_BY)]
         cis = [node for _, node in _forward(sub, anchor.key, EdgeKind.MODIFIES)]
         if not problems and not cis:
             return []
         tickets: list[GraphNode] = []
         for problem in problems:
             for _, node in _backward(sub, problem.key, EdgeKind.LINKED_TO):
-                if node.kind is NodeKind.TICKET and not any(
-                    t.key == node.key for t in tickets
-                ):
+                if node.kind is NodeKind.TICKET and not any(t.key == node.key for t in tickets):
                     tickets.append(node)
         runbooks = [node for _, node in _runbooks_forward(sub, [ci.key for ci in cis])]
         parts = [f"Change {_label(anchor)}"]
         if problems:
             parts.append(
-                "resolves known problem(s) "
-                + ", ".join(_label(node) for node in problems[:4])
+                "resolves known problem(s) " + ", ".join(_label(node) for node in problems[:4])
             )
         if tickets:
-            parts.append(
-                "linked to incident(s) " + ", ".join(_label(node) for node in tickets[:4])
-            )
+            parts.append("linked to incident(s) " + ", ".join(_label(node) for node in tickets[:4]))
         if cis:
             parts.append("modifying CI(s) " + ", ".join(node.title for node in cis[:4]))
         if runbooks:
             parts.append(
-                "with operating runbook(s) "
-                + ", ".join(_label(node) for node in runbooks[:4])
+                "with operating runbook(s) " + ", ".join(_label(node) for node in runbooks[:4])
             )
         parts.append("Correlate new occurrences with this approved change and its runbook.")
         return [
@@ -391,19 +376,12 @@ class GraphRetriever:
                 " ".join(parts),
                 [*problems, *cis, *tickets, *runbooks],
                 [
-                    *[
-                        edge
-                        for edge, _ in _backward(
-                            sub, anchor.key, EdgeKind.RESOLVED_BY
-                        )
-                    ],
+                    *[edge for edge, _ in _backward(sub, anchor.key, EdgeKind.RESOLVED_BY)],
                     *[edge for edge, _ in _forward(sub, anchor.key, EdgeKind.MODIFIES)],
                     *[
                         edge
                         for problem in problems
-                        for edge, _ in _backward(
-                            sub, problem.key, EdgeKind.LINKED_TO
-                        )
+                        for edge, _ in _backward(sub, problem.key, EdgeKind.LINKED_TO)
                     ],
                     *[edge for edge, _ in _runbooks_forward(sub, [ci.key for ci in cis])],
                 ],
@@ -432,9 +410,7 @@ class GraphRetriever:
         ticket_edges: list[GraphEdge] = []
         for ci in cis:
             for edge, node in _backward(sub, ci.key, EdgeKind.AFFECTS):
-                if node.kind is NodeKind.TICKET and not any(
-                    t.key == node.key for t in tickets
-                ):
+                if node.kind is NodeKind.TICKET and not any(t.key == node.key for t in tickets):
                     tickets.append(node)
                     ticket_edges.append(edge)
         narrative = (
@@ -473,9 +449,7 @@ class GraphRetriever:
             changes = [node for _, node in _forward(sub, problem.key, EdgeKind.RESOLVED_BY)]
             if not changes:
                 continue
-            change_edges = [
-                edge for edge, _ in _forward(sub, problem.key, EdgeKind.RESOLVED_BY)
-            ]
+            change_edges = [edge for edge, _ in _forward(sub, problem.key, EdgeKind.RESOLVED_BY)]
             modified = [
                 node
                 for change in changes
@@ -492,12 +466,9 @@ class GraphRetriever:
                 narrative += f" modifying {', '.join(node.title for node in modified[:4])}"
             if runbooks:
                 narrative += (
-                    " with operating runbook(s) "
-                    f"{', '.join(_label(node) for node in runbooks[:4])}"
+                    f" with operating runbook(s) {', '.join(_label(node) for node in runbooks[:4])}"
                 )
-            narrative += (
-                ". Correlate new occurrences with the approved change before acting."
-            )
+            narrative += ". Correlate new occurrences with the approved change before acting."
             findings.append(
                 self._build(
                     anchor,

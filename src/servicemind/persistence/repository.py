@@ -75,9 +75,7 @@ class ServiceMindRepository:
                         action_hash=action_hash,
                         completed=False,
                     )
-                    .on_conflict_do_nothing(
-                        index_elements=["tenant_id", "idempotency_key"]
-                    )
+                    .on_conflict_do_nothing(index_elements=["tenant_id", "idempotency_key"])
                     .returning(IdempotencyRecord.id)
                 )
             ).scalar_one_or_none()

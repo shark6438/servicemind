@@ -32,9 +32,7 @@ class ModelRoutePolicy:
         if context is not None and context.tenant_id.int != 0 and self.tenant_allowlists:
             entry = self.tenant_allowlists.get(str(context.tenant_id))
             if entry is None:
-                raise PermissionError(
-                    f"tenant has no model allowlist entry: {context.tenant_id}"
-                )
+                raise PermissionError(f"tenant has no model allowlist entry: {context.tenant_id}")
         if entry is not None:
             providers &= frozenset(value.casefold() for value in entry.get("providers", []))
             models &= frozenset(entry.get("models", []))

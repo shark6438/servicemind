@@ -18,6 +18,7 @@ TENANT_ID = UUID("11111111-1111-4111-8111-111111111111")
 async def main() -> None:
     local_env = dotenv_values("deploy/glpi/.env")
     async with httpx.AsyncClient(timeout=120, trust_env=False) as client:
+
         async def token(username: str, password_key: str) -> str:
             response = await client.post(
                 "http://127.0.0.1:8090/realms/servicemind/protocol/openid-connect/token",
@@ -50,9 +51,7 @@ async def main() -> None:
         run = response.json()
         assert run["status"] == "waiting_approval"
         action_hash = run["action_intent"]["action_hash"]
-        approval_url = (
-            f"http://127.0.0.1:8080/v1/servicemind/runs/{run['id']}/approval"
-        )
+        approval_url = f"http://127.0.0.1:8080/v1/servicemind/runs/{run['id']}/approval"
         approval_body = {
             "decision": "approved",
             "expected_action_hash": action_hash,
@@ -60,9 +59,7 @@ async def main() -> None:
         }
         responses = await asyncio.gather(
             *(
-                client.post(
-                    approval_url, headers=approver_headers, json=approval_body
-                )
+                client.post(approval_url, headers=approver_headers, json=approval_body)
                 for _ in range(2)
             )
         )
