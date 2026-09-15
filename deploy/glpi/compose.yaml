@@ -136,10 +136,13 @@ services:
       start_period: 60s
 
   rag-embedding:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3
+    # cuda-1.9.3 requires CUDA 12.9 and cannot start on the host's production
+    # 535 driver. Pin the verified CUDA 12.2 multi-arch digest: it keeps the
+    # runtime reproducible and is compatible with the installed driver.
+    image: ghcr.io/huggingface/text-embeddings-inference:cuda-1.8.3@sha256:57ad7e05ca1b42e0c16cb5fa42f43ee5187c6cd3b14288cd2c412b61953b4d39
     profiles: ["rag"]
     restart: unless-stopped
-    command: ["--model-id", "/data/models--BAAI--bge-m3/snapshots/${SERVICEMIND_EMBEDDING_REVISION}", "--tokenization-workers", "4", "--max-concurrent-requests", "16", "--max-batch-tokens", "4096", "--max-client-batch-size", "16"]
+    command: ["--model-id", "/data/models--BAAI--bge-m3/snapshots/${SERVICEMIND_EMBEDDING_REVISION}", "--tokenization-workers", "4", "--max-concurrent-requests", "32", "--max-batch-tokens", "8192", "--max-client-batch-size", "32"]
     environment:
       # huggingface_hub honours HF_ENDPOINT; the datacenter has no direct route to
       # huggingface.co (TCP timeout) and must pull artifacts through the mirror.
@@ -158,6 +161,13 @@ services:
       # resolve-cache 307 (Content-Range missing), so artifacts are pre-fetched on the
       # host with python huggingface_hub into data/phase4/models/embedding.
       - /home/shihongye/data1/servicemind/data/phase4/models/embedding:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 10s
@@ -166,10 +176,10 @@ services:
       start_period: 120s
 
   rag-reranker:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3
+    image: ghcr.io/huggingface/text-embeddings-inference:cuda-1.8.3@sha256:57ad7e05ca1b42e0c16cb5fa42f43ee5187c6cd3b14288cd2c412b61953b4d39
     profiles: ["rag"]
     restart: unless-stopped
-    command: ["--model-id", "/data/models--BAAI--bge-reranker-v2-m3/snapshots/${SERVICEMIND_RERANKER_REVISION}", "--tokenization-workers", "2", "--max-concurrent-requests", "8", "--max-batch-tokens", "1024", "--max-client-batch-size", "8"]
+    command: ["--model-id", "/data/models--BAAI--bge-reranker-v2-m3/snapshots/${SERVICEMIND_RERANKER_REVISION}", "--tokenization-workers", "4", "--max-concurrent-requests", "32", "--max-batch-tokens", "8192", "--max-client-batch-size", "32"]
     environment:
       HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
       HF_HUB_CACHE: /data
@@ -179,6 +189,13 @@ services:
       - "127.0.0.1:8086:80"
     volumes:
       - /home/shihongye/data1/servicemind/data/phase4/models/reranker:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 10s
@@ -207,6 +224,44 @@ services:
       retries: 30
       start_period: 30s
 
+  redis:
+    image: redis:8.2-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${SERVICEMIND_REDIS_PASSWORD:?SERVICEMIND_REDIS_PASSWORD is required}
+    command:
+      - sh
+      - -ec
+      - exec redis-server --appendonly yes --appendfsync everysec --requirepass "$${REDIS_PASSWORD}"
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - servicemind_redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  opa:
+    image: openpolicyagent/opa:1.20.2-static
+    restart: unless-stopped
+    command:
+      - run
+      - --server
+      - --addr=0.0.0.0:8181
+      - --set=decision_logs.console=true
+      - /policy/servicemind.rego
+    ports:
+      - "127.0.0.1:8181:8181"
+    volumes:
+      - ./opa/servicemind.rego:/policy/servicemind.rego:ro
+    healthcheck:
+      test: ["CMD", "/opa", "eval", "1"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+
 volumes:
   glpi_application:
   glpi_database:
@@ -216,3 +271,4 @@ volumes:
   servicemind_embedding_models:
   servicemind_reranker_models:
   servicemind_neo4j:
+  servicemind_redis:

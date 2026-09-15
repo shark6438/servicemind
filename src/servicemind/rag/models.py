@@ -245,27 +245,43 @@ class TeiEmbeddingProvider:
 class TeiReranker:
     model_name = "BAAI/bge-reranker-v2-m3"
 
-    def __init__(self, base_url: str, *, model_revision: str = "main") -> None:
+    def __init__(
+        self,
+        base_url: str,
+        *,
+        model_revision: str = "main",
+        transport: httpx.AsyncBaseTransport | None = None,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.model_revision = model_revision
+        self.transport = transport
         self._semaphore = asyncio.Semaphore(2)
 
     async def score(self, query: str, documents: list[str]) -> list[float]:
         if not documents:
             return []
         scores = [0.0] * len(documents)
-        async with httpx.AsyncClient(timeout=120, trust_env=False) as client:
-            for start in range(0, len(documents), 4):
+        async with httpx.AsyncClient(
+            timeout=120, trust_env=False, transport=self.transport
+        ) as client:
+
+            async def score_batch(start: int) -> tuple[int, list[dict[str, Any]]]:
+                texts = documents[start : start + 4]
                 async with self._semaphore:
                     response = await self._post_with_retry(
                         client,
                         {
                             "query": query,
-                            "texts": documents[start : start + 4],
+                            "texts": texts,
                             "return_text": False,
                         },
                     )
-                batch = response.json()
+                return start, response.json()
+
+            batches = await asyncio.gather(
+                *(score_batch(start) for start in range(0, len(documents), 4))
+            )
+            for start, batch in batches:
                 expected = len(documents[start : start + 4])
                 if len(batch) != expected or {item["index"] for item in batch} != set(
                     range(expected)

@@ -136,7 +136,6 @@ class GlpiKnowbaseItem(BaseModel):
             "id": self.id,
             "name": self.name,
             "answer": html_to_text(self.answer),
-            "answer_html": self.answer,
             "is_faq": self.is_faq,
             "begin_date": self.begin_date,
             "end_date": self.end_date,

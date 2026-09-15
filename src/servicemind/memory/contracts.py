@@ -8,7 +8,15 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, computed_field, model_validator
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    computed_field,
+    field_validator,
+    model_validator,
+)
 
 
 class MemoryType(StrEnum):
@@ -100,6 +108,23 @@ class MemoryCandidate(BaseModel):
     taint_labels: frozenset[str] = Field(default_factory=frozenset)
     created_by: str = Field(min_length=1, max_length=255)
 
+    @field_validator("provenance")
+    @classmethod
+    def validate_provenance(cls, value: dict[str, Any]) -> dict[str, Any]:
+        try:
+            encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("memory provenance must be JSON serializable") from exc
+        if len(encoded.encode()) > 16_384:
+            raise ValueError("memory provenance exceeds 16 KiB")
+        for key in ("required_entity_ids", "required_group_ids"):
+            raw = value.get(key, [])
+            if not isinstance(raw, list) or any(
+                isinstance(item, bool) or not isinstance(item, int) or item < 0 for item in raw
+            ):
+                raise ValueError(f"{key} must be a list of non-negative integers")
+        return value
+
     @computed_field
     @property
     def content_hash(self) -> str:
@@ -178,8 +203,8 @@ class MemoryRecord(BaseModel):
     created_by: str
     idempotency_key: str = Field(pattern=r"^[0-9a-f]{64}$")
     activation_reason: str | None = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: AwareDatetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: AwareDatetime = Field(default_factory=lambda: datetime.now(UTC))
 
     def visible_at(self, when: datetime) -> bool:
         return (
@@ -204,14 +229,18 @@ class MemoryQuery(BaseModel):
     limit: int = Field(default=8, ge=1, le=50)
 
     def allows_record(self, record: MemoryRecord) -> bool:
+        required_entities = _required_acl_ids(record.provenance, "required_entity_ids")
+        required_groups = _required_acl_ids(record.provenance, "required_group_ids")
         return (
             record.tenant_id == self.tenant_id
             and record.memory_type in self.memory_types
             and self.allows_scope(record.scope)
             and record.visible_at(self.at)
             and not record.taint_labels
-            and set(record.provenance.get("required_entity_ids", ())).issubset(self.entity_ids)
-            and set(record.provenance.get("required_group_ids", ())).issubset(self.group_ids)
+            and required_entities is not None
+            and required_entities.issubset(self.entity_ids)
+            and required_groups is not None
+            and required_groups.issubset(self.group_ids)
             # Legacy post-run summaries were widened to tenant scope. Never serve
             # them while awaiting the quarantine migration.
             and not (
@@ -230,6 +259,15 @@ class MemoryQuery(BaseModel):
         if scope.scope_type is MemoryScopeType.GROUP:
             return bool(scope.scope_id and int(scope.scope_id) in self.group_ids)
         return bool(scope.scope_id and scope.scope_id in self.service_ids)
+
+
+def _required_acl_ids(provenance: dict[str, Any], key: str) -> frozenset[int] | None:
+    raw = provenance.get(key, [])
+    if not isinstance(raw, list) or any(
+        isinstance(item, bool) or not isinstance(item, int) or item < 0 for item in raw
+    ):
+        return None
+    return frozenset(raw)
 
 
 class MemorySelection(BaseModel):

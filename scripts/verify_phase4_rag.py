@@ -40,6 +40,9 @@ class MemoryRepository:
     async def count_pending(self, tenant_id) -> int:
         return 0
 
+    async def request_regeneration(self, tenant_id) -> int:
+        return 0
+
     async def parents(self, tenant_id, ids):
         return {item: self.parent_content[item] for item in ids if item in self.parent_content}
 
@@ -54,9 +57,11 @@ async def main() -> None:
         index=index,
         embedding=embedding,
         reranker=CallableReranker(
-            lambda query, text: len(set(query.casefold().split()) & set(text.casefold().split()))
+            lambda query, text: float(
+                bool(set(query.casefold().split()) & set(text.casefold().split()))
+            )
         ),
-        repository=MemoryRepository(),
+        repository=MemoryRepository(),  # type: ignore[arg-type]
     )
     try:
         documents = await InternalRunbookSource(TENANT, RUNBOOKS).load()

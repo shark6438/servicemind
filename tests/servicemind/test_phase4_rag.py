@@ -1,6 +1,8 @@
+import json
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+import httpx
 import pytest
 
 from servicemind.domain.evidence import EVIDENCE_CONTENT_MAX
@@ -15,7 +17,7 @@ from servicemind.rag.chunking import (
     StructureAwareSemanticChunker,
     child_embedding_text,
 )
-from servicemind.rag.models import CallableReranker, DeterministicEmbeddingProvider
+from servicemind.rag.models import CallableReranker, DeterministicEmbeddingProvider, TeiReranker
 from servicemind.rag.opensearch import OpenSearchKnowledgeIndex
 from servicemind.rag.parsing import StructureParser
 from servicemind.rag.service import EnterpriseRAG, _bounded_evidence_content
@@ -219,8 +221,8 @@ async def test_hybrid_result_reranks_deduplicates_expands_and_cites() -> None:
     rag = EnterpriseRAG(
         index=FakeIndex(hits),  # type: ignore[arg-type]
         embedding=DeterministicEmbeddingProvider(),
-        reranker=CallableReranker(lambda query, text: 1 if "vpn" in text else 0),
-        repository=FakeRepository(),
+        reranker=CallableReranker(lambda query, text: 1 if text.endswith("vpn identity") else 0),
+        repository=FakeRepository(),  # type: ignore[arg-type]
     )
     result = await rag.retrieve(
         principal=RetrievalPrincipal(tenant_id=TENANT, user_id="u1", entity_ids=frozenset({1})),
@@ -290,8 +292,8 @@ async def test_context_packer_enforces_per_document_ceiling(monkeypatch) -> None
     rag = EnterpriseRAG(
         index=FakeIndex(hits),  # type: ignore[arg-type]
         embedding=DeterministicEmbeddingProvider(),
-        reranker=CallableReranker(lambda query, text: scores[text]),
-        repository=FakeRepository(),
+        reranker=CallableReranker(lambda query, text: scores[text.rsplit("\n", 1)[-1]]),
+        repository=FakeRepository(),  # type: ignore[arg-type]
     )
     result = await rag.retrieve(
         principal=RetrievalPrincipal(tenant_id=TENANT, user_id="u1", entity_ids=frozenset({1})),
@@ -299,6 +301,49 @@ async def test_context_packer_enforces_per_document_ceiling(monkeypatch) -> None
         use_query_model=False,
     )
     assert [item.hit.child_content for item in result.items] == ["a-one", "b-one"]
+
+
+@pytest.mark.asyncio
+async def test_rerank_uses_title_and_retains_exact_retrieval_signal(monkeypatch) -> None:
+    """A slightly higher semantic score must not erase a dominant exact-match signal."""
+    from core import settings
+
+    monkeypatch.setattr(settings, "SERVICEMIND_RAG_RERANK_WEIGHT", 0.85)
+    exact_document = document("# Exact\n\nexact-body")
+    semantic_document = document("# Semantic\n\nsemantic-body")
+    exact = make_hit(
+        exact_document,
+        "exact-body",
+        UUID("cccccccc-cccc-4ccc-8ccc-ccccccccccc1"),
+        1.0,
+    )
+    semantic = make_hit(
+        semantic_document,
+        "semantic-body",
+        UUID("dddddddd-dddd-4ddd-8ddd-ddddddddddd1"),
+        0.0,
+    )
+    observed: list[str] = []
+
+    def score(_query: str, text: str) -> float:
+        observed.append(text)
+        return 0.8 if text.endswith("exact-body") else 0.9
+
+    rag = EnterpriseRAG(
+        index=FakeIndex([exact, semantic]),  # type: ignore[arg-type]
+        embedding=DeterministicEmbeddingProvider(),
+        reranker=CallableReranker(score),
+        repository=FakeRepository(),  # type: ignore[arg-type]
+    )
+    result = await rag.retrieve(
+        principal=RetrievalPrincipal(
+            tenant_id=TENANT, user_id="u1", entity_ids=frozenset({1})
+        ),
+        query="exact",
+        use_query_model=False,
+    )
+    assert all(text.startswith("VPN runbook\n") for text in observed)
+    assert [item.hit.child_content for item in result.items] == ["exact-body", "semantic-body"]
 
 
 @pytest.mark.asyncio
@@ -329,7 +374,7 @@ async def test_retrieve_forwards_retrieval_mode_to_index(monkeypatch) -> None:
 
     index = FakeIndex([])  # type: ignore[arg-type]
     rag = EnterpriseRAG(
-        index=index,
+        index=index,  # type: ignore[arg-type]
         embedding=DeterministicEmbeddingProvider(),
         reranker=CallableReranker(lambda query, text: 0),
     )
@@ -397,6 +442,30 @@ def test_child_embedding_text_prepends_document_and_section_context() -> None:
     # manufactured (it would shift every vector of a contextless corpus).
     assert child_embedding_text("", [], "body only") == "body only"
     assert child_embedding_text("   ", ["  "], "body only") == "body only"
+
+
+@pytest.mark.asyncio
+async def test_tei_reranker_batches_concurrently_without_losing_result_order() -> None:
+    batch_sizes: list[int] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        texts = payload["texts"]
+        batch_sizes.append(len(texts))
+        return httpx.Response(
+            200,
+            json=[
+                {"index": index, "score": int(text.removeprefix("doc-")) / 100}
+                for index, text in enumerate(texts)
+            ],
+        )
+
+    documents = [f"doc-{index}" for index in range(17)]
+    scores = await TeiReranker(
+        "http://tei.test", transport=httpx.MockTransport(handler)
+    ).score("query", documents)
+    assert sorted(batch_sizes) == [1, 4, 4, 4, 4]
+    assert scores == [index / 100 for index in range(17)]
 
 
 def _seam(left: str, right: str) -> int:

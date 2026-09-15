@@ -15,6 +15,7 @@ from servicemind.context.contracts import (
     ContextSelection,
     ContextSource,
 )
+from servicemind.rag.chunking import ConservativeOfflineEncoding, has_cl100k_cache
 
 ROLE_SOURCES: dict[ContextAgent, frozenset[ContextSource]] = {
     ContextAgent.DATA: frozenset(
@@ -91,7 +92,7 @@ def redact_for_model(value: str) -> Redaction:
     return Redaction(text=value, count=count + blob_count + email_count + phone_count)
 
 
-_default_encoding: tiktoken.Encoding | None = None
+_default_encoding: tiktoken.Encoding | ConservativeOfflineEncoding | None = None
 
 
 def _default_token_counter() -> Callable[[str], int]:
@@ -104,7 +105,11 @@ def _default_token_counter() -> Callable[[str], int]:
     """
     global _default_encoding
     if _default_encoding is None:
-        _default_encoding = tiktoken.get_encoding("cl100k_base")
+        _default_encoding = (
+            tiktoken.get_encoding("cl100k_base")
+            if has_cl100k_cache()
+            else ConservativeOfflineEncoding()
+        )
     return lambda value: len(_default_encoding.encode(value))
 
 

@@ -240,7 +240,7 @@ async def main() -> None:
                         ]
                     },
                 )
-            ).all()
+            ).tuples().all()
         )
         zero_context_count = (
             await session.execute(select(func.count()).select_from(MemoryRecordRow))
@@ -294,7 +294,8 @@ async def main() -> None:
                 )
             ).scalars()
         )
-    assert revision == "0009_model_accounting_provenance"
+    # Phase 5 tables remain valid under the current linear migration head.
+    assert revision == "0013_phase6_hash_guards"
     assert rls == {
         "memory_records": True,
         "memory_events": True,

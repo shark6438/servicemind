@@ -5,7 +5,7 @@ from uuid import UUID
 
 import httpx
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
@@ -93,19 +93,37 @@ class OIDCVerifier:
 
 
 oidc_verifier = OIDCVerifier()
-bearer_scheme = HTTPBearer(description="ServiceMind Keycloak access token")
+bearer_scheme = HTTPBearer(description="ServiceMind Keycloak access token", auto_error=False)
 
 
 async def get_tenant_context(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
 ) -> TenantContext:
+    challenge = "Bearer"
+    if request.url.path.startswith("/v1/servicemind/mcp"):
+        configured = settings.SERVICEMIND_MCP_PUBLIC_URL
+        resource = configured.rstrip("/") if configured else (
+            f"{str(request.base_url).rstrip('/')}/v1/servicemind/mcp"
+        )
+        metadata = (
+            f"{resource.split('/v1/servicemind/mcp', 1)[0]}"
+            "/.well-known/oauth-protected-resource/v1/servicemind/mcp"
+        )
+        challenge = f'Bearer resource_metadata="{metadata}"'
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access token is required",
+            headers={"WWW-Authenticate": challenge},
+        )
     try:
         return await oidc_verifier.verify(credentials.credentials)
     except (jwt.PyJWTError, httpx.HTTPError, RuntimeError, ValueError) as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired access token",
-            headers={"WWW-Authenticate": "Bearer"},
+            headers={"WWW-Authenticate": challenge},
         ) from exc
 
 

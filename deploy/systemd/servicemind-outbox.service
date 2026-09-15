@@ -1,0 +1,16 @@
+[Unit]
+Description=ServiceMind transactional outbox relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/shihongye/data1/servicemind
+Environment=PYTHONPATH=src
+ExecStart=/home/shihongye/data1/servicemind/.venv/bin/python -m servicemind.reliability.worker
+Restart=on-failure
+RestartSec=2s
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=default.target

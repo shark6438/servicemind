@@ -253,12 +253,19 @@ class ServiceMindRepository:
         dry_run_preview: str | None = None,
     ) -> ActionIntentRecord:
         async with tenant_session(self.tenant_id) as session:
+            # Serialize the one-intent-per-run invariant across API replicas.
+            await session.execute(
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+                {"key": f"action-intent:{self.tenant_id}:{run_id}"},
+            )
             existing = (
                 await session.execute(
                     select(ActionIntentRecord).where(ActionIntentRecord.run_id == run_id)
                 )
             ).scalar_one_or_none()
             if existing:
+                if existing.action_hash != action_hash:
+                    raise RuntimeError("run already has a different ActionIntent")
                 return existing
             intent = ActionIntentRecord(
                 tenant_id=self.tenant_id,
@@ -339,6 +346,22 @@ class ServiceMindRepository:
                 if decision == "approved"
                 else ActionStatus.REJECTED.value
             )
+            if decision == "approved":
+                from servicemind.reliability.outbox import ToolOutboxRepository
+
+                await ToolOutboxRepository.enqueue_in_transaction(
+                    session,
+                    tenant_id=self.tenant_id,
+                    aggregate_type="ActionIntent",
+                    aggregate_id=str(action.id),
+                    event_type="action.approved",
+                    payload={
+                        "run_id": str(run_id),
+                        "action_hash": action.action_hash,
+                        "action_type": action.action_type,
+                    },
+                    idempotency_key=f"action-approved:{action.id}:{action.action_hash}",
+                )
             # This compare-and-set closes concurrent approval and crash-before-resume windows.
             run.status = RunStatus.RUNNING.value
             await session.flush()

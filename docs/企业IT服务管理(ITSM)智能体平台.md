@@ -172,6 +172,7 @@ Action Agent
 - Sparse：BM25；
 - Fusion：RRF；
 - Reranker：Cross-Encoder，通过统一接口可替换；
+- 生产推理：BGE-M3 与 BGE-Reranker-v2-M3 分别绑定独立 GPU，模型 revision 与镜像 digest 固定；
 - 原始文件：MinIO；
 - 关系图：Neo4j；
 - Canonical Metadata：PostgreSQL。
@@ -229,6 +230,11 @@ Query classification
 → Reviewer citation verification
 ```
 
+生产检索实现固定使用 100/100/100 dense、BM25 与候选深度，OpenSearch `pagination_depth`
+与返回 `size` 分离；重排输入包含标题与子块正文，最终排序保留 15% 归一化 RRF 信号。
+索引 schema v3 只写入 PostgreSQL 权威文档哈希，且必须在 refresh 后才发布新别名，
+避免合法候选被哈希误删或空新代无法激活。
+
 ## 4.4 Graph-RAG 的真实用法
 
 只同步 GLPI API 数据，不直接读取 GLPI 数据库：
@@ -264,12 +270,11 @@ Change ─MODIFIES→ CI
 
 ## 5.1 企业 Memory
 
-四类记忆：
+三类长期记忆，Preference 是 Semantic subtype：
 
-- Semantic：稳定的领域事实；
+- Semantic：稳定的领域事实，以及用户明确同意保存的 Preference；
 - Episodic：经过验证的历史处置案例；
-- Procedural：Runbook 和组织流程；
-- Preference：用户允许保存的输出偏好。
+- Procedural：从至少两个不同成功 Run 的 Episodic Memory 中归纳出的做法；正式 Runbook 和组织流程仍属于 RAG，不复制为 Memory。
 
 Memory 数据模型：
 
@@ -286,6 +291,9 @@ version
 valid_from / valid_to
 expires_at
 status
+provenance / taint_labels
+supporting_episode_ids
+consent_ref
 created_by
 ```
 
@@ -306,6 +314,12 @@ Run completed
 ```
 
 未经证据支持的网页内容、用户指令或 Tool 输出不得直接成为永久企业事实。
+
+固定权威关系为 `Memory < Skill < Policy`。Procedural 永不自动激活；从 quarantine
+转为 active 必须有人审引用、重新执行 secret/PII/injection/evidence/TTL 检查，并验证至少
+两个来自不同成功 Run 且当前仍 active 的 Episodic 证据。撤销 Episode 时必须传递撤销依赖它的
+Procedural Memory。所有读取在向量计算后再次用 PostgreSQL 权威状态、scope、entity、group、TTL
+和 taint 重校验，关闭异步检索期间的撤销/权限竞态。
 
 ## 5.3 Context Builder
 
@@ -374,81 +388,77 @@ skills/
 
 验收不能只看模型能否回答，应比较质量、延迟和成本。
 
+Phase 5 验收必须把“工程控制通过”和“业务效果认证”分开：RAG/Memory/Context/Skill/Model Gateway
+的隔离、撤销、权限、审计和失败关闭由自动化门禁验证；Memory A/B、RAG Recall/拒答、业务任务成功率
+必须由固定数据集的实际指标证明。没有生产查询日志或 ITSM 专家签署时可以工程关闭，但不得写成
+生产质量全面认证。
+
 ------
 
-# Phase 6：Tool Platform、MCP、可靠性与安全治理
+# Phase 6：Governed Tool Platform、MCP 与可靠执行
 
-## 6.1 Tool Registry
+## 6.0 最终裁定与边界
 
-每个 Tool 必须注册：
+Phase 6 冻结为四个相互独立、由统一合约连接的模块：
+
+1. Governed Tool Platform：Tool Registry、唯一 Tool Gateway、Policy、Audit；
+2. MCP：当前无会话协议、OAuth 受保护资源发现、Native/MCP Provider parity；
+3. Reliability：PostgreSQL Outbox、Redis Streams、限流、超时、重试、熔断、舱壁、取消与任务 lease；
+4. Agentic Security：能力交集、taint、审批绑定、密钥隔离、审计和资源上限。
+
+本阶段只修改 ServiceMind 项目业务链路，不把服务器上的通用示例 Agent、外部项目 Agent 或运行实例 Agent 纳入架构和验收。MCP 是传输与能力暴露边界，不能成为第二套权限系统，也不能绕过 Phase 2 Harness。工具层不暴露直接 GLPI 写接口；写请求只能创建 `ActionIntent`，随后仍由 Reviewer、HITL、幂等执行器和 read-back verification 控制。
+
+## 6.1 Tool Registry 与唯一执行边界
+
+每个 Tool 必须注册并冻结：
 
 ```
-name / version
-provider
+name / semver / checksum / provider
 input_schema / output_schema
-read_write_type
-risk_level
-allowed_roles
-allowed_entities
-requires_approval
-timeout
-retry_policy
-idempotency_strategy
-verification_strategy
-data_classification
+read_write_type / risk_level / data_classification
+allowed_roles / allowed_entities
+requires_approval / approval_binding
+timeout / retry_policy / rate_limit / bulkhead
+idempotency_strategy / verification_strategy
 ```
 
-统一执行：
-
-```
-Schema validation
-→ Tenant/RBAC/ABAC
-→ Prompt-injection/taint policy
-→ Risk classification
-→ Rate limit
-→ Approval
-→ Idempotency/lock
-→ Provider execute
-→ Read-back verify
-→ Audit/trace
-```
-
-## 6.2 MCP 的正确实现
-
-最终一定包含 MCP，但 MCP 不能绕过 Harness：
+唯一执行路径为：
 
 ```
 Agent
-→ Tool Calling
-→ Tool Gateway
-→ Policy Engine
-→ Native Provider / MCP Provider
-→ GLPI API
+→ ToolCall contract
+→ JSON Schema Draft 2020-12
+→ tenant + RBAC + ABAC + capability intersection
+→ taint / secret / prompt-injection guard
+→ OPA policy decision
+→ approval binding（需要时）
+→ tenant rate limit + per-tool circuit breaker + bulkhead
+→ idempotency lock
+→ NativeGlpiProvider / McpGlpiProvider
+→ output schema + read-back verify
+→ append-only policy/invocation audit
 ```
 
-实现两个 Provider：
+读操作只对明确的可重试故障执行 full-jitter 有界重试；副作用不在 Tool Gateway 内盲重试。进程内幂等缓存有容量和 TTL，跨进程写入不变量由 PostgreSQL advisory lock、唯一约束、ActionIntent hash 和现有 Harness 保证。
 
-- `NativeGlpiProvider`
-- `McpGlpiProvider`
+## 6.2 MCP 2026-07-28
 
-二者必须通过同一组 Contract/Parity Tests。
+MCP 固定采用正式 `2026-07-28` 协议：
 
-MCP 采用当前 `2026-07-28` 规范：
+- JSON-RPC 2.0 envelope；
+- 每个请求携带 protocol version 和 client capabilities；`clientInfo` 按协议为 SHOULD，可省略，携带时必须通过 schema 校验；
+- `Mcp-Method`、`Mcp-Name` header 与 body 交叉校验；
+- `server/discover` 与带 `ttlMs/cacheScope` 的 list/read；
+- 不使用 `Mcp-Session-Id`、legacy HTTP+SSE 或 initialize handshake；
+- 长 CMDB 查询由服务端决定升级为 `io.modelcontextprotocol/tasks`；
+- 任务支持 `tasks/get/update/cancel`，状态和密文结果持久化在 PostgreSQL；
+- task request ID 幂等绑定，执行器采用分布式 lease/heartbeat，跨实例取消通过持久状态传播，过期 lease fail closed；
+- Tool 运行故障返回标准 `CallToolResult.isError=true`，协议/参数故障返回 JSON-RPC error；
+- 响应 receipt 绑定 request ID、output hash 与持久审计结果。
 
-- stateless core；
-- 不依赖 `Mcp-Session-Id`；
-- `Mcp-Method`、`Mcp-Name` header routing；
-- list cache hints；
-- Tasks 扩展处理长任务；
-- `tasks/get/update/cancel`；
-- issuer validation；
-- CIMD/Enterprise Managed Authorization；
-- 不新建 legacy HTTP+SSE；
-- 不使用已弃用 Roots、Sampling、Logging 作为新架构基础。
+HTTP 授权端实现 RFC 9728 `/.well-known/oauth-protected-resource` 与 401 `WWW-Authenticate resource_metadata`；Keycloak JWT 必须同时通过签名、issuer、audience、时效、tenant claim 与 entity claim 校验。企业客户端采用 IdP 受管预注册，运行时不开放 Dynamic Client Registration。CIMD 属于 MCP 客户端与授权服务器的注册能力，只有 IdP 明确支持并通过互操作测试后才能声明启用，不能由资源服务器伪造“已支持”。
 
-这些均来自 MCP 当前正式规范更新。[MCP 2026-07-28](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
-
-GLPI MCP Server 第一批能力：
+MCP 第一批能力严格限定为：
 
 ```
 resources:
@@ -466,78 +476,70 @@ tools:
   submit_action_intent
 ```
 
-不暴露 `direct_update_ticket`。写入必须提交 ActionIntent，再进入 Phase 2 Harness。
+`NativeGlpiProvider` 与 `McpGlpiProvider` 必须通过同一组 Contract/Parity Tests。GLPI 搜索使用 High-Level API v2 的服务端 RSQL 过滤和有界结果，不允许只在最近若干记录中做客户端过滤；富文本在进入 Agent 前转换为有界纯文本。
+标准客户端会自动获得只读上下文；只有显式声明 `com.servicemind/governed-execution`
+能力的受管客户端才会看到 `submit_action_intent`，且调用仍不会直接产生 GLPI 副作用。
 
-## 6.3 Policy-as-Code
+协议依据：[MCP 2026-07-28](https://blog.modelcontextprotocol.io/posts/2026-07-28/)、[MCP Tasks extension](https://tasks.extensions.modelcontextprotocol.io/specification/draft/tasks)、[GLPI RESTful API v2](https://help.glpi-project.org/documentation/modules/configuration/general/api/restful-api-v2)。
 
-建议引入 OPA/Rego：
+## 6.3 Policy-as-Code 与审计
 
-```
-input:
-  identity
-  tenant
-  roles
-  resource
-  action
-  arguments
-  risk
-  evidence
-  environment
+生产路径固定使用 OPA/Rego，OPA 不可用、超时或输出非法时 fail closed；本地 mandatory policy 在调用 OPA 前继续执行，避免外部 PDP 配置错误取消最低安全控制。OPA 输入只携带身份、租户、角色、实体、工具元数据、风险、taint、审批引用和 argument hash，不发送 GLPI 参数正文或凭据。
 
-output:
-  allow
-  requires_approval
-  allowed_fields
-  redactions
-  reason
-```
+Policy Decision 与 Invocation 分表记录，保存 policy version、OPA decision ID、tool checksum、argument/output hash、attempt、latency、verification 与稳定 error code。两张表强制 RLS、数据库 append-only trigger 和 hash/status check constraint；审计不保存 token、密码、工具正文或隐藏推理。
 
-Policy Decision 必须写入 Audit，并记录 policy version。
+OPA 决策接口和决策日志能力依据官方 REST API：[OPA REST API](https://www.openpolicyagent.org/docs/rest-api)、[OPA Decision Logs](https://www.openpolicyagent.org/docs/management-decision-logs)。
 
-## 6.4 可靠性
+## 6.4 可靠性与资源治理
 
-增加：
+- 审批记录与 `action.approved` outbox 在同一 PostgreSQL 事务提交；
+- relay 使用 `FOR UPDATE SKIP LOCKED`、owner lease、visibility timeout、full-jitter backoff 和最大尝试次数；
+- 失败终态保留在 PostgreSQL `dead` 状态，作为可审计 poison-task quarantine；
+- Redis Streams 只传 event/tenant/aggregate/idempotency 引用，不传原始参数、结果或凭据；PostgreSQL 始终是权威源；
+- consumer primitive 使用 consumer group、`XREADGROUP/XACK/XAUTOCLAIM`，业务 handler 必须幂等；
+- 工具执行具有 deadline、只读有界重试、取消传播、per-tool circuit breaker、bulkhead 和分布式 tenant rate limit；
+- API shutdown 会取消并收敛本进程 MCP task；异常退出由 task lease 过期和启动恢复收敛；
+- outbox relay 由独立、仅属于本项目的 systemd 服务托管并支持 graceful shutdown。
 
-- PostgreSQL transactional outbox；
-- Redis Streams worker queue；
-- worker lease/heartbeat；
-- visibility timeout；
-- dead-letter queue；
-- exponential backoff + jitter；
-- per-tool timeout；
-- circuit breaker；
-- bulkhead；
-- tenant rate limit；
-- cancellation propagation；
-- graceful shutdown；
-- poison-task quarantine。
-
-LangGraph 当前已经提供 node retry、timeout、error handler 和 resume-safe failure，可用于认知节点；外部副作用仍必须复用现有幂等 Harness。[LangGraph Fault Tolerance](https://docs.langchain.com/oss/python/langgraph/fault-tolerance)
-
-不建议现在引入 Temporal：它会与 LangGraph Checkpoint 形成两套 Workflow 真相来源。现阶段用 PostgreSQL Outbox + Redis Worker 更清晰。
+Redis Streams 的 consumer group/Pending Entries List 语义以官方文档为准：[Redis Streams](https://redis.io/docs/latest/develop/data-types/streams/)。
 
 ## 6.5 Agentic Security
 
-安全基线映射：
+安全基线映射 OWASP Top 10 for Agentic Applications 2026、NIST AI RMF / Generative AI Profile 与企业 GLPI Policy，门禁覆盖 indirect prompt injection、tool misuse、identity/privilege abuse、goal manipulation、memory poisoning、excessive agency、cascading failure、不安全 inter-agent communication、敏感数据泄露与资源耗尽。
 
-- OWASP Top 10 for Agentic Applications 2026；
-- NIST AI RMF / Generative AI Profile；
-- 企业自身 GLPI Policy。
+关键不变量：Memory < Skill < Policy；Skill 只能收窄能力；检索内容和 Memory 都是不可信数据；MCP/Native 共享同一 Policy 与 Audit；`submit_action_intent` 不能直接产生外部副作用；任何直接写工具注册、未绑定审批、高风险 fallback、跨租户资源或未解决 taint 都必须 fail closed。
 
-重点攻击：
+## 6.6 执行路径与验收门禁
 
-- indirect prompt injection；
-- tool misuse；
-- identity/privilege abuse；
-- goal manipulation；
-- memory poisoning；
-- excessive agency；
-- cascading multi-agent failure；
-- insecure inter-agent communication；
-- sensitive data leakage；
-- resource/cost exhaustion。
+执行路径已按下列顺序落地：
 
-OWASP 已将这些作为自主 Agent 的核心风险类别；NIST AI RMF 则要求把治理、测量和风险处置贯穿整个生命周期。[OWASP Agentic Top 10](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/)、[NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework)
+1. P6.0 Contract freeze：Registry、schema、checksum、risk、provider parity；
+2. P6.1 Security boundary：唯一 Gateway、OPA、tenant/RBAC/ABAC、approval binding、append-only audit；
+3. P6.2 MCP：无会话 JSON-RPC、OAuth metadata/challenge、五项 GLPI 能力、Tasks durable lease；
+4. P6.3 Reliability：transactional outbox、Redis relay/consumer primitive、rate limit/circuit/bulkhead/retry/cancel；
+5. P6.4 Hardening：GLPI 服务身份与 High-Level API 可复现 bootstrap、迁移/RLS/密文/真实 HTTP/故障回归。
+
+最终验收必须同时满足：全仓测试与 Ruff 无 error，ServiceMind 生产代码与本阶段验证器 Pyrefly 无 error；fresh DB `upgrade → downgrade base → upgrade`；在线 `alembic check` 零 drift；四张 Phase 6 表强制 RLS；审计 append-only；MCP 任务密文、租户隔离、幂等、lease/recovery/cancel 通过；真实 OPA、Redis、Keycloak、MCP、GLPI v2 链路通过；API/UI/outbox 和相关容器健康。通用 starter 模板、可选 UI 脚本和无关实例 Agent 的既存类型债务不计入 ServiceMind 生产门禁；任何一项业务范围门禁失败都不得标记 Phase 6 工程关闭。
+
+Phase 6 的工程验收与业务质量认证分开。工具治理通过不改变 Phase 4 RAG 效果结论；没有 ITSM 专家签署和真实生产日志时，RAG 只能依据固定外部 silver 数据集与实际指标声明代理评测结果。
+
+## 6.7 2026-09-14 执行与验收结果
+
+Phase 6 已按 6.6 路径实际执行。当前 Alembic head 为 `0013_phase6_hash_guards`；
+空库 upgrade → full downgrade → upgrade 通过；全仓自动测试 422 passed、6 skipped、0 failed；
+ServiceMind 生产路径 Ruff、Pyrefly 与 Alembic drift 均为零错误。真实 OPA、Redis、PostgreSQL outbox、
+Keycloak OIDC、MCP HTTP、GLPI v2、密文 Task lease 与独立 outbox worker 验证通过。
+
+MCP 官方 conformance alpha 对产品实际支持面执行：`tools-list` 2/2，header 校验
+12/13，stateless 21 success/5 skipped。剩余用例依赖官方套件专用的诊断 Tool、
+本项目未声明的 Prompts/Subscriptions，或使用空参数调用必填 `ticket_id` 的业务 Tool；
+不为追求测试数字暴露生产诊断工具或放宽 schema。详细证据见
+`docs/PHASE6_ENTERPRISE_ACCEPTANCE.md`。
+
+RAG 活跃索引已重建为 schema v3，39 文档、446 父块、668 子块，删除对账 0/0；
+BGE-M3 与 Reranker 分配到两张 RTX 3090。100 候选重排 0.80 秒，实际端到端检索
+5.54 秒，顶部证据正确命中 `runbook://rb-vpn-mfa`。外部 TechQA silver 质量门禁仍未全部通过，
+因此继续保留 `QUALITY_EXCEPTION_ACCEPTED`，不虚报为已获业务质量认证。
 
 ------
 

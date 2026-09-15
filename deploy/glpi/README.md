@@ -26,3 +26,8 @@ docker compose stop
 Do not use `docker compose down --volumes` unless the GLPI and MariaDB data should be permanently deleted.
 
 The initial GLPI administrator account is only for local bootstrap. Change the default password before exposing the service beyond localhost.
+
+`bootstrap_phase2.php`, `bootstrap_oauth.php`, and `bootstrap_service_users.php`
+make the ServiceMind entities, OAuth client, and entity-scoped service identities
+reproducible after a fresh GLPI volume is created. Supply their credentials through
+environment variables; never store them in the PHP files.

@@ -134,7 +134,7 @@ class _FakeClient:
                     "sources": {
                         "buckets": [
                             {"key": {"source_record_id": value}}
-                            for value in sorted(self.source_ids.get(index, set()))
+                            for value in sorted(self.source_ids.get(index or "", set()))
                         ]
                     }
                 }
@@ -363,6 +363,7 @@ def test_hybrid_search_builds_rrf_query_and_routes_via_pipeline() -> None:
     assert params == {"search_pipeline": PIPELINE}
     assert "hybrid" in body["query"]
     queries = body["query"]["hybrid"]["queries"]
+    assert body["query"]["hybrid"]["pagination_depth"] == 40
     # Both sub-queries carry the compiled ACL pre-filter.
     assert "knn" in queries[0]["bool"]["must"][0]
     assert "multi_match" in queries[1]["bool"]["must"][0]

@@ -7,6 +7,8 @@ require '/var/www/glpi/vendor/autoload.php';
 $kernel = new \Glpi\Kernel\Kernel('production');
 $kernel->boot();
 
+Config::setConfigurationValues('core', ['enable_hlapi' => 1]);
+
 $clientId = getenv('SERVICEMIND_GLPI_CLIENT_ID');
 $clientSecret = getenv('SERVICEMIND_GLPI_CLIENT_SECRET');
 if ($clientId === false || $clientSecret === false) {

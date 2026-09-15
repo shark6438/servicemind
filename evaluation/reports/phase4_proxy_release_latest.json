@@ -1,10 +1,11 @@
 {
-  "schema_version": "phase4-proxy-release-v1.2",
+  "schema_version": "phase4-proxy-release-v1.3",
   "status": "failed",
   "source": {
     "dataset": "nvidia/TechQA-RAG-Eval",
     "revision": "0b5bbc84b7f07d6d09d063130e90b716d8d4a32a",
     "corpus_documents": 28481,
+    "production_shaped_passages": 96293,
     "label_tier": "external_silver_no_tenant_human_signoff"
   },
   "queries": {
@@ -14,159 +15,188 @@
   },
   "retrieval": {
     "bm25": {
-      "recall_at_5": 0.5429,
+      "recall_at_5": 0.5286,
       "recall_at_5_ci95": [
-        0.4857,
-        0.6
+        0.4714,
+        0.5857
       ],
-      "recall_at_10": 0.5821,
+      "recall_at_10": 0.5643,
       "recall_at_10_ci95": [
-        0.525,
-        0.6393
+        0.5071,
+        0.6214
       ],
-      "recall_at_20": 0.6464,
+      "recall_at_20": 0.65,
       "recall_at_20_ci95": [
-        0.5893,
-        0.7
+        0.5929,
+        0.7036
       ],
-      "mrr_at_10": 0.4527,
+      "mrr_at_10": 0.4414,
       "mrr_at_10_ci95": [
-        0.3994,
-        0.5082
+        0.3891,
+        0.4963
       ],
-      "ndcg_at_10": 0.4839,
+      "ndcg_at_10": 0.4713,
       "ndcg_at_10_ci95": [
-        0.4316,
-        0.5377
+        0.4187,
+        0.5251
       ]
     },
     "dense": {
-      "recall_at_5": 0.6607,
+      "recall_at_5": 0.7143,
       "recall_at_5_ci95": [
-        0.6036,
-        0.7179
+        0.6607,
+        0.7679
       ],
-      "recall_at_10": 0.6964,
+      "recall_at_10": 0.7536,
       "recall_at_10_ci95": [
-        0.6429,
-        0.75
+        0.7036,
+        0.8036
       ],
-      "recall_at_20": 0.7429,
+      "recall_at_20": 0.7679,
       "recall_at_20_ci95": [
-        0.6893,
-        0.7929
+        0.7179,
+        0.8143
       ],
-      "mrr_at_10": 0.5485,
+      "mrr_at_10": 0.5691,
       "mrr_at_10_ci95": [
-        0.4957,
-        0.6007
+        0.5185,
+        0.6193
       ],
-      "ndcg_at_10": 0.5848,
+      "ndcg_at_10": 0.6142,
       "ndcg_at_10_ci95": [
-        0.5328,
-        0.6353
+        0.5657,
+        0.6621
       ]
     },
     "hybrid_rrf": {
-      "recall_at_5": 0.6357,
+      "recall_at_5": 0.6464,
       "recall_at_5_ci95": [
-        0.5786,
-        0.6929
+        0.5893,
+        0.7
       ],
-      "recall_at_10": 0.6929,
+      "recall_at_10": 0.7357,
       "recall_at_10_ci95": [
-        0.6393,
-        0.7464
+        0.6821,
+        0.7857
       ],
-      "recall_at_20": 0.7536,
+      "recall_at_20": 0.7893,
       "recall_at_20_ci95": [
-        0.7036,
-        0.8036
+        0.7393,
+        0.8357
       ],
-      "mrr_at_10": 0.5369,
+      "mrr_at_10": 0.5406,
       "mrr_at_10_ci95": [
-        0.4848,
-        0.5898
+        0.4891,
+        0.5928
       ],
-      "ndcg_at_10": 0.5742,
+      "ndcg_at_10": 0.5869,
       "ndcg_at_10_ci95": [
-        0.5227,
-        0.6251
+        0.5377,
+        0.6362
       ]
     },
     "hybrid_bge_rerank": {
-      "recall_at_5": 0.6536,
+      "recall_at_5": 0.6821,
       "recall_at_5_ci95": [
-        0.5964,
-        0.7107
+        0.6286,
+        0.7357
       ],
-      "recall_at_10": 0.7,
+      "recall_at_10": 0.7286,
       "recall_at_10_ci95": [
-        0.6464,
-        0.7536
+        0.675,
+        0.7786
       ],
-      "recall_at_20": 0.7536,
+      "recall_at_20": 0.7857,
       "recall_at_20_ci95": [
-        0.7036,
-        0.8036
+        0.7357,
+        0.8321
       ],
-      "mrr_at_10": 0.5541,
+      "mrr_at_10": 0.5699,
       "mrr_at_10_ci95": [
-        0.5018,
-        0.6075
+        0.5182,
+        0.6218
       ],
-      "ndcg_at_10": 0.5896,
+      "ndcg_at_10": 0.6087,
       "ndcg_at_10_ci95": [
-        0.5383,
-        0.6415
+        0.5589,
+        0.6579
       ]
+    },
+    "held_out_abstention": {
+      "threshold": 0.730741,
+      "calibration": {
+        "answerable": 40,
+        "impossible": 20
+      },
+      "held_out": {
+        "answerable": 240,
+        "impossible": 100
+      },
+      "answerable_answer_rate": 0.3333,
+      "impossible_abstention_rate": 0.78,
+      "balanced_accuracy": 0.5567
     },
     "embedding": {
       "model": "BAAI/bge-m3",
       "revision": "5617a9f61b028005a4858fdac845db406aefb181",
       "backend": "ONNX Runtime CUDA exact cosine",
-      "max_length": 512
+      "passage_tokens": 420,
+      "overlap_tokens": 48
     },
     "reranker": {
       "model": "BAAI/bge-reranker-v2-m3",
-      "revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e"
+      "revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+      "activation": "sigmoid"
     },
     "bm25_latency_ms": {
-      "p50": 20.61,
-      "p95": 26.07
+      "p50": 35.47,
+      "p95": 45.38
     }
   },
   "gates": {
     "recall_at_5": {
-      "actual": 0.6536,
+      "actual": 0.6821,
       "operator": ">=",
       "threshold": 0.85,
       "passed": false
     },
     "recall_at_10": {
-      "actual": 0.7,
+      "actual": 0.7286,
       "operator": ">=",
       "threshold": 0.9,
       "passed": false
     },
     "mrr_at_10": {
-      "actual": 0.5541,
+      "actual": 0.5699,
       "operator": ">=",
       "threshold": 0.75,
       "passed": false
     },
     "ndcg_at_10": {
-      "actual": 0.5896,
+      "actual": 0.6087,
       "operator": ">=",
       "threshold": 0.8,
       "passed": false
+    },
+    "impossible_abstention_rate": {
+      "actual": 0.78,
+      "operator": ">=",
+      "threshold": 0.9,
+      "passed": false
+    },
+    "answerable_answer_rate": {
+      "actual": 0.3333,
+      "operator": ">=",
+      "threshold": 0.9,
+      "passed": false
     }
   },
-  "duration_seconds": 749.57,
+  "duration_seconds": 148.53,
   "limitations": [
     "public technical-support distribution, not private tenant query distribution",
     "source-provided silver labels, not independent ServiceMind human qrels",
-    "impossible labels are counted for set composition; end-to-end refusal remains a separate gate",
-    "dense ranking is exact cosine over one max-512-token vector per source document; production uses chunk-level OpenSearch HNSW"
+    "passages use the pinned BGE tokenizer instead of cl100k, while preserving the production 420-token/48-overlap shape",
+    "dense document ranking uses exact max pooling over child passages; production uses approximate OpenSearch HNSW before parent expansion",
+    "abstention is a retrieval-score proxy; end-to-end answer refusal remains a separate semantic gate"
   ]
 }

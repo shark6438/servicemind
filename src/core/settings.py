@@ -187,9 +187,14 @@ class Settings(BaseSettings):
     #: ``candidate_k`` is therefore the effective recall ceiling and costs one
     #: rerank score per row. Operators raise the funnel for large corpora, lower it
     #: to bound rerank latency.
-    SERVICEMIND_RAG_DENSE_K: int = Field(default=60, ge=1)
-    SERVICEMIND_RAG_BM25_K: int = Field(default=60, ge=1)
-    SERVICEMIND_RAG_CANDIDATE_K: int = Field(default=40, ge=1)
+    SERVICEMIND_RAG_DENSE_K: int = Field(default=100, ge=1, le=500)
+    SERVICEMIND_RAG_BM25_K: int = Field(default=100, ge=1, le=500)
+    SERVICEMIND_RAG_CANDIDATE_K: int = Field(default=100, ge=1, le=500)
+    #: Cross-encoder evidence is the main ranking signal, while a small amount of
+    #: normalized RRF score prevents semantic reranking from discarding strong exact
+    #: identifier/title matches. This is ranking only; confidence remains the raw,
+    #: calibrated reranker score.
+    SERVICEMIND_RAG_RERANK_WEIGHT: float = Field(default=0.85, ge=0.0, le=1.0)
     SERVICEMIND_EMBEDDING_URL: str | None = None
     SERVICEMIND_RERANKER_URL: str | None = None
 
@@ -215,6 +220,25 @@ class Settings(BaseSettings):
     SERVICEMIND_MODEL_TIMEOUT_SECONDS: float = 30
     SERVICEMIND_MODEL_MAX_COST_USD_PER_CALL: float = Field(default=0.05, gt=0, le=10)
     SERVICEMIND_SEMANTIC_CACHE_ENABLED: bool = False
+
+    # Phase 6 governed tool platform. Native and MCP are provider adapters behind
+    # one registry/policy/audit boundary; Redis is delivery only, PostgreSQL remains
+    # the transactional authority.
+    SERVICEMIND_TOOL_PLATFORM_ENABLED: bool = False
+    SERVICEMIND_TOOL_PROVIDER: str = "native_glpi"
+    SERVICEMIND_TOOL_POLICY_MODE: str = "local"
+    SERVICEMIND_TOOL_POLICY_VERSION: str = "servicemind-tool-policy-v1"
+    SERVICEMIND_OPA_URL: str | None = None
+    SERVICEMIND_OPA_DECISION_PATH: str = "/v1/data/servicemind/tool/decision"
+    SERVICEMIND_MCP_GLPI_URL: str | None = None
+    SERVICEMIND_MCP_PUBLIC_URL: str | None = None
+    SERVICEMIND_MCP_EXPECTED_ISSUER: str = "servicemind://glpi-mcp"
+    SERVICEMIND_MCP_SERVICE_TOKEN: SecretStr | None = None
+    SERVICEMIND_REDIS_URL: SecretStr | None = None
+    SERVICEMIND_TOOL_RATE_LIMIT_PER_MINUTE: int = Field(default=60, ge=1, le=10_000)
+    SERVICEMIND_TOOL_BULKHEAD_LIMIT: int = Field(default=8, ge=1, le=100)
+    SERVICEMIND_TOOL_CIRCUIT_FAILURES: int = Field(default=5, ge=1, le=100)
+    SERVICEMIND_TOOL_CIRCUIT_RESET_SECONDS: float = Field(default=30, gt=0, le=600)
 
     LANGCHAIN_TRACING_V2: bool = False
     LANGCHAIN_PROJECT: str = "default"

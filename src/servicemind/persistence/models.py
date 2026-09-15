@@ -550,3 +550,171 @@ class ContextArtifactRecord(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+
+class ToolPolicyDecisionRecord(Base):
+    __tablename__ = "tool_policy_decisions"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "decision_id"),
+        Index("ix_tool_policy_run", "tenant_id", "run_id", "created_at"),
+        CheckConstraint(
+            "tool_checksum ~ '^[0-9a-f]{64}$' AND argument_hash ~ '^[0-9a-f]{64}$'",
+            name="ck_tool_policy_hashes",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False
+    )
+    decision_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    request_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    run_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="CASCADE"), nullable=False
+    )
+    task_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    tool_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    tool_version: Mapped[str] = mapped_column(String(40), nullable=False)
+    tool_checksum: Mapped[str] = mapped_column(String(64), nullable=False)
+    argument_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    allow: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    requires_approval: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    policy_version: Mapped[str] = mapped_column(String(200), nullable=False)
+    external_decision_id: Mapped[str | None] = mapped_column(String(255))
+    reason_codes: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
+    context_manifest: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class GovernedToolInvocationRecord(Base):
+    __tablename__ = "governed_tool_invocations"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "request_id"),
+        Index("ix_governed_tool_run", "tenant_id", "run_id", "created_at"),
+        CheckConstraint("attempts >= 0 AND attempts <= 5", name="ck_tool_invocation_attempts"),
+        CheckConstraint("latency_ms >= 0", name="ck_tool_invocation_latency"),
+        CheckConstraint(
+            "status IN ('succeeded','failed','denied','cancelled')",
+            name="ck_tool_invocation_status",
+        ),
+        CheckConstraint(
+            "tool_checksum ~ '^[0-9a-f]{64}$' AND argument_hash ~ '^[0-9a-f]{64}$' "
+            "AND (output_hash IS NULL OR output_hash ~ '^[0-9a-f]{64}$')",
+            name="ck_tool_invocation_hashes",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False
+    )
+    request_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    run_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="CASCADE"), nullable=False
+    )
+    task_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    tool_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    tool_version: Mapped[str] = mapped_column(String(40), nullable=False)
+    tool_checksum: Mapped[str] = mapped_column(String(64), nullable=False)
+    provider: Mapped[str] = mapped_column(String(80), nullable=False)
+    argument_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    output_hash: Mapped[str | None] = mapped_column(String(64))
+    policy_decision_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    status: Mapped[str] = mapped_column(String(40), nullable=False)
+    verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False)
+    latency_ms: Mapped[float] = mapped_column(Float, nullable=False)
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class ToolOutboxRecord(Base):
+    __tablename__ = "tool_outbox"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "idempotency_key"),
+        Index("ix_tool_outbox_dispatch", "tenant_id", "status", "available_at"),
+        CheckConstraint(
+            "status IN ('pending','leased','published','dead')", name="ck_tool_outbox_status"
+        ),
+        CheckConstraint("attempts >= 0", name="ck_tool_outbox_attempts"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False
+    )
+    aggregate_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    aggregate_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(30), default="pending", nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    available_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    lease_owner: Mapped[str | None] = mapped_column(String(255))
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+class McpTaskRecord(Base):
+    """Durable, tenant-scoped state for the stateless MCP Tasks extension.
+
+    Tool output can contain confidential GLPI data, so only ciphertext is stored.
+    The hashes remain queryable for integrity checks without exposing the payload.
+    """
+
+    __tablename__ = "mcp_tasks"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "task_id"),
+        UniqueConstraint("tenant_id", "request_id"),
+        Index("ix_mcp_tasks_status", "tenant_id", "status", "updated_at"),
+        Index("ix_mcp_tasks_lease", "tenant_id", "status", "lease_expires_at"),
+        CheckConstraint(
+            "status IN ('working','completed','failed','cancelled')", name="ck_mcp_task_status"
+        ),
+        CheckConstraint(
+            "argument_hash ~ '^[0-9a-f]{64}$' "
+            "AND (output_hash IS NULL OR output_hash ~ '^[0-9a-f]{64}$')",
+            name="ck_mcp_task_hashes",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False
+    )
+    task_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    request_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    run_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="CASCADE"), nullable=False
+    )
+    workflow_task_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    tool_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    argument_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(30), default="working", nullable=False)
+    output_ciphertext: Mapped[str | None] = mapped_column(Text)
+    output_hash: Mapped[str | None] = mapped_column(String(64))
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    cancellation_requested: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    lease_owner: Mapped[str] = mapped_column(String(100), nullable=False)
+    lease_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )

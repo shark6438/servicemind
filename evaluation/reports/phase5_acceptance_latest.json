@@ -1,7 +1,7 @@
 {
-  "report_id": "servicemind-phase5-acceptance-2026-09-08",
-  "evaluated_at": "2026-09-08T20:16:13+08:00",
-  "result": "PASS",
+  "report_id": "servicemind-phase5-acceptance-2026-09-14",
+  "evaluated_at": "2026-09-14T23:20:00+08:00",
+  "result": "PASS_ENGINEERING",
   "scope": [
     "governed_memory",
     "context_engineering",
@@ -9,21 +9,34 @@
     "model_gateway",
     "workflow_integration"
   ],
-  "database_revision": "0009_model_accounting_provenance",
-  "tests": {
-    "full_suite": {"passed": 389, "skipped": 6, "failed": 0},
-    "phase5_targeted": {"passed": 25, "failed": 0},
-    "docker_authority_checks": {"passed": 2, "failed": 0},
-    "excluded_unrelated_template_checks": {
-      "count": 4,
-      "reason": "Generic fake chatbot tests target an unrelated service on port 8080 and are outside the ServiceMind project-agent scope."
-    },
-    "ruff_errors": 0,
-    "pyrefly_errors": 0,
+  "database": {
+    "current_revision": "0013_phase6_hash_guards",
+    "phase5_tables": 4,
+    "phase5_rls_forced": true,
+    "fresh_round_trip": "passed",
     "alembic_drift_operations": 0
   },
+  "tests": {
+    "full_suite": {
+      "passed": 422,
+      "skipped": 6,
+      "failed": 0,
+      "warnings": 38
+    },
+    "phase5_targeted": {
+      "passed": 32,
+      "failed": 0
+    },
+    "servicemind_phase4_to_phase6_targeted": {
+      "passed": 89,
+      "skipped": 1,
+      "failed": 0
+    },
+    "ruff_errors": 0,
+    "pyrefly_servicemind_production_errors": 0,
+    "full_repository_pyrefly_is_not_acceptance_gate": "Legacy generic template, optional Playwright, fake test doubles and unrelated instance-agent paths are outside the ServiceMind business-agent scope."
+  },
   "live_checks": {
-    "fresh_upgrade_downgrade_upgrade": "passed",
     "forced_rls_and_zero_context_denial": "passed",
     "cross_tenant_isolation": "passed",
     "concurrent_memory_idempotency": "passed",
@@ -32,8 +45,42 @@
     "deepseek_structured_gateway": "passed",
     "provider_token_and_cost_provenance": "passed",
     "governed_knowledge_workflow": "passed",
-    "nonblocking_background_recovery": "passed",
-    "authenticated_api_info": "passed"
+    "rag_retrieval": {
+      "status": "passed",
+      "evidence_count": 5,
+      "top_source": "runbook://rb-vpn-mfa",
+      "method": "dense_bm25_mq_rrf_cross_encoder_parent",
+      "latency_ms": 5537.83
+    },
+    "api_health": "passed",
+    "ui_health": "passed",
+    "outbox_health": "passed"
+  },
+  "rag_hardening": {
+    "active_schema": "v3",
+    "documents": 39,
+    "parent_chunks": 446,
+    "child_chunks": 668,
+    "delete_reconciliation": {
+      "postgres": 0,
+      "index": 0
+    },
+    "candidate_funnel": {
+      "dense_k": 100,
+      "bm25_k": 100,
+      "candidate_k": 100
+    },
+    "rerank": {
+      "model": "BAAI/bge-reranker-v2-m3",
+      "gpu": "RTX 3090 #1",
+      "candidates": 100,
+      "latency_seconds": 0.8
+    },
+    "embedding": {
+      "model": "BAAI/bge-m3",
+      "dimension": 1024,
+      "gpu": "RTX 3090 #0"
+    }
   },
   "hard_gates": {
     "tenant_or_scope_leaks": 0,
@@ -45,7 +92,7 @@
     "cross_tenant_cache_hits": 0,
     "uncontrolled_high_risk_fallbacks": 0,
     "model_cost_budget_bypasses": 0,
-    "known_open_phase5_defects": 0
+    "known_open_phase5_defects_in_tested_scope": 0
   },
   "deployment": {
     "memory_enabled": true,
@@ -60,18 +107,22 @@
     "max_cost_usd_per_call": 0.05,
     "persistent_services": [
       "servicemind-api.service",
-      "servicemind-streamlit.service"
-    ],
-    "api_readiness_seconds": 8.3,
-    "api_agents": 10,
-    "api_agents_scope": "servicemind_project_registry_only",
-    "api_models": 2,
-    "api_health": "passed",
-    "ui_health": "passed"
+      "servicemind-streamlit.service",
+      "servicemind-outbox.service"
+    ]
   },
   "inherited_quality_boundary": {
     "phase4_status": "QUALITY_EXCEPTION_ACCEPTED",
-    "reason": "No expert sign-off or production query logs; proxy quality gates are not all passed.",
+    "external_silver_status": "failed",
+    "metrics": {
+      "recall_at_5": 0.6821,
+      "recall_at_10": 0.7286,
+      "mrr_at_10": 0.5699,
+      "ndcg_at_10": 0.6087,
+      "impossible_abstention_rate": 0.78,
+      "answerable_answer_rate": 0.3333
+    },
+    "reason": "ITSM expert sign-off and real production query logs are unavailable; public TechQA silver gates are not all passed.",
     "phase5_does_not_override_phase4_quality": true
   }
 }

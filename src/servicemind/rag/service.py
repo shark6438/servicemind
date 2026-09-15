@@ -16,6 +16,7 @@ from servicemind.domain.knowledge import (
     Citation,
     ContextItem,
     KnowledgeRAGResult,
+    RetrievalHit,
     RetrievalMode,
     RetrievalPrincipal,
 )
@@ -272,6 +273,11 @@ class EnterpriseRAG:
             # delete their authority rows now -- unpublish.
             await self.repository.delete_missing(tenant_id, batch_ids)
 
+        # Make bulk writes visible before ``publish`` checks the desired generation's
+        # count. Publishing first could observe an unrefreshed count of zero, leave
+        # the alias on a stale generation, and never retry the switch in this run.
+        await self.index.refresh(tenant_id)
+
         # Flip the alias only when no row is left pending: PostgreSQL is the source
         # of truth for "is the desired generation fully written?". Without a
         # repository (smoke/infra harnesses) flip eagerly once the batch landed.
@@ -281,7 +287,6 @@ class EnterpriseRAG:
             )
             if pending == 0:
                 await self.index.publish(tenant_id, self.embedding)
-        await self.index.refresh(tenant_id)
         return totals
 
     async def set_document_active(
@@ -381,7 +386,8 @@ class EnterpriseRAG:
             parents = {}
         if run_rerank and hits:
             scores = await self.reranker.score(
-                processed.normalized_query, [hit.child_content for hit in hits]
+                processed.normalized_query,
+                [f"{hit.title}\n{hit.child_content}" for hit in hits],
             )
             if len(scores) != len(hits) or any(
                 not math.isfinite(score) or not 0 <= score <= 1 for score in scores
@@ -391,11 +397,24 @@ class EnterpriseRAG:
                 hit.model_copy(update={"rerank_score": score})
                 for hit, score in zip(hits, scores, strict=True)
             ]
-        ranked = sorted(
-            hits,
-            key=lambda hit: hit.rerank_score if hit.rerank_score is not None else hit.score,
-            reverse=True,
-        )
+        if run_rerank and hits:
+            retrieval_low = min(hit.score for hit in hits)
+            retrieval_high = max(hit.score for hit in hits)
+            retrieval_span = retrieval_high - retrieval_low
+            rerank_weight = settings.SERVICEMIND_RAG_RERANK_WEIGHT
+
+            def final_score(hit: RetrievalHit) -> float:
+                retrieval_score = (
+                    (hit.score - retrieval_low) / retrieval_span
+                    if retrieval_span > 1e-12
+                    else 0.5
+                )
+                assert hit.rerank_score is not None
+                return rerank_weight * hit.rerank_score + (1 - rerank_weight) * retrieval_score
+
+            ranked = sorted(hits, key=final_score, reverse=True)
+        else:
+            ranked = sorted(hits, key=lambda hit: hit.score, reverse=True)
 
         # Deduplicate to one parent per ... , then apply diversity ceilings so a single
         # document or source cannot crowd the context (Phase 4 baseline §7). Selection

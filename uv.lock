@@ -5300,6 +5300,15 @@ wheels = [
 ]
 
 [[package]]
+name = "redis"
+version = "6.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/d6/e8b92798a5bd67d659d51a18170e91c16ac3b59738d91894651ee255ed49/redis-6.4.0.tar.gz", hash = "sha256:b01bc7282b8444e28ec36b261df5375183bb47a07eb9c603f284e89cbc5ef010", size = 4647399, upload-time = "2025-08-07T08:10:11.441Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e8/02/89e2ed7e85db6c93dfa9e8f691c5087df4e3551ab39081a4d7c6d1f90e05/redis-6.4.0-py3-none-any.whl", hash = "sha256:f0544fa9604264e9464cdf4814e7d4830f74b165d52f2a330a760a88dd248b7f", size = 279847, upload-time = "2025-08-07T08:10:09.84Z" },
+]
+
+[[package]]
 name = "referencing"
 version = "0.37.0"
 source = { registry = "https://pypi.org/simple" }
@@ -5749,6 +5758,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "jiter" },
+    { name = "jsonschema" },
     { name = "langchain" },
     { name = "langchain-anthropic" },
     { name = "langchain-aws" },
@@ -5784,6 +5794,7 @@ dependencies = [
     { name = "pyowm" },
     { name = "pypdf" },
     { name = "python-dotenv" },
+    { name = "redis" },
     { name = "sentence-transformers" },
     { name = "setuptools" },
     { name = "sqlalchemy", extra = ["asyncio"] },
@@ -5824,6 +5835,7 @@ requires-dist = [
     { name = "fastapi", specifier = "~=0.139.0" },
     { name = "httpx", specifier = "~=0.28.1" },
     { name = "jiter", specifier = "~=0.16.0" },
+    { name = "jsonschema", specifier = ">=4.26,<5" },
     { name = "langchain", specifier = "~=1.3.11" },
     { name = "langchain-anthropic", specifier = "~=1.4.8" },
     { name = "langchain-aws", specifier = "~=1.6.1" },
@@ -5859,6 +5871,7 @@ requires-dist = [
     { name = "pyowm", specifier = "~=3.5.0" },
     { name = "pypdf", specifier = ">=6.14.2,<6.17.0" },
     { name = "python-dotenv", specifier = "~=1.2.2" },
+    { name = "redis", specifier = ">=6,<7" },
     { name = "sentence-transformers", specifier = ">=5.1,<6" },
     { name = "setuptools", specifier = "~=83.0.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = "~=2.0" },

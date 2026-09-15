@@ -12,6 +12,7 @@ from servicemind.integrations.glpi.models import (
     GlpiKnowbaseItem,
     GlpiTicket,
     GlpiTokenResponse,
+    html_to_text,
 )
 
 
@@ -135,7 +136,13 @@ class GlpiClient:
         if response.is_error:
             detail = "Unexpected response"
             if isinstance(data, dict):
-                detail = str(data.get("detail") or data.get("title") or detail)
+                detail = str(
+                    data.get("detail")
+                    or data.get("title")
+                    or data.get("error_description")
+                    or data.get("error")
+                    or detail
+                )[:500]
             raise GlpiAPIError(response.status_code, detail)
         return data
 
@@ -183,6 +190,20 @@ class GlpiClient:
             raise GlpiAPIError(502, "Unexpected ticket list response")
         return [GlpiTicket.model_validate(item) for item in data]
 
+    async def search_tickets(self, query: str, limit: int = 20) -> list[GlpiTicket]:
+        """Search the full visible collection through GLPI v2 RSQL filtering."""
+        if not query.strip() or not 1 <= limit <= 20:
+            raise ValueError("query is required and limit must be between 1 and 20")
+        value = _rsql_literal(query.strip())
+        data = await self._request(
+            "GET",
+            f"{self.api_prefix}/Assistance/Ticket",
+            params={"limit": limit, "filter": f"(name=ilike={value},content=ilike={value})"},
+        )
+        if not isinstance(data, list):
+            raise GlpiAPIError(502, "Unexpected ticket search response")
+        return [GlpiTicket.model_validate(item) for item in data]
+
     async def list_groups(self, limit: int = 50) -> list[GlpiGroup]:
         if not 1 <= limit <= 100:
             raise ValueError("limit must be between 1 and 100")
@@ -202,6 +223,53 @@ class GlpiClient:
         if not isinstance(data, list):
             raise GlpiAPIError(502, "Unexpected knowledge item list response")
         return [GlpiKnowbaseItem.model_validate(item) for item in data]
+
+    async def search_knowledge_items(
+        self, query: str, limit: int = 20
+    ) -> list[GlpiKnowbaseItem]:
+        if not query.strip() or not 1 <= limit <= 20:
+            raise ValueError("query is required and limit must be between 1 and 20")
+        value = _rsql_literal(query.strip())
+        data = await self._request(
+            "GET",
+            f"{self.api_prefix}/Tools/KnowbaseItem",
+            params={"limit": limit, "filter": f"(name=ilike={value},answer=ilike={value})"},
+        )
+        if not isinstance(data, list):
+            raise GlpiAPIError(502, "Unexpected knowledge search response")
+        return [GlpiKnowbaseItem.model_validate(item) for item in data]
+
+    async def get_resource(self, resource_type: str, resource_id: int) -> dict[str, Any]:
+        """Read a bounded resource subset for the MCP resource surface."""
+        paths = {
+            "problem": "Assistance/Problem",
+            "change": "Assistance/Change",
+            "knowledge": "Tools/KnowbaseItem",
+        }
+        if resource_type not in paths or resource_id < 1:
+            raise ValueError("unsupported GLPI resource type or ID")
+        data = await self._request("GET", f"{self.api_prefix}/{paths[resource_type]}/{resource_id}")
+        if not isinstance(data, dict):
+            raise GlpiAPIError(502, "Unexpected resource response")
+        allowed = {
+            "id",
+            "name",
+            "content",
+            "answer",
+            "status",
+            "entity",
+            "impact",
+            "urgency",
+            "priority",
+            "date_mod",
+            "begin_date",
+            "end_date",
+        }
+        result = {key: data[key] for key in allowed if key in data}
+        for key in ("content", "answer"):
+            if isinstance(result.get(key), str):
+                result[key] = html_to_text(result[key])[:20_000]
+        return result
 
     async def append_ticket_followup(
         self, ticket_id: int, content: str, *, is_private: bool = True
@@ -236,3 +304,9 @@ class GlpiClient:
             GlpiFollowup.model_validate(item.get("item", item) if isinstance(item, dict) else item)
             for item in data
         ]
+
+
+def _rsql_literal(value: str) -> str:
+    """Quote untrusted text as one RSQL string literal, never as query syntax."""
+    escaped = value.replace("\\", "\\\\").replace("'", "\\'")
+    return f"'{escaped}'"

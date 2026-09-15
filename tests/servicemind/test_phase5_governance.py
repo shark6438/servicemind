@@ -100,6 +100,7 @@ def fact_candidate(
     source_run_id: UUID | None = None,
     expires_at: datetime | None = None,
     taint_labels: frozenset[str] = frozenset(),
+    provenance: dict | None = None,
 ) -> MemoryCandidate:
     return MemoryCandidate(
         tenant_id=tenant_id,
@@ -115,6 +116,7 @@ def fact_candidate(
         importance=0.8,
         expires_at=expires_at,
         taint_labels=taint_labels,
+        provenance=provenance or {},
         created_by="test",
     )
 
@@ -545,6 +547,21 @@ async def test_memory_vector_ranking_is_bounded_and_cached() -> None:
     assert first[0].memory.memory_id == relevant.memory_id
     assert second[0].memory.memory_id == relevant.memory_id
     assert provider.calls == 2  # one batch for query, one for candidate records
+
+
+@pytest.mark.asyncio
+async def test_memory_embedding_cache_supports_batches_larger_than_capacity() -> None:
+    provider = CountingEmbeddingProvider()
+    cached = CachedMemoryEmbeddingProvider(provider, max_entries=1)
+    values = await cached.embed_documents(["identity one", "printer two", "mfa three"])
+    assert values == [[1.0, 0.0], [0.0, 1.0], [1.0, 0.0]]
+
+
+def test_memory_provenance_acl_must_be_bounded_json_integer_lists() -> None:
+    with pytest.raises(ValidationError, match="required_entity_ids"):
+        fact_candidate(provenance={"required_entity_ids": "1"})
+    with pytest.raises(ValidationError, match="JSON serializable"):
+        fact_candidate(provenance={"unsafe": object()})
 
 
 def context_item(

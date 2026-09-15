@@ -6,17 +6,19 @@ Queries: 400 (280 answerable / 120 impossible).
 
 | run | Recall@5 | Recall@10 | Recall@20 | MRR@10 | NDCG@10 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| BM25 | 0.5429 | 0.5821 | 0.6464 | 0.4527 | 0.4839 |
-| BGE-M3 dense | 0.6607 | 0.6964 | 0.7429 | 0.5485 | 0.5848 |
-| RRF hybrid | 0.6357 | 0.6929 | 0.7536 | 0.5369 | 0.5742 |
-| RRF hybrid + BGE rerank | 0.6536 | 0.7000 | 0.7536 | 0.5541 | 0.5896 |
+| BM25 | 0.5286 | 0.5643 | 0.6500 | 0.4414 | 0.4713 |
+| BGE-M3 dense | 0.7143 | 0.7536 | 0.7679 | 0.5691 | 0.6142 |
+| RRF hybrid | 0.6464 | 0.7357 | 0.7893 | 0.5406 | 0.5869 |
+| RRF hybrid + BGE rerank | 0.6821 | 0.7286 | 0.7857 | 0.5699 | 0.6087 |
 
 ## Gates
 
-- FAIL: recall_at_5 0.6536 >= 0.85
-- FAIL: recall_at_10 0.7 >= 0.9
-- FAIL: mrr_at_10 0.5541 >= 0.75
-- FAIL: ndcg_at_10 0.5896 >= 0.8
+- FAIL: recall_at_5 0.6821 >= 0.85
+- FAIL: recall_at_10 0.7286 >= 0.9
+- FAIL: mrr_at_10 0.5699 >= 0.75
+- FAIL: ndcg_at_10 0.6087 >= 0.8
+- FAIL: impossible_abstention_rate 0.78 >= 0.9
+- FAIL: answerable_answer_rate 0.3333 >= 0.9
 
 ## Scope
 

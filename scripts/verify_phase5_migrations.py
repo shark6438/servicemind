@@ -44,10 +44,15 @@ def main() -> None:
                 "SELECT count(*) FROM pg_class WHERE relname IN "
                 "('memory_records','memory_events','model_invocations','context_artifacts')"
             ).fetchone()
-        assert revision is not None and revision[0] == "0009_model_accounting_provenance"
+        # Phase 5 remains independently verifiable after later linear migrations.
+        # The current repository head is Phase 6's integrity-hardening revision;
+        # this verifier asserts that the four Phase 5 authority tables survive the
+        # complete current-chain round trip.
+        assert revision is not None and revision[0] == "0013_phase6_hash_guards"
         assert table_count is not None and table_count[0] == 4
         print(
-            "PASS phase5 fresh migration: upgrade -> full downgrade -> upgrade, head=0009, tables=4"
+            "PASS phase5 fresh migration: upgrade -> full downgrade -> upgrade, "
+            "current head=0013, phase5 tables=4"
         )
     finally:
         with psycopg.connect(admin_url, autocommit=True) as connection:

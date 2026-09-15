@@ -1,0 +1,155 @@
+{
+  "report_id": "servicemind-phase6-acceptance-2026-09-14",
+  "evaluated_at": "2026-09-14T23:25:00+08:00",
+  "result": "PASS_ENGINEERING_SUPPORTED_SURFACE",
+  "scope": [
+    "governed_tool_platform",
+    "mcp_2026_07_28",
+    "reliable_execution",
+    "agentic_security"
+  ],
+  "scope_boundary": "ServiceMind business-agent path only; unrelated generic templates, external project agents and runtime instance agents are excluded.",
+  "execution_path": [
+    {
+      "id": "P6.0",
+      "name": "contract_freeze",
+      "status": "complete"
+    },
+    {
+      "id": "P6.1",
+      "name": "security_boundary",
+      "status": "complete"
+    },
+    {
+      "id": "P6.2",
+      "name": "mcp_and_glpi_v2",
+      "status": "complete"
+    },
+    {
+      "id": "P6.3",
+      "name": "reliability",
+      "status": "complete"
+    },
+    {
+      "id": "P6.4",
+      "name": "hardening_and_acceptance",
+      "status": "complete"
+    }
+  ],
+  "database": {
+    "revision": "0013_phase6_hash_guards",
+    "phase6_tables": [
+      "tool_policy_decisions",
+      "governed_tool_invocations",
+      "tool_outbox",
+      "mcp_tasks"
+    ],
+    "rls_forced": true,
+    "append_only_audits": true,
+    "hash_and_status_constraints": true,
+    "fresh_round_trip": "passed",
+    "alembic_drift_operations": 0
+  },
+  "tests": {
+    "full_suite": {
+      "passed": 422,
+      "skipped": 6,
+      "failed": 0,
+      "warnings": 38
+    },
+    "phase6_targeted": {
+      "passed": 15,
+      "failed": 0
+    },
+    "servicemind_phase4_to_phase6_targeted": {
+      "passed": 89,
+      "skipped": 1,
+      "failed": 0
+    },
+    "ruff_errors": 0,
+    "pyrefly_servicemind_production_errors": 0
+  },
+  "live_checks": {
+    "opa_gateway_audit_receipt": "passed",
+    "audit_rls_append_only": "passed",
+    "mcp_task_encryption": "passed",
+    "mcp_task_lease_recovery_cancel": "passed",
+    "redis_distributed_rate_limit": "passed",
+    "postgres_outbox_to_metadata_only_stream": "passed",
+    "rfc9728_resource_metadata_and_challenge": "passed",
+    "keycloak_oidc": "passed",
+    "mcp_discovery": "passed",
+    "governed_tools": 5,
+    "glpi_high_level_api_v2": "passed",
+    "server_directed_durable_task": "passed",
+    "api_health": "passed",
+    "ui_health": "passed",
+    "outbox_worker": "passed"
+  },
+  "mcp_conformance": {
+    "package": "@modelcontextprotocol/conformance@0.2.0-alpha.10",
+    "protocol": "2026-07-28",
+    "supported_surface_result": "passed",
+    "scenarios": {
+      "server-stateless": {
+        "success": 21,
+        "skipped": 5,
+        "not_testable": 4,
+        "reason": "Conformance-only diagnostic tools and unadvertised subscriptions are intentionally absent."
+      },
+      "tools-list": {
+        "success": 2,
+        "failed": 0,
+        "standard_client_tools": 4,
+        "governed_client_tools": 5
+      },
+      "http-header-validation": {
+        "success": 12,
+        "harness_argument_mismatch": 1,
+        "reason": "Whitespace header was accepted; harness then invoked get_ticket_context with empty arguments, correctly rejected because ticket_id is required."
+      },
+      "caching": {
+        "success": 5,
+        "skipped": 1,
+        "unsupported_prompts": 1,
+        "reason": "Tools/resources caching passes; prompts are not advertised or implemented."
+      },
+      "json-schema-2020-12": {
+        "not_applicable": 1,
+        "reason": "Scenario requires a conformance-only named diagnostic tool; production tool schemas are independently validated as Draft 2020-12."
+      }
+    },
+    "production_schema_or_capability_was_not_weakened_for_harness": true
+  },
+  "security_invariants": {
+    "direct_glpi_write_tools": 0,
+    "submit_action_intent_external_side_effects": 0,
+    "policy_fail_open_paths": 0,
+    "unbound_high_risk_approvals": 0,
+    "cross_tenant_resource_leaks": 0,
+    "raw_secret_audit_records": 0,
+    "native_mcp_policy_bypasses": 0,
+    "known_open_phase6_defects_in_tested_scope": 0
+  },
+  "reliability": {
+    "authority": "PostgreSQL",
+    "transport": "Redis Streams metadata references only",
+    "relay": "FOR UPDATE SKIP LOCKED with owner lease, visibility timeout, jitter backoff and dead state",
+    "worker": "servicemind-outbox.service",
+    "tool_controls": [
+      "deadline",
+      "bounded_read_retry",
+      "cancellation",
+      "circuit_breaker",
+      "bulkhead",
+      "tenant_rate_limit",
+      "idempotency",
+      "readback_verification"
+    ]
+  },
+  "quality_and_capacity_boundaries": {
+    "rag_quality": "QUALITY_EXCEPTION_ACCEPTED",
+    "production_load_capacity": "not_certified_in_phase6",
+    "reason": "Expert gold labels, production query logs and Phase 8 load tests are unavailable; engineering acceptance must not be represented as business-quality or capacity certification."
+  }
+}

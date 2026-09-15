@@ -37,7 +37,11 @@ logger = logging.getLogger("servicemind.rag.opensearch")
 #: Both change the meaning of every stored vector and token stream, so the schema
 #: version MUST advance: a corpus indexed as v1 and a corpus indexed as v2 would
 #: otherwise be co-resident in one generation with incompatible doc-side embeddings.
-SCHEMA_VERSION = "v2"
+#: v3: ``content_hash`` is the authoritative document digest used by PostgreSQL
+#: parent revalidation and citation binding. v2 accidentally projected each child
+#: digest into that field, causing every otherwise valid hit to fail closed during
+#: parent expansion. A new generation is mandatory so stale v2 rows cannot mix in.
+SCHEMA_VERSION = "v3"
 
 _GENERATION_SUFFIX = re.compile(r"-(?:children|parents)-([^/]+)$")
 
@@ -480,7 +484,7 @@ class OpenSearchKnowledgeIndex:
                         "license": document.provenance.license,
                         "authority_level": int(document.provenance.authority_level),
                         "synthetic": document.provenance.synthetic,
-                        "content_hash": chunk.content_hash,
+                        "content_hash": document.provenance.content_hash,
                         "corpus_scope": acl.corpus_scope.value,
                         "index_version": generation,
                         "tenant_id": str(tenant_id),
@@ -690,8 +694,9 @@ class OpenSearchKnowledgeIndex:
         ``dense_k`` / ``bm25_k`` bound each candidate arm; ``candidate_k`` is how
         many RRF-fused rows survive to the cross-encoder rerank. The arms are kept
         wider than ``candidate_k`` so RRF has material to merge and the reranker can
-        promote an item that neither channel alone ranked top -- the rerank pool is
-        the recall ceiling, so it must not be smaller than the per-arm depth.
+        promote an item that neither channel alone ranked top. The rerank pool is the
+        recall ceiling; production defaults therefore keep it equal to each arm's
+        depth, while explicit evaluation overrides may use a narrower ablation pool.
 
         ``mode`` selects the candidate channel (dense / bm25 / hybrid+RRF) -- the
         evaluation harness and agent both need it; ACL filtering is identical in all
@@ -754,7 +759,16 @@ class OpenSearchKnowledgeIndex:
             body = {
                 "size": candidate_k,
                 "_source": {"excludes": ["embedding"]},
-                "query": {"hybrid": {"queries": queries}},
+                "query": {
+                    "hybrid": {
+                        # ``size`` is only the returned rerank pool. Without an
+                        # explicit pagination depth OpenSearch also truncates every
+                        # subquery to that value before RRF, silently defeating wider
+                        # dense/BM25 candidate arms.
+                        "pagination_depth": max(dense_k, bm25_k, candidate_k),
+                        "queries": queries,
+                    }
+                },
             }
             params = {"search_pipeline": self.PIPELINE}
         elif mode is RetrievalMode.DENSE:

@@ -3,6 +3,7 @@
 import asyncio
 import json
 import selectors
+import time
 from uuid import UUID
 
 from servicemind.agents.knowledge import KnowledgeAgent
@@ -13,6 +14,7 @@ TENANT = UUID("11111111-1111-4111-8111-111111111111")
 async def main() -> None:
     agent = KnowledgeAgent()
     try:
+        started = time.perf_counter()
         evidence = await agent.retrieve(
             tenant_id=TENANT,
             user_id="phase4-verifier",
@@ -21,6 +23,7 @@ async def main() -> None:
         )
         if not evidence:
             raise RuntimeError("Knowledge Agent returned no evidence")
+        latency_ms = (time.perf_counter() - started) * 1000
         for item in evidence:
             citation = item.metadata.get("citation")
             if not citation or not citation.get("content_hash"):
@@ -34,6 +37,7 @@ async def main() -> None:
                     "top_source_ref": evidence[0].source_ref,
                     "retrieval_method": evidence[0].provenance.retrieval_method,
                     "citation_id": evidence[0].metadata["citation"]["citation_id"],
+                    "retrieval_latency_ms": round(latency_ms, 2),
                 },
                 indent=2,
             )

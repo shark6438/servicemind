@@ -84,6 +84,29 @@ async def test_list_recent_tickets_bounds_and_sorting() -> None:
 
 
 @pytest.mark.asyncio
+async def test_ticket_search_uses_full_collection_rsql_and_quotes_user_text() -> None:
+    seen_filter = ""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal seen_filter
+        if request.url.path == "/api.php/token":
+            return httpx.Response(
+                200,
+                json={"token_type": "Bearer", "expires_in": 3600, "access_token": "token-1"},
+            )
+        seen_filter = request.url.params["filter"]
+        return httpx.Response(200, json=[ticket_payload()])
+
+    async with GlpiClient(config(), transport=httpx.MockTransport(handler)) as client:
+        tickets = await client.search_tickets("VPN');status==closed", 3)
+
+    assert tickets[0].id == 42
+    assert seen_filter == (
+        "(name=ilike='VPN\\');status==closed',content=ilike='VPN\\');status==closed')"
+    )
+
+
+@pytest.mark.asyncio
 async def test_unauthorized_response_refreshes_token_once() -> None:
     token_calls = 0
     ticket_calls = 0

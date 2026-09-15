@@ -57,18 +57,22 @@ class FakeJobIndex:
         self.replace_calls = 0
         self.published = 0
         self.refreshed = 0
+        self.events: list[str] = []
 
     async def replace_document(self, tenant_id, document, parents, children, embedding) -> None:
         assert tenant_id == TENANT
         self.replace_calls += 1
+        self.events.append("replace")
 
     async def refresh(self, tenant_id) -> None:
         assert tenant_id == TENANT
         self.refreshed += 1
+        self.events.append("refresh")
 
     async def publish(self, tenant_id, embedding) -> None:
         assert tenant_id == TENANT
         self.published += 1
+        self.events.append("publish")
 
 
 class FakeJobRepository:
@@ -223,6 +227,7 @@ async def test_ingest_tolerates_repository_without_job_register() -> None:
     assert totals["documents"] == 1
     assert index.replace_calls == 1
     assert index.published == 1  # publish gate still fires once all docs are pending-free
+    assert index.events == ["replace", "refresh", "publish"]
 
 
 @pytest.mark.asyncio

@@ -55,10 +55,18 @@ from service.utils import (
 )
 from servicemind.api import phase2_router
 from servicemind.harness.recovery import recover_incomplete_runs
+from servicemind.mcp.server import (
+    configure_mcp_gateway,
+    mcp_metadata_router,
+    mcp_router,
+    shutdown_mcp_tasks,
+)
+from servicemind.mcp.tasks import InMemoryMcpTaskStore, PostgresMcpTaskStore
 from servicemind.observability.tracing import configure_telemetry, shutdown_telemetry
 from servicemind.orchestration.supervisor_workflow import configure_supervisor_checkpointer
 from servicemind.orchestration.workflow import configure_phase2_checkpointer
 from servicemind.persistence.database import close_database
+from servicemind.tool_platform.runtime import build_tool_gateway
 
 warnings.filterwarnings("ignore", category=LangChainBetaWarning)
 logger = logging.getLogger(__name__)
@@ -114,6 +122,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                 await store.setup()
             configure_phase2_checkpointer(saver)
             configure_supervisor_checkpointer(saver)
+            if settings.SERVICEMIND_TOOL_PLATFORM_ENABLED:
+                task_store = (
+                    PostgresMcpTaskStore()
+                    if settings.DATABASE_TYPE.value == "postgres"
+                    else InMemoryMcpTaskStore()
+                )
+                recovered_tasks = await task_store.recover_interrupted()
+                if recovered_tasks:
+                    logger.warning(
+                        "Closed %s interrupted MCP tasks after service restart", recovered_tasks
+                    )
+                configure_mcp_gateway(build_tool_gateway(), task_store)
 
             if settings.AUTH_SECRET is None or not settings.AUTH_SECRET.get_secret_value():
                 logger.warning(
@@ -152,6 +172,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             recovery_task.cancel()
             with suppress(asyncio.CancelledError):
                 await recovery_task
+        await shutdown_mcp_tasks()
         await close_database()
         shutdown_telemetry()
 
@@ -531,3 +552,5 @@ async def health_check():
 
 app.include_router(router)
 app.include_router(phase2_router)
+app.include_router(mcp_router)
+app.include_router(mcp_metadata_router)

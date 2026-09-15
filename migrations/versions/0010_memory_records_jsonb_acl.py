@@ -28,6 +28,15 @@ def upgrade() -> None:
             f'ALTER TABLE "memory_records" '
             f'ALTER COLUMN "{column}" TYPE jsonb USING "{column}"::jsonb'
         )
+    # Automated ticket summaries created before Phase 5.1 used tenant scope.
+    # Quarantine them so migration cannot silently retain excess visibility.
+    op.execute(
+        "UPDATE memory_records SET status='quarantine', "
+        "provenance=provenance || "
+        '\'{"quarantine_reason":"legacy_scope_too_broad"}\'::jsonb '
+        "WHERE created_by='post-run-memory-middleware' AND scope_type<>'user' "
+        "AND status='active'"
+    )
 
 
 def downgrade() -> None:
