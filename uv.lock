@@ -331,6 +331,19 @@ wheels = [
 ]
 
 [[package]]
+name = "authlib"
+version = "1.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cryptography" },
+    { name = "joserfc" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f1/51/bc1729d3cfdc214b4935f4e886e4dd443c3065fd8e1e66423fe84b490f81/authlib-1.8.0.tar.gz", hash = "sha256:f3ecd5f1da737262fb53bf1a4d95c4ea1ad9dd509316587a255c99ab1838a4f0", size = 177759, upload-time = "2026-08-30T12:12:34.833Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/c6/6f124bcfbbfb20fba22c939b4e43a06dccfc0e1ca20e5634ca573cb1e271/authlib-1.8.0-py2.py3-none-any.whl", hash = "sha256:88aebbd9af6757e14e912d5dc007ae1dc1f3e27e3b2152ce7c552ee2c3b3c121", size = 260804, upload-time = "2026-08-30T12:12:33.162Z" },
+]
+
+[[package]]
 name = "backoff"
 version = "2.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2243,6 +2256,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/41/f2/d34e8b3a08a9cc79a50b2208a93dce981fe615b64d5a4d4abee421d898df/joblib-1.5.3.tar.gz", hash = "sha256:8561a3269e6801106863fd0d6d84bb737be9e7631e33aaed3fb9ce5953688da3", size = 331603, upload-time = "2025-12-15T08:41:46.427Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7b/91/984aca2ec129e2757d1e4e3c81c3fcda9d0f85b74670a094cc443d9ee949/joblib-1.5.3-py3-none-any.whl", hash = "sha256:5fc3c5039fc5ca8c0276333a188bbd59d6b7ab37fe6632daa76bc7f9ec18e713", size = 309071, upload-time = "2025-12-15T08:41:44.973Z" },
+]
+
+[[package]]
+name = "joserfc"
+version = "1.7.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cryptography" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/19/94/80fea1514b7c6d7d37804d3fe9ca81455f633347fc98731bd71ffe1faa17/joserfc-1.7.5.tar.gz", hash = "sha256:d5ff536e658e17664f8c1b1ab60dc4aa62aa973fcef1edd33cc44bda45d6f5ea", size = 234990, upload-time = "2026-08-29T13:05:42.057Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/67/c5/82addfd375e5ee6520644e0553e4aadde92d668c4fc99cc716d337fe7bb3/joserfc-1.7.5-py3-none-any.whl", hash = "sha256:add2c2c84e8373b084d526a8b53daba5d7a513a118cd2dcd9fc9f979d0922159", size = 71269, upload-time = "2026-08-29T13:05:40.718Z" },
 ]
 
 [[package]]
@@ -5750,6 +5775,7 @@ dependencies = [
     { name = "ag-ui-langgraph" },
     { name = "aiosqlite" },
     { name = "alembic" },
+    { name = "authlib" },
     { name = "beautifulsoup4" },
     { name = "ddgs" },
     { name = "docling" },
@@ -5805,6 +5831,7 @@ dependencies = [
 
 [package.dev-dependencies]
 client = [
+    { name = "authlib" },
     { name = "httpx" },
     { name = "pydantic" },
     { name = "python-dotenv" },
@@ -5827,6 +5854,7 @@ requires-dist = [
     { name = "ag-ui-langgraph", specifier = "~=0.0.42" },
     { name = "aiosqlite", specifier = ">=0.22.1" },
     { name = "alembic", specifier = "~=1.16" },
+    { name = "authlib", specifier = ">=1.3.2,<2" },
     { name = "beautifulsoup4", specifier = ">=4.13,<5" },
     { name = "ddgs", specifier = ">=9.14.4" },
     { name = "docling", specifier = ">=2.60,<3" },
@@ -5882,6 +5910,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 client = [
+    { name = "authlib", specifier = ">=1.3.2,<2" },
     { name = "httpx", specifier = "~=0.28.1" },
     { name = "pydantic", specifier = "~=2.13.4" },
     { name = "python-dotenv", specifier = "~=1.2.2" },

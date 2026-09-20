@@ -12,12 +12,30 @@ from pydantic import BaseModel, Field
 from core import settings
 
 
+def _integer_claim_set(claims: dict[str, Any], name: str) -> set[int]:
+    raw = claims.get(name, [])
+    if isinstance(raw, str):
+        raw = [raw]
+    if not isinstance(raw, list):
+        raise ValueError(f"OIDC claim {name!r} must be a list of non-negative integers")
+    values: set[int] = set()
+    for value in raw:
+        if isinstance(value, bool) or not (
+            (isinstance(value, int) and value >= 0)
+            or (isinstance(value, str) and value.isdecimal())
+        ):
+            raise ValueError(f"OIDC claim {name!r} must be a list of non-negative integers")
+        values.add(int(value))
+    return values
+
+
 class TenantContext(BaseModel):
     tenant_id: UUID
     user_id: str
     username: str
     roles: set[str] = Field(default_factory=set)
     allowed_glpi_entity_ids: set[int] = Field(default_factory=set)
+    allowed_glpi_group_ids: set[int] = Field(default_factory=set)
 
     def require_role(self, role: str) -> None:
         if role not in self.roles:
@@ -79,16 +97,20 @@ class OIDCVerifier:
             issuer=issuer,
             options={"require": ["exp", "iat", "iss", "sub", "tenant_id"]},
         )
-        entity_claim = claims.get("glpi_entity_ids", [])
-        if isinstance(entity_claim, str):
-            entity_claim = [entity_claim]
-        roles = set(claims.get("realm_access", {}).get("roles", []))
+        realm_access = claims.get("realm_access", {})
+        if not isinstance(realm_access, dict):
+            raise ValueError("OIDC realm_access claim must be an object")
+        raw_roles = realm_access.get("roles", [])
+        if not isinstance(raw_roles, list) or any(not isinstance(role, str) for role in raw_roles):
+            raise ValueError("OIDC roles claim must be a list of strings")
+        roles = set(raw_roles)
         return TenantContext(
             tenant_id=UUID(str(claims["tenant_id"])),
             user_id=str(claims["sub"]),
             username=str(claims.get("preferred_username", claims["sub"])),
             roles=roles,
-            allowed_glpi_entity_ids={int(value) for value in entity_claim},
+            allowed_glpi_entity_ids=_integer_claim_set(claims, "glpi_entity_ids"),
+            allowed_glpi_group_ids=_integer_claim_set(claims, "glpi_group_ids"),
         )
 
 
@@ -103,8 +125,10 @@ async def get_tenant_context(
     challenge = "Bearer"
     if request.url.path.startswith("/v1/servicemind/mcp"):
         configured = settings.SERVICEMIND_MCP_PUBLIC_URL
-        resource = configured.rstrip("/") if configured else (
-            f"{str(request.base_url).rstrip('/')}/v1/servicemind/mcp"
+        resource = (
+            configured.rstrip("/")
+            if configured
+            else (f"{str(request.base_url).rstrip('/')}/v1/servicemind/mcp")
         )
         metadata = (
             f"{resource.split('/v1/servicemind/mcp', 1)[0]}"

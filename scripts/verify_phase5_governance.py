@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import sys
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select, text
@@ -14,9 +16,15 @@ from servicemind.context.builder import ContextBuilder
 from servicemind.context.contracts import ContextAgent, ContextItem, ContextSource, TrustLabel
 from servicemind.context.repository import PostgresContextArtifactSink
 from servicemind.memory.contracts import (
+    CROSS_TICKET_PROCEDURE_POLICY,
+    POST_RUN_MEMORY_WRITER,
+    POST_RUN_PROCEDURAL_WRITER,
+    POST_RUN_TENANT_EPISODE_POLICY,
     MemoryCandidate,
     MemoryEvidenceRef,
+    MemoryPatternQuery,
     MemoryQuery,
+    MemoryReviewQuery,
     MemoryScope,
     MemoryStatus,
     MemoryType,
@@ -98,6 +106,12 @@ async def main() -> None:
         goal="Phase 5 tenant isolation verification",
         request_write=False,
     )
+    second_acme_run = await ServiceMindRepository(ACME).create_run(
+        user_id="phase5-live-verifier",
+        ticket_id=2,
+        goal="Phase 5 procedural review verification",
+        request_write=False,
+    )
     subject = f"concurrency-{uuid4()}"
     acme_repository = PostgresMemoryRepository(ACME)
     writer = MemoryWriter(acme_repository)
@@ -125,6 +139,120 @@ async def main() -> None:
         pass
     else:
         raise AssertionError("repository accepted a cross-tenant memory query")
+
+    pattern_key = hashlib.sha256(f"phase5-live:{uuid4()}".encode()).hexdigest()
+    episode_records = []
+    for ticket_id, source_run in ((1, run), (2, second_acme_run)):
+        episode = await writer.write(
+            MemoryCandidate(
+                tenant_id=ACME,
+                scope=MemoryScope(),
+                memory_type=MemoryType.EPISODIC,
+                subject_key=f"phase5-live-ticket-{ticket_id}-{pattern_key}",
+                content=f"Verified cross-ticket procedural support {ticket_id} for {pattern_key}",
+                source_run_id=source_run.id,
+                source_trace_id=f"phase5-live-procedure-{ticket_id}",
+                evidence_refs=(
+                    MemoryEvidenceRef(
+                        evidence_id=f"phase5-live-procedure-{pattern_key}-{ticket_id}",
+                        source_ref=f"acceptance://procedure/{ticket_id}",
+                        content_hash=hashlib.sha256(
+                            f"evidence:{pattern_key}:{ticket_id}".encode()
+                        ).hexdigest(),
+                        verified=True,
+                    ),
+                ),
+                final_state_verified=True,
+                confidence=0.99,
+                importance=0.8,
+                provenance={
+                    "post_run_scope": POST_RUN_TENANT_EPISODE_POLICY,
+                    "procedure_pattern_key": pattern_key,
+                    "source_ticket_id": ticket_id,
+                    "required_entity_ids": [1],
+                    "required_group_ids": [1],
+                },
+                created_by=POST_RUN_MEMORY_WRITER,
+            )
+        )
+        assert episode is not None and episode.status is MemoryStatus.ACTIVE
+        episode_records.append(episode)
+    support = await acme_repository.pattern_episodes(
+        MemoryPatternQuery(
+            tenant_id=ACME,
+            pattern_key=pattern_key,
+            entity_ids=frozenset({1}),
+            group_ids=frozenset({1}),
+        )
+    )
+    assert {record.memory_id for record in support} == {
+        record.memory_id for record in episode_records
+    }
+    procedure = await writer.write(
+        MemoryCandidate(
+            tenant_id=ACME,
+            scope=MemoryScope(),
+            memory_type=MemoryType.PROCEDURAL,
+            subject_key=f"phase5-live-procedure-{pattern_key}",
+            content=f"Verify both independently reviewed incidents before applying {pattern_key}",
+            source_run_id=second_acme_run.id,
+            source_trace_id="phase5-live-procedural-review",
+            evidence_refs=tuple(
+                evidence for episode in episode_records for evidence in episode.evidence_refs
+            ),
+            supporting_episode_ids=tuple(record.memory_id for record in episode_records),
+            confidence=0.99,
+            importance=0.9,
+            provenance={
+                "derivation_policy": CROSS_TICKET_PROCEDURE_POLICY,
+                "procedure_pattern_key": pattern_key,
+                "source_ticket_ids": ["1", "2"],
+                "required_entity_ids": [1],
+                "required_group_ids": [1],
+            },
+            created_by=POST_RUN_PROCEDURAL_WRITER,
+        )
+    )
+    assert procedure is not None and procedure.status is MemoryStatus.QUARANTINE
+    review_query = MemoryReviewQuery(
+        tenant_id=ACME,
+        reviewer_id="phase5-live-approver",
+        entity_ids=frozenset({1}),
+        group_ids=frozenset({1}),
+    )
+    assert procedure.memory_id in {
+        record.memory_id for record in await acme_repository.list_review_queue(review_query)
+    }
+    denied_review = review_query.model_copy(update={"group_ids": frozenset()})
+    assert await acme_repository.get_for_review(denied_review, procedure.memory_id) is None
+    try:
+        await acme_repository.transition(
+            procedure.memory_id,
+            MemoryStatus.ACTIVE,
+            actor_id="phase5-live-approver",
+            reason="HUMAN_REVIEW_ACTIVATE",
+            human_review_ref=f"acceptance://review/{pattern_key}",
+            review_comment="Live exact-snapshot rejection probe.",
+            expected_version=procedure.version,
+            expected_content_hash="0" * 64,
+            expected_status=MemoryStatus.QUARANTINE,
+        )
+    except ValueError as exc:
+        assert "content changed" in str(exc)
+    else:
+        raise AssertionError("stale memory review snapshot unexpectedly activated")
+    activated_procedure = await acme_repository.transition(
+        procedure.memory_id,
+        MemoryStatus.ACTIVE,
+        actor_id="phase5-live-approver",
+        reason="HUMAN_REVIEW_ACTIVATE",
+        human_review_ref=f"acceptance://review/{pattern_key}",
+        review_comment="Live procedure sources and ACL verified.",
+        expected_version=procedure.version,
+        expected_content_hash=procedure.content_hash,
+        expected_status=MemoryStatus.QUARANTINE,
+    )
+    assert activated_procedure.status is MemoryStatus.ACTIVE
 
     if not settings.SERVICEMIND_EMBEDDING_URL:
         raise RuntimeError("SERVICEMIND_EMBEDDING_URL is required for Phase 5 acceptance")
@@ -165,6 +293,56 @@ async def main() -> None:
         )
     )
     assert relevant is not None and vector_results[0].memory.memory_id == relevant.memory_id
+
+    # A procedure's own 180-day TTL must not let it outlive the 90-day episodes
+    # that authorized it. Force both support windows to lapse, then prove that a
+    # normal serving read expires the episodes, revokes the procedure, and emits
+    # the append-only automatic decision event.
+    async with tenant_session(ACME) as session:
+        support_rows = list(
+            (
+                await session.execute(
+                    select(MemoryRecordRow)
+                    .where(MemoryRecordRow.id.in_([record.memory_id for record in episode_records]))
+                    .with_for_update()
+                )
+            ).scalars()
+        )
+        lapsed_at = datetime.now(UTC) - timedelta(seconds=1)
+        for row in support_rows:
+            row.expires_at = lapsed_at
+    after_support_expiry = await acme_repository.candidates(
+        MemoryQuery(
+            tenant_id=ACME,
+            text=activated_procedure.content,
+            user_id="phase5-live-verifier",
+            entity_ids=frozenset({1}),
+            group_ids=frozenset({1}),
+        )
+    )
+    assert activated_procedure.memory_id not in {
+        record.memory_id for record in after_support_expiry
+    }
+    async with tenant_session(ACME) as session:
+        revoked_procedure = (
+            await session.execute(
+                select(MemoryRecordRow).where(MemoryRecordRow.id == activated_procedure.memory_id)
+            )
+        ).scalar_one()
+        invalidation_events = list(
+            (
+                await session.execute(
+                    select(MemoryEventRecord).where(
+                        MemoryEventRecord.memory_id == activated_procedure.memory_id,
+                        MemoryEventRecord.event_type == "memory.revoked",
+                    )
+                )
+            ).scalars()
+        )
+    assert revoked_procedure.status == MemoryStatus.REVOKED.value
+    assert [event.reason_codes for event in invalidation_events] == [
+        ["PROCEDURAL_SUPPORT_INVALIDATED"]
+    ]
 
     context = ContextBuilder().build(
         tenant_id=ACME,
@@ -240,7 +418,9 @@ async def main() -> None:
                         ]
                     },
                 )
-            ).tuples().all()
+            )
+            .tuples()
+            .all()
         )
         zero_context_count = (
             await session.execute(select(func.count()).select_from(MemoryRecordRow))
@@ -349,7 +529,8 @@ async def main() -> None:
     print(
         "PASS phase5 database: migration head, forced RLS, zero-context denial, "
         "tenant isolation, concurrent idempotency, BGE-M3 vector ranking, and "
-        "append-only governance audit"
+        "ACL-scoped procedural review, exact-snapshot concurrency control, and "
+        "support-lifetime revocation, and append-only governance audit"
     )
     await close_database()
 

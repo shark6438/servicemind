@@ -63,6 +63,17 @@ def check_str_is_http(x: str) -> str:
     return str(http_url_adapter.validate_python(x))
 
 
+#: Headroom the context envelope reserves for the system prompt and the model's own
+#: output. This MUST equal ``servicemind.context.contracts.DEFAULT_SYSTEM_RESERVE`` /
+#: ``DEFAULT_OUTPUT_RESERVE``, which is where the builder reads them. The copy exists
+#: because ``core`` is the scaffold layer and may not import the product layer; the
+#: cost of the copy is that drift would keep validating a cap against a stale envelope
+#: and only raise at request time, on a live analysis run -- so
+#: ``test_the_startup_cap_bound_is_the_same_number_the_builder_enforces`` pins the two.
+CONTEXT_SYSTEM_RESERVE = 256
+CONTEXT_OUTPUT_RESERVE = 1024
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=find_dotenv(),
@@ -206,8 +217,18 @@ class Settings(BaseSettings):
     SERVICEMIND_MEMORY_AUTO_ACTIVATION_CONFIDENCE: float = 0.9
     SERVICEMIND_MEMORY_VECTOR_ENABLED: bool = False
     SERVICEMIND_MEMORY_CANDIDATE_CEILING: int = Field(default=100, ge=1, le=500)
+    #: Automatically propose (never auto-activate) a procedure after the same
+    #: normalized recommendation is verified on at least two distinct tickets.
+    SERVICEMIND_MEMORY_PROCEDURAL_PROPOSALS_ENABLED: bool = False
     SERVICEMIND_CONTEXT_ENABLED: bool = False
     SERVICEMIND_CONTEXT_MAX_INPUT_TOKENS: int = 12_000
+    #: Ceiling on how many tokens the EVIDENCE channel may claim in one envelope.
+    #: Evidence is bulk and sorts above memory (authority 0.95 vs 0.7), so with no cap
+    #: a knowledge-saturated run leaves the memory channel whatever is left over -- at
+    #: the shipped defaults that measured 238 tokens out of 10720, which is less than a
+    #: single realistic runbook and therefore silently drops governed procedures the
+    #: reviewer had already approved. ``None`` keeps the historical uncapped behaviour.
+    SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP: int | None = Field(default=None, ge=256, le=1_000_000)
     SERVICEMIND_SKILLS_ENABLED: bool = False
     SERVICEMIND_SKILLS_DIR: str = "skills"
     SERVICEMIND_MODEL_GATEWAY_AUDIT_ENABLED: bool = False
@@ -287,6 +308,17 @@ class Settings(BaseSettings):
     )
 
     def model_post_init(self, __context: Any) -> None:
+        evidence_cap = self.SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP
+        usable_context = (
+            self.SERVICEMIND_CONTEXT_MAX_INPUT_TOKENS
+            - CONTEXT_SYSTEM_RESERVE
+            - CONTEXT_OUTPUT_RESERVE
+        )
+        if evidence_cap is not None and evidence_cap > usable_context // 2:
+            raise ValueError(
+                "SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP must not exceed half "
+                "the usable context budget"
+            )
         api_keys = {
             Provider.OPENAI: self.OPENAI_API_KEY,
             Provider.OPENAI_COMPATIBLE: self.COMPATIBLE_BASE_URL and self.COMPATIBLE_MODEL,

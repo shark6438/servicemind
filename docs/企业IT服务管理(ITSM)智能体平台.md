@@ -317,9 +317,20 @@ Run completed
 
 固定权威关系为 `Memory < Skill < Policy`。Procedural 永不自动激活；从 quarantine
 转为 active 必须有人审引用、重新执行 secret/PII/injection/evidence/TTL 检查，并验证至少
-两个来自不同成功 Run 且当前仍 active 的 Episodic 证据。撤销 Episode 时必须传递撤销依赖它的
-Procedural Memory。所有读取在向量计算后再次用 PostgreSQL 权威状态、scope、entity、group、TTL
-和 taint 重校验，关闭异步检索期间的撤销/权限竞态。
+两个来自不同成功 Run、**不同工单**且当前仍 active 的 Episodic 证据。生产候选只在
+`recurring_incident=true` 且同一规范化 problem/change 建议跨工单重复时生成；模式键不包含
+工单号、自由推理、工具参数或资源 ID。撤销或过期 Episode 时必须在服务前撤销依赖它的
+Procedural Memory，并写入 `PROCEDURAL_SUPPORT_INVALIDATED` 审计事件。激活、候选读取和最终
+重校验复用同一支撑判定，Procedure 自身较长的 TTL 不能覆盖其论证证据已经失效的事实。所有读取
+在向量计算后再次用 PostgreSQL 权威状态、scope、entity、group、TTL 和 taint 重校验，关闭异步
+检索期间的撤销/权限竞态。
+
+人工复核面必须提供 tenant/entity/group ACL 过滤的 quarantine 队列，复核人必须持有
+`approver` 角色及 OIDC `glpi_group_ids` 授权。激活/拒绝决定在仓储锁内绑定
+`expected_version + expected_content_hash + expected_status`，防止陈旧页面或并发相反决定覆盖
+先完成的审核；每次决定写 append-only 审计事件。缺少组声明时按空权限失败关闭。
+现有 Streamlit 控制台必须提供 Keycloak OIDC 保护的 **Memory Review** 页面；页面只能调用上述
+API，不复制或放宽后端授权，并使用加载时的版本、内容摘要和状态提交原子决定。
 
 ## 5.3 Context Builder
 
@@ -385,6 +396,9 @@ skills/
 - 高风险任务强模型、简单路由小模型；
 - prompt/template version；
 - semantic cache 必须包含 tenant、role、policy version。
+
+调用前/失败路径的 token 估算必须完全离线并采用保守上界，不得在请求热路径下载 tokenizer；
+成功调用以供应商 usage 为权威，审计明确区分 `provider` 与 `estimated` 来源。
 
 验收不能只看模型能否回答，应比较质量、延迟和成本。
 
@@ -538,8 +552,12 @@ MCP 官方 conformance alpha 对产品实际支持面执行：`tools-list` 2/2�
 
 RAG 活跃索引已重建为 schema v3，39 文档、446 父块、668 子块，删除对账 0/0；
 BGE-M3 与 Reranker 分配到两张 RTX 3090。100 候选重排 0.80 秒，实际端到端检索
-5.54 秒，顶部证据正确命中 `runbook://rb-vpn-mfa`。外部 TechQA silver 质量门禁仍未全部通过，
-因此继续保留 `QUALITY_EXCEPTION_ACCEPTED`，不虚报为已获业务质量认证。
+5.54 秒，顶部证据正确命中 `runbook://rb-vpn-mfa`。外部 TechQA silver 的四个点估计都低于
+租户参考阈值，但外部代理集无权裁定租户门禁；正式状态是 `BELOW_TARGET_DIAGNOSTIC`，
+§4.1 六项仍为 `NOT_EVALUATED`。因此继续保留 `DOMAIN_QUALITY_NOT_CERTIFIED /
+QUALITY_EXCEPTION_ACCEPTED`，不虚报为已获业务质量认证。`answerable_answer_rate=0.275`
+是检索 top-score 阈值代理而非 Reviewer 端到端作答率，完整机器口径见
+`evaluation/reports/rag_quality_status_latest.{json,md}`。
 
 ------
 

@@ -39,6 +39,14 @@ The repo is a derivative of the 🧰 [AI Agent Service Toolkit](https://github.c
   packer under a token budget, so rollout never needs a schema downgrade.
 - **Model gateway governance (Phase 5)** — provider/model allowlists (global and per-tenant),
   per-call audit persistence, retry/timeout/cost ceilings, and a semantic cache.
+- **Governed tool platform (Phase 6)** — a single Tool Gateway in front of every tool call:
+  a frozen registry with Draft 2020-12 contracts, RBAC/ABAC/capability intersection, taint
+  and injection checks, fail-closed OPA policy behind a mandatory local layer, approval
+  binding, and append-only audit that stores policy/tool/schema versions and payload hashes
+  rather than credentials or content. MCP (`2026-07-28`) is an exposure boundary over that
+  same gateway, not a second permission system; rate limiting, bulkhead, circuit breaking,
+  idempotency and durable tasks run on Redis + PostgreSQL, with PostgreSQL the only
+  authoritative store.
 - **Skills** — versioned skills (`skills/`) the agents can be equipped with for change
   risk, incident triage, major incidents, recurring problems, and VPN/MFA recovery.
 
@@ -64,9 +72,9 @@ src/
 ├── voice/              # STT/TTS providers for the chat UI
 ├── streamlit_app.py    # ServiceMind Console (chat UI)
 └── run_service.py      # Entry point: uvicorn "service:app"
-migrations/             # Alembic migrations 0001–0010 (product schema, Postgres)
+migrations/             # Alembic migrations 0001–0013 (product schema, Postgres)
 deploy/glpi/            # Local GLPI + MariaDB + Postgres + Keycloak + OpenSearch +
-                        #   Neo4j + TEI embedding/reranker stack (docker compose)
+                        #   Neo4j + TEI embedding/reranker + Redis + OPA stack (compose)
 evaluation/             # Gold sets, retrieval/route/acceptance eval harness + reports
 skills/                 # Versioned skills the agents can be equipped with
 docker/                 # Dockerfiles (service / app), add-on compose files
@@ -119,7 +127,9 @@ docker compose watch        # or: docker compose up --build
 ### B. Enterprise GLPI stack (recommended for ITSM features)
 
 The ServiceMind API needs Postgres 16, and full incident workflows need GLPI + Keycloak +
-OpenSearch + Neo4j + TEI. `deploy/glpi/compose.yaml` provisions the whole local stack;
+OpenSearch + Neo4j + TEI. The Phase 6 tool platform additionally needs Redis (rate limiting,
+bulkhead, circuit-breaker and task state) and optionally OPA for external policy decisions.
+`deploy/glpi/compose.yaml` provisions the whole local stack;
 see [deploy/glpi/README.md](deploy/glpi/README.md) for commands and ports.
 
 ### C. Manual run without Docker
@@ -174,6 +184,8 @@ target environment.
 | `GET /v1/servicemind/runs/{id}` | Run state + pending action intent |
 | `POST /v1/servicemind/runs/{id}/approval` | Approve/reject a write action (role `approver`) |
 | `POST /v1/servicemind/runs/{id}/review-resolution` | Resolve a review escalation |
+| `GET /v1/servicemind/memories/review-queue` | List/filter ACL-scoped quarantined memories (`approver`) |
+| `POST /v1/servicemind/memories/{id}/review` | Activate/reject an exact memory snapshot (`approver`) |
 | `POST /v1/servicemind/runs/{id}:cancel` | Cancel a pending/awaiting run |
 | `GET /v1/servicemind/runs/{id}/events` | SSE stream of run events |
 | `POST /v1/servicemind/webhooks/glpi` | Ingest a signed GLPI webhook (idempotent) |
@@ -201,7 +213,9 @@ linting, and a docker-based integration job. For per-commit authoring convention
 - Enterprise spec (Chinese): [`docs/企业IT服务管理(ITSM)智能体平台.md`](docs/企业IT服务管理(ITSM)智能体平台.md)
 - Architecture map: [`docs/PHASE3_CURRENT_ARCHITECTURE_MAP.md`](docs/PHASE3_CURRENT_ARCHITECTURE_MAP.md)
 - Phase 4 RAG technical baseline: [`docs/PHASE4_RAG_TECHNICAL_BASELINE.md`](docs/PHASE4_RAG_TECHNICAL_BASELINE.md)
+- Phase 4 RAG quality root cause: [`docs/PHASE4_RAG_QUALITY_ROOT_CAUSE_2026-09-15.md`](docs/PHASE4_RAG_QUALITY_ROOT_CAUSE_2026-09-15.md)
 - Phase 5 architecture & acceptance: [`docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md`](docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md)
+- Phase 5 memory quality evaluation: [`docs/PHASE5_MEMORY_QUALITY_EVALUATION.md`](docs/PHASE5_MEMORY_QUALITY_EVALUATION.md)
 - Phase acceptance reports: `docs/PHASE*_ACCEPTANCE.md`, plus live reports under
   `evaluation/reports/`
 - Local deployment notes: [`LOCAL_DEPLOYMENT.md`](LOCAL_DEPLOYMENT.md)

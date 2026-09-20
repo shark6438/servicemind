@@ -1,0 +1,43 @@
+{
+  "answerable": 280,
+  "unanswerable": 120,
+  "pools": {
+    "two_way": {
+      "depth": 100,
+      "coverage": 0.8714,
+      "production_bge_reranker_v2_m3": {
+        "recall@5": 0.6821,
+        "recall@10": 0.7357,
+        "recall@20": 0.7786,
+        "mrr@10": 0.5614,
+        "ndcg@10": 0.6036
+      },
+      "challenger": "mixedbread-ai/mxbai-rerank-large-v1",
+      "challenger_metrics": {
+        "recall@5": 0.6571,
+        "recall@10": 0.6964,
+        "recall@20": 0.7679,
+        "mrr@10": 0.5059,
+        "ndcg@10": 0.552
+      },
+      "conditional_precision_at_10": {
+        "production": 0.8442,
+        "challenger": 0.7991
+      },
+      "paired_bootstrap_challenger_minus_production": {
+        "ndcg@10": {
+          "delta": -0.0517,
+          "ci95_low": -0.0863,
+          "ci95_high": -0.0177,
+          "ci95_lower_above_zero": false
+        },
+        "recall@10": {
+          "delta": -0.0393,
+          "ci95_low": -0.0821,
+          "ci95_high": 0.0036,
+          "ci95_lower_above_zero": false
+        }
+      }
+    }
+  }
+}

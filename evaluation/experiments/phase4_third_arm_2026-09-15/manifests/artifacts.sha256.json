@@ -1,0 +1,370 @@
+{
+  "schema": "servicemind-experiment-artifacts-v1",
+  "experiment": "phase4_third_arm_2026-09-15",
+  "source_directory": "/tmp/exp_layer1 (transient; archived here for change-control audit)",
+  "note": "sha256 of every input/output the document cites. Pool definitions are gzipped; the manifest carries the hash of the uncompressed bytes. `measure_passage_lengths.py`/passage_lengths.json were added after the initial archive to settle the character-vs-token question in §2.6. `prereg_power_analysis.py`/`prereg_power.json` were added to replace the single-metric power claim in the third-arm pre-registration with per-metric and joint power estimates; they run only on the already-analysed 280-query set and never touch the holdout.",
+  "artifacts": [
+    {
+      "path": "matrices/_ans_idx.npy",
+      "kind": "score_matrix",
+      "bytes": 2368,
+      "sha256": "c26ddd4b42fb501ef26718e692cc7c9eeda753677ac43958612e731ff82e4743",
+      "in_repo": true
+    },
+    {
+      "path": "matrices/gte_modernbert_three_way.npy",
+      "kind": "score_matrix",
+      "bytes": 160128,
+      "sha256": "bdef8aceb966bb89388a6f37348219c4aec6e8abfd9897c481b70a5e72a9f903",
+      "in_repo": true
+    },
+    {
+      "path": "matrices/gte_modernbert_two_way.npy",
+      "kind": "score_matrix",
+      "bytes": 160128,
+      "sha256": "071e4ba67e406eddd23ef5e162c1bef906fabd984f1003601815c77cde4778db",
+      "in_repo": true
+    },
+    {
+      "path": "matrices/mxbai_rerank.npy",
+      "kind": "score_matrix",
+      "bytes": 160128,
+      "sha256": "2bff0fa2dc84fd4d6dc01bf4333e912e7542831e45e8b3dc8c846d22ff53896d",
+      "in_repo": true
+    },
+    {
+      "path": "matrices/rerank_tei_3way.npy",
+      "kind": "score_matrix",
+      "bytes": 160128,
+      "sha256": "378e883b30a237156a7d0d3b1d60cd6898017b0268400d7d3ca8fdc30a26e9cd",
+      "in_repo": true
+    },
+    {
+      "path": "matrices/rerank_tei_true3.npy",
+      "kind": "score_matrix",
+      "bytes": 160128,
+      "sha256": "aa97d329104e31caeaedf4de0a13027136c8b84663488c02f0a86f1f4c13ebbc",
+      "in_repo": true
+    },
+    {
+      "path": "matrices/rerank_tei_v1.npy",
+      "kind": "score_matrix",
+      "bytes": 160128,
+      "sha256": "0faa08cff47a6fc4116d7a1f99a0fedbaa71e7f6e7a898b76a22a8f3d9c46cb9",
+      "in_repo": true
+    },
+    {
+      "path": "matrices/truncation_probe_window512.npy",
+      "kind": "score_matrix",
+      "bytes": 53972,
+      "sha256": "fb3d6a6953f87a9ef82ef0a950b46737f1a9e8db54cca824e508529a806d03a5",
+      "in_repo": true
+    },
+    {
+      "path": "matrices/truncation_probe_window8192.npy",
+      "kind": "score_matrix",
+      "bytes": 53972,
+      "sha256": "d5cfe8020b39b51e78b19a6d667c2d814e34b6e2438f15e016edaed75ed59205",
+      "in_repo": true
+    },
+    {
+      "path": "pools/funnel_v1.json.gz",
+      "kind": "pool_definition",
+      "uncompressed_bytes": 2458155,
+      "uncompressed_sha256": "1008db0e4fd56654a13a502d278161523bc2564d0228c398c340b08e836b87db",
+      "gz_bytes": 521576,
+      "in_repo": true
+    },
+    {
+      "path": "pools/gte_modernbert_three_way.json.gz",
+      "kind": "pool_definition",
+      "uncompressed_bytes": 761703,
+      "uncompressed_sha256": "1ab76157f7bddbcdbe380aacc97c2cb3d66afe0ffc288bd09fcb5579abf38b16",
+      "gz_bytes": 156706,
+      "in_repo": true
+    },
+    {
+      "path": "pools/gte_modernbert_two_way.json.gz",
+      "kind": "pool_definition",
+      "uncompressed_bytes": 761907,
+      "uncompressed_sha256": "f9cd099c588cde5853157980a7703a42799a6d172e79fe54d72cd83133b001d4",
+      "gz_bytes": 156471,
+      "in_repo": true
+    },
+    {
+      "path": "pools/mxbai_rerank_docs.json.gz",
+      "kind": "pool_definition",
+      "uncompressed_bytes": 761907,
+      "uncompressed_sha256": "f9cd099c588cde5853157980a7703a42799a6d172e79fe54d72cd83133b001d4",
+      "gz_bytes": 156466,
+      "in_repo": true
+    },
+    {
+      "path": "pools/qwen3_dense_top100.json.gz",
+      "kind": "pool_definition",
+      "uncompressed_bytes": 761494,
+      "uncompressed_sha256": "a0dbac1e1bb63a0e3ebe134a1d8d5cfe1ce87cb9b9a1dacf53dfec0de4e1c08b",
+      "gz_bytes": 155991,
+      "in_repo": true
+    },
+    {
+      "path": "pools/rerank_tei_3way.json.gz",
+      "kind": "pool_definition",
+      "uncompressed_bytes": 761714,
+      "uncompressed_sha256": "61de64783ba943bf1cc03d4c5ec3f0fc36fdaa98df45ac8f83129751e4e5be8f",
+      "gz_bytes": 156722,
+      "in_repo": true
+    },
+    {
+      "path": "pools/rerank_tei_true3.json.gz",
+      "kind": "pool_definition",
+      "uncompressed_bytes": 761755,
+      "uncompressed_sha256": "206d5be4a994de642acaa37b499bbb193f1ce725d5c1c1f1a2d26c362ed93664",
+      "gz_bytes": 156756,
+      "in_repo": true
+    },
+    {
+      "path": "pools/rerank_tei_v1.json.gz",
+      "kind": "pool_definition",
+      "uncompressed_bytes": 761918,
+      "uncompressed_sha256": "91930d001d73b61dee40b4a81d43c0678cf01e31d974d42d82f8408bbe832147",
+      "gz_bytes": 156486,
+      "in_repo": true
+    },
+    {
+      "path": "pools/rrf3_top100.json.gz",
+      "kind": "pool_definition",
+      "uncompressed_bytes": 761703,
+      "uncompressed_sha256": "1ab76157f7bddbcdbe380aacc97c2cb3d66afe0ffc288bd09fcb5579abf38b16",
+      "gz_bytes": 156693,
+      "in_repo": true
+    },
+    {
+      "path": "pools/rrf3_true_top100.json.gz",
+      "kind": "pool_definition",
+      "uncompressed_bytes": 761745,
+      "uncompressed_sha256": "27be9ba15f051752962e8212567a2c0908f9f246525a3862133da7caacd194d5",
+      "gz_bytes": 156736,
+      "in_repo": true
+    },
+    {
+      "path": "qwen3_passages.npy",
+      "kind": "embedding_matrix",
+      "bytes": 394416256,
+      "sha256": "f5491a3392a15f9e751d6c1b5c26428aafdff69f86fd2b0e794a493e49d8d3fe",
+      "in_repo": false,
+      "reason": "385 MB float32 embedding matrix; regenerable from the pinned Qwen3-Embedding-0.6B revision recorded in run_layer2a.py",
+      "regenerate": "uv run python scripts/experiments/... (see README) `run_layer2a.py`"
+    },
+    {
+      "path": "reports/layer1_report.json",
+      "kind": "report",
+      "bytes": 4138,
+      "sha256": "c72ef506f716746313d44d52aaf1d04d6915b633b703c3759f4ab45fd8070e8d",
+      "in_repo": true
+    },
+    {
+      "path": "reports/layer2_consolidated.json",
+      "kind": "report",
+      "bytes": 950,
+      "sha256": "d34a0985d4ba248a2539cb952451157693c47a03a6886e77ef420a5d39df26cf",
+      "in_repo": true
+    },
+    {
+      "path": "reports/layer2_decision.json",
+      "kind": "report",
+      "bytes": 2407,
+      "sha256": "de7c76add2485bf16d31e407e1d357c2f34d0ca33d71a960dab8edabc5a87db2",
+      "in_repo": true
+    },
+    {
+      "path": "reports/layer2_grid.json",
+      "kind": "report",
+      "bytes": 705,
+      "sha256": "272dc7b20ceaff852869f73a8447db4a076ebad11dac702e03573d0025e084b6",
+      "in_repo": true
+    },
+    {
+      "path": "reports/layer2a_report.json",
+      "kind": "report",
+      "bytes": 348,
+      "sha256": "44953219b441f9599d9a2758c53f4669fcc7f0ad89e72a1031f26a1c16dd4561",
+      "in_repo": true
+    },
+    {
+      "path": "reports/layer2b_report.json",
+      "kind": "report",
+      "bytes": 3204,
+      "sha256": "8cdf2cfb6603f6d3e5d944cd86892e3648bb678bfae752b71cc8a6a3942e2961",
+      "in_repo": true
+    },
+    {
+      "path": "reports/layer2d_report.json",
+      "kind": "report",
+      "bytes": 2548,
+      "sha256": "7b599d4a2b166142bf996c84fe0c059b43de62a4d9457d8631f1e5355b15c37c",
+      "in_repo": true
+    },
+    {
+      "path": "reports/passage_lengths.json",
+      "kind": "report",
+      "bytes": 857,
+      "sha256": "7a498ad6d8b1b3e019a06ff60192af8208b15c501014e4bd8db6ead6be733145",
+      "in_repo": true
+    },
+    {
+      "path": "reports/path_compare.json",
+      "kind": "report",
+      "bytes": 1028,
+      "sha256": "be4923138d96f353fbf569472aa3c894a683a60501f320d44a92b0f7e6a89a91",
+      "in_repo": true
+    },
+    {
+      "path": "reports/prereg_power.json",
+      "kind": "report",
+      "bytes": 1853,
+      "sha256": "53001f1df89af2c361cc3f23b6e5bffbd1cf0f5ba67841595365ecc305fb840f",
+      "in_repo": true
+    },
+    {
+      "path": "reports/reconcile_latest.json",
+      "kind": "report",
+      "bytes": 709,
+      "sha256": "35948b10c7317509a65b418c008739f55384abe579bd25902ff9841a38b20733",
+      "in_repo": true
+    },
+    {
+      "path": "reports/reranker_ab.json",
+      "kind": "report",
+      "bytes": 1056,
+      "sha256": "e7d3b5cf938d329153e01533aa3cfd7aabcf382c047b6657e876584560711de6",
+      "in_repo": true
+    },
+    {
+      "path": "reports/rrf3_true_vs_nested.json",
+      "kind": "report",
+      "bytes": 127,
+      "sha256": "14eee8930084e03354c863432502fb535f9ac1dd774a8da2faf9adb1e56eee28",
+      "in_repo": true
+    },
+    {
+      "path": "reports/scoring_path_diagnosis.json",
+      "kind": "report",
+      "bytes": 415,
+      "sha256": "c23037f157710facb7597f09888b9d98f8d47261ee9837fc32e794ef27ca4a48",
+      "in_repo": true
+    },
+    {
+      "path": "reports/truncation_probe.json",
+      "kind": "report",
+      "bytes": 600,
+      "sha256": "5804959e337d4c62c13d54ca9909e57fde14aa921dcfaea0ab98f7b233bfef5b",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/compare_paths_at_production_window.py",
+      "kind": "script",
+      "bytes": 4173,
+      "sha256": "3613e4b917c324d9eb88123138483dea95257a83fc1264df43ad99a6bfacf4f4",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/diagnose_scoring_paths.py",
+      "kind": "script",
+      "bytes": 4410,
+      "sha256": "1760b401797a4bda24c0e79987f84a0383f8e9569a447aef3e697a7947df3a85",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/fix_blend100.py",
+      "kind": "script",
+      "bytes": 2783,
+      "sha256": "f31f8651a80384e5c45298c78cdc85904c95a083b2c363cc3dc56931c9fe9201",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/layer2_consolidate.py",
+      "kind": "script",
+      "bytes": 3276,
+      "sha256": "f3e56ae4aa8865f09ffe3a1653437592f4c516726f1f7febf95fff710a0bd2b1",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/measure_passage_lengths.py",
+      "kind": "script",
+      "bytes": 4332,
+      "sha256": "f9a5d7c163c6b7462f92f5b355591157c1e3b02ea02275e2589e79623337fb3c",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/peek_two_way.py",
+      "kind": "script",
+      "bytes": 2583,
+      "sha256": "d7619180596f83a6759615731cc17696575c5e8b898f7465df00cde24b124954",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/prereg_power_analysis.py",
+      "kind": "script",
+      "bytes": 6690,
+      "sha256": "9e4a4278d06bcb15491ddd193295d493ab509292bcb3ae38224286300ec7f91e",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/probe_truncation.py",
+      "kind": "script",
+      "bytes": 6192,
+      "sha256": "789ef25bd8cf07691ba3a70cea7aa1b796745f22c6dc0100a89d021f8645eb99",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/reconcile_v14.py",
+      "kind": "script",
+      "bytes": 5173,
+      "sha256": "799306b8270eab71bf7d7d7771c7bd64f14c0e22de0d003cdb7af2e2aff8c55b",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/reranker_ab.py",
+      "kind": "script",
+      "bytes": 5391,
+      "sha256": "f03eb87afb6ce695a6fb25dd00700f3c54c3ae4b67efcdedd779f06138aa09c8",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/run_layer1.py",
+      "kind": "script",
+      "bytes": 13309,
+      "sha256": "7a238ce95de9d6e36b86ebd94b5e71c71b550f2a20ca1c4f785793ba00bf4462",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/run_layer2a.py",
+      "kind": "script",
+      "bytes": 5810,
+      "sha256": "5b07887e4ca1b61640a2ee64aff07a7dc072ceadbbf443274c365fa92335e476",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/run_layer2b.py",
+      "kind": "script",
+      "bytes": 9060,
+      "sha256": "c6a4916acc7e3f32270453bbcc5667a3d7ac8382d52577ec3500b439c2549b39",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/run_layer2c.py",
+      "kind": "script",
+      "bytes": 8678,
+      "sha256": "f9e4a3520d9541d20cd6bea8692406cdb4a2d0a60b00e7036e8bdca31a1b9396",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/run_layer2d.py",
+      "kind": "script",
+      "bytes": 9884,
+      "sha256": "d730ac32bb738a662b36728d93806714a971ef19dec96d94700b120b8064774b",
+      "in_repo": true
+    }
+  ]
+}

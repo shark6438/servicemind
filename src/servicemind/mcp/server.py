@@ -387,7 +387,9 @@ async def _tool_call(request: JsonRpcRequest, context, mcp_name: str | None) -> 
             entity_ids=frozenset(context.allowed_glpi_entity_ids),
         )
     }
-    capabilities = visible | ({"glpi.read_resource"} if request.method == "resources/read" else set())
+    capabilities = visible | (
+        {"glpi.read_resource"} if request.method == "resources/read" else set()
+    )
     if tool_name == "glpi.submit_action_intent" and (
         raw_execution is None or not _supports_governed_execution(meta)
     ):

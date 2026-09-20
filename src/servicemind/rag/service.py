@@ -405,9 +405,7 @@ class EnterpriseRAG:
 
             def final_score(hit: RetrievalHit) -> float:
                 retrieval_score = (
-                    (hit.score - retrieval_low) / retrieval_span
-                    if retrieval_span > 1e-12
-                    else 0.5
+                    (hit.score - retrieval_low) / retrieval_span if retrieval_span > 1e-12 else 0.5
                 )
                 assert hit.rerank_score is not None
                 return rerank_weight * hit.rerank_score + (1 - rerank_weight) * retrieval_score

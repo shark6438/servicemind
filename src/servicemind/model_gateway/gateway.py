@@ -5,11 +5,9 @@ import time
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
-from functools import cached_property
 from typing import Any
 from uuid import UUID
 
-import tiktoken
 from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel
 
@@ -113,6 +111,17 @@ def _retryable(error: BaseException) -> bool:
     )
 
 
+def _conservative_token_count(value: object) -> int:
+    """Return a deterministic offline upper bound for BPE-family token counts.
+
+    Provider usage replaces this estimate after a successful call. Counting UTF-8
+    bytes is intentionally conservative for pre-provider/cache/failure accounting:
+    it cannot silently understate a byte-level BPE token count, needs no model file,
+    and never turns a cold process start into an unbounded network download.
+    """
+    return len(str(value).encode("utf-8"))
+
+
 class ModelCostBudgetExceeded(RuntimeError):
     pass
 
@@ -143,13 +152,6 @@ class ModelGateway:
         self._failures: dict[str, int] = {}
         self._open_until: dict[str, float] = {}
 
-    @cached_property
-    def _encoding(self) -> tiktoken.Encoding:
-        # tiktoken downloads the cl100k_base BPE file on first use and caches
-        # it; keep that out of __init__ so constructing the gateway (and thus
-        # importing this module) never blocks on the network.
-        return tiktoken.get_encoding("cl100k_base")
-
     def structured[SchemaT: BaseModel](
         self,
         model: BaseChatModel,
@@ -174,7 +176,7 @@ class ModelGateway:
         payload = _message_payload(messages)
         prompt_hash = stable_hash(payload)
         schema_hash = stable_hash(schema.model_json_schema())
-        input_tokens = len(self._encoding.encode(str(payload)))
+        input_tokens = _conservative_token_count(payload)
         models = [model]
         if self.policy.allow_fallback(context):
             models.extend(fallback_models)
@@ -330,7 +332,7 @@ class ModelGateway:
         provider_usage: dict[str, int] | None = None,
     ) -> bool:
         estimated_output = (
-            len(self._encoding.encode(result.model_dump_json())) if result is not None else 0
+            _conservative_token_count(result.model_dump_json()) if result is not None else 0
         )
         if provider_usage is not None:
             input_tokens = provider_usage["input_tokens"]
@@ -425,11 +427,7 @@ _default_model_gateway: ModelGateway | None = None
 
 
 def default_model_gateway() -> ModelGateway:
-    """Return the process-wide ModelGateway, building it lazily on first use.
-
-    Constructing the gateway touches tiktoken's BPE table, which can download
-    on first run; deferring construction keeps module import offline and fast.
-    """
+    """Return the process-wide governed model gateway."""
     global _default_model_gateway
     if _default_model_gateway is None:
         _default_model_gateway = ModelGateway()

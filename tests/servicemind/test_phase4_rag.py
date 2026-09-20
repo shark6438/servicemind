@@ -336,9 +336,7 @@ async def test_rerank_uses_title_and_retains_exact_retrieval_signal(monkeypatch)
         repository=FakeRepository(),  # type: ignore[arg-type]
     )
     result = await rag.retrieve(
-        principal=RetrievalPrincipal(
-            tenant_id=TENANT, user_id="u1", entity_ids=frozenset({1})
-        ),
+        principal=RetrievalPrincipal(tenant_id=TENANT, user_id="u1", entity_ids=frozenset({1})),
         query="exact",
         use_query_model=False,
     )
@@ -461,9 +459,9 @@ async def test_tei_reranker_batches_concurrently_without_losing_result_order() -
         )
 
     documents = [f"doc-{index}" for index in range(17)]
-    scores = await TeiReranker(
-        "http://tei.test", transport=httpx.MockTransport(handler)
-    ).score("query", documents)
+    scores = await TeiReranker("http://tei.test", transport=httpx.MockTransport(handler)).score(
+        "query", documents
+    )
     assert sorted(batch_sizes) == [1, 4, 4, 4, 4]
     assert scores == [index / 100 for index in range(17)]
 

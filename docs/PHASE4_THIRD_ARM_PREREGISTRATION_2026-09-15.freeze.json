@@ -1,0 +1,35 @@
+{
+  "schema": "phase4-third-arm-prereg-freeze-v1",
+  "frozen_at_utc": "2026-09-15T16:01:21Z",
+  "source": {
+    "path": "docs/PHASE4_THIRD_ARM_PREREGISTRATION_2026-09-15.md",
+    "sha256": "038d74114cbac0a936144d585b0d2cf6c38179f49f7a3bf38576a457fbdb937a",
+    "bytes": 12469
+  },
+  "git": {
+    "head": "91681f6696ad9ee164dab4984cdd191a509e48ee",
+    "tree_dirty": true
+  },
+  "scope": {
+    "confirmatory_hypothesis": "C1 = C0 + Qwen3-Embedding-0.6B dense arm, production equal-weight 3-way RRF",
+    "holdout": "330 answerable + 180 impossible (TechQA-RAG-Eval, 910 rows minus the 400 already analysed)",
+    "delta": 0.02,
+    "gate_two_joint_power_under_h0": 0.688,
+    "quantiles": {
+      "gain_metrics_two_sided_95": [
+        0.025,
+        0.975
+      ],
+      "non_inferiority_one_sided_95": [
+        0.05,
+        0.95
+      ]
+    },
+    "bootstrap": {
+      "samples": 10000,
+      "seed": 20260915,
+      "unit": "query (paired)"
+    }
+  },
+  "note": "The sha256 lives here rather than inside the document because a hash cannot be written into the file it hashes. Any later edit to the document invalidates this record -- that is the point. Results from the holdout run must carry this hash."
+}

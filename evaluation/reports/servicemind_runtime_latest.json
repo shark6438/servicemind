@@ -1,0 +1,30 @@
+{
+  "schema_version": "servicemind-runtime-verification-v1",
+  "status": "PASS",
+  "unit": "servicemind-api.service",
+  "scope": "user",
+  "base_url": "http://127.0.0.1:18080",
+  "configured_host": "127.0.0.1",
+  "configured_port": 18080,
+  "unit_properties": {
+    "MainPID": "1976754",
+    "ExecStart": "{ path=/home/shihongye/data1/servicemind/.venv/bin/python ; argv[]=/home/shihongye/data1/servicemind/.venv/bin/python src/run_service.py ; ignore_errors=no ; start_time=[Wed 2026-09-16 21:32:53 CST] ; stop_time=[n/a] ; pid=1976754 ; code=(null) ; status=0/0 }",
+    "WorkingDirectory": "/home/shihongye/data1/servicemind",
+    "ActiveState": "active",
+    "SubState": "running",
+    "FragmentPath": "/home/shihongye/.config/systemd/user/servicemind-api.service"
+  },
+  "health_http_status": 200,
+  "health_body": {
+    "status": "ok"
+  },
+  "checks": {
+    "unit_active": true,
+    "unit_running": true,
+    "main_pid_present": true,
+    "working_directory_matches_repository": true,
+    "exec_start_matches_repository": true,
+    "health_http_200": true,
+    "health_body_ok": true
+  }
+}

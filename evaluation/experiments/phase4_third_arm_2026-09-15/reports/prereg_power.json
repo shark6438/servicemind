@@ -1,0 +1,80 @@
+{
+  "Recall@5": {
+    "delta_on_dev": 0.0286,
+    "ci95_two_sided": [
+      0.0071,
+      0.0536
+    ],
+    "ci_95_one_sided_lower": 0.0107,
+    "se_dev": 0.012165,
+    "se_holdout_n330": 0.011206,
+    "single_metric_power_at_delta_0.020": 0.5556,
+    "delta_hat_must_exceed_under_h0": -0.001568
+  },
+  "Recall@10": {
+    "delta_on_dev": 0.0036,
+    "ci95_two_sided": [
+      -0.0179,
+      0.025
+    ],
+    "ci_95_one_sided_lower": -0.0143,
+    "se_dev": 0.010655,
+    "se_holdout_n330": 0.009814,
+    "single_metric_power_at_delta_0.020": 0.6528,
+    "delta_hat_must_exceed_under_h0": -0.003857
+  },
+  "MRR@10": {
+    "delta_on_dev": 0.0082,
+    "ci95_two_sided": [
+      -0.003,
+      0.0201
+    ],
+    "ci_95_one_sided_lower": -0.0013,
+    "se_dev": 0.005915,
+    "se_holdout_n330": 0.005448,
+    "single_metric_power_at_delta_0.020": 0.9786,
+    "delta_hat_must_exceed_under_h0": -0.011039
+  },
+  "NDCG@10": {
+    "delta_on_dev": 0.0074,
+    "ci95_two_sided": [
+      -0.0034,
+      0.019
+    ],
+    "ci_95_one_sided_lower": -0.0018,
+    "se_dev": 0.0057,
+    "se_holdout_n330": 0.005251,
+    "single_metric_power_at_delta_0.020": 0.9848,
+    "delta_hat_must_exceed_under_h0": -0.011363
+  },
+  "_joint": {
+    "gate_two_metrics": [
+      "Recall@10",
+      "MRR@10",
+      "NDCG@10"
+    ],
+    "joint_power_under_h0": 0.6879,
+    "product_of_marginal_powers": 0.6291,
+    "residual_correlation_matrix": [
+      [
+        1.0,
+        0.283,
+        0.641
+      ],
+      [
+        0.283,
+        1.0,
+        0.916
+      ],
+      [
+        0.641,
+        0.916,
+        1.0
+      ]
+    ],
+    "simulation_replicates": 200000,
+    "delta": 0.02,
+    "z": 1.6449,
+    "note": "H0 = true paired difference is exactly zero for all three metrics; joint power is the share of simulated runs where all three one-sided 95% lower bounds exceed -delta"
+  }
+}

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterable
+from collections import Counter
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from uuid import UUID
 
 import tiktoken
 
 from servicemind.context.contracts import (
+    DEFAULT_OUTPUT_RESERVE,
+    DEFAULT_SYSTEM_RESERVE,
     ContextAgent,
     ContextBudget,
     ContextEnvelope,
@@ -137,8 +140,9 @@ class ContextBuilder:
         agent: ContextAgent,
         items: Iterable[ContextItem],
         max_input_tokens: int,
-        system_reserve: int = 256,
-        output_reserve: int = 1024,
+        system_reserve: int = DEFAULT_SYSTEM_RESERVE,
+        output_reserve: int = DEFAULT_OUTPUT_RESERVE,
+        source_token_caps: Mapping[ContextSource, int] | None = None,
     ) -> ContextEnvelope:
         allowed_sources = ROLE_SOURCES[agent]
         usable = max_input_tokens - system_reserve - output_reserve
@@ -209,13 +213,34 @@ class ContextBuilder:
         selected: list[ContextItem] = []
         used = 0
         pruned = 0
+        caps = dict(source_token_caps or {})
+        invalid_caps = {source: cap for source, cap in caps.items() if cap < 0 or cap > usable // 2}
+        if invalid_caps:
+            raise ValueError(
+                "source token caps must be non-negative and no more than half "
+                f"the usable context budget: {invalid_caps}"
+            )
+        per_source: Counter[ContextSource] = Counter()
         for item, tokens in prepared:
-            if used + tokens <= usable:
+            # A cap bounds how much of the envelope a *bulk* channel may claim; it must
+            # never turn a required control item into a budget error, which would report
+            # a channel-policy decision as an over-budget run.
+            cap = None if item.required else caps.get(item.source)
+            if used + tokens <= usable and (cap is None or per_source[item.source] + tokens <= cap):
                 selected.append(item)
                 used += tokens
+                per_source[item.source] += tokens
                 decision, reason = "selected", "ranked_within_budget"
             elif item.required:
                 raise ValueError(f"required context item exceeds token budget: {item.item_id}")
+            elif cap is not None and used + tokens <= usable:
+                # Fits the budget but not its channel's share. Without this the largest
+                # source simply takes the envelope and every lower-authority channel --
+                # memory in particular, which is small and sorts last -- is starved with
+                # no violation anywhere: the manifest calls the loss "pruned" and every
+                # evaluation block that stops at retrieval still reads green.
+                pruned += tokens
+                decision, reason = "pruned", "source_token_cap_exceeded"
             else:
                 pruned += tokens
                 decision, reason = "pruned", "token_budget_exceeded"

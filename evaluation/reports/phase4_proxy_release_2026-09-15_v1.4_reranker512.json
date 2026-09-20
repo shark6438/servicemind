@@ -1,0 +1,330 @@
+{
+  "schema_version": "phase4-proxy-release-v1.4",
+  "status": "regression_baseline_created",
+  "quality_certification": false,
+  "status_semantics": "this report certifies nothing about tenant-domain RAG quality. It reports proxy retrieval metrics on an external silver set and whether they held against the frozen proxy baseline. The \u00a74.1 closure gate is listed but not evaluated; see `gates`.",
+  "source": {
+    "dataset": "nvidia/TechQA-RAG-Eval",
+    "revision": "0b5bbc84b7f07d6d09d063130e90b716d8d4a32a",
+    "corpus_documents": 28481,
+    "production_shaped_passages": 96293,
+    "label_tier": "external_silver_no_tenant_human_signoff"
+  },
+  "queries": {
+    "total": 400,
+    "answerable": 280,
+    "impossible": 120
+  },
+  "retrieval": {
+    "bm25": {
+      "recall_at_5": 0.5286,
+      "recall_at_5_ci95": [
+        0.4714,
+        0.5857
+      ],
+      "recall_at_10": 0.5643,
+      "recall_at_10_ci95": [
+        0.5071,
+        0.6214
+      ],
+      "recall_at_20": 0.65,
+      "recall_at_20_ci95": [
+        0.5929,
+        0.7036
+      ],
+      "mrr_at_10": 0.4414,
+      "mrr_at_10_ci95": [
+        0.3891,
+        0.4963
+      ],
+      "ndcg_at_10": 0.4713,
+      "ndcg_at_10_ci95": [
+        0.4187,
+        0.5251
+      ]
+    },
+    "dense": {
+      "recall_at_5": 0.7143,
+      "recall_at_5_ci95": [
+        0.6607,
+        0.7679
+      ],
+      "recall_at_10": 0.7536,
+      "recall_at_10_ci95": [
+        0.7036,
+        0.8036
+      ],
+      "recall_at_20": 0.7679,
+      "recall_at_20_ci95": [
+        0.7179,
+        0.8143
+      ],
+      "mrr_at_10": 0.5691,
+      "mrr_at_10_ci95": [
+        0.5185,
+        0.6193
+      ],
+      "ndcg_at_10": 0.6142,
+      "ndcg_at_10_ci95": [
+        0.5657,
+        0.6621
+      ]
+    },
+    "hybrid_rrf": {
+      "recall_at_5": 0.6464,
+      "recall_at_5_ci95": [
+        0.5893,
+        0.7
+      ],
+      "recall_at_10": 0.7357,
+      "recall_at_10_ci95": [
+        0.6821,
+        0.7857
+      ],
+      "recall_at_20": 0.7893,
+      "recall_at_20_ci95": [
+        0.7393,
+        0.8357
+      ],
+      "mrr_at_10": 0.5406,
+      "mrr_at_10_ci95": [
+        0.4891,
+        0.5928
+      ],
+      "ndcg_at_10": 0.5869,
+      "ndcg_at_10_ci95": [
+        0.5377,
+        0.6362
+      ]
+    },
+    "hybrid_bge_rerank": {
+      "recall_at_5": 0.6821,
+      "recall_at_5_ci95": [
+        0.6286,
+        0.7357
+      ],
+      "recall_at_10": 0.7286,
+      "recall_at_10_ci95": [
+        0.675,
+        0.7786
+      ],
+      "recall_at_20": 0.7857,
+      "recall_at_20_ci95": [
+        0.7357,
+        0.8321
+      ],
+      "mrr_at_10": 0.5699,
+      "mrr_at_10_ci95": [
+        0.5182,
+        0.6218
+      ],
+      "ndcg_at_10": 0.6087,
+      "ndcg_at_10_ci95": [
+        0.5589,
+        0.6579
+      ]
+    },
+    "hybrid_bge_rerank_depth100": {
+      "recall_at_5": 0.6821,
+      "recall_at_5_ci95": [
+        0.6286,
+        0.7357
+      ],
+      "recall_at_10": 0.7357,
+      "recall_at_10_ci95": [
+        0.6857,
+        0.7857
+      ],
+      "recall_at_20": 0.7786,
+      "recall_at_20_ci95": [
+        0.7286,
+        0.825
+      ],
+      "mrr_at_10": 0.5662,
+      "mrr_at_10_ci95": [
+        0.5143,
+        0.6173
+      ],
+      "ndcg_at_10": 0.6074,
+      "ndcg_at_10_ci95": [
+        0.5578,
+        0.6566
+      ]
+    },
+    "production": {
+      "recall_at_5": 0.6786,
+      "recall_at_5_ci95": [
+        0.6214,
+        0.7321
+      ],
+      "recall_at_10": 0.7571,
+      "recall_at_10_ci95": [
+        0.7071,
+        0.8071
+      ],
+      "recall_at_20": 0.8071,
+      "recall_at_20_ci95": [
+        0.7571,
+        0.85
+      ],
+      "mrr_at_10": 0.5852,
+      "mrr_at_10_ci95": [
+        0.5332,
+        0.636
+      ],
+      "ndcg_at_10": 0.6266,
+      "ndcg_at_10_ci95": [
+        0.5774,
+        0.674
+      ]
+    },
+    "held_out_abstention": {
+      "threshold": 0.998383,
+      "calibration": {
+        "answerable": 40,
+        "impossible": 20
+      },
+      "held_out": {
+        "answerable": 240,
+        "impossible": 100
+      },
+      "answerable_answer_rate": 0.3333,
+      "impossible_abstention_rate": 0.78,
+      "balanced_accuracy": 0.5567,
+      "top_score_roc_auc": 0.6061,
+      "best_case_balanced_accuracy": 0.5933
+    },
+    "embedding": {
+      "model": "BAAI/bge-m3",
+      "revision": "5617a9f61b028005a4858fdac845db406aefb181",
+      "backend": "ONNX Runtime CUDA exact cosine",
+      "passage_tokens": 420,
+      "overlap_tokens": 48
+    },
+    "reranker": {
+      "model": "BAAI/bge-reranker-v2-m3",
+      "revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+      "activation": "sigmoid (applied once, by the checkpoint)",
+      "reranked_pool_depth": 100
+    },
+    "production_blend": {
+      "formula": "rerank_weight * rerank_score + (1 - rerank_weight) * minmax(fused_rrf_score)",
+      "rerank_weight": 0.85,
+      "source": "src/servicemind/rag/service.py `final_score`",
+      "published_protocol": "the published v1.3 report measured RRF top-30 with pure reranking; this run keeps that arm for continuity and adds the depth-100 production configuration alongside it"
+    },
+    "bm25_latency_ms": {
+      "p50": 35.9,
+      "p95": 46.94
+    }
+  },
+  "gates": {
+    "recall_at_5": {
+      "actual": 0.6786,
+      "operator": ">=",
+      "threshold": 0.85,
+      "applicable": false,
+      "passed": null,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
+      "reason": "not evaluated: this run scores an external silver set, not tenant qrels"
+    },
+    "recall_at_10": {
+      "actual": 0.7571,
+      "operator": ">=",
+      "threshold": 0.9,
+      "applicable": false,
+      "passed": null,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
+      "reason": "not evaluated: this run scores an external silver set, not tenant qrels"
+    },
+    "mrr_at_10": {
+      "actual": 0.5852,
+      "operator": ">=",
+      "threshold": 0.75,
+      "applicable": false,
+      "passed": null,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
+      "reason": "not evaluated: this run scores an external silver set, not tenant qrels"
+    },
+    "ndcg_at_10": {
+      "actual": 0.6266,
+      "operator": ">=",
+      "threshold": 0.8,
+      "applicable": false,
+      "passed": null,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
+      "reason": "not evaluated: this run scores an external silver set, not tenant qrels"
+    },
+    "impossible_abstention_rate": {
+      "actual": 0.78,
+      "operator": ">=",
+      "threshold": 0.9,
+      "applicable": false,
+      "passed": null,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
+      "reason": "not evaluated: production abstains through the Reviewer's semantic ABSTAIN on evidence sufficiency, not through a retrieval-score cut; on this set the score separates answerable from impossible at ROC-AUC 0.6061 with a best-case balanced accuracy of 0.5933 over every cut"
+    },
+    "answerable_answer_rate": {
+      "actual": 0.3333,
+      "operator": ">=",
+      "threshold": 0.9,
+      "applicable": false,
+      "passed": null,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
+      "reason": "not evaluated: production abstains through the Reviewer's semantic ABSTAIN on evidence sufficiency, not through a retrieval-score cut; on this set the score separates answerable from impossible at ROC-AUC 0.6061 with a best-case balanced accuracy of 0.5933 over every cut"
+    }
+  },
+  "proxy_regression": {
+    "rule": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a76.4 (no further degradation)",
+    "baseline_file": "evaluation/reports/phase4_proxy_regression_baseline.json",
+    "tolerance": 0.0,
+    "metrics": {
+      "recall_at_5": {
+        "baseline": 0.6786,
+        "actual": 0.6786,
+        "tolerance": 0.0,
+        "passed": true
+      },
+      "recall_at_10": {
+        "baseline": 0.7571,
+        "actual": 0.7571,
+        "tolerance": 0.0,
+        "passed": true
+      },
+      "recall_at_20": {
+        "baseline": 0.8071,
+        "actual": 0.8071,
+        "tolerance": 0.0,
+        "passed": true
+      },
+      "mrr_at_10": {
+        "baseline": 0.5852,
+        "actual": 0.5852,
+        "tolerance": 0.0,
+        "passed": true
+      },
+      "ndcg_at_10": {
+        "baseline": 0.6266,
+        "actual": 0.6266,
+        "tolerance": 0.0,
+        "passed": true
+      }
+    }
+  },
+  "duration_seconds": 4211.37,
+  "limitations": [
+    "public technical-support distribution, not private tenant query distribution",
+    "source-provided silver labels, not independent ServiceMind human qrels",
+    "the \u00a74.1 closure gate is reported but not evaluated here; it needs private tenant queries with expert qrels",
+    "each answerable query carries a single relevant filename, so a rank-2 hit scores the same as a miss under Recall@10",
+    "passages use the pinned BGE tokenizer instead of cl100k, while preserving the production 420-token/48-overlap shape",
+    "dense document ranking uses exact max pooling over child passages; production uses approximate OpenSearch HNSW before parent expansion",
+    "abstention is measured as a retrieval-score cut, which the data shows cannot separate answerable from impossible here; production refuses through the Reviewer's semantic ABSTAIN instead"
+  ]
+}

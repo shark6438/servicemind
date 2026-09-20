@@ -1,0 +1,70 @@
+{
+  "schema_version": "servicemind-rag-quality-state-v1",
+  "overall_status": "DOMAIN_QUALITY_NOT_CERTIFIED",
+  "quality_exception": "QUALITY_EXCEPTION_ACCEPTED",
+  "tenant_release_gate": {
+    "status": "NOT_EVALUATED",
+    "gate_count": 6,
+    "evaluated_count": 0,
+    "required_input": "tenant-domain release queries with independent human qrels"
+  },
+  "external_silver": {
+    "dataset": "nvidia/TechQA-RAG-Eval",
+    "status": "BELOW_TARGET_DIAGNOSTIC",
+    "quality_certification": false,
+    "metrics": {
+      "recall_at_5": 0.6857,
+      "recall_at_10": 0.7643,
+      "mrr_at_10": 0.5848,
+      "ndcg_at_10": 0.6279
+    },
+    "reference_targets": {
+      "recall_at_5": 0.85,
+      "recall_at_10": 0.9,
+      "mrr_at_10": 0.75,
+      "ndcg_at_10": 0.8
+    },
+    "below_reference_targets": [
+      "recall_at_5",
+      "recall_at_10",
+      "mrr_at_10",
+      "ndcg_at_10"
+    ],
+    "interpretation": "All four point estimates are below the tenant thresholds, but this external silver distribution is not allowed to decide the tenant release gate."
+  },
+  "answerability_signal": {
+    "status": "WEAK_RETRIEVAL_SCORE_SIGNAL",
+    "measurement_kind": "held-out retrieval top-score threshold proxy",
+    "is_end_to_end_reviewer_measurement": false,
+    "answerable_answer_rate": 0.275,
+    "impossible_abstention_rate": 0.87,
+    "roc_auc": 0.6035,
+    "best_case_balanced_accuracy": 0.5979,
+    "reviewer_semantic_calibration": "NOT_EVALUATED"
+  },
+  "committed_gold": {
+    "status": "SMOKE_ONLY_SATURATED",
+    "documents": 8,
+    "children": 43,
+    "queries": 15,
+    "saturated_arms": [
+      "dense",
+      "bm25",
+      "hybrid",
+      "hybrid_rerank"
+    ],
+    "precision_at_5": 0.2667,
+    "mean_dedupe_rate": 0.5,
+    "allowed_use": "deterministic regression smoke only"
+  },
+  "production_change": {
+    "retrieval_quality_improved_by_current_measurement_work": false,
+    "configuration_change_approved": false,
+    "next_plan": "docs/PHASE4_RAG_QUALITY_IMPROVEMENT_PLAN_V2_0.md"
+  },
+  "release_blockers": [
+    "tenant-domain human qrels are unavailable",
+    "Reviewer answerability and abstention correctness are not calibrated on domain labels",
+    "production evidence/context-cap impact has no non-synthetic observations"
+  ]
+}

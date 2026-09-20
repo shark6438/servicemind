@@ -14,6 +14,7 @@ ServiceMind 是一个**企业级 ITSM(IT 服务管理)智能体平台**:它把�
 - **Graph-RAG(Phase 4)** —— 在 Neo4j 中投影 `Ticket → CI → Service → Problem → Change` 关系,回答纯文本检索无法表达的结构化问题(如"还有哪些东西依赖这个服务?")。图谱发现是旁路补充;混合文本检索仍是主通道。
 - **受治理长期记忆 + 上下文注入(Phase 5)** —— 声明式、特性开关控制的记忆:置信度阈值自动激活、向量检索、预算内的输入上下文打包器;上线/回滚无需 schema 降级。
 - **模型网关治理(Phase 5)** —— 全局与按租户的 provider/model 白名单、逐调用审计持久化、重试/超时/成本上限、语义缓存。
+- **受治理工具平台(Phase 6)** —— 所有工具调用统一经过一个 **Tool Gateway**:冻结的 Registry(Draft 2020-12 契约)、RBAC/ABAC/能力交集、taint 与注入检查、在强制本地策略之后的 fail-closed OPA 决策、审批绑定,以及只保存 policy/tool/schema 版本与载荷哈希(不保存凭据与正文)的 append-only 审计。MCP(`2026-07-28`)只是同一个网关之上的能力暴露边界,不是第二套权限系统;限流、舱壁、熔断、幂等与持久任务运行在 Redis + PostgreSQL 上,PostgreSQL 是唯一权威源。
 - **技能(Skills)** —— 版本化技能(`skills/`),可为 agent 装配变更风险评估、事件分类、重大事件、重复问题、VPN/MFA 恢复等能力。
 
 同时保留 toolkit 的运行脚手架:一个 FastAPI 服务同时挂载 ServiceMind API 与通用 LangGraph agents、`AgentClient`、以及带语音输入/输出的 Streamlit **ServiceMind Console** 聊天界面。
@@ -35,9 +36,9 @@ src/
 ├── voice/              # 聊天界面 STT/TTS providers
 ├── streamlit_app.py    # ServiceMind Console(聊天界面)
 └── run_service.py      # 入口: uvicorn "service:app"
-migrations/             # Alembic 迁移 0001–0010(产品 schema,Postgres)
+migrations/             # Alembic 迁移 0001–0013(产品 schema,Postgres)
 deploy/glpi/            # 本地 GLPI + MariaDB + Postgres + Keycloak + OpenSearch +
-                        #   Neo4j + TEI embedding/reranker 栈(docker compose)
+                        #   Neo4j + TEI embedding/reranker + Redis + OPA 栈(docker compose)
 evaluation/             # Gold 集、检索/路由/验收评测 harness 与报告
 skills/                 # 可为 agent 装配的版本化技能
 docker/                 # Dockerfiles(service/app)、附加 compose 文件
@@ -86,7 +87,8 @@ docker compose watch        # 或: docker compose up --build
 ### B. 企业级 GLPI 栈(使用 ITSM 功能推荐)
 
 ServiceMind API 需要 Postgres 16;完整事件工作流还需要 GLPI + Keycloak + OpenSearch +
-Neo4j + TEI。`deploy/glpi/compose.yaml` 可一键拉起整套本地栈;命令与端口见
+Neo4j + TEI。Phase 6 工具平台另外需要 Redis(限流、舱壁、熔断与任务状态),以及可选的
+OPA(外部策略决策)。`deploy/glpi/compose.yaml` 可一键拉起整套本地栈;命令与端口见
 [deploy/glpi/README.md](deploy/glpi/README.md)。
 
 ### C. 免 Docker 手动运行
@@ -140,6 +142,8 @@ uv run streamlit run src/streamlit_app.py
 | `GET /v1/servicemind/runs/{id}` | 运行状态 + 待决 action intent |
 | `POST /v1/servicemind/runs/{id}/approval` | 批准/拒绝写操作(角色 `approver`) |
 | `POST /v1/servicemind/runs/{id}/review-resolution` | 解决复核升级 |
+| `GET /v1/servicemind/memories/review-queue` | 列出/筛选 ACL 范围内的隔离记忆（`approver`） |
+| `POST /v1/servicemind/memories/{id}/review` | 激活/拒绝精确绑定的记忆快照（`approver`） |
 | `POST /v1/servicemind/runs/{id}:cancel` | 取消 pending/awaiting 运行 |
 | `GET /v1/servicemind/runs/{id}/events` | 运行事件 SSE 流 |
 | `POST /v1/servicemind/webhooks/glpi` | 接入签名 GLPI webhook(幂等) |

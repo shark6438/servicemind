@@ -1,0 +1,102 @@
+{
+  "schema_version": "phase4-holdout-prereg-2026-09-15",
+  "verdict": "FAIL",
+  "protocol": {
+    "path": "docs/PHASE4_THIRD_ARM_PREREGISTRATION_2026-09-15.md",
+    "sha256": "038d74114cbac0a936144d585b0d2cf6c38179f49f7a3bf38576a457fbdb937a",
+    "frozen_at_utc": "2026-09-15T16:01:21Z",
+    "script_sha256": "ac9d954885962f9cea0875cac18140004ca34cb1b4e93d8a6954af77be11416b"
+  },
+  "dataset": {
+    "source": "nvidia/TechQA-RAG-Eval",
+    "revision": "0b5bbc84b7f07d6d09d063130e90b716d8d4a32a"
+  },
+  "holdout": {
+    "answerable": 330,
+    "impossible": 180,
+    "id_fingerprint": "7d59475988f54fb3a0d10d7a020f4ec07ca8e935b5e2225520d8b9f9a94b63a4",
+    "consumed": true
+  },
+  "configurations": {
+    "C0": "BM25 + BGE-M3 dense, equal-weight RRF (rank_constant=60), depth-100",
+    "C1": "C0 + Qwen3-Embedding-0.6B dense arm, equal-weight three-way RRF",
+    "rerank_weight": 0.85
+  },
+  "statistics": {
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 20260915,
+    "quantiles_gain_two_sided_95": [
+      0.025,
+      0.975
+    ],
+    "quantiles_non_inferiority_one_sided_95": [
+      0.05,
+      0.95
+    ],
+    "delta": 0.02,
+    "unit": "query (paired)"
+  },
+  "hard_subset": {
+    "definition": "C0 fused top-10 miss on holdout answerable",
+    "size": 71
+  },
+  "anchors": {
+    "recall_at_5": 0.6857,
+    "recall_at_10": 0.7643,
+    "mrr_at_10": 0.5848,
+    "ndcg_at_10": 0.6279
+  },
+  "gates": {
+    "gate_one_gain": {
+      "recall_at_5_overall": {
+        "delta": 0.0,
+        "lcb": -0.0091,
+        "ucb": 0.0091,
+        "n_queries": 330,
+        "c0": 0.7364,
+        "c1": 0.7364,
+        "passed": false
+      },
+      "recall_at_5_hard": {
+        "delta": 0.0,
+        "lcb": 0.0,
+        "ucb": 0.0,
+        "n_queries": 71,
+        "c0": 0.0,
+        "c1": 0.0,
+        "passed": false
+      }
+    },
+    "gate_two_non_inferiority": {
+      "recall_at_10": {
+        "delta": 0.0152,
+        "lcb": 0.003,
+        "ucb": 0.0303,
+        "n_queries": 330,
+        "c0": 0.7848,
+        "c1": 0.8,
+        "passed": true
+      },
+      "mrr_at_10": {
+        "delta": 0.0135,
+        "lcb": 0.003,
+        "ucb": 0.0243,
+        "n_queries": 330,
+        "c0": 0.6105,
+        "c1": 0.624,
+        "passed": true
+      },
+      "ndcg_at_10": {
+        "delta": 0.0136,
+        "lcb": 0.0048,
+        "ucb": 0.0226,
+        "n_queries": 330,
+        "c0": 0.6529,
+        "c1": 0.6665,
+        "passed": true
+      }
+    }
+  },
+  "hard_set_scope_note": "The hard subset is defined by the incumbent system's own failures, so it is a biased target subset and not independent adoption evidence (protocol §4).",
+  "status_semantics": "PASS buys a controlled shadow run, not production adoption. Gates three and four are outside this protocol."
+}

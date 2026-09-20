@@ -64,6 +64,8 @@ uv export --frozen --no-dev --no-hashes > requirements.txt
 | 前端(UI) | `streamlit` | `~1.59.1` |
 | 协议/AG-UI | `ag-ui-langgraph` | `~0.0.42` |
 | 可观测 | `langfuse`、`langsmith`、`opentelemetry-*` | `~4.12` / `~0.10.2` / `~1.44.0` |
+| 工具平台 / MCP | `langchain-mcp-adapters` | `>=0.3.0` |
+| 限流与可靠性 | `redis`(Redis 8.2) | `>=6,<7` |
 
 ## 外部基础设施
 
@@ -80,10 +82,15 @@ ServiceMind 本体可在无外部基础设施时启动做界面演示(见下节)
 | TEI embedding | BGE-M3 嵌入服务(可选加速) | `127.0.0.1:8085` | 为空则走进程内 sentence-transformers |
 | TEI reranker | bge-reranker-v2-m3 重排服务(可选加速) | `127.0.0.1:8086` | 为空则走进程内兜底 |
 | Neo4j 5.26 | Graph-RAG 投影图 | `127.0.0.1:17687`(bolt) | 可选;`SERVICEMIND_GRAPH_RAG_ENABLED` 关闭时不依赖 |
+| Redis 8.2 | 工具平台限流、舱壁与熔断状态;可靠性 worker | `127.0.0.1:6379` | 需 `SERVICEMIND_REDIS_PASSWORD`(compose 强制);`SERVICEMIND_REDIS_URL` 指向它 |
+| OPA 1.20 | 工具调用的外部策略决策 | `127.0.0.1:8181` | 可选;`SERVICEMIND_OPA_URL` 为空时 `SERVICEMIND_TOOL_POLICY_MODE=local` 用进程内策略 |
 | DeepSeek API | 默认 LLM provider | 外部 | `.env` 填 `DEEPSEEK_API_KEY` |
 
-其中 Postgres 之外,GLPI、Keycloak、OpenSearch、Neo4j、TEI 等仅在你启用对应功能时才是
-硬依赖。RAG 的进程内嵌入/重排路径在
+其中 Postgres 之外,GLPI、Keycloak、OpenSearch、Neo4j、TEI、Redis、OPA 等仅在你启用对应
+功能时才是硬依赖:Redis 与 OPA 只服务 Phase 6 工具平台
+(`SERVICEMIND_TOOL_PLATFORM_ENABLED=true`),关闭时不需要;
+工具平台经 `SERVICEMIND_MCP_PUBLIC_URL`(默认 `<服务地址>/v1/servicemind/mcp`)对外暴露
+MCP 端点,`SERVICEMIND_MCP_GLPI_URL` 指定其 GLPI 后端。RAG 的进程内嵌入/重排路径在
 `SERVICEMIND_EMBEDDING_URL` / `SERVICEMIND_RERANKER_URL` 为空时启用,可读取本地预取快照
 (`SERVICEMIND_*_CACHE_DIR` + 钉死的 `*_REVISION`)实现**完全离线**;这些快照目录
 (`data/phase4/models/…`)已被 gitignore,需运维按
@@ -124,6 +131,7 @@ uv run streamlit run src/streamlit_app.py   # Console
 | `SERVICEMIND_SKILLS_ENABLED` | 技能装配 | Phase 5 |
 | `SERVICEMIND_MODEL_GATEWAY_AUDIT_ENABLED` | 逐调用审计持久化 | Phase 5 |
 | `SERVICEMIND_SEMANTIC_CACHE_ENABLED` | 语义缓存 | Phase 5 |
+| `SERVICEMIND_TOOL_PLATFORM_ENABLED` | 工具平台(MCP provider + 策略/限流/熔断) | Phase 6 |
 
 各开关详见 [`.env.example`](.env.example) 与 [`docs/企业IT服务管理(ITSM)智能体平台.md`](docs/企业IT服务管理(ITSM)智能体平台.md)。
 

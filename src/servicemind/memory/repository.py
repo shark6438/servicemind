@@ -9,10 +9,15 @@ from uuid import UUID, uuid4
 from sqlalchemy import and_, func, or_, select, text
 
 from servicemind.memory.contracts import (
+    CROSS_TICKET_PROCEDURE_POLICY,
+    POST_RUN_MEMORY_WRITER,
+    POST_RUN_TENANT_EPISODE_POLICY,
     MemoryCandidate,
     MemoryEvidenceRef,
+    MemoryPatternQuery,
     MemoryQuery,
     MemoryRecord,
+    MemoryReviewQuery,
     MemoryScope,
     MemoryScopeType,
     MemoryStatus,
@@ -34,6 +39,14 @@ class MemoryRepository(Protocol):
 
     async def revalidate(self, query: MemoryQuery, ids: list[UUID]) -> set[UUID]: ...
 
+    async def list_review_queue(self, query: MemoryReviewQuery) -> list[MemoryRecord]: ...
+
+    async def get_for_review(
+        self, query: MemoryReviewQuery, memory_id: UUID
+    ) -> MemoryRecord | None: ...
+
+    async def pattern_episodes(self, query: MemoryPatternQuery) -> list[MemoryRecord]: ...
+
     async def transition(
         self,
         memory_id: UUID,
@@ -42,6 +55,10 @@ class MemoryRepository(Protocol):
         actor_id: str,
         reason: str,
         human_review_ref: str | None = None,
+        review_comment: str | None = None,
+        expected_version: int | None = None,
+        expected_content_hash: str | None = None,
+        expected_status: MemoryStatus | None = None,
     ) -> MemoryRecord: ...
 
     async def revoke_by_evidence(
@@ -124,6 +141,53 @@ def _subject_dedupe_outcome(
     return False, None, ()
 
 
+PROCEDURAL_SUPPORT_INVALIDATED = "PROCEDURAL_SUPPORT_INVALIDATED"
+
+
+def _procedural_support_failure(
+    record: MemoryRecord,
+    episodes: list[MemoryRecord],
+    *,
+    now: datetime | None = None,
+) -> str | None:
+    """Return a stable reason when a procedure no longer has authoritative support.
+
+    This is deliberately the same predicate used at human activation and on every
+    serving read. A longer procedure TTL may preserve a reusable conclusion, but it
+    must never outlive the verified episodes that authorize that conclusion.
+    """
+    if record.memory_type is not MemoryType.PROCEDURAL:
+        return None
+    checked_at = now or datetime.now(UTC)
+    expected_ids = set(record.supporting_episode_ids)
+    valid = [
+        episode
+        for episode in episodes
+        if episode.memory_id in expected_ids
+        and episode.tenant_id == record.tenant_id
+        and episode.memory_type is MemoryType.EPISODIC
+        and episode.visible_at(checked_at)
+        and not episode.taint_labels
+        and all(ref.verified for ref in episode.evidence_refs)
+        and (episode.scope == record.scope or episode.scope.scope_type is MemoryScopeType.TENANT)
+    ]
+    if len({episode.memory_id for episode in valid}) != len(expected_ids):
+        return PROCEDURAL_SUPPORT_INVALIDATED
+    if len({episode.source_run_id for episode in valid} - {None}) < 2:
+        return PROCEDURAL_SUPPORT_INVALIDATED
+    if record.provenance.get("derivation_policy") == CROSS_TICKET_PROCEDURE_POLICY:
+        pattern_key = record.provenance.get("procedure_pattern_key")
+        ticket_ids = {
+            episode.provenance.get("source_ticket_id")
+            for episode in valid
+            if episode.provenance.get("procedure_pattern_key") == pattern_key
+            and episode.provenance.get("source_ticket_id") is not None
+        }
+        if len(ticket_ids) < 2:
+            return PROCEDURAL_SUPPORT_INVALIDATED
+    return None
+
+
 def _validate_activation(
     record: MemoryRecord, review: str | None, episodes: list[MemoryRecord]
 ) -> None:
@@ -151,27 +215,24 @@ def _validate_activation(
         record.expires_at is not None and record.expires_at <= now
     ):
         raise PermissionError("expired memory cannot be activated")
-    if record.memory_type is MemoryType.PROCEDURAL:
-        valid = [
-            episode
-            for episode in episodes
-            if episode.memory_id in record.supporting_episode_ids
-            and episode.tenant_id == record.tenant_id
-            and episode.memory_type is MemoryType.EPISODIC
-            and episode.visible_at(now)
-            and not episode.taint_labels
-            and all(ref.verified for ref in episode.evidence_refs)
-            and (
-                episode.scope == record.scope or episode.scope.scope_type is MemoryScopeType.TENANT
-            )
-        ]
-        if (
-            len(valid) != len(set(record.supporting_episode_ids))
-            or len({episode.source_run_id for episode in valid} - {None}) < 2
-        ):
-            raise PermissionError(
-                "procedural memory requires distinct verified accessible episodes"
-            )
+    if _procedural_support_failure(record, episodes, now=now) is not None:
+        raise PermissionError("procedural memory requires distinct verified accessible episodes")
+
+
+def _validate_review_snapshot(
+    record: MemoryRecord,
+    *,
+    expected_version: int | None,
+    expected_content_hash: str | None,
+    expected_status: MemoryStatus | None,
+) -> None:
+    """Reject a decision made against content other than the locked record."""
+    if expected_status is not None and record.status is not expected_status:
+        raise ValueError("memory status changed after review")
+    if expected_version is not None and record.version != expected_version:
+        raise ValueError("memory version changed after review")
+    if expected_content_hash is not None and record.content_hash != expected_content_hash:
+        raise ValueError("memory content changed after review")
 
 
 def _revocation_closure(records: list[MemoryRecord], evidence_id: str) -> set[UUID]:
@@ -196,6 +257,25 @@ def _semantic_overlap(left: str, right: str) -> float:
     first = set(re.findall(pattern, left.casefold()))
     second = set(re.findall(pattern, right.casefold()))
     return len(first & second) / len(first | second) if first and second else 0
+
+
+def _mark_subject_conflict(candidate: MemoryCandidate) -> MemoryCandidate:
+    """Stamp a write that collides with a live version of the same subject.
+
+    Forcing the write into quarantine already blocks a second live version, but
+    the record itself carried no durable evidence of *why*: the collision lived
+    only in the transient decision codes. ``MemoryGovernancePolicy`` raises
+    ``CONFLICT_DETECTED`` from ``provenance["conflict_detected"]``, and nothing
+    in the repository ever set that key, so the reason code was unreachable and
+    an operator reading a stored record could not tell a conflicted subject from
+    a merely low-confidence one. Stamping it makes the conflict auditable and
+    re-assessable on the activation path.
+    """
+    if candidate.provenance.get("conflict_detected") is True:
+        return candidate
+    return candidate.model_copy(
+        update={"provenance": {**candidate.provenance, "conflict_detected": True}}
+    )
 
 
 def _record_from_candidate(
@@ -300,8 +380,13 @@ class InMemoryMemoryRepository:
                     action=MemoryWriteAction.QUARANTINE,
                     reason_codes=tuple(dict.fromkeys(reason_codes)),
                 )
+            stored = (
+                _mark_subject_conflict(candidate)
+                if "VERSION_CONFLICT" in extra_codes
+                else candidate
+            )
             record = _record_from_candidate(
-                candidate,
+                stored,
                 effective_decision,
                 lineage_id=lineage,
                 version=version,
@@ -332,15 +417,42 @@ class InMemoryMemoryRepository:
                     update={"status": MemoryStatus.EXPIRED, "updated_at": now}
                 )
 
+    def _revoke_invalid_procedures_locked(self) -> int:
+        """Fail closed when an ACTIVE procedure loses any activation support."""
+        now = datetime.now(UTC)
+        episodes = list(self._records.values())
+        count = 0
+        for memory_id, current in tuple(self._records.items()):
+            if current.status is not MemoryStatus.ACTIVE:
+                continue
+            failure = _procedural_support_failure(current, episodes, now=now)
+            if failure is None:
+                continue
+            self._records[memory_id] = current.model_copy(
+                update={
+                    "status": MemoryStatus.REVOKED,
+                    "updated_at": now,
+                    "provenance": {
+                        **current.provenance,
+                        "revocation_reason": failure,
+                        "support_invalidated_at": now.isoformat(),
+                    },
+                }
+            )
+            count += 1
+        return count
+
     async def candidates(self, query: MemoryQuery, *, ceiling: int = 500) -> list[MemoryRecord]:
         async with self._lock:
             self._expire_lapsed_locked()
+            self._revoke_invalid_procedures_locked()
             eligible = [record for record in self._records.values() if query.allows_record(record)]
             eligible.sort(
                 key=lambda record: (
                     -_semantic_overlap(query.text, record.content),
                     -record.updated_at.timestamp(),
-                    str(record.memory_id),
+                    record.content_hash,
+                    record.idempotency_key,
                 )
             )
             return eligible[:ceiling]
@@ -348,6 +460,7 @@ class InMemoryMemoryRepository:
     async def revalidate(self, query: MemoryQuery, ids: list[UUID]) -> set[UUID]:
         async with self._lock:
             self._expire_lapsed_locked()
+            self._revoke_invalid_procedures_locked()
             current_query = query.model_copy(update={"at": max(query.at, datetime.now(UTC))})
             return {
                 memory_id
@@ -355,6 +468,28 @@ class InMemoryMemoryRepository:
                 if memory_id in self._records
                 and current_query.allows_record(self._records[memory_id])
             }
+
+    async def list_review_queue(self, query: MemoryReviewQuery) -> list[MemoryRecord]:
+        async with self._lock:
+            records = [record for record in self._records.values() if query.allows_record(record)]
+            records.sort(key=lambda record: (record.created_at, record.memory_id))
+            return records[: query.limit]
+
+    async def get_for_review(
+        self, query: MemoryReviewQuery, memory_id: UUID
+    ) -> MemoryRecord | None:
+        async with self._lock:
+            record = self._records.get(memory_id)
+            return record if record is not None and query.allows_record(record) else None
+
+    async def pattern_episodes(self, query: MemoryPatternQuery) -> list[MemoryRecord]:
+        async with self._lock:
+            self._expire_lapsed_locked()
+            records = [record for record in self._records.values() if query.allows_record(record)]
+            records.sort(
+                key=lambda record: (record.created_at, record.content_hash, record.memory_id)
+            )
+            return records[: query.limit]
 
     async def transition(
         self,
@@ -364,10 +499,20 @@ class InMemoryMemoryRepository:
         actor_id: str,
         reason: str,
         human_review_ref: str | None = None,
+        review_comment: str | None = None,
+        expected_version: int | None = None,
+        expected_content_hash: str | None = None,
+        expected_status: MemoryStatus | None = None,
     ) -> MemoryRecord:
         del actor_id
         async with self._lock:
             current = self._records[memory_id]
+            _validate_review_snapshot(
+                current,
+                expected_version=expected_version,
+                expected_content_hash=expected_content_hash,
+                expected_status=expected_status,
+            )
             _validate_transition(
                 current.status,
                 status,
@@ -395,7 +540,14 @@ class InMemoryMemoryRepository:
                     "updated_at": datetime.now(UTC),
                     "provenance": {
                         **current.provenance,
-                        **({"human_review_ref": human_review_ref} if human_review_ref else {}),
+                        **(
+                            {
+                                "human_review_ref": human_review_ref,
+                                "human_review_comment_recorded": bool(review_comment),
+                            }
+                            if human_review_ref
+                            else {}
+                        ),
                     },
                 }
             )
@@ -505,9 +657,13 @@ class PostgresMemoryRepository:
             or_(MemoryRecordRow.expires_at.is_(None), MemoryRecordRow.expires_at > query.at),
             MemoryRecordRow.taint_labels == [],
             or_(*scope_filters),
+            # Mirrors MemoryQuery.allows_record: post-run summaries are unserved in
+            # non-USER scope unless they declare the scope on purpose.
             or_(
-                MemoryRecordRow.created_by != "post-run-memory-middleware",
+                MemoryRecordRow.created_by != POST_RUN_MEMORY_WRITER,
                 MemoryRecordRow.scope_type == "user",
+                MemoryRecordRow.provenance["post_run_scope"].astext
+                == POST_RUN_TENANT_EPISODE_POLICY,
             ),
             or_(
                 MemoryRecordRow.provenance["required_entity_ids"].is_(None),
@@ -523,6 +679,76 @@ class PostgresMemoryRepository:
                     sorted(query.group_ids)
                 ),
             ),
+        ]
+
+    @staticmethod
+    def _acl_filters(entity_ids: frozenset[int], group_ids: frozenset[int]) -> list:
+        return [
+            or_(
+                MemoryRecordRow.provenance["required_entity_ids"].is_(None),
+                ~MemoryRecordRow.provenance.has_key("required_entity_ids"),
+                MemoryRecordRow.provenance["required_entity_ids"].contained_by(sorted(entity_ids)),
+            ),
+            or_(
+                MemoryRecordRow.provenance["required_group_ids"].is_(None),
+                ~MemoryRecordRow.provenance.has_key("required_group_ids"),
+                MemoryRecordRow.provenance["required_group_ids"].contained_by(sorted(group_ids)),
+            ),
+        ]
+
+    def _review_filters(self, query: MemoryReviewQuery) -> list:
+        if query.tenant_id != self.tenant_id:
+            raise PermissionError("review query tenant does not match repository tenant")
+        scope_filters = [MemoryRecordRow.scope_type == MemoryScopeType.TENANT.value]
+        for scope_type, ids in (
+            (MemoryScopeType.USER.value, [query.reviewer_id]),
+            (MemoryScopeType.ENTITY.value, [str(value) for value in query.entity_ids]),
+            (MemoryScopeType.GROUP.value, [str(value) for value in query.group_ids]),
+            (MemoryScopeType.SERVICE.value, list(query.service_ids)),
+        ):
+            if ids:
+                scope_filters.append(
+                    and_(
+                        MemoryRecordRow.scope_type == scope_type,
+                        MemoryRecordRow.scope_id.in_(ids),
+                    )
+                )
+        filters = [
+            MemoryRecordRow.status == MemoryStatus.QUARANTINE.value,
+            MemoryRecordRow.memory_type.in_([kind.value for kind in query.memory_types]),
+            MemoryRecordRow.valid_from <= query.at,
+            or_(MemoryRecordRow.valid_to.is_(None), MemoryRecordRow.valid_to > query.at),
+            or_(MemoryRecordRow.expires_at.is_(None), MemoryRecordRow.expires_at > query.at),
+            or_(*scope_filters),
+            *self._acl_filters(query.entity_ids, query.group_ids),
+        ]
+        if query.after_created_at is not None and query.after_memory_id is not None:
+            filters.append(
+                or_(
+                    MemoryRecordRow.created_at > query.after_created_at,
+                    and_(
+                        MemoryRecordRow.created_at == query.after_created_at,
+                        MemoryRecordRow.id > query.after_memory_id,
+                    ),
+                )
+            )
+        return filters
+
+    def _pattern_filters(self, query: MemoryPatternQuery) -> list:
+        if query.tenant_id != self.tenant_id:
+            raise PermissionError("pattern query tenant does not match repository tenant")
+        return [
+            MemoryRecordRow.status == MemoryStatus.ACTIVE.value,
+            MemoryRecordRow.memory_type == MemoryType.EPISODIC.value,
+            MemoryRecordRow.scope_type == MemoryScopeType.TENANT.value,
+            MemoryRecordRow.valid_from <= query.at,
+            or_(MemoryRecordRow.valid_to.is_(None), MemoryRecordRow.valid_to > query.at),
+            or_(MemoryRecordRow.expires_at.is_(None), MemoryRecordRow.expires_at > query.at),
+            MemoryRecordRow.taint_labels == [],
+            MemoryRecordRow.created_by == POST_RUN_MEMORY_WRITER,
+            MemoryRecordRow.provenance["post_run_scope"].astext == POST_RUN_TENANT_EPISODE_POLICY,
+            MemoryRecordRow.provenance["procedure_pattern_key"].astext == query.pattern_key,
+            *self._acl_filters(query.entity_ids, query.group_ids),
         ]
 
     async def persist(
@@ -596,6 +822,8 @@ class PostgresMemoryRepository:
                     and _semantic_overlap(previous.content, candidate.content) >= 0.85
                 ):
                     reason_codes.append("SEMANTIC_DUPLICATE_SUSPECTED")
+            if "VERSION_CONFLICT" in extra_codes:
+                candidate = _mark_subject_conflict(candidate)
             row = MemoryRecordRow(
                 tenant_id=self.tenant_id,
                 lineage_id=lineage_id,
@@ -689,6 +917,75 @@ class PostgresMemoryRepository:
             count += 1
         return count
 
+    async def _revoke_invalid_procedures(self, session, procedure_ids: set[UUID]) -> int:
+        """Revoke procedures whose activation evidence is no longer serviceable.
+
+        Procedure rows are locked before their support snapshot is evaluated. A
+        concurrent human transition or evidence revocation therefore has a single
+        database winner, and the append-only event makes the automatic decision
+        inspectable. The serving query runs only after this method completes.
+        """
+        now = datetime.now(UTC)
+        if not procedure_ids:
+            return 0
+        procedure_rows = list(
+            (
+                await session.execute(
+                    select(MemoryRecordRow)
+                    .where(
+                        MemoryRecordRow.status == MemoryStatus.ACTIVE.value,
+                        MemoryRecordRow.memory_type == MemoryType.PROCEDURAL.value,
+                        MemoryRecordRow.id.in_(procedure_ids),
+                    )
+                    .with_for_update()
+                )
+            ).scalars()
+        )
+        if not procedure_rows:
+            return 0
+        support_ids = {
+            UUID(value) for row in procedure_rows for value in row.supporting_episode_ids
+        }
+        support_rows = (
+            list(
+                (
+                    await session.execute(
+                        select(MemoryRecordRow).where(MemoryRecordRow.id.in_(support_ids))
+                    )
+                ).scalars()
+            )
+            if support_ids
+            else []
+        )
+        supports = [_to_domain(row) for row in support_rows]
+        count = 0
+        for row in procedure_rows:
+            failure = _procedural_support_failure(_to_domain(row), supports, now=now)
+            if failure is None:
+                continue
+            row.status = MemoryStatus.REVOKED.value
+            row.updated_at = now
+            row.provenance = {
+                **row.provenance,
+                "revocation_reason": failure,
+                "support_invalidated_at": now.isoformat(),
+            }
+            session.add(
+                MemoryEventRecord(
+                    tenant_id=self.tenant_id,
+                    memory_id=row.id,
+                    actor_id="procedural-support-revalidator",
+                    event_type="memory.revoked",
+                    reason_codes=[failure],
+                    payload={
+                        "invalidated_at": now.isoformat(),
+                        "expected_support_count": len(set(row.supporting_episode_ids)),
+                    },
+                )
+            )
+            count += 1
+        return count
+
     async def candidates(self, query: MemoryQuery, *, ceiling: int = 500) -> list[MemoryRecord]:
         if query.tenant_id != self.tenant_id:
             raise PermissionError("query tenant does not match repository tenant")
@@ -706,17 +1003,24 @@ class PostgresMemoryRepository:
                         MemoryRecordRow.updated_at.desc(),
                         MemoryRecordRow.confidence.desc(),
                         MemoryRecordRow.importance.desc(),
-                        MemoryRecordRow.id,
+                        MemoryRecordRow.content_hash,
+                        MemoryRecordRow.idempotency_key,
                     )
                     .limit(ceiling)
                 )
             ).scalars()
-            return [record for row in rows if query.allows_record(record := _to_domain(row))]
+            selected = list(rows)
+            await self._revoke_invalid_procedures(
+                session,
+                {row.id for row in selected if row.memory_type == MemoryType.PROCEDURAL.value},
+            )
+            return [record for row in selected if query.allows_record(record := _to_domain(row))]
 
     async def revalidate(self, query: MemoryQuery, ids: list[UUID]) -> set[UUID]:
         current_query = query.model_copy(update={"at": max(query.at, datetime.now(UTC))})
         async with tenant_session(self.tenant_id) as session:
             await self._expire_lapsed(session)
+            await self._revoke_invalid_procedures(session, set(ids))
             rows = (
                 await session.execute(
                     select(MemoryRecordRow).where(
@@ -726,6 +1030,51 @@ class PostgresMemoryRepository:
             ).scalars()
             return {row.id for row in rows if current_query.allows_record(_to_domain(row))}
 
+    async def list_review_queue(self, query: MemoryReviewQuery) -> list[MemoryRecord]:
+        async with tenant_session(self.tenant_id) as session:
+            rows = (
+                await session.execute(
+                    select(MemoryRecordRow)
+                    .where(*self._review_filters(query))
+                    .order_by(MemoryRecordRow.created_at, MemoryRecordRow.id)
+                    .limit(query.limit)
+                )
+            ).scalars()
+            return [record for row in rows if query.allows_record(record := _to_domain(row))]
+
+    async def get_for_review(
+        self, query: MemoryReviewQuery, memory_id: UUID
+    ) -> MemoryRecord | None:
+        async with tenant_session(self.tenant_id) as session:
+            row = (
+                await session.execute(
+                    select(MemoryRecordRow).where(
+                        *self._review_filters(query), MemoryRecordRow.id == memory_id
+                    )
+                )
+            ).scalar_one_or_none()
+            if row is None:
+                return None
+            record = _to_domain(row)
+            return record if query.allows_record(record) else None
+
+    async def pattern_episodes(self, query: MemoryPatternQuery) -> list[MemoryRecord]:
+        async with tenant_session(self.tenant_id) as session:
+            await self._expire_lapsed(session)
+            rows = (
+                await session.execute(
+                    select(MemoryRecordRow)
+                    .where(*self._pattern_filters(query))
+                    .order_by(
+                        MemoryRecordRow.created_at,
+                        MemoryRecordRow.content_hash,
+                        MemoryRecordRow.id,
+                    )
+                    .limit(query.limit)
+                )
+            ).scalars()
+            return [record for row in rows if query.allows_record(record := _to_domain(row))]
+
     async def transition(
         self,
         memory_id: UUID,
@@ -734,6 +1083,10 @@ class PostgresMemoryRepository:
         actor_id: str,
         reason: str,
         human_review_ref: str | None = None,
+        review_comment: str | None = None,
+        expected_version: int | None = None,
+        expected_content_hash: str | None = None,
+        expected_status: MemoryStatus | None = None,
     ) -> MemoryRecord:
         async with tenant_session(self.tenant_id) as session:
             await self._write_lock(session)
@@ -742,8 +1095,15 @@ class PostgresMemoryRepository:
                     select(MemoryRecordRow).where(MemoryRecordRow.id == memory_id).with_for_update()
                 )
             ).scalar_one()
+            current = _to_domain(row)
+            _validate_review_snapshot(
+                current,
+                expected_version=expected_version,
+                expected_content_hash=expected_content_hash,
+                expected_status=expected_status,
+            )
             _validate_transition(
-                MemoryStatus(row.status),
+                current.status,
                 status,
                 procedural=row.memory_type == "procedural",
                 human_review_ref=human_review_ref,
@@ -759,7 +1119,7 @@ class PostgresMemoryRepository:
                     )
                 ).scalars()
                 _validate_activation(
-                    _to_domain(row), human_review_ref, [_to_domain(episode) for episode in episodes]
+                    current, human_review_ref, [_to_domain(episode) for episode in episodes]
                 )
                 prior_active = list(
                     (
@@ -799,7 +1159,12 @@ class PostgresMemoryRepository:
                     actor_id=actor_id,
                     event_type=f"memory.{status.value}",
                     reason_codes=[reason],
-                    payload={"human_review_ref": human_review_ref},
+                    payload={
+                        "human_review_ref": human_review_ref,
+                        "review_comment": review_comment,
+                        "reviewed_version": row.version,
+                        "reviewed_content_hash": row.content_hash,
+                    },
                 )
             )
             await session.flush()

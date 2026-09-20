@@ -75,6 +75,7 @@ dependencies = [
     "docling>=2.60,<3",
     "opensearch-py[async]>=3,<4",
     "sentence-transformers>=5.1,<6",
+    "authlib>=1.3.2,<2",
 ]
 
 # Supply-chain cooldown: resolution only considers releases >=14 days old. Needs the
@@ -100,6 +101,7 @@ dev = [
 # These are also installed in the default dependencies.
 # To install run: `uv sync --frozen --only-group client`
 client = [
+    "authlib>=1.3.2,<2",
     "httpx~=0.28.1",
     "pydantic ~=2.13.4",
     "python-dotenv ~=1.2.2",
@@ -109,6 +111,14 @@ client = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+# `evaluation/experiments/<date>/` holds frozen, as-executed analysis snapshots
+# archived for change-control audit (see each directory's README.md). They are
+# not imported by the package, which is why they are also outside
+# `[tool.pyrefly] project-includes`. Reformatting them would invalidate the
+# sha256 manifest that pins exactly which bytes produced the numbers cited in
+# docs/ — so they stay byte-for-byte as they ran, and are excluded from lint
+# rather than rewritten. New analysis code belongs under scripts/ or src/.
+extend-exclude = ["evaluation/experiments"]
 
 [tool.ruff.lint]
 extend-select = ["I", "U"]

@@ -9,6 +9,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
+#: Headroom the envelope keeps for the system prompt and for the model's own output.
+#: These are the single definition: ``ContextBudget`` reads them as field defaults and
+#: ``ContextBuilder.build`` as parameter defaults, so the usable-envelope arithmetic
+#: cannot disagree with itself inside the product layer. ``core.settings`` keeps its own
+#: copy (it may not import the product layer) and a test pins that copy to these.
+DEFAULT_SYSTEM_RESERVE = 256
+DEFAULT_OUTPUT_RESERVE = 1024
+
 
 class ContextAgent(StrEnum):
     DATA = "data"
@@ -61,8 +69,8 @@ class ContextBudget(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     max_input_tokens: int = Field(ge=256, le=200_000)
-    system_reserve: int = Field(default=256, ge=0)
-    output_reserve: int = Field(default=1024, ge=0)
+    system_reserve: int = Field(default=DEFAULT_SYSTEM_RESERVE, ge=0)
+    output_reserve: int = Field(default=DEFAULT_OUTPUT_RESERVE, ge=0)
     tokens_used: int = Field(default=0, ge=0)
     tokens_pruned: int = Field(default=0, ge=0)
 

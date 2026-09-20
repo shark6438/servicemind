@@ -82,9 +82,7 @@ async def wait_for_outbox_delivery(
                 )
             )
         if status == "published":
-            for message_id, values in await redis.xrevrange(
-                "servicemind:tool-events", count=100
-            ):
+            for message_id, values in await redis.xrevrange("servicemind:tool-events", count=100):
                 fields = decode_fields(values)
                 if fields.get("idempotency_key") == idempotency_key:
                     fields["_message_id"] = (

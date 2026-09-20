@@ -135,7 +135,9 @@ def upgrade() -> None:
         sa.Column("output_ciphertext", sa.Text()),
         sa.Column("output_hash", sa.String(64)),
         sa.Column("error_code", sa.String(100)),
-        sa.Column("cancellation_requested", sa.Boolean(), server_default=sa.false(), nullable=False),
+        sa.Column(
+            "cancellation_requested", sa.Boolean(), server_default=sa.false(), nullable=False
+        ),
         sa.Column(
             "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
         ),

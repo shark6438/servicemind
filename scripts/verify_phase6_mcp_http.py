@@ -95,9 +95,7 @@ async def main() -> None:
     if not password:
         raise RuntimeError("ACME_ANALYST_PASSWORD is required for local acceptance")
     origin = resource.split("/v1/servicemind/mcp", 1)[0]
-    metadata_url = (
-        f"{origin}/.well-known/oauth-protected-resource/v1/servicemind/mcp"
-    )
+    metadata_url = f"{origin}/.well-known/oauth-protected-resource/v1/servicemind/mcp"
     async with httpx.AsyncClient(timeout=40, trust_env=False) as client:
         metadata_response = await client.get(metadata_url)
         metadata_response.raise_for_status()
@@ -115,9 +113,7 @@ async def main() -> None:
             ),
         )
         assert unauthorized.status_code == 401
-        assert f'resource_metadata="{metadata_url}"' in unauthorized.headers[
-            "www-authenticate"
-        ]
+        assert f'resource_metadata="{metadata_url}"' in unauthorized.headers["www-authenticate"]
 
         token_response = await client.post(
             f"{issuer}/protocol/openid-connect/token",

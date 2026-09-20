@@ -159,9 +159,7 @@ class InMemoryMcpTaskStore:
 
 
 class PostgresMcpTaskStore:
-    def __init__(
-        self, cipher: CredentialCipher | None = None, *, lease_seconds: int = 30
-    ) -> None:
+    def __init__(self, cipher: CredentialCipher | None = None, *, lease_seconds: int = 30) -> None:
         self.cipher = cipher or CredentialCipher()
         self.lease_seconds = lease_seconds
         self.worker_id = f"mcp-{uuid4()}"
@@ -241,11 +239,7 @@ class PostgresMcpTaskStore:
             row = await session.scalar(
                 select(McpTaskRecord).where(McpTaskRecord.task_id == task_id)
             )
-            if (
-                row
-                and row.status == "working"
-                and row.lease_expires_at <= datetime.now(UTC)
-            ):
+            if row and row.status == "working" and row.lease_expires_at <= datetime.now(UTC):
                 row.status = "failed"
                 row.error_code = "Task executor lease expired"
                 await session.flush()

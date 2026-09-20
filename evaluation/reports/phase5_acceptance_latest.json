@@ -1,128 +1,194 @@
 {
-  "report_id": "servicemind-phase5-acceptance-2026-09-14",
-  "evaluated_at": "2026-09-14T23:20:00+08:00",
-  "result": "PASS_ENGINEERING",
+  "report_id": "servicemind-phase5-acceptance-2026-09-17-v1.3",
+  "evaluated_at": "2026-09-17T08:00:18+08:00",
+  "result": "PASS_ENGINEERING_WITH_NO_PRODUCTION_MEMORY_SAMPLE",
   "scope": [
     "governed_memory",
     "context_engineering",
     "versioned_skills",
     "model_gateway",
-    "workflow_integration"
+    "workflow_integration",
+    "procedural_proposal_and_human_review",
+    "procedural_support_lifetime",
+    "human_review_console"
   ],
   "database": {
     "current_revision": "0013_phase6_hash_guards",
     "phase5_tables": 4,
     "phase5_rls_forced": true,
-    "fresh_round_trip": "passed",
-    "alembic_drift_operations": 0
+    "zero_context_denial": "passed",
+    "append_only_audit": "passed",
+    "alembic_drift_operations": 0,
+    "fresh_round_trip": {
+      "status": "carried_forward_pass",
+      "verified_at": "2026-09-14"
+    }
   },
   "tests": {
     "full_suite": {
-      "passed": 422,
+      "passed": 573,
       "skipped": 6,
       "failed": 0,
       "warnings": 38
     },
-    "phase5_targeted": {
-      "passed": 32,
+    "procedural_and_review_targeted": {
+      "passed": 88,
       "failed": 0
     },
-    "servicemind_phase4_to_phase6_targeted": {
-      "passed": 89,
-      "skipped": 1,
+    "review_identity_reconcile_targeted": {
+      "passed": 11,
       "failed": 0
     },
     "ruff_errors": 0,
-    "pyrefly_servicemind_production_errors": 0,
-    "full_repository_pyrefly_is_not_acceptance_gate": "Legacy generic template, optional Playwright, fake test doubles and unrelated instance-agent paths are outside the ServiceMind business-agent scope."
+    "pyrefly_errors": 0,
+    "git_diff_check_errors": 0
   },
-  "live_checks": {
-    "forced_rls_and_zero_context_denial": "passed",
-    "cross_tenant_isolation": "passed",
-    "concurrent_memory_idempotency": "passed",
-    "bge_m3_memory_ranking": "passed",
-    "append_only_audit": "passed",
-    "deepseek_structured_gateway": "passed",
-    "provider_token_and_cost_provenance": "passed",
-    "governed_knowledge_workflow": "passed",
-    "rag_retrieval": {
+  "memory_evaluation": {
+    "lexical_check": "passed",
+    "tei_check": "passed",
+    "write_steps": 48,
+    "read_probes": 45,
+    "leak_rate": 0.0,
+    "rank_gates_passed": 29,
+    "rank_gates_total": 29,
+    "delivery_gates_passed": 4,
+    "delivery_gates_total": 4,
+    "minimum_memory_headroom_tokens": 5738,
+    "evidence_token_cap": 5000
+  },
+  "procedural_memory": {
+    "proposal_policy": "cross_ticket_verified_episode_v1",
+    "proposal_feature_enabled": true,
+    "auto_activation": false,
+    "minimum_distinct_runs": 2,
+    "minimum_distinct_tickets": 2,
+    "review_snapshot_binding": [
+      "version",
+      "content_hash",
+      "status"
+    ],
+    "review_acl": [
+      "role",
+      "tenant",
+      "entity",
+      "group"
+    ],
+    "concurrent_opposite_decisions": "one_winner",
+    "live_postgres_review_path": "passed",
+    "live_http_review_queue": {
       "status": "passed",
-      "evidence_count": 5,
-      "top_source": "runbook://rb-vpn-mfa",
-      "method": "dense_bm25_mq_rrf_cross_encoder_parent",
-      "latency_ms": 5537.83
+      "http_status": 200,
+      "real_items": 0
     },
-    "api_health": "passed",
-    "ui_health": "passed",
-    "outbox_health": "passed"
-  },
-  "rag_hardening": {
-    "active_schema": "v3",
-    "documents": 39,
-    "parent_chunks": 446,
-    "child_chunks": 668,
-    "delete_reconciliation": {
-      "postgres": 0,
-      "index": 0
-    },
-    "candidate_funnel": {
-      "dense_k": 100,
-      "bm25_k": 100,
-      "candidate_k": 100
-    },
-    "rerank": {
-      "model": "BAAI/bge-reranker-v2-m3",
-      "gpu": "RTX 3090 #1",
-      "candidates": 100,
-      "latency_seconds": 0.8
-    },
-    "embedding": {
-      "model": "BAAI/bge-m3",
-      "dimension": 1024,
-      "gpu": "RTX 3090 #0"
+    "support_lifetime_policy": "continuous_read_time_revalidation",
+    "support_invalidation_transition": "active_to_revoked",
+    "support_invalidation_reason": "PROCEDURAL_SUPPORT_INVALIDATED",
+    "live_postgres_support_lifetime_path": "passed",
+    "review_console": {
+      "status": "passed",
+      "framework": "streamlit",
+      "oidc_provider": "keycloak",
+      "secret_file_mode": "0600_gitignored",
+      "health_http_status": 200
     }
+  },
+  "identity": {
+    "keycloak_drift_check": "passed",
+    "group_claim": "glpi_group_ids",
+    "missing_group_claim_policy": "empty_access_fail_closed",
+    "seeded_reviewer": "acme-approver",
+    "seeded_reviewer_group_ids": [
+      1,
+      2
+    ],
+    "realm_roles_reconciled": true,
+    "drift_directions": [
+      "protocol_mapper",
+      "user_profile",
+      "attributes",
+      "role_missing",
+      "role_undeclared"
+    ],
+    "unrepairable_drift_fails_apply": true,
+    "drift_check_probe": "live: revoke approver -> check FAIL rc=1; apply -> recheck PASS"
+  },
+  "runtime": {
+    "unit": "servicemind-api.service",
+    "scope": "user",
+    "status": "active",
+    "base_url": "http://127.0.0.1:18080",
+    "health_http_status": 200,
+    "machine_report": "evaluation/reports/servicemind_runtime_latest.json",
+    "persistent_services": {
+      "servicemind-api.service": "active",
+      "servicemind-streamlit.service": "active",
+      "servicemind-outbox.service": "active"
+    }
+  },
+  "production_observation": {
+    "status": "NO_DATA",
+    "real_analysis_envelopes": 0,
+    "real_memory_candidate_envelopes": 0,
+    "excluded_synthetic_artifacts": 13,
+    "report": "evaluation/reports/phase5_context_delivery_observed_latest.json",
+    "interpretation": "The path is executable and governed; no claim is made about real production memory volume or content quality."
   },
   "hard_gates": {
     "tenant_or_scope_leaks": 0,
     "unsafe_memory_auto_activations": 0,
     "duplicate_memory_on_replay": 0,
+    "stale_review_snapshot_acceptances": 0,
+    "concurrent_double_review_acceptances": 0,
     "context_budget_overruns": 0,
     "raw_evidence_model_boundary_bypasses": 0,
     "skill_capability_expansions": 0,
     "cross_tenant_cache_hits": 0,
     "uncontrolled_high_risk_fallbacks": 0,
     "model_cost_budget_bypasses": 0,
-    "known_open_phase5_defects_in_tested_scope": 0
+    "known_open_phase5_defects_in_tested_scope": 0,
+    "procedures_served_after_support_expiry": 0,
+    "review_tokens_exposed_in_errors": 0
   },
   "deployment": {
     "memory_enabled": true,
     "memory_vector_enabled": true,
+    "procedural_proposals_enabled": true,
     "context_enabled": true,
     "skills_enabled": true,
     "model_gateway_audit_enabled": true,
     "semantic_cache_enabled": false,
-    "explicit_tenant_allowlists": 2,
     "allowed_provider": "deepseek",
     "allowed_model": "deepseek-v4-flash",
     "max_cost_usd_per_call": 0.05,
-    "persistent_services": [
-      "servicemind-api.service",
-      "servicemind-streamlit.service",
-      "servicemind-outbox.service"
-    ]
+    "review_console_oidc_enabled": true,
+    "model_gateway_offline_estimator": "utf8_byte_upper_bound_v1"
   },
   "inherited_quality_boundary": {
     "phase4_status": "QUALITY_EXCEPTION_ACCEPTED",
-    "external_silver_status": "failed",
+    "external_silver_status": "BELOW_TARGET_DIAGNOSTIC",
     "metrics": {
-      "recall_at_5": 0.6821,
-      "recall_at_10": 0.7286,
-      "mrr_at_10": 0.5699,
-      "ndcg_at_10": 0.6087,
-      "impossible_abstention_rate": 0.78,
-      "answerable_answer_rate": 0.3333
+      "recall_at_5": 0.6857,
+      "recall_at_10": 0.7643,
+      "recall_at_20": 0.8071,
+      "mrr_at_10": 0.5848,
+      "ndcg_at_10": 0.6279
     },
-    "reason": "ITSM expert sign-off and real production query logs are unavailable; public TechQA silver gates are not all passed.",
-    "phase5_does_not_override_phase4_quality": true
+    "reason": "ITSM expert sign-off and real production query logs are unavailable; the tenant-domain release gates remain NOT_EVALUATED. Public TechQA silver point estimates are below the tenant reference thresholds and are diagnostic only.",
+    "phase5_does_not_override_phase4_quality": true,
+    "tenant_release_gate_status": "NOT_EVALUATED",
+    "tenant_release_gates_evaluated": 0,
+    "reviewer_semantic_calibration": "NOT_EVALUATED",
+    "committed_gold_status": "SMOKE_ONLY_SATURATED"
+  },
+  "amendment": {
+    "at": "2026-09-17",
+    "scope": "support lifetime, human review console, RAG status truth, and offline model accounting",
+    "detail": [
+      "Active procedures are revoked before serving when their required supporting episodes are no longer valid, with an append-only audit event.",
+      "The Streamlit Memory Review console uses Keycloak OIDC and preserves backend role, tenant, entity/group ACL, and exact-snapshot CAS enforcement.",
+      "The RAG machine report distinguishes unevaluated tenant release gates, below-target external-silver diagnostics, and a saturated local smoke set.",
+      "Model Gateway fallback token estimates are deterministic and offline; successful provider usage remains authoritative.",
+      "The full suite, static checks, live runtime checks, PostgreSQL governance, Keycloak drift, and lexical/TEI memory gates were re-run. The fresh database round trip remains the explicitly dated carried-forward item."
+    ]
   }
 }

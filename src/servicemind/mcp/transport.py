@@ -98,7 +98,11 @@ class StatelessMcpClient:
             raise ValueError("MCP response must be an object")
         if "error" in envelope:
             error = envelope["error"]
-            message = error.get("message", "MCP request failed") if isinstance(error, dict) else "MCP request failed"
+            message = (
+                error.get("message", "MCP request failed")
+                if isinstance(error, dict)
+                else "MCP request failed"
+            )
             raise RuntimeError(str(message))
         payload = envelope.get("result")
         if not isinstance(payload, dict) or "resultType" not in payload:
@@ -152,9 +156,7 @@ class McpGlpiProvider:
         while datetime.now(UTC) < deadline:
             delay_ms = max(100, min(int(task.get("pollIntervalMs", 1000)), 10_000))
             await asyncio.sleep(delay_ms / 1000)
-            task = await self.client.request(
-                "tasks/get", name=task_id, params={"taskId": task_id}
-            )
+            task = await self.client.request("tasks/get", name=task_id, params={"taskId": task_id})
             if task.get("status") == "completed":
                 result = task.get("result")
                 if not isinstance(result, dict):

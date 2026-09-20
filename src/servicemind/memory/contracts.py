@@ -241,11 +241,15 @@ class MemoryQuery(BaseModel):
             and required_entities.issubset(self.entity_ids)
             and required_groups is not None
             and required_groups.issubset(self.group_ids)
-            # Legacy post-run summaries were widened to tenant scope. Never serve
-            # them while awaiting the quarantine migration.
+            # Automated ticket summaries written before Phase 5.1 used tenant scope.
+            # Never serve them: the widening was never reviewed and the rows predate
+            # the entity/group ACL. New summaries declare the scope on purpose and
+            # carry the ACL, so the marker -- not the writer's identity -- is what
+            # separates the two. See :data:`POST_RUN_SCOPE_POLICY`.
             and not (
-                record.created_by == "post-run-memory-middleware"
+                record.created_by == POST_RUN_MEMORY_WRITER
                 and record.scope.scope_type is not MemoryScopeType.USER
+                and record.provenance.get("post_run_scope") != POST_RUN_TENANT_EPISODE_POLICY
             )
         )
 
@@ -259,6 +263,111 @@ class MemoryQuery(BaseModel):
         if scope.scope_type is MemoryScopeType.GROUP:
             return bool(scope.scope_id and int(scope.scope_id) in self.group_ids)
         return bool(scope.scope_id and scope.scope_id in self.service_ids)
+
+
+class MemoryReviewQuery(BaseModel):
+    """Authorization and keyset-pagination boundary for the human review queue."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    tenant_id: UUID
+    reviewer_id: str = Field(min_length=1, max_length=255)
+    entity_ids: frozenset[int] = Field(default_factory=frozenset)
+    group_ids: frozenset[int] = Field(default_factory=frozenset)
+    service_ids: frozenset[str] = Field(default_factory=frozenset)
+    memory_types: frozenset[MemoryType] = Field(default_factory=lambda: frozenset(MemoryType))
+    at: AwareDatetime = Field(default_factory=lambda: datetime.now(UTC))
+    after_created_at: AwareDatetime | None = None
+    after_memory_id: UUID | None = None
+    limit: int = Field(default=50, ge=1, le=100)
+
+    @model_validator(mode="after")
+    def require_complete_cursor(self) -> MemoryReviewQuery:
+        if (self.after_created_at is None) != (self.after_memory_id is None):
+            raise ValueError("review cursor requires both timestamp and memory id")
+        return self
+
+    def allows_record(self, record: MemoryRecord) -> bool:
+        required_entities = _required_acl_ids(record.provenance, "required_entity_ids")
+        required_groups = _required_acl_ids(record.provenance, "required_group_ids")
+        after_cursor = True
+        if self.after_created_at is not None and self.after_memory_id is not None:
+            after_cursor = (record.created_at, record.memory_id) > (
+                self.after_created_at,
+                self.after_memory_id,
+            )
+        return (
+            record.tenant_id == self.tenant_id
+            and record.status is MemoryStatus.QUARANTINE
+            and record.memory_type in self.memory_types
+            and self.allows_scope(record.scope)
+            and record.valid_from <= self.at
+            and (record.valid_to is None or record.valid_to > self.at)
+            and (record.expires_at is None or record.expires_at > self.at)
+            and required_entities is not None
+            and required_entities.issubset(self.entity_ids)
+            and required_groups is not None
+            and required_groups.issubset(self.group_ids)
+            and after_cursor
+        )
+
+    def allows_scope(self, scope: MemoryScope) -> bool:
+        if scope.scope_type is MemoryScopeType.TENANT:
+            return True
+        if scope.scope_type is MemoryScopeType.USER:
+            return scope.scope_id == self.reviewer_id
+        if scope.scope_type is MemoryScopeType.ENTITY:
+            return bool(scope.scope_id and int(scope.scope_id) in self.entity_ids)
+        if scope.scope_type is MemoryScopeType.GROUP:
+            return bool(scope.scope_id and int(scope.scope_id) in self.group_ids)
+        return bool(scope.scope_id and scope.scope_id in self.service_ids)
+
+
+class MemoryPatternQuery(BaseModel):
+    """Exact, ACL-constrained lookup for episodes supporting one learned procedure."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    tenant_id: UUID
+    pattern_key: str = Field(pattern=r"^[0-9a-f]{64}$")
+    entity_ids: frozenset[int] = Field(default_factory=frozenset)
+    group_ids: frozenset[int] = Field(default_factory=frozenset)
+    at: AwareDatetime = Field(default_factory=lambda: datetime.now(UTC))
+    limit: int = Field(default=50, ge=2, le=100)
+
+    def allows_record(self, record: MemoryRecord) -> bool:
+        required_entities = _required_acl_ids(record.provenance, "required_entity_ids")
+        required_groups = _required_acl_ids(record.provenance, "required_group_ids")
+        return (
+            record.tenant_id == self.tenant_id
+            and record.memory_type is MemoryType.EPISODIC
+            and record.scope.scope_type is MemoryScopeType.TENANT
+            and record.visible_at(self.at)
+            and not record.taint_labels
+            and record.created_by == POST_RUN_MEMORY_WRITER
+            and record.provenance.get("post_run_scope") == POST_RUN_TENANT_EPISODE_POLICY
+            and record.provenance.get("procedure_pattern_key") == self.pattern_key
+            and required_entities is not None
+            and required_entities.issubset(self.entity_ids)
+            and required_groups is not None
+            and required_groups.issubset(self.group_ids)
+        )
+
+
+#: The one writer that produces records outside the caller's own scope.
+POST_RUN_MEMORY_WRITER = "post-run-memory-middleware"
+
+#: ``provenance["post_run_scope"]`` value a post-run writer sets when its non-USER
+#: scope is a deliberate, ACL-carrying choice rather than the pre-Phase 5.1 widening.
+#: Absent (the case for every legacy row) means "assume widened, do not serve".
+POST_RUN_TENANT_EPISODE_POLICY = "tenant_episode_v2"
+
+#: A conservative automatic proposer may create a PROCEDURAL candidate only
+#: after the same normalized recommendation appears in distinct verified tickets.
+CROSS_TICKET_PROCEDURE_POLICY = "cross_ticket_verified_episode_v1"
+
+#: Identity recorded on automatically proposed procedural candidates.
+POST_RUN_PROCEDURAL_WRITER = "post-run-procedural-proposer"
 
 
 def _required_acl_ids(provenance: dict[str, Any], key: str) -> frozenset[int] | None:

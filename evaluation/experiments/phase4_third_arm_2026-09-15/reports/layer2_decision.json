@@ -1,0 +1,93 @@
+{
+  "schema": "servicemind-layer2-arm-decision-v1",
+  "note": "offline layer-2 experiment; not a repo release report",
+  "configurations": {
+    "rrf_2way": {
+      "recall_at_10": 0.7357,
+      "mrr_at_10": 0.5406,
+      "ndcg_at_10": 0.5869,
+      "ndcg_at_5": 0.5576
+    },
+    "rerank_2way": {
+      "recall_at_10": 0.7357,
+      "mrr_at_10": 0.5614,
+      "ndcg_at_10": 0.6036,
+      "ndcg_at_5": 0.5863
+    },
+    "rrf_3way": {
+      "recall_at_10": 0.7536,
+      "mrr_at_10": 0.5974,
+      "ndcg_at_10": 0.6343,
+      "ndcg_at_5": 0.6099
+    },
+    "rerank_3way": {
+      "recall_at_10": 0.75,
+      "mrr_at_10": 0.558,
+      "ndcg_at_10": 0.6042,
+      "ndcg_at_5": 0.582
+    }
+  },
+  "hard_subset": {
+    "rule": "production configuration (2-way RRF top-100 + rerank) misses gold in top-10",
+    "queries": 147,
+    "of": 280
+  },
+  "decision_rule": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1: keep the new arm only if hard-subset NDCG@10 gains at least 0.02 and the paired-bootstrap 95% CI lower bound is above zero",
+  "paired_bootstrap": {
+    "rrf_3way": {
+      "overall": {
+        "delta": 0.0475,
+        "ci95_low": 0.0263,
+        "ci95_high": 0.0691,
+        "ci95_lower_above_zero": true,
+        "queries": 280
+      },
+      "hard_subset": {
+        "delta": 0.0535,
+        "ci95_low": 0.0206,
+        "ci95_high": 0.0866,
+        "ci95_lower_above_zero": true,
+        "queries": 147
+      }
+    },
+    "rerank_3way": {
+      "overall": {
+        "delta": 0.0006,
+        "ci95_low": -0.0078,
+        "ci95_high": 0.0093,
+        "ci95_lower_above_zero": false,
+        "queries": 280
+      },
+      "hard_subset": {
+        "delta": 0.0061,
+        "ci95_low": -0.0078,
+        "ci95_high": 0.0208,
+        "ci95_lower_above_zero": false,
+        "queries": 147
+      }
+    },
+    "rerank_3way_vs_rerank_2way": {
+      "overall": {
+        "delta": 0.0006,
+        "ci95_low": -0.0078,
+        "ci95_high": 0.0093,
+        "ci95_lower_above_zero": false,
+        "queries": 280
+      },
+      "hard_subset": {
+        "delta": 0.0061,
+        "ci95_low": -0.0078,
+        "ci95_high": 0.0208,
+        "ci95_lower_above_zero": false,
+        "queries": 147
+      }
+    }
+  },
+  "verdict": {
+    "arm": "qwen3-embedding-0.6b dense (third retrieval arm)",
+    "hard_subset_ndcg_at_10_gain": 0.0061,
+    "required_gain": 0.02,
+    "ci95_low": -0.0078,
+    "adopt": false
+  }
+}

@@ -224,9 +224,7 @@ class GlpiClient:
             raise GlpiAPIError(502, "Unexpected knowledge item list response")
         return [GlpiKnowbaseItem.model_validate(item) for item in data]
 
-    async def search_knowledge_items(
-        self, query: str, limit: int = 20
-    ) -> list[GlpiKnowbaseItem]:
+    async def search_knowledge_items(self, query: str, limit: int = 20) -> list[GlpiKnowbaseItem]:
         if not query.strip() or not 1 <= limit <= 20:
             raise ValueError("query is required and limit must be between 1 and 20")
         value = _rsql_literal(query.strip())

@@ -65,7 +65,7 @@ MCP 只是能力暴露与传输边界。Native 和 MCP 调用共享同一个 Too
 
 ## 边界与下一阶段
 
-Phase 6 工程闭环不改变 RAG 业务质量结论。由于没有 ITSM 专家 gold set 和真实生产查询日志，Phase 4 仍为 `QUALITY_EXCEPTION_ACCEPTED`。本阶段也不替代 Phase 8 的并发容量、长稳和灾备演练，因此不声明生产容量已认证。
+Phase 6 工程闭环不改变 RAG 业务质量结论。由于没有 ITSM 专家 gold set 和真实生产查询日志，Phase 4 仍为 `QUALITY_EXCEPTION_ACCEPTED`。质量不达标的具体归因、已修复的测量层缺陷与检索侧实测证据见 [`PHASE4_RAG_QUALITY_ROOT_CAUSE_2026-09-15.md`](PHASE4_RAG_QUALITY_ROOT_CAUSE_2026-09-15.md)。本阶段也不替代 Phase 8 的并发容量、长稳和灾备演练，因此不声明生产容量已认证。
 
 下一步进入 Phase 7：把当前脚本证据固化为 CI release gate，增加 OTel/Langfuse 可观测性、离线/在线评测、红队安全集、轨迹质量、漂移检测和回滚门禁。执行顺序应为 P7.0 指标与 trace contract → P7.1 可观测栈 → P7.2 固定 eval harness → P7.3 red-team → P7.4 CI/release gate → P7.5 SLO 与验收。
 

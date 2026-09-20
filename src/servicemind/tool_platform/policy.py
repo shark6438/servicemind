@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 import httpx
 
 from servicemind.memory.contracts import SECRET_PATTERN
-from servicemind.memory.policy import INJECTION_MARKERS
+from servicemind.memory.policy import contains_injection_marker
 from servicemind.tool_platform.contracts import (
     ToolCall,
     ToolDefinition,
@@ -28,7 +28,6 @@ class DeterministicToolPolicy:
     async def decide(self, definition: ToolDefinition, call: ToolCall) -> ToolPolicyDecision:
         reasons: list[str] = []
         body = _argument_text(call)
-        normalized = body.casefold()
         if call.tool_name not in call.capabilities:
             reasons.append("CAPABILITY_DENIED")
         if not definition.allowed_roles.intersection(call.roles):
@@ -41,7 +40,7 @@ class DeterministicToolPolicy:
             reasons.append("UNRESOLVED_TAINT")
         if SECRET_PATTERN.search(body):
             reasons.append("SECRET_IN_TOOL_ARGUMENT")
-        if any(marker in normalized for marker in INJECTION_MARKERS):
+        if contains_injection_marker(body):
             reasons.append("PROMPT_INJECTION_IN_TOOL_ARGUMENT")
         if (
             definition.risk_level in {ToolRisk.HIGH, ToolRisk.CRITICAL}

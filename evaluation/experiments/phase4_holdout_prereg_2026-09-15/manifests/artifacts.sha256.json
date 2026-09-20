@@ -1,0 +1,107 @@
+{
+  "schema": "servicemind-experiment-artifacts-v1",
+  "experiment": "phase4_holdout_prereg_2026-09-15",
+  "note": "One-shot confirmation run of the pre-registered third-arm protocol. The protocol was frozen (sha256 in the sidecar) BEFORE the script ran; the holdout split was consumed exactly once and is now spent. Paths are repo-relative: `location: repo` entries are already tracked by git and are NOT duplicated here; `evidence/` entries were copied in because data/phase4/raw/ is gitignored. The rankings file is stored gzipped and its hash is of the UNCOMPRESSED bytes (same rule as the pools/ of the third-arm archive). Verdict: FAIL.",
+  "artifacts": [
+    {
+      "path": "evidence/techqa_holdout_c0_dev_pool100.npy",
+      "kind": "rerank_cache",
+      "bytes": 160128,
+      "sha256": "32c3efbb94223068cfe03d20824efc0fdf8739e95791b417f96a2e575873454b",
+      "in_repo": true
+    },
+    {
+      "path": "evidence/techqa_holdout_c0_dev_pool100.json",
+      "kind": "cache_identity",
+      "bytes": 304,
+      "sha256": "816487b1e5af7c30392fe64cd6ca650a30c20d1968cbd57a08873e781d59e1f9",
+      "in_repo": true
+    },
+    {
+      "path": "evidence/techqa_holdout_c0_pool100.npy",
+      "kind": "rerank_cache",
+      "bytes": 204128,
+      "sha256": "00dfc755497dfc9c8215eeced1641d95082e307b88ed676f3cef39f6eb75d768",
+      "in_repo": true
+    },
+    {
+      "path": "evidence/techqa_holdout_c0_pool100.json",
+      "kind": "cache_identity",
+      "bytes": 301,
+      "sha256": "25f57f8cf0164e64eaf5e9301da284606a8d3f0ab467f3fe54780217aceb6783",
+      "in_repo": true
+    },
+    {
+      "path": "evidence/techqa_holdout_c1_pool100.npy",
+      "kind": "rerank_cache",
+      "bytes": 204128,
+      "sha256": "296e0ea0e123488c07b5b8677cb3ede1ac1597a01a0935e06a959b993057cefb",
+      "in_repo": true
+    },
+    {
+      "path": "evidence/techqa_holdout_c1_pool100.json",
+      "kind": "cache_identity",
+      "bytes": 301,
+      "sha256": "3e67a988dea90038e721a77b0df7b52bf8b7d173b00fe7ebb5685c85ebe5d444",
+      "in_repo": true
+    },
+    {
+      "path": "evidence/phase4_holdout_prereg_2026-09-15_rankings.json.gz",
+      "kind": "per_query_rankings",
+      "bytes": 797043,
+      "sha256": "76002f4cfda5880520d5881a371e46142c084b5596b7684159fd280cc015f02d",
+      "sha256_compressed": "c4f326c658e8d28cf6654f4aa5ca7a297466b28b7ae70b008991434cb5181e77",
+      "note": "gunzip before hashing; hash above is of the uncompressed bytes",
+      "in_repo": true
+    },
+    {
+      "path": "scripts/evaluate_phase4_holdout.py",
+      "kind": "execution_script",
+      "bytes": 31874,
+      "sha256": "ac9d954885962f9cea0875cac18140004ca34cb1b4e93d8a6954af77be11416b",
+      "in_repo": true,
+      "location": "repo"
+    },
+    {
+      "path": "evaluation/reports/phase4_holdout_prereg_2026-09-15.json",
+      "kind": "report_json",
+      "bytes": 2769,
+      "sha256": "302b2a7b57c449bea199db8283e4b6a6f1b46f8f184f254b5b6d3d0e9f42fe21",
+      "in_repo": true,
+      "location": "repo"
+    },
+    {
+      "path": "evaluation/reports/phase4_holdout_prereg_2026-09-15.md",
+      "kind": "report_md",
+      "bytes": 1693,
+      "sha256": "7437d0c261f9301b8ed2f6bd1aa95f0fa19f4c3c8b42708ea2809613e4a6f4ba",
+      "in_repo": true,
+      "location": "repo"
+    },
+    {
+      "path": "docs/PHASE4_THIRD_ARM_PREREGISTRATION_2026-09-15.md",
+      "kind": "frozen_protocol",
+      "bytes": 12469,
+      "sha256": "038d74114cbac0a936144d585b0d2cf6c38179f49f7a3bf38576a457fbdb937a",
+      "in_repo": true,
+      "location": "repo"
+    },
+    {
+      "path": "docs/PHASE4_THIRD_ARM_PREREGISTRATION_2026-09-15.freeze.json",
+      "kind": "protocol_freeze_sidecar",
+      "bytes": 1210,
+      "sha256": "5d4592f6feed1eef17b94e427dfda8bc399499bb5ba34615b1dabeb3f8698451",
+      "in_repo": true,
+      "location": "repo"
+    },
+    {
+      "path": "data/phase4/raw/eval/techqa-rag-eval/techqa_qwen3_0.6b_passages420.npy",
+      "kind": "embedding_matrix",
+      "bytes": 394416256,
+      "sha256": "f5491a3392a15f9e751d6c1b5c26428aafdff69f86fd2b0e794a493e49d8d3fe",
+      "in_repo": false,
+      "location": "gitignored",
+      "note": "394MB; regenerable from the pinned Qwen3 revision"
+    }
+  ]
+}

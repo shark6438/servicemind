@@ -35,10 +35,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_constraint("ck_mcp_task_hashes", "mcp_tasks", type_="check")
-    op.drop_constraint(
-        "ck_tool_invocation_hashes", "governed_tool_invocations", type_="check"
-    )
-    op.drop_constraint(
-        "ck_tool_invocation_status", "governed_tool_invocations", type_="check"
-    )
+    op.drop_constraint("ck_tool_invocation_hashes", "governed_tool_invocations", type_="check")
+    op.drop_constraint("ck_tool_invocation_status", "governed_tool_invocations", type_="check")
     op.drop_constraint("ck_tool_policy_hashes", "tool_policy_decisions", type_="check")

@@ -16,44 +16,16 @@ from servicemind.memory.contracts import (
     MemoryRecord,
     MemorySelection,
 )
-from servicemind.memory.policy import INJECTION_MARKERS, MemoryGovernancePolicy
+from servicemind.memory.policy import MemoryGovernancePolicy, contains_injection_marker
 from servicemind.memory.repository import MemoryRepository
 
 logger = logging.getLogger("servicemind.memory.service")
 
 TOKEN = re.compile(r"[a-z0-9_\-]+|[\u4e00-\u9fff]", re.I)
 
-#: Read-side injection tripwire (defense-in-depth over the write-time phrase
-#: table). The write policy scans the serialized candidate once at write time;
-#: this rescan protects the model boundary against records written before a
-#: marker existed or markers smuggled through a field the policy does not scan.
-#: It is a deterministic tripwire, not an obfuscation boundary -- a hit hard
-#: blocks the record from ever reaching a prompt (never downgraded to trusted).
-_READ_INJECTION_MARKERS = (
-    *INJECTION_MARKERS,
-    "ignore your instructions",
-    "ignore all previous",
-    "ignore all prior",
-    "disregard previous",
-    "disregard all prior",
-    "override the system",
-    "you are now",
-    "act as the system",
-    "act as the assistant",
-    "developer message",
-    "system message",
-    "forget previous",
-    "\u5ffd\u7565\u7cfb\u7edf\u63d0\u793a",
-    "\u65e0\u89c6\u4e4b\u524d",
-    "\u73b0\u5728\u626e\u6f14",
-    "\u8df3\u8fc7\u5ba1\u6279",
-    "\u7ed5\u8fc7\u5ba1\u6279",
-)
-
 
 def _carries_injection(content: str) -> bool:
-    lowered = content.casefold()
-    return any(marker in lowered for marker in _READ_INJECTION_MARKERS)
+    return contains_injection_marker(content)
 
 
 class MemoryEmbeddingProvider(Protocol):
@@ -139,6 +111,45 @@ def _cosine(left: list[float], right: list[float]) -> float:
     return max(0.0, min(1.0, numerator / (lnorm * rnorm)))
 
 
+#: Metadata may only break ties between comparably relevant memories; it must
+#: never manufacture relevance. A flat sum spent 0.55 of the budget on metadata
+#: and only 0.45 on relevance, so a record sitting exactly on
+#: ``min_semantic_similarity`` with full metadata scored 0.7075 and outranked a
+#: perfectly relevant but stale, low-confidence one (0.4500) -- the opposite of
+#: what the relevance guard below claims to guarantee. Relevance therefore keeps
+#: the dominant share and metadata is capped at ``METADATA_WEIGHT``.
+METADATA_WEIGHT = 0.15
+
+#: Composition of the metadata tie-breaker itself (sums to one).
+_METADATA_MIX = {"recency": 0.4, "confidence": 0.3, "importance": 0.2, "provenance": 0.1}
+
+
+def metadata_quality(
+    *, recency: float, confidence: float, importance: float, provenance: float
+) -> float:
+    """Collapse the metadata signals into a single bounded tie-breaker in [0, 1]."""
+    return (
+        _METADATA_MIX["recency"] * recency
+        + _METADATA_MIX["confidence"] * confidence
+        + _METADATA_MIX["importance"] * importance
+        + _METADATA_MIX["provenance"] * provenance
+    )
+
+
+def memory_relevance_score(semantic: float, metadata: float) -> float:
+    """Blend relevance with a bounded metadata tie-breaker, relevance dominant.
+
+    Invariant (asserted by the tests): a record at the similarity floor carrying
+    maximal metadata scores ``(1 - METADATA_WEIGHT) * floor + METADATA_WEIGHT``,
+    which stays below ``1 - METADATA_WEIGHT`` -- the score of a fully relevant
+    record carrying no metadata -- for every ``floor`` below
+    ``1 - METADATA_WEIGHT / (1 - METADATA_WEIGHT)`` (0.394 here). Metadata can
+    therefore reorder comparably relevant memories but can never promote an
+    irrelevant one above a relevant one.
+    """
+    return (1.0 - METADATA_WEIGHT) * semantic + METADATA_WEIGHT * metadata
+
+
 class MemoryRetriever:
     """Scope-first retrieval followed by ranking and authority revalidation."""
 
@@ -148,6 +159,7 @@ class MemoryRetriever:
         embedding: MemoryEmbeddingProvider | None = None,
         candidate_ceiling: int = 100,
         min_semantic_similarity: float = 0.35,
+        min_lexical_similarity: float = 0.05,
     ) -> None:
         if not 1 <= candidate_ceiling <= 500:
             raise ValueError("memory candidate ceiling must be between 1 and 500")
@@ -156,7 +168,14 @@ class MemoryRetriever:
         self.candidate_ceiling = candidate_ceiling
         if not 0 <= min_semantic_similarity <= 1:
             raise ValueError("minimum semantic similarity must be between zero and one")
+        if not 0 <= min_lexical_similarity <= 1:
+            raise ValueError("minimum lexical similarity must be between zero and one")
         self.min_semantic_similarity = min_semantic_similarity
+        #: The lexical fallback is a different scale from cosine similarity, so it
+        #: gets its own floor instead of silently reusing the semantic one. It used
+        #: to be an inline ``0.000001``, i.e. no floor at all: any shared token
+        #: admitted a memory into the prompt.
+        self.min_lexical_similarity = min_lexical_similarity
 
     async def retrieve(self, query: MemoryQuery) -> list[MemorySelection]:
         candidates = await self.repository.candidates(query, ceiling=self.candidate_ceiling)
@@ -192,19 +211,22 @@ class MemoryRetriever:
                 if query_vector is not None and document_vectors is not None
                 else _lexical_similarity(query.text, record.content)
             )
-            # Metadata quality must never manufacture query relevance.
-            if semantic < (self.min_semantic_similarity if self.embedding else 0.000001):
+            # Metadata quality must never manufacture query relevance. The floor
+            # is what enforces it: relevance is the admission test, and after
+            # admission metadata is capped to a tie-breaker of its own scale.
+            floor = self.min_semantic_similarity if self.embedding else self.min_lexical_similarity
+            if semantic < floor:
                 continue
             age_days = max((query.at - record.updated_at).total_seconds(), 0) / 86400
             recency = math.exp(-age_days / 180)
             provenance = 1.0 if record.evidence_refs or record.consent_ref else 0.0
-            score = (
-                0.45 * semantic
-                + 0.2 * recency
-                + 0.15 * record.confidence
-                + 0.1 * record.importance
-                + 0.1 * provenance
+            metadata = metadata_quality(
+                recency=recency,
+                confidence=record.confidence,
+                importance=record.importance,
+                provenance=provenance,
             )
+            score = memory_relevance_score(semantic, metadata)
             ranked.append(
                 MemorySelection(
                     memory=record,
@@ -215,10 +237,25 @@ class MemoryRetriever:
                         "confidence": record.confidence,
                         "importance": record.importance,
                         "provenance": provenance,
+                        # The tie-breaker and its weight are published so a reader
+                        # can tell how much of a score came from relevance alone.
+                        "metadata": metadata,
+                        "metadata_weight": METADATA_WEIGHT,
                     },
                 )
             )
-        ranked.sort(key=lambda item: (-item.score, str(item.memory.memory_id)))
+        # UUID4 is a storage identity, not a ranking signal. Using it here made
+        # exact-score ties change order when the same corpus was rebuilt. The
+        # content digest gives a stable first tie-breaker; the deterministic
+        # idempotency key completes the ordering when different subjects/scopes
+        # intentionally carry identical content.
+        ranked.sort(
+            key=lambda item: (
+                -item.score,
+                item.memory.content_hash,
+                item.memory.idempotency_key,
+            )
+        )
         # Embedding is an external await: a source may be revoked while it runs.
         visible = await self.repository.revalidate(
             query, [item.memory.memory_id for item in ranked]

@@ -1,0 +1,186 @@
+{
+  "schema": "servicemind-layer1-funnel-experiment-v1",
+  "note": "offline layer-1 experiment; not a repo release report",
+  "queries": 400,
+  "pool_depth": 100,
+  "reranker": "TEI bge-reranker-v2-m3 @127.0.0.1:8086 (production provider, single sigmoid)",
+  "blend": "0.85 * rerank + 0.15 * minmax(rrf)  [corrected: normalises the retrieval score, as src/servicemind/rag/service.py final_score does]",
+  "bm25_search_ms": {
+    "p50": 35.87,
+    "p95": 45.7
+  },
+  "arms": {
+    "rrf100": {
+      "recall_at_5": 0.6464,
+      "recall_at_5_ci95": [
+        0.5893,
+        0.7
+      ],
+      "recall_at_10": 0.7357,
+      "recall_at_10_ci95": [
+        0.6821,
+        0.7857
+      ],
+      "recall_at_20": 0.7893,
+      "recall_at_20_ci95": [
+        0.7393,
+        0.8357
+      ],
+      "mrr_at_10": 0.5406,
+      "mrr_at_10_ci95": [
+        0.4891,
+        0.5928
+      ],
+      "ndcg_at_10": 0.5869,
+      "ndcg_at_10_ci95": [
+        0.5377,
+        0.6362
+      ]
+    },
+    "pure30": {
+      "recall_at_5": 0.6786,
+      "recall_at_5_ci95": [
+        0.625,
+        0.7321
+      ],
+      "recall_at_10": 0.7321,
+      "recall_at_10_ci95": [
+        0.6786,
+        0.7821
+      ],
+      "recall_at_20": 0.7857,
+      "recall_at_20_ci95": [
+        0.7357,
+        0.8321
+      ],
+      "mrr_at_10": 0.5672,
+      "mrr_at_10_ci95": [
+        0.5149,
+        0.6197
+      ],
+      "ndcg_at_10": 0.6072,
+      "ndcg_at_10_ci95": [
+        0.5575,
+        0.657
+      ]
+    },
+    "pure100": {
+      "recall_at_5": 0.6821,
+      "recall_at_5_ci95": [
+        0.6286,
+        0.7357
+      ],
+      "recall_at_10": 0.7357,
+      "recall_at_10_ci95": [
+        0.6857,
+        0.7857
+      ],
+      "recall_at_20": 0.7786,
+      "recall_at_20_ci95": [
+        0.7286,
+        0.825
+      ],
+      "mrr_at_10": 0.5614,
+      "mrr_at_10_ci95": [
+        0.5098,
+        0.6135
+      ],
+      "ndcg_at_10": 0.6036,
+      "ndcg_at_10_ci95": [
+        0.5538,
+        0.6529
+      ]
+    },
+    "blend100": {
+      "recall_at_5": 0.6857,
+      "recall_at_5_ci95": [
+        0.6286,
+        0.7393
+      ],
+      "recall_at_10": 0.7643,
+      "recall_at_10_ci95": [
+        0.7143,
+        0.8143
+      ],
+      "recall_at_20": 0.8071,
+      "recall_at_20_ci95": [
+        0.7571,
+        0.85
+      ],
+      "mrr_at_10": 0.5848,
+      "mrr_at_10_ci95": [
+        0.5332,
+        0.6358
+      ],
+      "ndcg_at_10": 0.6279,
+      "ndcg_at_10_ci95": [
+        0.5792,
+        0.6757
+      ]
+    },
+    "oracle": {
+      "recall_at_5": 0.8714,
+      "recall_at_5_ci95": [
+        0.8321,
+        0.9107
+      ],
+      "recall_at_10": 0.8714,
+      "recall_at_10_ci95": [
+        0.8321,
+        0.9107
+      ],
+      "recall_at_20": 0.8714,
+      "recall_at_20_ci95": [
+        0.8321,
+        0.9107
+      ],
+      "mrr_at_10": 0.8714,
+      "mrr_at_10_ci95": [
+        0.8321,
+        0.9107
+      ],
+      "ndcg_at_10": 0.8714,
+      "ndcg_at_10_ci95": [
+        0.8321,
+        0.9107
+      ]
+    }
+  },
+  "answerable": 280,
+  "corrections": {
+    "blend100": {
+      "defect": "the first run normalised the rerank score matrix instead of the fused RRF score, making the blend a monotone transform of pure rerank (400/400 identical rankings) and hiding the production blend's real effect",
+      "previous_arm": {
+        "recall_at_5": 0.6821,
+        "recall_at_5_ci95": [
+          0.6286,
+          0.7357
+        ],
+        "recall_at_10": 0.7357,
+        "recall_at_10_ci95": [
+          0.6857,
+          0.7857
+        ],
+        "recall_at_20": 0.7786,
+        "recall_at_20_ci95": [
+          0.7286,
+          0.825
+        ],
+        "mrr_at_10": 0.5614,
+        "mrr_at_10_ci95": [
+          0.5098,
+          0.6135
+        ],
+        "ndcg_at_10": 0.6036,
+        "ndcg_at_10_ci95": [
+          0.5538,
+          0.6529
+        ]
+      },
+      "identical_orderings_vs_pure100_before": 400,
+      "identical_orderings_vs_pure100_after": 0,
+      "fused_ranking_matches_production_rrf": "asserted for all 400 queries",
+      "recomputed_by": "fix_blend100.py over the unchanged fused ranking + cached rerank matrix"
+    }
+  }
+}

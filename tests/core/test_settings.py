@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 from pydantic import SecretStr, ValidationError
@@ -14,6 +15,12 @@ from schema.models import (
     OpenAIModelName,
     OpenRouterModelName,
     VertexAIModelName,
+)
+from servicemind.context.builder import ContextBuilder
+from servicemind.context.contracts import (
+    ContextAgent,
+    ContextBudget,
+    ContextSource,
 )
 
 
@@ -281,3 +288,75 @@ def test_settings_log_level_invalid():
     with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key", "LOG_LEVEL": "INVALID"}, clear=True):
         with pytest.raises(ValueError, match="validation error for Settings\nLOG_LEVEL\n"):
             Settings(_env_file=None)
+
+
+def test_context_evidence_cap_cannot_exceed_half_the_usable_envelope():
+    base = {
+        "OPENAI_API_KEY": "test_key",
+        "SERVICEMIND_CONTEXT_MAX_INPUT_TOKENS": "12000",
+    }
+    with patch.dict(
+        os.environ,
+        {**base, "SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP": "5360"},
+        clear=True,
+    ):
+        assert Settings(_env_file=None).SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP == 5360
+
+    with patch.dict(
+        os.environ,
+        {**base, "SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP": "5361"},
+        clear=True,
+    ):
+        with pytest.raises(ValueError, match="must not exceed half"):
+            Settings(_env_file=None)
+
+
+def test_the_startup_cap_bound_is_the_same_number_the_builder_enforces():
+    """Pin the settings copy of the envelope arithmetic to the builder's.
+
+    ``Settings.model_post_init`` re-derives the usable envelope because ``core`` may
+    not import the product layer. The copy is only safe while the two agree: if the
+    reserves in ``ContextBuilder.build`` ever grow, startup would keep accepting a cap
+    the builder then rejects, and the failure would move from boot time to a live
+    analysis request. This asserts the boundary from both sides rather than comparing
+    constants, so it also catches the builder changing its arithmetic.
+    """
+    max_input = 12_000
+    boundary = ContextBudget(max_input_tokens=max_input).usable_tokens // 2
+
+    # Settings accepts exactly `boundary`, and rejects one token more.
+    with patch.dict(
+        os.environ,
+        {
+            "OPENAI_API_KEY": "test_key",
+            "SERVICEMIND_CONTEXT_MAX_INPUT_TOKENS": str(max_input),
+            "SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP": str(boundary),
+        },
+        clear=True,
+    ):
+        assert Settings(_env_file=None).SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP == boundary
+    with patch.dict(
+        os.environ,
+        {
+            "OPENAI_API_KEY": "test_key",
+            "SERVICEMIND_CONTEXT_MAX_INPUT_TOKENS": str(max_input),
+            "SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP": str(boundary + 1),
+        },
+        clear=True,
+    ):
+        with pytest.raises(ValueError, match="must not exceed half"):
+            Settings(_env_file=None)
+
+    # And the builder accepts exactly the same boundary.
+    builder = ContextBuilder()
+    common = {
+        "tenant_id": uuid4(),
+        "run_id": uuid4(),
+        "task_id": "T-CAP",
+        "agent": ContextAgent.DATA,
+        "items": (),
+        "max_input_tokens": max_input,
+    }
+    builder.build(**common, source_token_caps={ContextSource.EVIDENCE: boundary})
+    with pytest.raises(ValueError, match="no more than half"):
+        builder.build(**common, source_token_caps={ContextSource.EVIDENCE: boundary + 1})

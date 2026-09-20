@@ -1,0 +1,49 @@
+{
+  "characters": {
+    "n": 96293,
+    "p50": 1313,
+    "p95": 1738,
+    "max": 2205,
+    "mean": 1240.5
+  },
+  "passage_tokens_bge_tokenizer": {
+    "n": 96293,
+    "p50": 417,
+    "p95": 418,
+    "max": 427,
+    "mean": 367.6
+  },
+  "passage_tokens_reranker_tokenizer": {
+    "n": 96293,
+    "p50": 417,
+    "p95": 418,
+    "max": 427,
+    "mean": 367.6
+  },
+  "query_tokens_reranker_tokenizer": {
+    "n": 400,
+    "p50": 74,
+    "p95": 240,
+    "max": 572,
+    "mean": 98.3
+  },
+  "pair_tokens_reranker_tokenizer": {
+    "n": 3000,
+    "p50": 480,
+    "p95": 639,
+    "max": 993,
+    "mean": 469.7
+  },
+  "passages_over_512_tokens": {
+    "count": 0,
+    "of": 96293
+  },
+  "pairs_over_512_tokens": {
+    "count": 824,
+    "of": 3000,
+    "fraction": 0.2747
+  },
+  "reranker_tokenizer_model_max_length": 8192,
+  "pair_sample_size": 3000,
+  "seed": 0
+}

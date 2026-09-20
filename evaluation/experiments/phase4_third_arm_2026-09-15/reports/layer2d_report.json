@@ -1,0 +1,106 @@
+{
+  "schema": "servicemind-layer2-third-arm-true-fusion-v1",
+  "note": "offline layer-2 experiment; not a repo release report",
+  "why": "the nested fusion used by layer 2a/2c RRF(RRF(bm25,bge),qwen3) is not what production's OpenSearch hybrid + RRF pipeline would run for three arms; this script fuses three equal-weight arms with rank_constant 60",
+  "fused_coverage_at_100": {
+    "two_way": 0.8714,
+    "three_way_nested": 0.925,
+    "three_way_true": 0.9143
+  },
+  "arms": {
+    "rrf_2way": {
+      "R@5": 0.6464,
+      "R@10": 0.7357,
+      "R@20": 0.7893,
+      "MRR@10": 0.5406,
+      "NDCG@10": 0.5869
+    },
+    "pure_2way": {
+      "R@5": 0.6821,
+      "R@10": 0.7357,
+      "R@20": 0.7786,
+      "MRR@10": 0.5614,
+      "NDCG@10": 0.6036
+    },
+    "blend_2way": {
+      "R@5": 0.6857,
+      "R@10": 0.7643,
+      "R@20": 0.8071,
+      "MRR@10": 0.5848,
+      "NDCG@10": 0.6279
+    },
+    "rrf_true3": {
+      "R@5": 0.6714,
+      "R@10": 0.7429,
+      "R@20": 0.8071,
+      "MRR@10": 0.5763,
+      "NDCG@10": 0.616
+    },
+    "pure_true3": {
+      "R@5": 0.6786,
+      "R@10": 0.7464,
+      "R@20": 0.8036,
+      "MRR@10": 0.5584,
+      "NDCG@10": 0.6036
+    },
+    "blend_true3": {
+      "R@5": 0.7143,
+      "R@10": 0.7679,
+      "R@20": 0.8286,
+      "MRR@10": 0.593,
+      "NDCG@10": 0.6353
+    }
+  },
+  "hard_subset": {
+    "rule": "production blend misses gold in top-10",
+    "queries": 141,
+    "of": 280
+  },
+  "third_arm_vs_production": {
+    "NDCG@10": {
+      "delta": 0.0074,
+      "ci95_low": -0.0034,
+      "ci95_high": 0.019,
+      "ci95_lower_above_zero": false
+    },
+    "Recall@10": {
+      "delta": 0.0036,
+      "ci95_low": -0.0179,
+      "ci95_high": 0.025,
+      "ci95_lower_above_zero": false
+    },
+    "Recall@5": {
+      "delta": 0.0286,
+      "ci95_low": 0.0071,
+      "ci95_high": 0.0536,
+      "ci95_lower_above_zero": true
+    }
+  },
+  "third_arm_vs_production_hard_subset": {
+    "NDCG@10": {
+      "delta": 0.02,
+      "ci95_low": -0.0003,
+      "ci95_high": 0.0416,
+      "ci95_lower_above_zero": false
+    },
+    "Recall@10": {
+      "delta": 0.0071,
+      "ci95_low": -0.0355,
+      "ci95_high": 0.0496,
+      "ci95_lower_above_zero": false
+    },
+    "Recall@5": {
+      "delta": 0.0567,
+      "ci95_low": 0.0142,
+      "ci95_high": 0.1064,
+      "ci95_lower_above_zero": true
+    }
+  },
+  "verdict": {
+    "arm": "qwen3-embedding-0.6b dense, fused as production would fuse it",
+    "hard_subset_ndcg_at_10_gain": 0.02,
+    "required_gain": 0.02,
+    "ci95_low": -0.0003,
+    "adopt": false
+  }
+}

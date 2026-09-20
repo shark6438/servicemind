@@ -56,6 +56,21 @@
           }
         },
         {
+          "name": "glpi-group-ids",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "glpi_group_ids",
+            "claim.name": "glpi_group_ids",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
           "name": "servicemind-audience",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-audience-mapper",
@@ -95,7 +110,8 @@
       "requiredActions": [],
       "attributes": {
         "tenant_id": ["11111111-1111-4111-8111-111111111111"],
-        "glpi_entity_ids": ["1"]
+        "glpi_entity_ids": ["1"],
+        "glpi_group_ids": ["1", "2"]
       },
       "credentials": [{"type": "password", "value": "${ACME_APPROVER_PASSWORD}", "temporary": false}],
       "realmRoles": ["viewer", "analyst", "operator", "approver"]
