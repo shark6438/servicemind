@@ -195,6 +195,9 @@ privatecredentials/*
 node_modules/
 package-lock.json
 !frontend/package-lock.json
+# The packaging-template `lib/` above matches at any depth and was swallowing the
+# console's source directory, leaving a clean checkout unable to compile.
+!frontend/src/lib/
 
 # Live-app smoke test failure screenshot
 smoke_live_app_failure.png

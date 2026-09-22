@@ -11,11 +11,11 @@ test("authenticated operator console is usable and has no serious accessibility 
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(password as string);
   await page.getByRole("button", { name: /sign in/i }).click();
 
-  await expect(page.getByRole("heading", { name: /从工单到行动/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "工作台" })).toBeVisible();
   if (testInfo.project.name === "desktop") {
     await expect(page.getByText("受控环境")).toBeVisible();
   } else {
-    await expect(page.getByRole("link", { name: "SM / OPS" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "ServiceMind" })).toBeVisible();
   }
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations.filter((item) => ["serious", "critical"].includes(item.impact ?? ""))).toEqual([]);
@@ -24,8 +24,8 @@ test("authenticated operator console is usable and has no serious accessibility 
   if (testInfo.project.name === "mobile") {
     await page.getByRole("button", { name: "打开导航" }).click();
   }
-  await page.getByRole("link", { name: "质量门禁" }).click();
-  await expect(page.getByRole("heading", { name: "质量门禁不粉饰未闭合项" })).toBeVisible();
-  await expect(page.getByText("DOMAIN_QUALITY_NOT_CERTIFIED")).toBeVisible();
+  await page.getByRole("link", { name: "质量与发布", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "质量与发布状态" })).toBeVisible();
+  await expect(page.getByText("领域质量尚未认证")).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("quality-gates.png"), fullPage: true });
 });

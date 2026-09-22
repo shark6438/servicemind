@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { PageHeader } from "@/components/ui/page-header";
 import { RunTable } from "@/components/runs/run-table";
+import { runStatusLabels } from "@/components/ui/status";
 import { apiRequest } from "@/lib/api";
 import { runListSchema, runStatusSchema, type RunSummary } from "@/lib/contracts";
 import { useApi } from "@/hooks/use-api";
@@ -33,7 +34,7 @@ function RunLedger() {
   }
   function changeStatus(next: string) { setExtra([]); setCursor(null); router.replace(next ? `/runs?status=${next}` : "/runs"); }
   const hasMore = cursor !== null || (extra.length === 0 && initialCursor !== null);
-  return <><PageHeader eyebrow="运行账本 / Tenant scoped" title="每一次运行，都有可重建的路径" description="按时间查看本租户的 Agent 运行。状态、写意图与工单关联来自持久化账本。" actions={<label className="filter-label">状态筛选<select name="run_status" value={status} onChange={(event) => changeStatus(event.target.value)}><option value="">全部状态</option>{runStatusSchema.options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>} />
+  return <><PageHeader eyebrow="运行管理" title="运行记录" description="查看当前租户的工单调查、执行状态和写操作权限。" actions={<label className="filter-label">状态筛选<select name="run_status" value={status} onChange={(event) => changeStatus(event.target.value)}><option value="">全部状态</option>{runStatusSchema.options.map((option) => <option key={option} value={option}>{runStatusLabels[option]}</option>)}</select></label>} />
     {runs.isLoading ? <LoadingState /> : runs.error ? <ErrorState error={runs.error} retry={() => void runs.mutate()} /> : items.length ? <><RunTable runs={items} />{pageError && <p className="inline-error" role="alert">{pageError}</p>}{hasMore && <div className="load-more"><button className="button button--secondary" disabled={loadingMore} onClick={() => void loadMore()}>{loadingMore ? "正在读取…" : "加载更早运行"}</button></div>}</> : <EmptyState title="当前筛选没有运行" description="更换状态条件，或回到工作台启动一条真实调查。" />}</>;
 }
 
