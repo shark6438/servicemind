@@ -62,6 +62,7 @@ Product and scaffold live under one `src/` tree. The **product** is self-contain
 ```text
 src/
 ├── servicemind/        # Packaged modular product
+│   ├── foundation/     # Framework-independent primitives shared across contexts
 │   ├── domain/         # Pure business contracts and integrity primitives
 │   ├── orchestration/  # Durable workflows, planning, recovery, governance
 │   ├── interfaces/http/# Inbound HTTP adapters
@@ -93,9 +94,16 @@ schema|client|voice` + `streamlit_app.py`), so those layers are load-bearing and
 "product" code — treat them as runtime infrastructure.
 
 `pyproject.toml` defines the build backend, explicit package discovery and installed
-`servicemind-api` / `servicemind-outbox` entry points. The architecture gate rejects
-package cycles, outward domain imports, source-tree path injection and incomplete process
-manifests. See [`docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md`](docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md).
+`servicemind-api` / `servicemind-outbox` entry points.
+[`scripts/audit_project_structure.py`](scripts/audit_project_structure.py) is the executable
+architecture contract, run by CI's `architecture-gate` job: it rejects package cycles,
+outward domain imports, source-tree path injection, incomplete process manifests, and any
+growth of the product's imports from the inherited scaffold. The scaffold budget is frozen
+debt — `core` at 26 import sites, `schema` at 1 — and may only shrink. The gate also fails
+when the committed report stops matching the tree, so the evidence cannot drift away from
+what it describes. Machine-readable results land in
+`evaluation/reports/project_structure_latest.{json,md}`. See
+[`docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md`](docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md).
 
 ## Architecture at a glance
 
@@ -210,13 +218,18 @@ The test suite is the contract. Keep it green before pushing:
 uv run ruff format --check .
 uv run ruff check .
 uv run pyrefly check
+uv run python scripts/audit_project_structure.py --check   # architecture contract
 uv run pytest                                   # full offline suite
 uv run pytest tests/integration --run-docker    # docker-gated integration
 ```
 
+The architecture contract compares the tree against the committed report, so after an
+intentional structural change regenerate it first — `uv run python
+scripts/audit_project_structure.py` (no `--check`) — and commit both together.
+
 `.github/workflows/test.yml` runs ruff, pyrefly, pytest (Python 3.12/3.13/3.14), markdown
-linting, and a docker-based integration job. For per-commit authoring conventions see
-[CLAUDE.md](CLAUDE.md).
+linting, the architecture gate, and a docker-based integration job. For per-commit
+authoring conventions see [CLAUDE.md](CLAUDE.md).
 
 ## Documentation index
 

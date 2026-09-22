@@ -26,6 +26,7 @@ ServiceMind 是一个**企业级 ITSM(IT 服务管理)智能体平台**:它把�
 ```text
 src/
 ├── servicemind/        # 已打包的模块化产品
+│   ├── foundation/     # 与框架无关、跨上下文共享的原语
 │   ├── domain/         # 纯业务契约与完整性原语
 │   ├── orchestration/  # 持久工作流、规划、恢复与治理
 │   ├── interfaces/http/# HTTP 入站适配器
@@ -57,8 +58,13 @@ deploy/systemd/         # 版本化 API / Streamlit / outbox 进程清单
 死代码删除。
 
 `pyproject.toml` 已声明构建后端、显式包发现以及安装后的 `servicemind-api` /
-`servicemind-outbox` 入口。架构门禁会拒绝包依赖环、领域层向外依赖、源码路径注入和不完整的
-进程清单。详见 [`docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md`](docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md)。
+`servicemind-outbox` 入口。[`scripts/audit_project_structure.py`](scripts/audit_project_structure.py)
+是可执行的架构契约,由 CI 的 `architecture-gate` job 执行:它会拒绝包依赖环、领域层向外依赖、
+源码路径注入、不完整的进程清单,以及产品对上游脚手架 import 的**任何增长**。脚手架预算是
+冻结的技术债——`core` 26 处 import 站点、`schema` 1 处——只允许减少。当已提交的报告与代码树
+不再一致时门禁同样失败,因此证据不会与其描述的对象脱节。机器可读结果见
+`evaluation/reports/project_structure_latest.{json,md}`。详见
+[`docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md`](docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md)。
 
 ## 架构速览
 
@@ -167,12 +173,16 @@ uv run streamlit run src/streamlit_app.py
 uv run ruff format --check .
 uv run ruff check .
 uv run pyrefly check
+uv run python scripts/audit_project_structure.py --check   # 架构契约
 uv run pytest                                   # 全量离线套件
 uv run pytest tests/integration --run-docker    # docker 门控集成
 ```
 
+架构契约会把代码树与已提交的报告比对,因此**有意**改动结构后需先重新生成报告——`uv run
+python scripts/audit_project_structure.py`(不带 `--check`)——再与代码一并提交。
+
 `.github/workflows/test.yml` 运行 ruff、pyrefly、pytest(Python 3.12/3.13/3.14)、Markdown
-lint 以及 docker 集成 job。提交/撰写约定见 [CLAUDE.md](CLAUDE.md)。
+lint、架构门禁以及 docker 集成 job。提交/撰写约定见 [CLAUDE.md](CLAUDE.md)。
 
 ## 文档索引
 
