@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-09-22T08:48:35+08:00",
+  "release_decision": "QUALITY_EXCEPTION_ACCEPTED",
+  "structure": {
+    "status": "PASS",
+    "checks_passed": 16,
+    "checks_total": 16
+  },
+  "phase5": {
+    "status": "PASS_ENGINEERING_WITH_NO_PRODUCTION_MEMORY_SAMPLE",
+    "tests_passed": 576
+  },
+  "phase6": {
+    "status": "PASS_ENGINEERING_SUPPORTED_SURFACE",
+    "tests_passed": 422
+  },
+  "rag": {
+    "status": "DOMAIN_QUALITY_NOT_CERTIFIED",
+    "recall_at_5": 0.6857,
+    "recall_at_10": 0.7643,
+    "mrr_at_10": 0.5848,
+    "ndcg_at_10": 0.6279,
+    "scope": "4 项外部银标点估计均低于租户参考门槛；外部数据分布仅用于诊断，不能替代租户域人工标注集作出发布裁定。"
+  },
+  "runtime": {
+    "status": "PASS",
+    "health_ok": true
+  },
+  "caveats": [
+    "缺少租户域人工相关性标注集（qrels）。",
+    "Reviewer 的可答性与弃答正确率尚未在领域标签上完成校准。",
+    "生产 evidence 与 context cap 的影响尚无非合成观测样本。",
+    "Phase 5 没有非合成生产记忆样本；工程通过不代表生产记忆质量通过。",
+    "Phase 6 尚未认证生产负载能力；容量仍是后续发布门禁。"
+  ]
+}

@@ -191,9 +191,10 @@ data/phase4/models/
 privatecredentials/*
 !privatecredentials/.gitkeep
 
-# Node (scripts/agui-client)
+# Node (scripts/agui-client; the product frontend keeps its deterministic lockfile)
 node_modules/
 package-lock.json
+!frontend/package-lock.json
 
 # Live-app smoke test failure screenshot
 smoke_live_app_failure.png

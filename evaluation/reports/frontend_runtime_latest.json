@@ -1,0 +1,23 @@
+{
+  "schema_version": "servicemind-frontend-runtime-v3",
+  "verified_at": "2026-09-22T05:03:14.273431+00:00",
+  "status": "PASS",
+  "base_url": "http://127.0.0.1:3000",
+  "unit": "servicemind-frontend.service",
+  "image": "servicemind-frontend:local",
+  "checks": {
+    "user_unit_active": true,
+    "versioned_unit_loaded": true,
+    "frontend_http_200": true,
+    "security_headers": true,
+    "strict_nonce_csp": true,
+    "container_nonroot": true,
+    "container_read_only": true,
+    "deployed_image_scan_clean": true,
+    "loopback_only_binding": true,
+    "release_snapshot_available": true,
+    "allowed_origin_cors": true,
+    "untrusted_origin_denied": true,
+    "operational_api_surface": true
+  }
+}

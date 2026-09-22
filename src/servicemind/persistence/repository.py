@@ -1,9 +1,10 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import func, select, text
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.dialects.postgresql import insert
 
 from servicemind.persistence.database import tenant_session
@@ -130,6 +131,31 @@ class ServiceMindRepository:
             statement = statement.with_for_update()
         async with tenant_session(self.tenant_id) as session:
             return (await session.execute(statement)).scalar_one_or_none()
+
+    async def list_runs(
+        self,
+        *,
+        status: str | None = None,
+        limit: int = 50,
+        after_created_at: datetime | None = None,
+        after_run_id: UUID | None = None,
+    ) -> list[AgentRun]:
+        statement = select(AgentRun)
+        if status is not None:
+            statement = statement.where(AgentRun.status == status)
+        if after_created_at is not None and after_run_id is not None:
+            statement = statement.where(
+                or_(
+                    AgentRun.created_at < after_created_at,
+                    and_(
+                        AgentRun.created_at == after_created_at,
+                        AgentRun.id < after_run_id,
+                    ),
+                )
+            )
+        statement = statement.order_by(AgentRun.created_at.desc(), AgentRun.id.desc()).limit(limit)
+        async with tenant_session(self.tenant_id) as session:
+            return list((await session.execute(statement)).scalars())
 
     async def update_run(
         self,
@@ -474,6 +500,33 @@ class ServiceMindRepository:
             session.add(event)
             await session.flush()
         return event
+
+    async def list_audit_events(
+        self,
+        *,
+        run_id: UUID | None = None,
+        limit: int = 100,
+        after_created_at: datetime | None = None,
+        after_event_id: UUID | None = None,
+    ) -> list[AuditEvent]:
+        statement = select(AuditEvent)
+        if run_id is not None:
+            statement = statement.where(AuditEvent.run_id == run_id)
+        if after_created_at is not None and after_event_id is not None:
+            statement = statement.where(
+                or_(
+                    AuditEvent.created_at < after_created_at,
+                    and_(
+                        AuditEvent.created_at == after_created_at,
+                        AuditEvent.id < after_event_id,
+                    ),
+                )
+            )
+        statement = statement.order_by(AuditEvent.created_at.desc(), AuditEvent.id.desc()).limit(
+            limit
+        )
+        async with tenant_session(self.tenant_id) as session:
+            return list((await session.execute(statement)).scalars())
 
 
 async def list_tenant_ids() -> list[UUID]:

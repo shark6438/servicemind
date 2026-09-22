@@ -311,6 +311,36 @@ def test_context_evidence_cap_cannot_exceed_half_the_usable_envelope():
             Settings(_env_file=None)
 
 
+@pytest.mark.parametrize(
+    "origins",
+    [
+        '["*"]',
+        '["http://localhost:3000/path"]',
+        '["http://user:password@localhost:3000"]',
+    ],
+)
+def test_frontend_cors_origins_must_be_exact(origins: str):
+    with patch.dict(
+        os.environ,
+        {"OPENAI_API_KEY": "test_key", "SERVICEMIND_FRONTEND_ORIGINS": origins},
+        clear=True,
+    ):
+        with pytest.raises(ValueError, match="exact HTTP"):
+            Settings(_env_file=None)
+
+    with patch.dict(
+        os.environ,
+        {
+            "OPENAI_API_KEY": "test_key",
+            "SERVICEMIND_FRONTEND_ORIGINS": '["https://ops.example.com"]',
+        },
+        clear=True,
+    ):
+        assert Settings(_env_file=None).SERVICEMIND_FRONTEND_ORIGINS == [
+            "https://ops.example.com"
+        ]
+
+
 def test_the_startup_cap_bound_is_the_same_number_the_builder_enforces():
     """Pin the settings copy of the envelope arithmetic to the builder's.
 

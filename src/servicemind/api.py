@@ -20,8 +20,8 @@ from servicemind.harness.webhooks import (
 from servicemind.integrations.glpi.client import GlpiAPIError, GlpiClient
 from servicemind.integrations.glpi.resolver import resolve_glpi_config
 from servicemind.interfaces.http.memory_review import router as memory_review_router
+from servicemind.interfaces.http.operations import router as operations_router
 from servicemind.orchestration.runtime import (
-    has_pending_interrupt,
     resume_review_run,
     resume_run,
     start_run,
@@ -33,6 +33,7 @@ from servicemind.security.crypto import CredentialCipher
 
 phase2_router = APIRouter(prefix="/v1/servicemind", tags=["ServiceMind Phase 2"])
 phase2_router.include_router(memory_review_router)
+phase2_router.include_router(operations_router)
 
 
 class GlpiHealth(BaseModel):
@@ -204,7 +205,11 @@ async def receive_glpi_webhook(
 
 
 @phase2_router.post("/runs", status_code=status.HTTP_202_ACCEPTED)
-async def create_run(request: CreateRunRequest, context: TenantContextDependency) -> RunView:
+async def create_run(
+    request: CreateRunRequest,
+    background_tasks: BackgroundTasks,
+    context: TenantContextDependency,
+) -> RunView:
     context.require_role("analyst")
     repository = ServiceMindRepository(context.tenant_id)
     run = await repository.create_run(
@@ -218,29 +223,11 @@ async def create_run(request: CreateRunRequest, context: TenantContextDependency
         "run.created",
         {"ticket_id": request.ticket_id, "request_write": request.request_write},
     )
-    try:
-        await start_run(run, context)
-    except PermissionError as exc:
-        await repository.update_run(run.id, RunStatus.FAILED, error="Tenant scope denied")
-        raise HTTPException(status_code=403, detail="Ticket is outside tenant scope") from exc
-    except GlpiAPIError as exc:
-        await repository.update_run(run.id, RunStatus.FAILED, error="GLPI resource unavailable")
-        if exc.status_code in {403, 404}:
-            raise HTTPException(status_code=404, detail="Ticket not found") from exc
-        raise HTTPException(status_code=502, detail="GLPI API request failed") from exc
-    except Exception as exc:
-        await repository.update_run(run.id, RunStatus.FAILED, error=type(exc).__name__)
-        raise HTTPException(status_code=502, detail="ServiceMind run failed") from exc
-
-    stored = await repository.get_run(run.id)
-    assert stored is not None
-    action = await repository.get_action_intent(run.id)
-    if stored.status in {
-        RunStatus.WAITING_APPROVAL.value,
-        RunStatus.WAITING_REVIEW.value,
-    }:
-        assert await has_pending_interrupt(stored, context)
-    return _run_view(stored, action)
+    # HTTP 202 is a real asynchronous boundary. Returning the durable run identity
+    # immediately lets the console poll its timeline while the workflow advances;
+    # recovery owns PENDING/RUNNING records if the process exits mid-run.
+    background_tasks.add_task(_process_webhook_run, run, context)
+    return _run_view(run)
 
 
 @phase2_router.get("/runs/{run_id}")

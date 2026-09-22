@@ -85,7 +85,8 @@ skills/                 # Versioned skills the agents can be equipped with
 docker/                 # Dockerfiles (service / app), add-on compose files
 docs/                   # Phase acceptance docs + the enterprise spec
 scripts/                # Phase seed / verify / ingest / evaluate scripts
-deploy/systemd/         # Versioned API / Streamlit / outbox process manifests
+deploy/systemd/         # Versioned API / frontend / Streamlit / outbox process manifests
+frontend/               # Next.js 16 operator console (OIDC, tenant-scoped API views)
 ```
 
 The service boot path (`src/service/service.py` → `src/run_service.py`) and the root

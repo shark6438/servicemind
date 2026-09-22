@@ -77,6 +77,33 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 
+  # The architecture contract from scripts/audit_project_structure.py: package cycles,
+  # domain import direction, source-tree boundaries, process manifests, and the frozen
+  # budget for scaffold imports left inside the product. --check also fails when the
+  # committed report under evaluation/reports/ no longer matches the tree, so the evidence
+  # cannot drift away from the thing it describes. Runs once: it reads files, not runtimes.
+  architecture-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version-file: "pyproject.toml"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v9.0.0
+      with:
+        version: "0.11.32"
+    - name: Install dependencies with uv
+      run: |
+        uv sync --frozen
+      env:
+        UV_SYSTEM_PYTHON: 1
+    - name: Audit project structure
+      run: |
+        uv run python scripts/audit_project_structure.py --check
+
   lint-markdown:
     runs-on: ubuntu-latest
 
@@ -113,6 +140,33 @@ jobs:
                      -e 'docs/PHASE4_RAG_FRONTIER_GAP_ANALYSIS.md' \
                      -e 'docs/PHASE4_RAG_MULTI_AGENT_AUDIT_2026-09-08.md')
         uv run pymarkdown scan README.md $docs
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-node@v6
+      with:
+        node-version: "24"
+        cache: npm
+        cache-dependency-path: frontend/package-lock.json
+    - name: Install locked frontend dependencies
+      working-directory: frontend
+      run: npm ci
+    - name: Lint, type-check, test and build operator console
+      working-directory: frontend
+      run: npm run check
+    - name: Audit dependencies and generate frontend SBOM
+      working-directory: frontend
+      run: |
+        npm audit --audit-level=high
+        npm sbom --sbom-format=cyclonedx > frontend-sbom.cdx.json
+    - name: Upload frontend SBOM
+      uses: actions/upload-artifact@v7
+      with:
+        name: frontend-sbom
+        path: frontend/frontend-sbom.cdx.json
 
   test-docker:
     runs-on: ubuntu-latest
@@ -157,6 +211,26 @@ jobs:
           tags: servicemind.app:${{ github.sha }}
           file: docker/Dockerfile.app
 
+      - name: Build operator console image
+        uses: docker/build-push-action@v7
+        with:
+          context: frontend
+          push: false
+          load: true
+          provenance: false
+          tags: servicemind.frontend:${{ github.sha }}
+          file: frontend/Dockerfile
+
+      - name: Scan operator console image
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 image \
+            --db-repository ghcr.io/aquasecurity/trivy-db:2 \
+            --db-repository public.ecr.aws/aquasecurity/trivy-db:2 \
+            --db-repository mirror.gcr.io/aquasec/trivy-db:2 \
+            --timeout 10m --scanners vuln --severity HIGH,CRITICAL --exit-code 1 \
+            servicemind.frontend:${{ github.sha }}
+
       - name: Start service container
         # Must be a literal (|) block: as a plain multi-line scalar YAML folds the
         # line breaks into spaces, which turns the shell line-continuation "\" into
@@ -194,6 +268,19 @@ jobs:
             done
           '
 
+      - name: Run and verify operator console container
+        run: |
+          docker run -d --name frontend-container --network host \
+            --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            -e PORT=3000 \
+            servicemind.frontend:${{ github.sha }}
+          timeout 30 bash -c '
+            while ! curl -fsS http://localhost:3000/ >/dev/null; do
+              docker logs frontend-container
+              sleep 1
+            done
+          '
+
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
@@ -216,5 +303,5 @@ jobs:
       - name: Clean up containers
         if: always()
         run: |
-          docker stop service-container app-container || true
-          docker rm service-container app-container || true
+          docker stop service-container app-container frontend-container || true
+          docker rm service-container app-container frontend-container || true

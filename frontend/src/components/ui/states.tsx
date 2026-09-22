@@ -1,0 +1,4 @@
+import { AlertTriangle, Inbox, LoaderCircle } from "lucide-react";
+export function LoadingState({ label = "正在读取运行账本" }: { label?: string }) { return <div className="state-panel" role="status"><LoaderCircle className="spin" aria-hidden="true" /><p>{label}</p></div>; }
+export function ErrorState({ error, retry }: { error: unknown; retry?: () => void }) { const message = error instanceof Error ? error.message : "请求未完成"; return <div className="state-panel state-panel--error" role="alert"><AlertTriangle aria-hidden="true" /><div><strong>数据读取失败</strong><p>{message}</p></div>{retry && <button className="button button--secondary" onClick={retry}>重新读取</button>}</div>; }
+export function EmptyState({ title, description }: { title: string; description: string }) { return <div className="state-panel"><Inbox aria-hidden="true" /><div><strong>{title}</strong><p>{description}</p></div></div>; }

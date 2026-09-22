@@ -1,6 +1,7 @@
 from enum import StrEnum
 from json import loads
 from typing import Annotated, Any
+from urllib.parse import urlsplit
 
 from dotenv import find_dotenv
 from pydantic import (
@@ -137,6 +138,9 @@ class Settings(BaseSettings):
     SERVICEMIND_OIDC_ISSUER: str | None = None
     SERVICEMIND_OIDC_AUDIENCE: str = "servicemind-api"
     SERVICEMIND_OIDC_JWKS_URL: str | None = None
+    SERVICEMIND_FRONTEND_ORIGINS: list[str] = Field(
+        default_factory=lambda: ["http://127.0.0.1:3000", "http://localhost:3000"]
+    )
     SERVICEMIND_ACME_GLPI_USERNAME: str | None = None
     SERVICEMIND_ACME_GLPI_PASSWORD: SecretStr | None = None
     SERVICEMIND_GLOBEX_GLPI_USERNAME: str | None = None
@@ -308,6 +312,21 @@ class Settings(BaseSettings):
     )
 
     def model_post_init(self, __context: Any) -> None:
+        for origin in self.SERVICEMIND_FRONTEND_ORIGINS:
+            parsed = urlsplit(origin)
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not parsed.netloc
+                or parsed.username is not None
+                or parsed.password is not None
+                or parsed.path not in {"", "/"}
+                or parsed.query
+                or parsed.fragment
+                or "*" in origin
+            ):
+                raise ValueError(
+                    "SERVICEMIND_FRONTEND_ORIGINS entries must be exact HTTP(S) origins"
+                )
         evidence_cap = self.SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP
         usable_context = (
             self.SERVICEMIND_CONTEXT_MAX_INPUT_TOKENS

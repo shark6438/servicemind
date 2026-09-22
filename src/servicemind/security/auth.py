@@ -44,6 +44,15 @@ class TenantContext(BaseModel):
                 detail=f"Role {role!r} is required",
             )
 
+    def require_any_role(self, *roles: str) -> None:
+        """Require at least one role without leaking which extra roles a user has."""
+        if not self.roles.intersection(roles):
+            expected = ", ".join(repr(role) for role in roles)
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"One of roles {expected} is required",
+            )
+
 
 class OIDCVerifier:
     def __init__(self) -> None:

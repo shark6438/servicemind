@@ -774,8 +774,10 @@ GLPI v2 与 outbox 验收，因此不存在“跳过 Phase 6 再做前端”的�
 前端路径冻结为：
 
 1. 保留 Streamlit 作为内部演示和 Memory Review 运维入口；
-2. 正式用户界面采用 React/Next.js + AG-UI，先实现 Workbench、Run/DAG、Evidence/Citations、
-   Approval Center、Trace/Audit，再实现 Evaluation Dashboard；
+2. 正式用户界面采用 React/Next.js 16，通过 ServiceMind 租户域 REST 与持久化事件时间线实现
+   Workbench、Run/DAG、Evidence/Citations、Approval Center、Memory Review、Trace/Audit 与
+   Evaluation Dashboard；现有 `/agui` 属于通用实例 Agent，不得接入本项目正式界面。只有新增
+   ServiceMind 专用、保留审批与审计语义的 AG-UI adapter 后，才允许把实时交互迁移到 AG-UI；
 3. 前端只能调用现有受治理 API，不复制 tenant/RBAC/ABAC、审批、Tool Policy 或 Memory Policy；
 4. 所有写操作继续形成 `ActionIntent`，前端不能增加直接 GLPI 写旁路；
 5. 浏览器端不得持有 service account、MCP service token 或数据库凭据，用户登录采用
@@ -796,3 +798,22 @@ GLPI v2 与 outbox 验收，因此不存在“跳过 Phase 6 再做前端”的�
 
 因此当前最优顺序是“前端与 P7 发布门禁并行 → 受控 preview → 生产基础设施与恢复/负载验收 →
 正式发布”，而不是重新执行 Phase 6，也不是完成页面后直接对外上线。
+
+## 当前前端落地（2026-09-22）
+
+- `frontend/` 已形成独立 Next.js 16 App Router 应用，使用 React 19、TypeScript、Zod、SWR、
+  Keycloak Authorization Code + PKCE；访问令牌只保留在 Keycloak JS 内存态。
+- 后端新增租户范围运行列表、JSON 时间线与受角色保护的追加式审计查询；创建运行以真实 HTTP 202
+  异步边界立即返回 durable run id，页面随后轮询持久化状态，避免长任务阻塞请求。
+- 审批绑定 `action_hash`；Memory Review 绑定 `version + content_hash + quarantine status`；前端不复制
+  授权逻辑，服务端继续执行 tenant/RBAC/实体/组范围校验。
+- 质量门禁页由验收 JSON 生成脱敏冻结快照，继续显示 `QUALITY_EXCEPTION_ACCEPTED` 与
+  `DOMAIN_QUALITY_NOT_CERTIFIED`，不把 Phase 5/6 工程通过改写成 RAG 业务质量通过。
+- 前端以只读容器和独立 user-systemd unit 运行在 `127.0.0.1:3000`；API 仅允许精确前端 origin，
+  Keycloak client 以版本化脚本收敛 redirect URI、web origin 与 PKCE S256。
+- 每次响应生成独立 nonce，CSP 采用 `script-src 'self' 'nonce-…' 'strict-dynamic'`；运行时门禁逐个核验
+  页面脚本 nonce。CI 同时执行依赖审计、CycloneDX SBOM 和生产镜像 HIGH/CRITICAL 漏洞门禁。
+- 生产阶段使用 digest 固定的 Distroless Node 24 Debian 13 nonroot 镜像，只读文件系统运行；本机
+  Trivy v0.74.0 全量扫描（含无修复项）HIGH/CRITICAL 为 0，扫描器镜像同样以 OCI digest 固定。
+- 该状态满足受控 preview 的工程入口条件；企业生产发布仍受上文 Phase 7、TLS、生产 Keycloak、
+  恢复演练、负载与供应链门禁约束。

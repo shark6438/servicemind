@@ -6,7 +6,7 @@ import argparse
 import ast
 import json
 import tomllib
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -14,16 +14,15 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 OUTPUT_JSON = ROOT / "evaluation/reports/project_structure_latest.json"
 OUTPUT_MD = ROOT / "evaluation/reports/project_structure_latest.md"
-INTERNAL_ROOTS = {
-    "agents",
-    "client",
-    "core",
-    "memory",
-    "pages",
-    "schema",
-    "service",
-    "servicemind",
-    "voice",
+#: Import sites the product is still allowed to hold against the inherited scaffold, as
+#: measured when this gate was introduced. The budget may only shrink: the product and the
+#: instance-agent shell are separate lineages, so every entry here is migration debt, and a
+#: new site inside an already-coupled file is precisely the regression this catches --
+#: counting coupled files instead of sites would let it through. Lower a number when a call
+#: site moves behind a ServiceMind-owned port; never raise one.
+SCAFFOLD_IMPORT_BUDGET = {
+    "core": 26,
+    "schema": 1,
 }
 
 
@@ -118,6 +117,37 @@ def _source_boundary_violations() -> list[str]:
     return violations
 
 
+def scaffold_import_sites() -> dict[str, int]:
+    """Count the product's import sites per inherited scaffold root.
+
+    Every site counts, including imports inside functions and under `TYPE_CHECKING`: the
+    budget was measured that way, so the comparison stays like-for-like.
+    """
+    sites: Counter[str] = Counter()
+    for path in sorted((SRC / "servicemind").rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            modules: list[str] = []
+            if isinstance(node, ast.Import):
+                modules = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                modules = [node.module]
+            for module in modules:
+                root = module.split(".", 1)[0]
+                if root in SCAFFOLD_IMPORT_BUDGET:
+                    sites[root] += 1
+    return dict(sites)
+
+
+def _scaffold_budget_violations(sites: dict[str, int]) -> list[str]:
+    """Report scaffold roots that grew past the budget frozen for them."""
+    return [
+        f"src/servicemind -> {root}: {sites.get(root, 0)} import sites, budget {budget}"
+        for root, budget in sorted(SCAFFOLD_IMPORT_BUDGET.items())
+        if sites.get(root, 0) > budget
+    ]
+
+
 def _development_execution_violations() -> list[str]:
     """Reject developer entry points that bypass the installed distribution."""
     violations: list[str] = []
@@ -154,6 +184,8 @@ def build_report() -> dict[str, Any]:
     domain_violations = _domain_violations()
     source_violations = _source_boundary_violations()
     development_violations = _development_execution_violations()
+    scaffold_sites = scaffold_import_sites()
+    scaffold_violations = _scaffold_budget_violations(scaffold_sites)
     project_scripts = pyproject.get("project", {}).get("scripts", {})
     pytest_options = pyproject.get("tool", {}).get("pytest", {}).get("ini_options", {})
     package_find = (
@@ -163,9 +195,14 @@ def build_report() -> dict[str, Any]:
         ROOT / "deploy/systemd/servicemind-api.service",
         ROOT / "deploy/systemd/servicemind-streamlit.service",
         ROOT / "deploy/systemd/servicemind-outbox.service",
+        ROOT / "deploy/systemd/servicemind-frontend.service",
     ]
     units_present = all(path.is_file() for path in unit_paths)
     unit_text = "\n".join(path.read_text(encoding="utf-8") for path in unit_paths if path.exists())
+    frontend_dockerfile = ROOT / "frontend/Dockerfile"
+    frontend_dockerfile_text = (
+        frontend_dockerfile.read_text(encoding="utf-8") if frontend_dockerfile.is_file() else ""
+    )
 
     checks = {
         "src_layout": (SRC / "servicemind/__init__.py").is_file(),
@@ -183,14 +220,29 @@ def build_report() -> dict[str, Any]:
         and "--import-mode=importlib" in pytest_options.get("addopts", []),
         "fastapi_application_factory": _has_function(SRC / "service/service.py", "create_app"),
         "http_adapter_split": (SRC / "servicemind/interfaces/http/memory_review.py").is_file(),
+        "frontend_application_boundary": (ROOT / "frontend/package.json").is_file()
+        and (ROOT / "frontend/src/app/layout.tsx").is_file()
+        and (ROOT / "frontend/src/providers/auth-provider.tsx").is_file(),
+        "frontend_release_manifests": frontend_dockerfile.is_file()
+        and (ROOT / "frontend/package-lock.json").is_file()
+        and (ROOT / "frontend/.env.local.example").is_file()
+        and (ROOT / "frontend/.dockerignore").is_file()
+        and frontend_dockerfile_text.count("FROM node:24-bookworm-slim@sha256:") == 2
+        and frontend_dockerfile_text.count(
+            "FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:"
+        )
+        == 1
+        and "USER nonroot" in frontend_dockerfile_text,
         "domain_dependency_rule": not domain_violations,
         "acyclic_servicemind_packages": not cycles,
         "source_tree_boundary": not source_violations,
+        "scaffold_import_budget": not scaffold_violations,
         "installed_execution_hygiene": not development_violations,
         "versioned_process_manifests": units_present
         and "PYTHONPATH=src" not in unit_text
         and "/servicemind-api" in unit_text
-        and "/servicemind-outbox" in unit_text,
+        and "/servicemind-outbox" in unit_text
+        and "servicemind-frontend:local" in unit_text,
     }
     return {
         "schema_version": "servicemind-project-structure-v1",
@@ -201,19 +253,26 @@ def build_report() -> dict[str, Any]:
             "domain_dependencies": domain_violations,
             "source_boundaries": source_violations,
             "development_execution": development_violations,
+            "scaffold_import_budget": scaffold_violations,
         },
+        "scaffold_import_sites": dict(sorted(scaffold_sites.items())),
+        "scaffold_import_budget": dict(sorted(SCAFFOLD_IMPORT_BUDGET.items())),
         "servicemind_package_graph": {key: sorted(values) for key, values in sorted(graph.items())},
         "repository_model": {
             "style": "packaged modular monolith with explicit process adapters",
             "composition_root": "src/service/service.py:create_app",
             "domain_root": "src/servicemind/domain",
-            "inbound_adapters": ["src/servicemind/interfaces/http", "src/pages"],
+            "inbound_adapters": [
+                "src/servicemind/interfaces/http",
+                "src/pages",
+                "frontend/src/app",
+            ],
             "outbound_adapters": [
                 "src/servicemind/integrations",
                 "src/servicemind/persistence",
                 "src/servicemind/tool_platform",
             ],
-            "independent_processes": ["api", "streamlit", "outbox"],
+            "independent_processes": ["api", "streamlit", "outbox", "frontend"],
             "legacy_instance_agent_shell": [
                 "src/agents",
                 "src/client",
@@ -241,11 +300,15 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"| `{source}` | {', '.join(f'`{target}`' for target in targets) or '—'} |"
         for source, targets in report["servicemind_package_graph"].items()
     )
+    budget_rows = "\n".join(
+        f"| `{root}` | {report['scaffold_import_sites'].get(root, 0)} | {budget} |"
+        for root, budget in sorted(report["scaffold_import_budget"].items())
+    )
     return f"""# ServiceMind project structure audit
 
 Status: **{report["status"]}**
 
-This audit covers repository structure, import direction, packaging and the three deployed
+This audit covers repository structure, import direction, packaging and the four deployed
 process manifests. It does not rate unrelated instance Agents and does not convert missing
 RAG business evidence into a quality pass.
 
@@ -262,9 +325,20 @@ RAG business evidence into a quality pass.
 - Domain contracts do not import runtime, persistence, HTTP or provider adapters.
 - HTTP entry adapters live under `servicemind.interfaces.http`; repositories and providers
   remain outbound adapters.
-- API, Streamlit and outbox are separate versioned process manifests.
+- API, Streamlit, outbox and the Next.js operator console are separate versioned process
+  manifests.
 - The inherited top-level instance-agent shell remains load-bearing but sits outside the
   ServiceMind platform dependency graph.
+
+## Scaffold import budget
+
+The product and the instance-agent shell are separate lineages; every import below is
+migration debt, so the budget may only shrink. A new import site in an already-coupled
+file fails the gate rather than passing silently.
+
+| scaffold root | current sites | budget |
+| --- | --- | --- |
+{budget_rows}
 
 ## Package dependency graph
 

@@ -2,7 +2,7 @@
 
 Status: **PASS**
 
-This audit covers repository structure, import direction, packaging and the three deployed
+This audit covers repository structure, import direction, packaging and the four deployed
 process manifests. It does not rate unrelated instance Agents and does not convert missing
 RAG business evidence into a quality pass.
 
@@ -18,9 +18,12 @@ RAG business evidence into a quality pass.
 | `tests_use_installed_distribution` | PASS |
 | `fastapi_application_factory` | PASS |
 | `http_adapter_split` | PASS |
+| `frontend_application_boundary` | PASS |
+| `frontend_release_manifests` | PASS |
 | `domain_dependency_rule` | PASS |
 | `acyclic_servicemind_packages` | PASS |
 | `source_tree_boundary` | PASS |
+| `scaffold_import_budget` | PASS |
 | `installed_execution_hygiene` | PASS |
 | `versioned_process_manifests` | PASS |
 
@@ -31,9 +34,21 @@ RAG business evidence into a quality pass.
 - Domain contracts do not import runtime, persistence, HTTP or provider adapters.
 - HTTP entry adapters live under `servicemind.interfaces.http`; repositories and providers
   remain outbound adapters.
-- API, Streamlit and outbox are separate versioned process manifests.
+- API, Streamlit, outbox and the Next.js operator console are separate versioned process
+  manifests.
 - The inherited top-level instance-agent shell remains load-bearing but sits outside the
   ServiceMind platform dependency graph.
+
+## Scaffold import budget
+
+The product and the instance-agent shell are separate lineages; every import below is
+migration debt, so the budget may only shrink. A new import site in an already-coupled
+file fails the gate rather than passing silently.
+
+| scaffold root | current sites | budget |
+| --- | --- | --- |
+| `core` | 26 | 26 |
+| `schema` | 1 | 1 |
 
 ## Package dependency graph
 
@@ -48,7 +63,7 @@ RAG business evidence into a quality pass.
 | `graphrag` | `domain` |
 | `harness` | `domain`, `integrations`, `persistence`, `security` |
 | `integrations` | `persistence`, `security` |
-| `interfaces` | `memory`, `security` |
+| `interfaces` | `memory`, `persistence`, `security` |
 | `mcp` | `persistence`, `security`, `tool_platform` |
 | `memory` | `persistence` |
 | `model_gateway` | `domain`, `persistence` |

@@ -1,0 +1,19 @@
+[Unit]
+Description=ServiceMind Next.js Operator Console
+After=network-online.target docker.service servicemind-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=-/usr/bin/docker rm -f servicemind-frontend
+ExecStart=/usr/bin/docker run --rm --name servicemind-frontend --pull=never --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m -p 127.0.0.1:3000:3000 servicemind-frontend:local
+ExecStop=/usr/bin/docker stop -t 20 servicemind-frontend
+Restart=on-failure
+RestartSec=3s
+TimeoutStartSec=60s
+TimeoutStopSec=30s
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

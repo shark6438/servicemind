@@ -120,7 +120,12 @@ systemd unit 只存在于单机用户目录，仓库只跟踪 outbox unit；API/
 - domain 导入 runtime、database、HTTP 或供应商适配器；
 - 生产源码导入 tests/scripts/evaluation 或修改 `sys.path`；
 - 开发脚本通过 `PYTHONPATH=src` 或 `sys.path` 绕过已安装发行包；
+- **产品对上游脚手架的 import 站点超出冻结预算**（`core` 26、`schema` 1）。预算是债不是额度：
+  在已耦合文件里新增一条 `from core import …` 就会失败，减债则任何时刻都允许（可先降预算再改代码）；
 - app factory、Memory Review adapter 或任一进程清单缺失。
+
+该门禁由 CI 的 `architecture-gate` job 执行，因此上述规则不是文档约定而是流水线事实；同时
+`--check` 还要求已提交的报告与代码树逐字一致。
 
 复现：
 
@@ -132,10 +137,15 @@ cd /tmp
   'from importlib.metadata import version; from service import create_app; print(version("servicemind"), len(create_app().routes))'
 ```
 
-本轮实跑结果：结构门禁 **13/13 PASS**，wheel 构建成功且包含 Memory Review 页面与新适配器，
-全仓 **576 passed / 6 skipped / 0 failed**；Ruff 全绿、Pyrefly 0 error。真实 PostgreSQL
-治理、Keycloak 身份漂移、lexical/TEI Memory 门禁与运行时核验均通过；API、Streamlit、outbox
-三个 user unit 为 active，仓库清单与已安装 unit 逐字一致。
+本轮实跑结果：结构门禁 **16/16 PASS**，wheel 构建成功且包含 Memory Review 页面与新适配器，
+全仓 **587 passed / 6 skipped / 0 failed**；Ruff 全绿、Pyrefly 0 error；前端 ESLint、TypeScript、
+Vitest 与 Next.js production build 全部通过。脚手架预算的证伪已实测：
+在 `skills/contracts.py` 注入一条 `from core import settings` 后 `--check` 返回 FAIL/rc=1，
+回退后恢复 PASS/rc=0。真实 PostgreSQL
+治理、Keycloak 身份漂移、lexical/TEI Memory 门禁与运行时核验均通过；前端运行时 **13/13 PASS**，
+包含逐脚本 nonce CSP、nonroot 只读容器、loopback 绑定、精确 CORS 与 API surface；生产镜像
+采用 digest 固定的 Distroless Node 24，Trivy 全量 HIGH/CRITICAL 扫描为 **0**；API、Streamlit、
+outbox、frontend 四个 user unit 均为 active，仓库清单与已安装 unit 逐字一致。
 
 ## 5. 诚实边界
 

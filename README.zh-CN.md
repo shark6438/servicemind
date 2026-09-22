@@ -49,7 +49,8 @@ skills/                 # 可为 agent 装配的版本化技能
 docker/                 # Dockerfiles(service/app)、附加 compose 文件
 docs/                   # 各阶段验收文档 + 企业级主规格
 scripts/                # 各阶段 seed/verify/ingest/evaluate 脚本
-deploy/systemd/         # 版本化 API / Streamlit / outbox 进程清单
+deploy/systemd/         # 版本化 API / 前端 / Streamlit / outbox 进程清单
+frontend/               # Next.js 16 运维控制台（OIDC、租户范围 API 视图）
 ```
 
 服务启动链路(`src/service/service.py` → `src/run_service.py`)与根级 `compose.yaml`

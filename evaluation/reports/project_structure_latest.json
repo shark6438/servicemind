@@ -10,9 +10,12 @@
     "tests_use_installed_distribution": true,
     "fastapi_application_factory": true,
     "http_adapter_split": true,
+    "frontend_application_boundary": true,
+    "frontend_release_manifests": true,
     "domain_dependency_rule": true,
     "acyclic_servicemind_packages": true,
     "source_tree_boundary": true,
+    "scaffold_import_budget": true,
     "installed_execution_hygiene": true,
     "versioned_process_manifests": true
   },
@@ -20,7 +23,16 @@
     "package_cycles": [],
     "domain_dependencies": [],
     "source_boundaries": [],
-    "development_execution": []
+    "development_execution": [],
+    "scaffold_import_budget": []
+  },
+  "scaffold_import_sites": {
+    "core": 26,
+    "schema": 1
+  },
+  "scaffold_import_budget": {
+    "core": 26,
+    "schema": 1
   },
   "servicemind_package_graph": {
     "_root": [
@@ -67,6 +79,7 @@
     ],
     "interfaces": [
       "memory",
+      "persistence",
       "security"
     ],
     "mcp": [
@@ -139,7 +152,8 @@
     "domain_root": "src/servicemind/domain",
     "inbound_adapters": [
       "src/servicemind/interfaces/http",
-      "src/pages"
+      "src/pages",
+      "frontend/src/app"
     ],
     "outbound_adapters": [
       "src/servicemind/integrations",
@@ -149,7 +163,8 @@
     "independent_processes": [
       "api",
       "streamlit",
-      "outbox"
+      "outbox",
+      "frontend"
     ],
     "legacy_instance_agent_shell": [
       "src/agents",

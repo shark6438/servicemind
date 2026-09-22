@@ -52,9 +52,10 @@ cd /home/shihongye/data1/servicemind
   --output evaluation/reports/servicemind_runtime_latest.json
 ```
 
-The three versioned unit files live in `deploy/systemd/`. They use installed console
-entry points for API and outbox and do not depend on `PYTHONPATH`; run `uv sync --frozen`
-before installing or restarting them.
+The four versioned unit files live in `deploy/systemd/`. API and outbox use installed
+console entry points and do not depend on `PYTHONPATH`; the Next.js console runs from the
+versioned `servicemind-frontend:local` image. Run `uv sync --frozen` before restarting
+Python services, and rebuild the image after a frontend change.
 
 For direct inspection use `systemctl --user status servicemind-api.service` and
 `curl --noproxy '*' http://127.0.0.1:18080/health`. A plain `systemctl is-active
@@ -73,6 +74,28 @@ then run the read-only drift check:
 The command reads credentials from `deploy/glpi/.env` and never prints passwords or
 tokens. A missing `glpi_group_ids` claim is interpreted as no group access, so the
 review queue fails closed.
+
+The React operator console runs as `servicemind-frontend.service` on
+`http://127.0.0.1:3000`. Build and install it with:
+
+```sh
+docker build -t servicemind-frontend:local frontend
+cp deploy/systemd/servicemind-frontend.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now servicemind-frontend.service
+```
+
+An existing Keycloak client also needs its exact redirect URIs, web origins and PKCE
+S256 setting reconciled from the versioned realm declaration:
+
+```sh
+.venv/bin/python scripts/reconcile_frontend_oidc_client.py
+.venv/bin/python scripts/reconcile_frontend_oidc_client.py --check
+```
+
+The client is public and has no browser secret. The console sends each user's in-memory
+access token to the API; API-side tenant/RBAC/ABAC checks remain authoritative. The API
+CORS allowlist accepts only the exact origins in `SERVICEMIND_FRONTEND_ORIGINS`.
 
 Realm roles are part of the same contract: the review queue gates on
 `require_role("approver")`, and realm import assigns roles only while the realm is being

@@ -22,8 +22,19 @@
       "publicClient": true,
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
-      "redirectUris": ["http://127.0.0.1:8501/*"],
-      "webOrigins": ["http://127.0.0.1:8501"],
+      "redirectUris": [
+        "http://127.0.0.1:8501/*",
+        "http://127.0.0.1:3000/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8501",
+        "http://127.0.0.1:3000",
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
       "protocol": "openid-connect",
       "protocolMappers": [
         {

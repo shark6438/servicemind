@@ -9,6 +9,7 @@ from typing import Annotated, Any
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRoute
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -555,6 +556,15 @@ def create_app() -> FastAPI:
     application = FastAPI(
         lifespan=lifespan,
         generate_unique_id_function=custom_generate_unique_id,
+    )
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.SERVICEMIND_FRONTEND_ORIGINS,
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "Last-Event-ID"],
+        expose_headers=["Content-Type"],
+        max_age=600,
     )
     application.include_router(health_router)
     application.include_router(router)
