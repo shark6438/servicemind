@@ -3,10 +3,10 @@ from __future__ import annotations
 from functools import lru_cache
 
 from core import settings
-from servicemind.mcp.transport import McpGlpiProvider, StatelessMcpClient
 from servicemind.tool_platform.audit import InMemoryToolAuditSink, PostgresToolAuditSink
 from servicemind.tool_platform.catalog import build_glpi_registry
 from servicemind.tool_platform.gateway import ToolGateway
+from servicemind.tool_platform.mcp_transport import McpGlpiProvider, StatelessMcpClient
 from servicemind.tool_platform.policy import DeterministicToolPolicy, OpaToolPolicy
 from servicemind.tool_platform.providers import NativeGlpiProvider
 from servicemind.tool_platform.resilience import (

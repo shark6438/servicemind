@@ -20,8 +20,8 @@ from servicemind.persistence.models import (
     ToolOutboxRecord,
     ToolPolicyDecisionRecord,
 )
+from servicemind.persistence.outbox import ToolOutboxRepository
 from servicemind.persistence.repository import ServiceMindRepository
-from servicemind.reliability.outbox import ToolOutboxRepository
 from servicemind.tool_platform.audit import PostgresToolAuditSink
 from servicemind.tool_platform.catalog import build_glpi_registry
 from servicemind.tool_platform.contracts import ProviderResult, ToolCall, ToolDefinition

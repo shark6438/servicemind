@@ -1,13 +1,13 @@
 [Unit]
-Description=ServiceMind transactional outbox relay
-After=network-online.target
+Description=ServiceMind Streamlit UI
+After=network-online.target servicemind-api.service
 Wants=network-online.target
 
 [Service]
 Type=simple
 WorkingDirectory=%h/data1/servicemind
 Environment=PYTHONUNBUFFERED=1
-ExecStart=%h/data1/servicemind/.venv/bin/servicemind-outbox
+ExecStart=%h/data1/servicemind/.venv/bin/streamlit run src/streamlit_app.py --server.address=127.0.0.1 --server.port=8501 --browser.gatherUsageStats=false
 Restart=on-failure
 RestartSec=2s
 TimeoutStopSec=30s

@@ -5770,7 +5770,7 @@ wheels = [
 [[package]]
 name = "servicemind"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "ag-ui-langgraph" },
     { name = "aiosqlite" },
@@ -5822,7 +5822,6 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "redis" },
     { name = "sentence-transformers" },
-    { name = "setuptools" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "streamlit" },
     { name = "tiktoken" },
@@ -5901,7 +5900,6 @@ requires-dist = [
     { name = "python-dotenv", specifier = "~=1.2.2" },
     { name = "redis", specifier = ">=6,<7" },
     { name = "sentence-transformers", specifier = ">=5.1,<6" },
-    { name = "setuptools", specifier = "~=83.0.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = "~=2.0" },
     { name = "streamlit", specifier = "~=1.59.1" },
     { name = "tiktoken", specifier = ">=0.13.0" },

@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from servicemind.runtime.contracts import AgentInvocationContext
+from servicemind.domain.invocation import AgentInvocationContext
 
 
 class ModelPurpose(StrEnum):

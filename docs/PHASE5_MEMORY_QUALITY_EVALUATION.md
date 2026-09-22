@@ -509,40 +509,40 @@ Procedure=`REVOKED`。PostgreSQL 在线验收另外在真实事务中缩短两�
 # 离线评测（无数据库、无模型服务、无网络）
 # --check 在以下五种情况任一发生时报错退出：泄漏、越权激活、排名门禁违规、必需记录缺失、
 # 投递门禁违规（声明了 must_deliver 的记忆被预算裁掉）
-PYTHONPATH=src .venv/bin/python scripts/evaluate_phase5_memory.py --check
+.venv/bin/python scripts/evaluate_phase5_memory.py --check
 
 # 契约测试（含全部证伪/活性证明，见 §3.4）
-PYTHONPATH=src .venv/bin/python -m pytest tests/servicemind/test_phase5_memory_evaluation.py -q
+.venv/bin/python -m pytest tests/servicemind/test_phase5_memory_evaluation.py -q
 
 # Procedural 跨工单生产、ACL 待审、陈旧快照与并发双审
-PYTHONPATH=src .venv/bin/python -m pytest \
+.venv/bin/python -m pytest \
     tests/servicemind/test_phase5_governance.py \
     tests/servicemind/test_phase5_memory_review_api.py -q
 
 # PostgreSQL 支撑寿命联动、append-only 失效事件和其他在线治理门禁
 set -a && source .env && set +a
-PYTHONPATH=src .venv/bin/python scripts/verify_phase5_governance.py
+.venv/bin/python scripts/verify_phase5_governance.py
 
 # Streamlit 审批 client 的 token 隐私、分页与 exact-snapshot 请求
-PYTHONPATH=src .venv/bin/python -m pytest tests/servicemind/test_memory_review_ui.py -q
+.venv/bin/python -m pytest tests/servicemind/test_memory_review_ui.py -q
 
 # 已存在 Keycloak realm 的 claim/profile/审批人组授权漂移检查
 .venv/bin/python scripts/reconcile_phase5_memory_review_identity.py --check
 
 # 复现已发布的 v1 结论
-PYTHONPATH=src .venv/bin/python scripts/evaluate_phase5_memory.py \
+.venv/bin/python scripts/evaluate_phase5_memory.py \
     --corpus evaluation/memory/scenarios.v1.json
 
 # 可选：改用生产嵌入提供方跑排序块
-PYTHONPATH=src .venv/bin/python scripts/evaluate_phase5_memory.py --embedding tei
+.venv/bin/python scripts/evaluate_phase5_memory.py --embedding tei
 
 # 生产投递观测：0=PASS、1=FAIL、2=NO_DATA/样本不足；不导出提示内容或内容哈希
-PYTHONPATH=src .venv/bin/python scripts/report_phase5_context_delivery.py \
+.venv/bin/python scripts/report_phase5_context_delivery.py \
     --tenant-id 11111111-1111-4111-8111-111111111111 --since-hours 720 --check \
     --output evaluation/reports/phase5_context_delivery_observed_latest.json
 
 # 当前 Linux 部署：核对 user unit、ExecStart、工作目录、.env 端口和 /health
-PYTHONPATH=src .venv/bin/python scripts/verify_servicemind_runtime.py --check \
+.venv/bin/python scripts/verify_servicemind_runtime.py --check \
     --output evaluation/reports/servicemind_runtime_latest.json
 ```
 
@@ -554,9 +554,9 @@ PYTHONPATH=src .venv/bin/python scripts/verify_servicemind_runtime.py --check \
 ```bash
 # 门禁变红：把一条必需记忆放大到装不下（词集合不变，只变长）
 # 门禁变绿：SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP=5000 后重跑，headroom 238 → 5738
-PYTHONPATH=src .venv/bin/python -m pytest \
+.venv/bin/python -m pytest \
     tests/servicemind/test_phase5_memory_evaluation.py -q -k delivery
-PYTHONPATH=src .venv/bin/python -m pytest \
+.venv/bin/python -m pytest \
     tests/servicemind/test_phase5_governance.py -q -k cap
 ```
 

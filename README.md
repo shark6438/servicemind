@@ -61,15 +61,19 @@ Product and scaffold live under one `src/` tree. The **product** is self-contain
 
 ```text
 src/
-├── servicemind/        # The product: rag/, graphrag/, domain/, memory/, context/,
-│                       #   skills/, model_gateway/, security/, persistence/,
-│                       #   orchestration/, harness/, integrations/, observability/
-├── service/            # FastAPI shell — mounts ServiceMind API + generic agent endpoints
+├── servicemind/        # Packaged modular product
+│   ├── domain/         # Pure business contracts and integrity primitives
+│   ├── orchestration/  # Durable workflows, planning, recovery, governance
+│   ├── interfaces/http/# Inbound HTTP adapters
+│   ├── persistence/    # Database and transactional-outbox adapters
+│   └── rag|memory|context|model_gateway|tool_platform|…
+├── service/            # FastAPI composition root (`create_app`)
 ├── agents/             # Inherited LangGraph agents (chatbot, research-assistant, …)
 ├── core/               # Settings + model lookup (shared)
 ├── schema/             # Protocol + model-name schema
 ├── client/             # AgentClient (build other apps on the agent service)
 ├── voice/              # STT/TTS providers for the chat UI
+├── pages/              # Packaged Streamlit review pages
 ├── streamlit_app.py    # ServiceMind Console (chat UI)
 └── run_service.py      # Entry point: uvicorn "service:app"
 migrations/             # Alembic migrations 0001–0013 (product schema, Postgres)
@@ -80,12 +84,18 @@ skills/                 # Versioned skills the agents can be equipped with
 docker/                 # Dockerfiles (service / app), add-on compose files
 docs/                   # Phase acceptance docs + the enterprise spec
 scripts/                # Phase seed / verify / ingest / evaluate scripts
+deploy/systemd/         # Versioned API / Streamlit / outbox process manifests
 ```
 
 The service boot path (`src/service/service.py` → `src/run_service.py`) and the root
 `compose.yaml` still depend on the inherited scaffold layers (`src/agents|core|memory|
 schema|client|voice` + `streamlit_app.py`), so those layers are load-bearing and not
 "product" code — treat them as runtime infrastructure.
+
+`pyproject.toml` defines the build backend, explicit package discovery and installed
+`servicemind-api` / `servicemind-outbox` entry points. The architecture gate rejects
+package cycles, outward domain imports, source-tree path injection and incomplete process
+manifests. See [`docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md`](docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md).
 
 ## Architecture at a glance
 
@@ -147,7 +157,7 @@ cp .env.example .env
 uv run alembic upgrade head
 
 # Shell 1 — agent service
-uv run python src/run_service.py
+uv run servicemind-api
 
 # Shell 2 — ServiceMind Console
 uv run streamlit run src/streamlit_app.py

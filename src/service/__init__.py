@@ -1,3 +1,3 @@
-from service.service import app
+from service.service import app, create_app
 
-__all__ = ["app"]
+__all__ = ["app", "create_app"]

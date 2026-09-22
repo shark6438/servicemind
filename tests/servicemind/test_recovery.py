@@ -8,7 +8,7 @@ from servicemind.persistence.models import RunStatus
 
 @pytest.mark.asyncio
 async def test_recovery_uses_least_privilege_tenant_context(monkeypatch) -> None:
-    from servicemind.harness import recovery
+    from servicemind.orchestration import recovery
 
     tenant_id = UUID("11111111-1111-4111-8111-111111111111")
     run = SimpleNamespace(

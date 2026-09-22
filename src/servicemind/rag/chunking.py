@@ -2,12 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import math
-import os
 import re
-import tempfile
 from collections.abc import Sequence
 from functools import cached_property
-from pathlib import Path
 from typing import Any, Protocol
 
 import tiktoken
@@ -18,6 +15,7 @@ from servicemind.domain.knowledge import (
     KnowledgeDocument,
     ParentChunk,
 )
+from servicemind.foundation.tokenization import ConservativeOfflineEncoding, has_cl100k_cache
 
 
 class AsyncEmbeddingProvider(Protocol):
@@ -38,34 +36,6 @@ DEFAULT_CHILD_OVERLAP_TOKENS = 48
 #: dense channel (see :func:`child_embedding_text`). This is a document-layout
 #: separator, never part of a query; the query side embeds the normalized query as-is.
 SECTION_CONTEXT_SEP = " / "
-
-_CL100K_URL = "https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken"
-
-
-class ConservativeOfflineEncoding:
-    """Lossless, deterministic tokenizer used when the pinned BPE is unavailable.
-
-    It deliberately over-counts long ASCII runs. That can produce smaller chunks,
-    but it cannot make a model/context limit unsafe and never needs network access.
-    """
-
-    _parts = re.compile(r"\s+|[\u4e00-\u9fff]|[A-Za-z0-9]{1,4}|[^A-Za-z0-9\s]")
-
-    def encode(self, text: str) -> list[str]:
-        return self._parts.findall(text)
-
-    def decode(self, tokens: Sequence[str]) -> str:
-        return "".join(tokens)
-
-
-def has_cl100k_cache() -> bool:
-    directory = (
-        os.environ.get("TIKTOKEN_CACHE_DIR")
-        or os.environ.get("DATA_GYM_CACHE_DIR")
-        or str(Path(tempfile.gettempdir()) / "data-gym-cache")
-    )
-    key = hashlib.sha1(_CL100K_URL.encode()).hexdigest()
-    return bool(directory) and (Path(directory) / key).is_file()
 
 
 def child_embedding_text(document_title: str, section_path: Sequence[str], content: str) -> str:

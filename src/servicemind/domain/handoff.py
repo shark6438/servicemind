@@ -4,9 +4,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from servicemind.domain.integrity import stable_digest
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
 from servicemind.domain.task import BudgetSnapshot
-from servicemind.runtime.contracts import stable_digest
 
 SENSITIVE_KEY_PARTS = {"secret", "password", "credential", "access_token", "api_key"}
 

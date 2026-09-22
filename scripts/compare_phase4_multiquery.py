@@ -17,7 +17,7 @@ Two measurement surfaces:
    cross-encoder chooses from.
 
 Usage:
-    PYTHONPATH=src .venv/bin/python scripts/compare_phase4_multiquery.py \
+    .venv/bin/python scripts/compare_phase4_multiquery.py \
         [--model deterministic|bge] [--top-k 1,5,10]
 
 Writes ``evaluation/reports/phase4_multiquery_latest.{json,md}`` and a keep/delete

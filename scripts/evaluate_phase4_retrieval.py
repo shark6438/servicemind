@@ -6,7 +6,7 @@ baselines (dense / bm25 / hybrid / hybrid+rerank). Writes
 ``evaluation/reports/phase4_retrieval_latest.{json,md}``.
 
 Usage:
-    PYTHONPATH=src .venv/bin/python scripts/evaluate_phase4_retrieval.py \
+    .venv/bin/python scripts/evaluate_phase4_retrieval.py \
         [--model deterministic|bge|tei] [--top-k 5,10,20]
 
 ``deterministic`` embeddings are fast and offline (harness wiring checks); ``bge``

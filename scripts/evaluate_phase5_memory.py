@@ -6,7 +6,7 @@ with no database, no model server and no network. Writes
 ``evaluation/reports/phase5_memory_latest.{json,md}``.
 
 Usage:
-    PYTHONPATH=src .venv/bin/python scripts/evaluate_phase5_memory.py
+    .venv/bin/python scripts/evaluate_phase5_memory.py
 
 ``--embedding tei`` swaps the retriever's lexical fallback for the production embedding
 provider, and writes to ``phase5_memory_tei_latest.{json,md}`` so it cannot overwrite

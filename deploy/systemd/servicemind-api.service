@@ -1,5 +1,5 @@
 [Unit]
-Description=ServiceMind transactional outbox relay
+Description=ServiceMind Agent API
 After=network-online.target
 Wants=network-online.target
 
@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=simple
 WorkingDirectory=%h/data1/servicemind
 Environment=PYTHONUNBUFFERED=1
-ExecStart=%h/data1/servicemind/.venv/bin/servicemind-outbox
+ExecStart=%h/data1/servicemind/.venv/bin/servicemind-api
 Restart=on-failure
 RestartSec=2s
 TimeoutStopSec=30s

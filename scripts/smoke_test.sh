@@ -228,7 +228,6 @@ smoke_langfuse() {
 
   # (2) decisive: a traced invoke must actually produce a trace in LangFuse.
   uv run python -c "
-import sys; sys.path.insert(0, 'src')
 from client import AgentClient
 c = AgentClient('http://localhost:8080')
 r = c.invoke('Trace me please', thread_id='$SMOKE_THREAD_ID', model='fake')

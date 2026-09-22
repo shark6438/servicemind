@@ -25,15 +25,19 @@ ServiceMind 是一个**企业级 ITSM(IT 服务管理)智能体平台**:它把�
 
 ```text
 src/
-├── servicemind/        # 产品: rag/、graphrag/、domain/、memory/、context/、
-│                       #   skills/、model_gateway/、security/、persistence/、
-│                       #   orchestration/、harness/、integrations/、observability/
-├── service/            # FastAPI 壳 —— 挂载 ServiceMind API + 通用 agent 端点
+├── servicemind/        # 已打包的模块化产品
+│   ├── domain/         # 纯业务契约与完整性原语
+│   ├── orchestration/  # 持久工作流、规划、恢复与治理
+│   ├── interfaces/http/# HTTP 入站适配器
+│   ├── persistence/    # 数据库与事务 outbox 适配器
+│   └── rag|memory|context|model_gateway|tool_platform|…
+├── service/            # FastAPI 组合根(`create_app`)
 ├── agents/             # 继承自上游的 LangGraph agents(chatbot、research-assistant、…)
 ├── core/               # 配置 + 模型查找(共享)
 ├── schema/             # 协议 + 模型名 schema
 ├── client/             # AgentClient(可基于 agent 服务构建其它应用)
 ├── voice/              # 聊天界面 STT/TTS providers
+├── pages/              # 随发行包交付的 Streamlit 审核页面
 ├── streamlit_app.py    # ServiceMind Console(聊天界面)
 └── run_service.py      # 入口: uvicorn "service:app"
 migrations/             # Alembic 迁移 0001–0013(产品 schema,Postgres)
@@ -44,12 +48,17 @@ skills/                 # 可为 agent 装配的版本化技能
 docker/                 # Dockerfiles(service/app)、附加 compose 文件
 docs/                   # 各阶段验收文档 + 企业级主规格
 scripts/                # 各阶段 seed/verify/ingest/evaluate 脚本
+deploy/systemd/         # 版本化 API / Streamlit / outbox 进程清单
 ```
 
 服务启动链路(`src/service/service.py` → `src/run_service.py`)与根级 `compose.yaml`
 仍依赖继承自上游的脚手架层(`src/agents|core|memory|schema|client|voice` 与
 `streamlit_app.py`),因此这些层是**承重**的运行时基础设施,不是"产品代码"——请勿当作
 死代码删除。
+
+`pyproject.toml` 已声明构建后端、显式包发现以及安装后的 `servicemind-api` /
+`servicemind-outbox` 入口。架构门禁会拒绝包依赖环、领域层向外依赖、源码路径注入和不完整的
+进程清单。详见 [`docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md`](docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md)。
 
 ## 架构速览
 
@@ -106,7 +115,7 @@ cp .env.example .env
 uv run alembic upgrade head
 
 # 终端 1 —— agent 服务
-uv run python src/run_service.py
+uv run servicemind-api
 
 # 终端 2 —— ServiceMind Console
 uv run streamlit run src/streamlit_app.py

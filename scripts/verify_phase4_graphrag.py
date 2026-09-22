@@ -6,7 +6,7 @@ and Graph-RAG to be enabled:
 
     SERVICEMIND_GRAPH_RAG_ENABLED=true \
     NEO4J_PASSWORD=<password> \
-    PYTHONPATH=src .venv/bin/python scripts/verify_phase4_graphrag.py
+    .venv/bin/python scripts/verify_phase4_graphrag.py
 """
 
 import asyncio

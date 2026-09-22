@@ -559,6 +559,14 @@ QUALITY_EXCEPTION_ACCEPTED`，不虚报为已获业务质量认证。`answerable
 是检索 top-score 阈值代理而非 Reviewer 端到端作答率，完整机器口径见
 `evaluation/reports/rag_quality_status_latest.{json,md}`。
 
+2026-09-22 完成项目结构收敛：根项目现为可构建、可安装的 `src` layout 模块化单体，
+FastAPI 使用 `create_app` 组合根，Memory Review 位于独立 HTTP adapter；API、Streamlit、
+outbox 三类进程清单全部版本化。领域完整性/调用身份、tokenizer、MCP transport、outbox
+repository、dynamic planner 与 recovery 已归入各自权威层，`src/servicemind` 包级依赖环由
+5 个降为 0。机器门禁为 `scripts/audit_project_structure.py --check`，详细裁定见
+`docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md`。该结构结论不评价项目外实例 Agent，
+也不改变 RAG 的 `DOMAIN_QUALITY_NOT_CERTIFIED` 状态。
+
 ------
 
 # Phase 7：Observability、Evaluation、红队与 CI Gate
@@ -757,19 +765,34 @@ A2A 只用于独立部署、不同所有者或不同框架的 Agent Service。�
 
 ------
 
-# 下一步的具体任务
+# 当前发布路径（2026-09-22 裁定）
 
-现在应立即启动 Phase 3，第一批开发顺序是：
+Phase 3–6 的工程路径已经执行，Phase 6 也已有真实 OPA、Redis、PostgreSQL、Keycloak、MCP、
+GLPI v2 与 outbox 验收，因此不存在“跳过 Phase 6 再做前端”的待决项。现在可以立即进入前端开发，
+同时补齐 Phase 7 的最小发布门禁；两条工作流可并行，但正式企业生产发布不得跳过发布门禁。
 
-1. 定义 `Evidence`、`ReviewResult`、`TaskPlan`、`HandoffEnvelope`；
-2. 实现 Knowledge Agent 和 Reviewer Agent；
-3. 实现 deterministic Fast Path Router；
-4. 实现 Supervisor + DAG Validator；
-5. 用 `Send` 并行 Data/Knowledge；
-6. 实现 Join、Reviewer 和 bounded replan；
-7. 建立 Reviewer → Action 的显式 Handoff；
-8. 全部写操作复用 Phase 2 Harness；
-9. 增加 routing/trajectory/security Golden Dataset；
-10. 完成浏览器演示和 Phase 3 验收报告。
+前端路径冻结为：
 
-在 Phase 3 完成前，不增加 `close_ticket`、`create_problem`、`create_change` 等新写工具。先把控制面、证据面和审核面做正确，再扩展业务写能力。
+1. 保留 Streamlit 作为内部演示和 Memory Review 运维入口；
+2. 正式用户界面采用 React/Next.js + AG-UI，先实现 Workbench、Run/DAG、Evidence/Citations、
+   Approval Center、Trace/Audit，再实现 Evaluation Dashboard；
+3. 前端只能调用现有受治理 API，不复制 tenant/RBAC/ABAC、审批、Tool Policy 或 Memory Policy；
+4. 所有写操作继续形成 `ActionIntent`，前端不能增加直接 GLPI 写旁路；
+5. 浏览器端不得持有 service account、MCP service token 或数据库凭据，用户登录采用
+   Authorization Code + PKCE。
+
+发布分为两级：
+
+- **内部 preview/demo**：前端 E2E、鉴权、跨租户隔离和关键路径通过后即可发布到受控网络；必须显式标记
+  RAG 为 `DOMAIN_QUALITY_NOT_CERTIFIED`，不得宣传为租户业务质量已认证。
+- **企业生产发布**：必须先关闭以下最小门禁，缺一项不得发布：
+  1. 把当前工作树冻结为可追溯 commit/tag，由 clean checkout 构建 wheel 与镜像；
+  2. CI 纳入结构审计、迁移往返、RAG 状态/回归、Memory、MCP contract、trajectory/security eval、
+     Docker build、浏览器 E2E、SBOM、依赖与容器漏洞扫描；
+  3. OTel traces、关键指标、结构化日志、告警和最小 SLO 可用，并验证审计中不出现 secret/token；
+  4. Keycloak production mode、TLS reverse proxy、PKCE、生产 secret/KMS 和密钥轮换完成；
+  5. PostgreSQL/Redis/OpenSearch/Neo4j 备份恢复演练、数据保留策略、负载与故障注入通过；
+  6. 生产发布声明继续保留 Phase 4 质量例外，直到取得租户域标注集或真实流量证据。
+
+因此当前最优顺序是“前端与 P7 发布门禁并行 → 受控 preview → 生产基础设施与恢复/负载验收 →
+正式发布”，而不是重新执行 Phase 6，也不是完成页面后直接对外上线。

@@ -16,7 +16,7 @@
 | AgentDojo | 通过（数据恢复） | 固定 revision `089ed468…`；archive SHA-256 `b1cbd209…`，安全解压后 36,860 files |
 | 复现脚本 | 通过 | `python scripts/fetch_phase4_eval.py --verify-only` 全部通过 |
 | 代码回归 | 通过 | `.venv/bin/pytest -q`：364 passed / 6 skipped；pytest 已限制发现范围为本仓库 `tests/`，不误收集外部 eval 源码 |
-| RAG 活体 smoke | 通过 | `PYTHONPATH=src .venv/bin/python scripts/verify_phase4_rag.py`：真实 OpenSearch、零跨租户 parent 泄漏、3 条 evidence |
+| RAG 活体 smoke | 通过 | `.venv/bin/python scripts/verify_phase4_rag.py`：真实 OpenSearch、零跨租户 parent 泄漏、3 条 evidence |
 
 OpenSearch 当前是单节点部署。计数一致和容器健康只能证明本机链路可用，不能据此推导高可用或大规模容量。
 

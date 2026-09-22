@@ -2,7 +2,7 @@
   "schema_version": "phase5-memory-eval-v1",
   "corpus": "servicemind-phase5-memory-v2",
   "description": "Phase 5 记忆质量评测语料 v2：在 v1 之上补齐评测判别力。新增三件事——(1) 与目标词法高度重叠的竞争性干扰记忆，使排序块脱离饱和；(2) 读侧污点/注入过滤器的成对对照探针（带毒记录必须被拦，仅差一个属性的干净对照必须在位），使「通过」不再可能来自记录本来就不可检索；(3) as_of 的开启/关闭边界正反探针。v1 的 26 条写入与 21 条探针原样保留，v1 报告仍可由 scenarios.v1.json 复现。",
-  "anchor": "2026-09-16T13:32:26.692981Z",
+  "anchor": "2026-09-22T00:46:59.174019Z",
   "scoring_mode": "lexical",
   "scoring_model": "lexical-jaccard",
   "write": {
@@ -51,7 +51,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "0ba85df4-d95c-454b-bd30-6e61e5a6b016"
+      "memory_id": "7fd8635d-f5c4-4135-bdb9-dc8afe4b528d"
     },
     {
       "step_id": "w-backup-window",
@@ -70,7 +70,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "309b3c27-21ff-4ad1-a30d-b57677f24e82"
+      "memory_id": "f7062bf9-7cb5-48c6-be9a-28b6a2095da5"
     },
     {
       "step_id": "w-user-preference",
@@ -89,7 +89,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "4f170035-df9b-47b6-9401-7aefec505fe7"
+      "memory_id": "f704ff21-b3f7-4aa3-b94c-4da6da405d14"
     },
     {
       "step_id": "w-group-rotation",
@@ -108,7 +108,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "9a067c48-c0eb-461b-b8f4-39531719759f"
+      "memory_id": "a20c5af1-d31d-4991-94ff-914dd5b67678"
     },
     {
       "step_id": "w-entity-srv42",
@@ -127,7 +127,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "5d91196d-14b6-46f5-8ee5-b83f51179ab2"
+      "memory_id": "d7a5ebce-23a2-433f-a7a5-13586c5da19e"
     },
     {
       "step_id": "w-service-sso",
@@ -146,7 +146,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "1a30ed6f-5cc6-43fd-a426-f530d65f3f32"
+      "memory_id": "7d3e303e-b261-464b-9948-243c91a7d2df"
     },
     {
       "step_id": "w-episode-sso-rollback",
@@ -165,7 +165,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "0bd604ff-c995-41ab-aaf2-12369c3cf5a1"
+      "memory_id": "198c9ab9-47d8-4cf9-a699-03b82e8838ec"
     },
     {
       "step_id": "w-episode-saml-cache",
@@ -184,7 +184,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "5e1863fb-8918-4a99-8921-3ea2a2be660f"
+      "memory_id": "401e7f78-44df-4065-87e6-cf9ebc86e562"
     },
     {
       "step_id": "w-procedure-sso",
@@ -203,7 +203,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "e2a659b6-16f6-469f-86ec-85e84bd7cb99"
+      "memory_id": "82d87a2e-6818-4c15-8d0d-2ca01d453462"
     },
     {
       "step_id": "w-vpn-reaffirm",
@@ -222,7 +222,7 @@
       "missing_reason_codes": [],
       "expected_stored": "unchanged",
       "actual_stored": "unchanged",
-      "memory_id": "0ba85df4-d95c-454b-bd30-6e61e5a6b016"
+      "memory_id": "7fd8635d-f5c4-4135-bdb9-dc8afe4b528d"
     },
     {
       "step_id": "w-vpn-contradiction",
@@ -242,7 +242,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "12f72c15-edd6-4e11-a327-7d67973d5e91"
+      "memory_id": "20e0dddc-490d-4d0a-ba63-366861140373"
     },
     {
       "step_id": "w-legacy-vpn",
@@ -261,7 +261,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "e6d4c24e-b348-4bb5-9b39-1c4e78abf601"
+      "memory_id": "51735dd2-7771-4d8a-9dd1-18c4bc743130"
     },
     {
       "step_id": "w-legacy-vpn-resurrect",
@@ -280,7 +280,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "a04bf15a-d5ea-424b-9f96-bde404e92e02"
+      "memory_id": "d423e0f2-80d0-4961-9d46-ac2eb8343713"
     },
     {
       "step_id": "w-cert-annual",
@@ -299,7 +299,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "56a49ff6-27b5-4721-9327-2af3bd1e2717"
+      "memory_id": "e3457e24-661c-4737-b3fd-6a7f40c98951"
     },
     {
       "step_id": "w-cert-quarterly",
@@ -318,7 +318,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "5dcfe596-26b0-47cd-b1ea-105e8ba74866"
+      "memory_id": "00ef903e-d1c2-49c7-9423-5e75babdf1e4"
     },
     {
       "step_id": "w-secret",
@@ -375,7 +375,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "8b7f12ee-0893-4a42-bb93-e2212d7d9562"
+      "memory_id": "7b64e605-79df-4a34-adda-b63883624b2c"
     },
     {
       "step_id": "w-pii",
@@ -394,7 +394,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "fc46042d-ba86-48d6-9d34-dd6e0f5e1bbb"
+      "memory_id": "e968683f-e3f5-4c0a-871a-c8692b80d8bb"
     },
     {
       "step_id": "w-unverified",
@@ -413,7 +413,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "b6f620e2-f6db-4f80-af2f-7c3730d7cb4f"
+      "memory_id": "d69126f7-ff1e-451d-93a0-d4750af3ce11"
     },
     {
       "step_id": "w-low-confidence",
@@ -432,7 +432,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "987b72ed-d15e-4967-b07d-80d5a6e443cd"
+      "memory_id": "a783e642-702e-497e-a8a8-e2b203225c65"
     },
     {
       "step_id": "w-tainted",
@@ -451,7 +451,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "a49fb4ae-0025-4cc7-9306-f4bd2a0dfcb3"
+      "memory_id": "51dfb842-c88d-4aff-a8cd-b21d6843e192"
     },
     {
       "step_id": "w-legacy-tenant-scope-summary",
@@ -470,7 +470,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "52b4cf87-472e-4aeb-95bb-7e0092aab8fc"
+      "memory_id": "01d47d07-90d7-43fd-9564-79c0f5578b4e"
     },
     {
       "step_id": "w-foreign-tenant",
@@ -489,7 +489,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "801a7540-d6ef-473a-84f8-34080b607172"
+      "memory_id": "e99f9fc7-e96c-43aa-b026-c250bd2b4649"
     },
     {
       "step_id": "w-expired-at-write",
@@ -508,7 +508,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "6ef46262-5454-4b14-8af1-929a6a5551b4"
+      "memory_id": "8a59f323-8478-4ab8-b105-a2a9f0662cb1"
     },
     {
       "step_id": "w-future-dated",
@@ -527,7 +527,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "3649e932-e7d3-46e1-8e88-936c3d93a4bd"
+      "memory_id": "04181186-113f-4a7b-88b0-a15ce2bd77b4"
     },
     {
       "step_id": "w-decoy-vpn-osaka",
@@ -546,7 +546,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "b2ee6eee-b167-4de6-b13d-a0687e639147"
+      "memory_id": "09fdbf86-0c44-4149-8e65-09f685e17cfe"
     },
     {
       "step_id": "w-decoy-vpn-shenzhen",
@@ -565,7 +565,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "4887a9c9-5166-4bd1-9b21-adb9753f0870"
+      "memory_id": "c8a9f336-8a57-42bb-b294-37bbb69134ce"
     },
     {
       "step_id": "w-decoy-backup-dr",
@@ -584,7 +584,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "2741e0bd-16e9-4ecf-8118-c8943467f0e9"
+      "memory_id": "d9696922-5689-45a4-9a5f-625a2f82ca1d"
     },
     {
       "step_id": "w-decoy-entity-srv40",
@@ -603,7 +603,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "84c7d5c7-2deb-4e5c-8141-e13648390447"
+      "memory_id": "775b7437-52a2-459f-aa98-41606a2e45b6"
     },
     {
       "step_id": "w-clean-settlement",
@@ -622,7 +622,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "67ab906d-d6fe-433b-9b2d-dd0d9a17bed4"
+      "memory_id": "220b1472-c6de-4d27-8575-34ed0406631b"
     },
     {
       "step_id": "w-clean-access-review",
@@ -641,7 +641,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "daaddb43-1476-48ad-929c-ba14584135cc"
+      "memory_id": "d2f4a36f-e40a-473e-a0f8-3aa18fb24b7f"
     },
     {
       "step_id": "w-clean-capacity",
@@ -660,7 +660,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "3b4fd98c-6ff5-41c8-bbc4-e51966de967b"
+      "memory_id": "a6a10ad0-9139-4819-bd55-c9a3fa2e0d09"
     },
     {
       "step_id": "w-clean-user-scope",
@@ -679,7 +679,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "bd5a2b99-f11e-4b6c-93cb-98dcce410fdf"
+      "memory_id": "034a7e9a-bd8c-4e66-8a50-6fc13e7396f2"
     },
     {
       "step_id": "w-clean-group-scope",
@@ -698,7 +698,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "f8257880-aa0b-4bb5-9b27-294a8a7917d0"
+      "memory_id": "cd69834c-eff8-4f3b-aa17-75b145133aed"
     },
     {
       "step_id": "w-inj-roleplay",
@@ -717,7 +717,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "5f59c1a8-43ef-42ba-a32a-200d044430f3"
+      "memory_id": "74c4c145-14d5-4032-a304-7036ac0f6980"
     },
     {
       "step_id": "w-benign-roleplay",
@@ -736,7 +736,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "a0776378-935b-4c4d-8ddc-821378529432"
+      "memory_id": "1e36b59f-5d6a-4614-a235-6b902bbce132"
     },
     {
       "step_id": "w-inj-system-message",
@@ -755,7 +755,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "bfed82b3-48d9-4a84-867f-0ec31e46d650"
+      "memory_id": "03cdea72-4a10-4c5f-9fd4-dd8770502727"
     },
     {
       "step_id": "w-benign-system-message",
@@ -774,7 +774,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "6ae21f5f-a732-43a5-8e85-7af2ea91d622"
+      "memory_id": "231cc297-e9af-4af1-96ef-22c8eb1ae679"
     },
     {
       "step_id": "w-inj-forget-previous",
@@ -793,7 +793,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "1bc600ff-0814-427e-95db-727cdef09e01"
+      "memory_id": "c6858b2d-068f-40e8-8343-3f1352b0f570"
     },
     {
       "step_id": "w-benign-forget-previous",
@@ -812,7 +812,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "e91907b0-56cb-43e8-8ce1-0c834a38687e"
+      "memory_id": "2a06a554-e117-4fe8-ac5d-518b03f3f3de"
     },
     {
       "step_id": "w-inj-zh-system-prompt",
@@ -831,7 +831,7 @@
       "missing_reason_codes": [],
       "expected_stored": "quarantine",
       "actual_stored": "quarantine",
-      "memory_id": "ca4940e5-95a4-4f9a-b96d-92f1c9a38b00"
+      "memory_id": "48cc448e-53b8-4712-a788-d6e33608f5a4"
     },
     {
       "step_id": "w-benign-zh-system-prompt",
@@ -850,7 +850,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "4bf70b43-7f79-43ca-8d0e-719406b5a7c3"
+      "memory_id": "b475d8e1-bc14-4dc5-9561-e6733eb94b8b"
     },
     {
       "step_id": "w-benign-ignore-previous",
@@ -869,7 +869,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "29d56dc3-fd10-44e8-bd86-e69b37a32394"
+      "memory_id": "6f0c34cd-1880-42a0-8f9f-77fb790b280e"
     },
     {
       "step_id": "w-benign-bypass-approval",
@@ -888,7 +888,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "47a406cd-8213-4192-a8fa-c6ce59147569"
+      "memory_id": "bee7a6c8-7bbe-4c8f-9315-431d4b9ab8a7"
     },
     {
       "step_id": "w-asof-window",
@@ -907,7 +907,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "c1d9fc81-2779-4f55-a6fd-ff3999ec70ff"
+      "memory_id": "3693738f-db86-40f5-8583-cbe0d4b4898d"
     },
     {
       "step_id": "w-asof-ttl",
@@ -926,7 +926,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "aeffb86a-4ed0-465a-be34-d85e1400ded4"
+      "memory_id": "c9d69f39-c9d3-4ecc-97e3-64e8d029c41b"
     },
     {
       "step_id": "w-post-run-tenant-episode",
@@ -945,7 +945,7 @@
       "missing_reason_codes": [],
       "expected_stored": "active",
       "actual_stored": "active",
-      "memory_id": "a21a5695-1a71-43f9-8861-d4b7b5746c97"
+      "memory_id": "0e405718-057b-4c97-9ab3-aa3a6fa8d4db"
     }
   ],
   "probe": {

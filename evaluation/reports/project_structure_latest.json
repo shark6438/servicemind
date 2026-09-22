@@ -1,0 +1,166 @@
+{
+  "schema_version": "servicemind-project-structure-v1",
+  "status": "PASS",
+  "checks": {
+    "src_layout": true,
+    "build_backend_declared": true,
+    "explicit_package_discovery": true,
+    "streamlit_pages_packaged": true,
+    "installed_process_entrypoints": true,
+    "tests_use_installed_distribution": true,
+    "fastapi_application_factory": true,
+    "http_adapter_split": true,
+    "domain_dependency_rule": true,
+    "acyclic_servicemind_packages": true,
+    "source_tree_boundary": true,
+    "installed_execution_hygiene": true,
+    "versioned_process_manifests": true
+  },
+  "violations": {
+    "package_cycles": [],
+    "domain_dependencies": [],
+    "source_boundaries": [],
+    "development_execution": []
+  },
+  "servicemind_package_graph": {
+    "_root": [
+      "domain",
+      "harness",
+      "integrations",
+      "interfaces",
+      "orchestration",
+      "persistence",
+      "security"
+    ],
+    "agents": [
+      "context",
+      "domain",
+      "integrations",
+      "rag",
+      "runtime",
+      "security"
+    ],
+    "context": [
+      "foundation",
+      "persistence"
+    ],
+    "domain": [],
+    "evaluation": [
+      "context",
+      "domain",
+      "memory",
+      "orchestration"
+    ],
+    "foundation": [],
+    "graphrag": [
+      "domain"
+    ],
+    "harness": [
+      "domain",
+      "integrations",
+      "persistence",
+      "security"
+    ],
+    "integrations": [
+      "persistence",
+      "security"
+    ],
+    "interfaces": [
+      "memory",
+      "security"
+    ],
+    "mcp": [
+      "persistence",
+      "security",
+      "tool_platform"
+    ],
+    "memory": [
+      "persistence"
+    ],
+    "model_gateway": [
+      "domain",
+      "persistence"
+    ],
+    "observability": [
+      "context"
+    ],
+    "orchestration": [
+      "agents",
+      "context",
+      "domain",
+      "harness",
+      "integrations",
+      "memory",
+      "model_gateway",
+      "observability",
+      "persistence",
+      "rag",
+      "runtime",
+      "security",
+      "skills"
+    ],
+    "persistence": [],
+    "rag": [
+      "context",
+      "domain",
+      "foundation",
+      "graphrag",
+      "integrations",
+      "persistence",
+      "runtime",
+      "security"
+    ],
+    "reliability": [
+      "persistence"
+    ],
+    "runtime": [
+      "domain",
+      "integrations",
+      "model_gateway",
+      "security",
+      "tool_platform"
+    ],
+    "security": [],
+    "skills": [
+      "context"
+    ],
+    "tool_platform": [
+      "domain",
+      "graphrag",
+      "integrations",
+      "memory",
+      "persistence",
+      "security"
+    ]
+  },
+  "repository_model": {
+    "style": "packaged modular monolith with explicit process adapters",
+    "composition_root": "src/service/service.py:create_app",
+    "domain_root": "src/servicemind/domain",
+    "inbound_adapters": [
+      "src/servicemind/interfaces/http",
+      "src/pages"
+    ],
+    "outbound_adapters": [
+      "src/servicemind/integrations",
+      "src/servicemind/persistence",
+      "src/servicemind/tool_platform"
+    ],
+    "independent_processes": [
+      "api",
+      "streamlit",
+      "outbox"
+    ],
+    "legacy_instance_agent_shell": [
+      "src/agents",
+      "src/client",
+      "src/core",
+      "src/memory",
+      "src/schema",
+      "src/service",
+      "src/pages",
+      "src/voice"
+    ]
+  },
+  "evidence_scope": "Structure, dependency direction, packaging and process manifests only; this does not certify tenant-domain RAG quality or instance-agent behavior."
+}

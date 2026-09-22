@@ -13,7 +13,6 @@ from core import settings
 from servicemind.agents.action import ActionAgent, action_agent
 from servicemind.agents.analysis import AnalysisAgent, analysis_agent
 from servicemind.agents.data import DataAgent, data_agent
-from servicemind.agents.dynamic_planner import DynamicPlanner, dynamic_planner
 from servicemind.agents.knowledge import KnowledgeAgent, knowledge_agent
 from servicemind.agents.reviewer import ReviewerAgent, reviewer_agent
 from servicemind.agents.supervisor import SupervisorAgent, supervisor_agent
@@ -33,6 +32,7 @@ from servicemind.model_gateway.gateway import model_call_scope
 from servicemind.observability.tracing import phase_span
 from servicemind.orchestration.budget import BudgetExceeded, budget_controller
 from servicemind.orchestration.dispatcher import TaskDispatcher, task_dispatcher
+from servicemind.orchestration.dynamic_planner import DynamicPlanner, dynamic_planner
 from servicemind.orchestration.phase5_governance import Phase5Governance, phase5_governance
 from servicemind.orchestration.registry import agent_registry
 from servicemind.orchestration.router import FastPathRouter, fast_path_router

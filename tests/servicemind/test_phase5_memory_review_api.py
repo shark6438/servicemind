@@ -9,12 +9,12 @@ import httpx
 import pytest
 from fastapi import FastAPI
 
-import servicemind.api as api_module
 import servicemind.security.auth as auth_module
 from core import settings
 from servicemind.api import phase2_router
 from servicemind.context.repository import NullContextArtifactSink
 from servicemind.domain.evidence import Evidence, EvidenceSourceType, join_evidence
+from servicemind.interfaces.http import memory_review as memory_review_module
 from servicemind.memory.contracts import (
     MemoryCandidate,
     MemoryStatus,
@@ -141,7 +141,9 @@ async def test_review_queue_and_decision_bind_the_exact_snapshot(
         )
     )
     assert second is not None and second.status is MemoryStatus.QUARANTINE
-    monkeypatch.setattr(api_module, "PostgresMemoryRepository", lambda tenant_id: repository)
+    monkeypatch.setattr(
+        memory_review_module, "PostgresMemoryRepository", lambda tenant_id: repository
+    )
 
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=_app(_context())), base_url="http://test"
@@ -220,7 +222,9 @@ async def test_review_queue_fails_closed_for_role_and_group_acl(
         )
     )
     assert semantic is not None and semantic.status is MemoryStatus.QUARANTINE
-    monkeypatch.setattr(api_module, "PostgresMemoryRepository", lambda tenant_id: repository)
+    monkeypatch.setattr(
+        memory_review_module, "PostgresMemoryRepository", lambda tenant_id: repository
+    )
 
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=_app(_context(roles={"viewer"}))),

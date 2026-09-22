@@ -8,9 +8,10 @@ from dotenv import load_dotenv
 
 from core import settings
 
-load_dotenv()
 
-if __name__ == "__main__":
+def main() -> None:
+    """Start the installed ServiceMind API process."""
+    load_dotenv()
     root_logger = logging.getLogger()
     if root_logger.handlers:
         print(
@@ -31,3 +32,7 @@ if __name__ == "__main__":
         timeout_graceful_shutdown=settings.GRACEFUL_SHUTDOWN_TIMEOUT,
         loop=loop_factory,
     )
+
+
+if __name__ == "__main__":
+    main()

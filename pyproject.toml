@@ -1,8 +1,13 @@
+[build-system]
+requires = ["setuptools>=77,<84"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "servicemind"
 version = "0.1.0"
 description = "ServiceMind — enterprise ITSM agent platform: multi-agent orchestration, hybrid RAG / Graph-RAG, governed long-term memory, and GLPI integration"
 readme = "README.md"
+license = "MIT"
 authors = [
     # Original author of the upstream AI Agent Service Toolkit this repo derives from (MIT).
     { name = "Joshua Carroll", email = "carroll.joshk@gmail.com" },
@@ -11,7 +16,6 @@ authors = [
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
-    "License :: OSI Approved :: MIT License",
     "Framework :: FastAPI",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -63,7 +67,6 @@ dependencies = [
     "pyowm ~=3.5.0",
     "python-dotenv ~=1.2.2",
     "redis >=6,<7",
-    "setuptools ~=83.0.0",
     "sqlalchemy[asyncio] ~=2.0",
     "streamlit ~=1.59.1",
     "tiktoken >=0.13.0",
@@ -77,6 +80,29 @@ dependencies = [
     "sentence-transformers>=5.1,<6",
     "authlib>=1.3.2,<2",
 ]
+
+[project.scripts]
+servicemind-api = "run_service:main"
+servicemind-outbox = "servicemind.reliability.worker:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+py-modules = ["run_service", "streamlit_app"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = [
+    "agents*",
+    "client*",
+    "core*",
+    "memory*",
+    "pages*",
+    "schema*",
+    "service*",
+    "servicemind*",
+    "voice*",
+]
+namespaces = false
 
 # Supply-chain cooldown: resolution only considers releases >=14 days old. Needs the
 # repo's pinned uv version (older uv ignores this and strips it from uv.lock on re-lock).
@@ -124,8 +150,8 @@ extend-exclude = ["evaluation/experiments"]
 extend-select = ["I", "U"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
 testpaths = ["tests"]
+addopts = ["--import-mode=importlib"]
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.pytest_env]

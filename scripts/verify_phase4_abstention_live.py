@@ -34,13 +34,10 @@ import asyncio
 import json
 import os
 import selectors
-import sys
 from datetime import date
 from pathlib import Path
 from typing import Any
 from uuid import UUID
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models import BaseChatModel

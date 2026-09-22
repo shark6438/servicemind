@@ -48,9 +48,13 @@ can be sent to a proxy and return an unrelated HTTP 502.
 
 ```sh
 cd /home/shihongye/data1/servicemind
-PYTHONPATH=src .venv/bin/python scripts/verify_servicemind_runtime.py --check \
+.venv/bin/python scripts/verify_servicemind_runtime.py --check \
   --output evaluation/reports/servicemind_runtime_latest.json
 ```
+
+The three versioned unit files live in `deploy/systemd/`. They use installed console
+entry points for API and outbox and do not depend on `PYTHONPATH`; run `uv sync --frozen`
+before installing or restarting them.
 
 For direct inspection use `systemctl --user status servicemind-api.service` and
 `curl --noproxy '*' http://127.0.0.1:18080/health`. A plain `systemctl is-active

@@ -347,7 +347,7 @@ class ServiceMindRepository:
                 else ActionStatus.REJECTED.value
             )
             if decision == "approved":
-                from servicemind.reliability.outbox import ToolOutboxRepository
+                from servicemind.persistence.outbox import ToolOutboxRepository
 
                 await ToolOutboxRepository.enqueue_in_transaction(
                     session,

@@ -1,7 +1,7 @@
-# ServiceMind Phase 5 最终架构与验收签署 v1.3
+# ServiceMind Phase 5 最终架构与验收签署 v1.4
 
-> 复核日期：2026-09-17
-> 范围：Governed Memory、Context Engineering、Versioned Skills、Model Gateway
+> 复核日期：2026-09-22
+> 范围：Governed Memory、Context Engineering、Versioned Skills、Model Gateway、项目结构与部署入口
 > 结论：**Phase 5 工程验收通过；RAG 业务质量继续保留条件例外**
 
 ## 最终架构
@@ -61,7 +61,7 @@ Phase 5 冻结为四个独立模块。Memory 属于 Harness 中间件，不是�
 `scripts/verify_servicemind_runtime.py --check` 会联合校验 unit scope、MainPID、
 ExecStart、工作目录、`.env` 端口及 `/health`，并显式绕过环境代理。机器证据写入
 `evaluation/reports/servicemind_runtime_latest.json`。生产 Context/Memory 投递观测写入
-`evaluation/reports/phase5_context_delivery_observed_latest.json`；当前排除 13 条合成验收
+`evaluation/reports/phase5_context_delivery_observed_latest.json`；当前排除 14 条合成验收
 artifact 后为 `NO_DATA`，不得表述成生产质量 PASS。
 
 ### 2026-09-16 Procedural 生产与复核闭环
@@ -91,7 +91,7 @@ Episode 过期或失效后，依赖 Procedure 在服务前转为 `REVOKED`，并
 
 | 门禁 | 结果 | 证据 |
 | --- | --- | --- |
-| 全仓自动化 | PASS | **573 passed / 6 skipped / 0 failed**，38 条第三方弃用 warning |
+| 全仓自动化 | PASS | **576 passed / 6 skipped / 0 failed**，38 条第三方弃用 warning |
 | Procedural + review 专项 | PASS | **88 passed / 0 failed** |
 | 复核身份漂移 | PASS | **11 passed / 0 failed**；attributes/roles 实写与后置重读均有证伪测试 |
 | 静态检查 | PASS | Ruff 全绿；Pyrefly 0 error；`git diff --check` 0 error |
@@ -99,7 +99,24 @@ Episode 过期或失效后，依赖 Procedure 在服务前转为 `REVOKED`，并
 | PostgreSQL 在线治理 | PASS | RLS、跨租户、模式情节查询、ACL 待审、错误摘要拒绝、激活、支撑失效撤销、append-only 审计 |
 | Keycloak | PASS | mapper/profile/user grant 漂移检查 rc=0；真实 approver token 含 entity/group/role |
 | 常驻服务 | PASS | API / Streamlit / outbox user unit active；健康检查通过；真实 token 查询待审队列 HTTP 200 |
-| 生产样本 | **NO_DATA** | 13 条合成 artifact 排除后，真实 ANALYSIS 与 Memory 候选信封均为 0 |
+| 生产样本 | **NO_DATA** | 14 条合成 artifact 排除后，真实 ANALYSIS 与 Memory 候选信封均为 0 |
+
+## 2026-09-22 项目结构冻结
+
+项目已收敛为可安装的 `src` 布局模块化单体。`pyproject.toml` 声明 build backend、显式包发现与
+`servicemind-api` / `servicemind-outbox` 入口；pytest 通过安装后的 editable distribution 导入，
+不再注入 `PYTHONPATH`。FastAPI 使用 `create_app()` 组合，Memory Review 路由移入独立 HTTP adapter；
+API、Streamlit、outbox 三个 user unit 均已版本化并使用稳定入口。
+
+`src/servicemind` 的领域原语、基础 tokenizer、编排、MCP transport 与 outbox repository 重新归属后，
+包级强连通分量从 5 个降为 0。`scripts/audit_project_structure.py --check` 固化 13 条门禁，覆盖
+build backend、包发现、wheel 页面内容、入口、已安装导入、应用工厂、HTTP adapter、domain 依赖方向、
+无环图、源码边界、开发脚本入口和 process manifests。`uv build --wheel` 成功，wheel 包含 Memory Review
+页面及新模块；当前 `.venv` 可解析 `servicemind==0.1.0` 和两个 console entry points。机器证据见
+`evaluation/reports/project_structure_latest.{json,md}`。
+
+这项 PASS 只评价结构、依赖方向、发行包与部署入口。它不改变 RAG 租户域门禁 `NOT_EVALUATED`，
+也不把实例 Agent 的业务表现纳入平台签署。当前只完成本机构建验证，未声明 SLSA Build L2/L3。
 
 ## RAG 质量边界
 

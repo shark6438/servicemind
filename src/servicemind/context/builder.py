@@ -18,7 +18,7 @@ from servicemind.context.contracts import (
     ContextSelection,
     ContextSource,
 )
-from servicemind.rag.chunking import ConservativeOfflineEncoding, has_cl100k_cache
+from servicemind.foundation.tokenization import ConservativeOfflineEncoding, has_cl100k_cache
 
 ROLE_SOURCES: dict[ContextAgent, frozenset[ContextSource]] = {
     ContextAgent.DATA: frozenset(

@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from servicemind.runtime.contracts import stable_digest
+from servicemind.domain.integrity import stable_digest
 
 
 class TicketAnalysis(BaseModel):

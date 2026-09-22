@@ -1,6 +1,6 @@
 {
-  "report_id": "servicemind-phase5-acceptance-2026-09-17-v1.3",
-  "evaluated_at": "2026-09-17T08:00:18+08:00",
+  "report_id": "servicemind-phase5-acceptance-2026-09-22-v1.4",
+  "evaluated_at": "2026-09-22T08:48:35+08:00",
   "result": "PASS_ENGINEERING_WITH_NO_PRODUCTION_MEMORY_SAMPLE",
   "scope": [
     "governed_memory",
@@ -10,7 +10,9 @@
     "workflow_integration",
     "procedural_proposal_and_human_review",
     "procedural_support_lifetime",
-    "human_review_console"
+    "human_review_console",
+    "project_structure_and_packaging",
+    "versioned_process_entrypoints"
   ],
   "database": {
     "current_revision": "0013_phase6_hash_guards",
@@ -26,7 +28,7 @@
   },
   "tests": {
     "full_suite": {
-      "passed": 573,
+      "passed": 576,
       "skipped": 6,
       "failed": 0,
       "warnings": 38
@@ -123,13 +125,14 @@
       "servicemind-api.service": "active",
       "servicemind-streamlit.service": "active",
       "servicemind-outbox.service": "active"
-    }
+    },
+    "verification_schema": "servicemind-runtime-verification-v2"
   },
   "production_observation": {
     "status": "NO_DATA",
     "real_analysis_envelopes": 0,
     "real_memory_candidate_envelopes": 0,
-    "excluded_synthetic_artifacts": 13,
+    "excluded_synthetic_artifacts": 14,
     "report": "evaluation/reports/phase5_context_delivery_observed_latest.json",
     "interpretation": "The path is executable and governed; no claim is made about real production memory volume or content quality."
   },
@@ -161,7 +164,11 @@
     "allowed_model": "deepseek-v4-flash",
     "max_cost_usd_per_call": 0.05,
     "review_console_oidc_enabled": true,
-    "model_gateway_offline_estimator": "utf8_byte_upper_bound_v1"
+    "model_gateway_offline_estimator": "utf8_byte_upper_bound_v1",
+    "installed_entrypoints": [
+      "servicemind-api",
+      "servicemind-outbox"
+    ]
   },
   "inherited_quality_boundary": {
     "phase4_status": "QUALITY_EXCEPTION_ACCEPTED",
@@ -181,14 +188,35 @@
     "committed_gold_status": "SMOKE_ONLY_SATURATED"
   },
   "amendment": {
-    "at": "2026-09-17",
-    "scope": "support lifetime, human review console, RAG status truth, and offline model accounting",
+    "at": "2026-09-22",
+    "scope": "support lifetime, human review console, RAG status truth, offline model accounting, and installable project structure",
     "detail": [
       "Active procedures are revoked before serving when their required supporting episodes are no longer valid, with an append-only audit event.",
       "The Streamlit Memory Review console uses Keycloak OIDC and preserves backend role, tenant, entity/group ACL, and exact-snapshot CAS enforcement.",
       "The RAG machine report distinguishes unevaluated tenant release gates, below-target external-silver diagnostics, and a saturated local smoke set.",
       "Model Gateway fallback token estimates are deterministic and offline; successful provider usage remains authoritative.",
-      "The full suite, static checks, live runtime checks, PostgreSQL governance, Keycloak drift, and lexical/TEI memory gates were re-run. The fresh database round trip remains the explicitly dated carried-forward item."
+      "The repository is now an installable src-layout distribution with explicit package discovery and stable API/outbox entry points.",
+      "The ServiceMind package graph has no strongly connected components; domain and source boundaries are machine-gated.",
+      "The full suite, static checks, wheel build, live runtime checks, PostgreSQL governance, Keycloak drift, and lexical/TEI memory gates were re-run. The fresh database round trip remains the explicitly dated carried-forward item."
     ]
+  },
+  "project_structure": {
+    "status": "passed",
+    "repository_style": "packaged modular monolith with explicit process adapters",
+    "machine_report": "evaluation/reports/project_structure_latest.json",
+    "gates_passed": 13,
+    "gates_total": 13,
+    "package_cycles": 0,
+    "domain_dependency_violations": 0,
+    "source_boundary_violations": 0,
+    "development_execution_violations": 0,
+    "wheel_build": "passed",
+    "installed_distribution_version": "0.1.0",
+    "process_manifests": [
+      "servicemind-api.service",
+      "servicemind-streamlit.service",
+      "servicemind-outbox.service"
+    ],
+    "claim_boundary": "Structure, packaging and deployment entry points only; tenant RAG quality and instance-agent behavior are outside this PASS."
   }
 }

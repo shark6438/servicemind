@@ -6,13 +6,13 @@ This is a maintainer tool for periodic model-catalog refreshes (see the
 model-refresh skill) -- it is NOT part of the pytest suite, since it makes real
 network calls against provider APIs and costs a small amount of real money.
 
-Usage (run from the repo root; PYTHONPATH=src is required, same as src/run_service.py):
-    PYTHONPATH=src uv run python scripts/check_live_models.py
-    PYTHONPATH=src uv run python scripts/check_live_models.py --provider anthropic google
+Usage (run from the repo root after ``uv sync --frozen``):
+    uv run python scripts/check_live_models.py
+    uv run python scripts/check_live_models.py --provider anthropic google
 
 If ANTHROPIC_API_KEY itself isn't settable in your environment, put the key under a
 different variable name and point --anthropic-api-key-env at it:
-    PYTHONPATH=src uv run python scripts/check_live_models.py --anthropic-api-key-env MY_VAR
+    uv run python scripts/check_live_models.py --anthropic-api-key-env MY_VAR
 """
 
 import argparse

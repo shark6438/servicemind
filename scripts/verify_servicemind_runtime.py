@@ -50,6 +50,15 @@ def _health(base_url: str) -> tuple[int | None, object]:
         return None, f"{type(exc.reason).__name__}: {exc.reason}"
 
 
+def _uses_installed_api_entrypoint(exec_start: str, repository: Path) -> bool:
+    match = re.search(r"\bpath=([^ ;]+)", exec_start)
+    executable = Path(match.group(1)) if match else None
+    return (
+        bool(executable)
+        and executable.resolve() == (repository / ".venv/bin/servicemind-api").resolve()
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--unit", default="servicemind-api.service")
@@ -67,25 +76,19 @@ def main() -> None:
     repository = Path(__file__).resolve().parents[1]
     working_directory = properties.get("WorkingDirectory")
     exec_start = properties.get("ExecStart", "")
-    executable_match = re.search(r"\bpath=([^ ;]+)", exec_start)
-    executable = Path(executable_match.group(1)) if executable_match else None
-    executable_matches = (
-        bool(executable)
-        and executable.name.startswith("python")
-        and (executable.parent.parent.resolve() == (repository / ".venv").resolve())
-    )
+    executable_matches = _uses_installed_api_entrypoint(exec_start, repository)
     checks = {
         "unit_active": properties.get("ActiveState") == "active",
         "unit_running": properties.get("SubState") == "running",
         "main_pid_present": int(properties.get("MainPID", "0") or 0) > 0,
         "working_directory_matches_repository": bool(working_directory)
         and Path(working_directory).resolve() == repository,
-        "exec_start_matches_repository": executable_matches and "src/run_service.py" in exec_start,
+        "exec_start_matches_repository": executable_matches,
         "health_http_200": http_status == 200,
         "health_body_ok": isinstance(health, dict) and health.get("status") == "ok",
     }
     report = {
-        "schema_version": "servicemind-runtime-verification-v1",
+        "schema_version": "servicemind-runtime-verification-v2",
         "status": "PASS" if all(checks.values()) else "FAIL",
         "unit": args.unit,
         "scope": args.scope,

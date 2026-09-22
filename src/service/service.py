@@ -54,7 +54,6 @@ from service.utils import (
     remove_tool_calls,
 )
 from servicemind.api import phase2_router
-from servicemind.harness.recovery import recover_incomplete_runs
 from servicemind.mcp.server import (
     configure_mcp_gateway,
     mcp_metadata_router,
@@ -63,6 +62,7 @@ from servicemind.mcp.server import (
 )
 from servicemind.mcp.tasks import InMemoryMcpTaskStore, PostgresMcpTaskStore
 from servicemind.observability.tracing import configure_telemetry, shutdown_telemetry
+from servicemind.orchestration.recovery import recover_incomplete_runs
 from servicemind.orchestration.supervisor_workflow import configure_supervisor_checkpointer
 from servicemind.orchestration.workflow import configure_phase2_checkpointer
 from servicemind.persistence.database import close_database
@@ -177,8 +177,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         shutdown_telemetry()
 
 
-app = FastAPI(lifespan=lifespan, generate_unique_id_function=custom_generate_unique_id)
 router = APIRouter(dependencies=[Depends(verify_bearer)])
+health_router = APIRouter()
 # AG-UI protocol endpoints inherit the same bearer auth - see service/agui.py
 router.include_router(agui_router)
 
@@ -533,7 +533,7 @@ async def threads(
     return UserThreads(threads=summaries)
 
 
-@app.get("/health")
+@health_router.get("/health")
 async def health_check():
     """Health check endpoint."""
 
@@ -550,7 +550,18 @@ async def health_check():
     return health_status
 
 
-app.include_router(router)
-app.include_router(phase2_router)
-app.include_router(mcp_router)
-app.include_router(mcp_metadata_router)
+def create_app() -> FastAPI:
+    """Compose the HTTP application from independently testable routers."""
+    application = FastAPI(
+        lifespan=lifespan,
+        generate_unique_id_function=custom_generate_unique_id,
+    )
+    application.include_router(health_router)
+    application.include_router(router)
+    application.include_router(phase2_router)
+    application.include_router(mcp_router)
+    application.include_router(mcp_metadata_router)
+    return application
+
+
+app = create_app()

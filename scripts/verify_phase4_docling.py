@@ -10,7 +10,7 @@ cached: without the snapshot docling degrades to pypdf plain-text, which is the
 honest, documented fallback this script asserts. Requires the real corpus PDF
 (fetch_phase4_corpora.py) or any PDF via --pdf.
 
-    HF_HUB_OFFLINE=1 PYTHONPATH=src .venv/bin/python scripts/verify_phase4_docling.py
+    HF_HUB_OFFLINE=1 .venv/bin/python scripts/verify_phase4_docling.py
 
 Writes evaluation/reports/phase4_docling_live.json.
 """

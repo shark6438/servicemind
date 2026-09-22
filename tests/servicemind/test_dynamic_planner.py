@@ -2,7 +2,6 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from servicemind.agents.dynamic_planner import DynamicPlanner
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
 from servicemind.domain.supervisor import (
     PlanProposal,
@@ -10,6 +9,7 @@ from servicemind.domain.supervisor import (
     PlanTaskProposal,
 )
 from servicemind.domain.task import AgentName, Budget, Task, TaskPlan, TaskStatus
+from servicemind.orchestration.dynamic_planner import DynamicPlanner
 
 
 class FakeRunnable:
@@ -105,7 +105,7 @@ def revision(*, mutate_completed: bool = False) -> PlanRevisionProposal:
 
 @pytest.mark.asyncio
 async def test_replan_preserves_completed_tasks_and_adds_new_dag(monkeypatch) -> None:
-    from servicemind.agents import dynamic_planner
+    from servicemind.orchestration import dynamic_planner
 
     monkeypatch.setattr(dynamic_planner, "get_model", lambda _: object())
     monkeypatch.setattr(
@@ -135,7 +135,7 @@ async def test_replan_preserves_completed_tasks_and_adds_new_dag(monkeypatch) ->
 
 @pytest.mark.asyncio
 async def test_replan_cannot_mutate_completed_task_identity(monkeypatch) -> None:
-    from servicemind.agents import dynamic_planner
+    from servicemind.orchestration import dynamic_planner
 
     monkeypatch.setattr(dynamic_planner, "get_model", lambda _: object())
     monkeypatch.setattr(
@@ -268,7 +268,7 @@ def test_revision_preserves_original_deadline_and_budget() -> None:
 
 @pytest.mark.asyncio
 async def test_replan_keeps_original_deadline(monkeypatch) -> None:
-    import servicemind.agents.dynamic_planner as dp
+    import servicemind.orchestration.dynamic_planner as dp
 
     monkeypatch.setattr(dp, "get_model", lambda _: object())
     monkeypatch.setattr(dp, "structured_output", lambda model, schema: FakeRunnable(revision()))
@@ -295,7 +295,7 @@ async def test_revise_plan_without_prior_review_keeps_deadline(monkeypatch) -> N
     """A Supervisor REPLAN can arrive before the first review (evidence gathered,
     not yet joined). The planner must accept ``review=None`` -- the path the
     revision node now uses -- and still carry the original deadline forward."""
-    import servicemind.agents.dynamic_planner as dp
+    import servicemind.orchestration.dynamic_planner as dp
 
     monkeypatch.setattr(dp, "get_model", lambda _: object())
     monkeypatch.setattr(dp, "structured_output", lambda model, schema: FakeRunnable(revision()))
@@ -312,7 +312,7 @@ async def test_revise_plan_without_prior_review_keeps_deadline(monkeypatch) -> N
 
 @pytest.mark.asyncio
 async def test_retrieve_more_revision_must_add_knowledge_task(monkeypatch) -> None:
-    import servicemind.agents.dynamic_planner as dp
+    import servicemind.orchestration.dynamic_planner as dp
 
     no_knowledge = PlanRevisionProposal(
         rationale_summary="Re-read evidence but add no Knowledge task.",
