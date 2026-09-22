@@ -18,7 +18,7 @@ export default function Home() {
   return (
     <section className="page">
       <header className="workspace-header">
-        <div><h1>工作台</h1><p>发起工单调查，查看当前租户的运行与待办。</p></div>
+        <div><h1>工作台</h1><p>向运维智能体提问，查看当前租户的运行与待办。</p></div>
         <span className="updated-at">数据每 15 秒更新</span>
       </header>
       <div className="dashboard-grid">
@@ -36,7 +36,7 @@ export default function Home() {
       </div>
       <section className="ledger-section">
         <div className="section-title"><div><h2>最近运行</h2><p>按更新时间倒序显示</p></div><Link className="text-link" href="/runs">查看全部运行</Link></div>
-        {runs.isLoading ? <LoadingState /> : runs.error ? <ErrorState error={runs.error} retry={() => void runs.mutate()} /> : items.length ? <RunTable runs={items} /> : <EmptyState title="还没有运行记录" description="从上方表单启动第一条工单调查。" />}
+        {runs.isLoading ? <LoadingState /> : runs.error ? <ErrorState error={runs.error} retry={() => void runs.mutate()} /> : items.length ? <RunTable runs={items} /> : <EmptyState title="还没有运行记录" description="在上方描述问题并关联工单，开始第一条智能体运行。" />}
       </section>
     </section>
   );

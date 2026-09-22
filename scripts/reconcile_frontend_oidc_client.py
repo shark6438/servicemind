@@ -56,19 +56,29 @@ def main() -> int:
     parser.add_argument("--realm", default="servicemind")
     parser.add_argument("--client-id", default="servicemind-api")
     parser.add_argument("--env-file", type=Path, default=Path("deploy/glpi/.env"))
-    parser.add_argument("--realm-definition", type=Path, default=Path("deploy/glpi/keycloak/servicemind-realm.json"))
+    parser.add_argument(
+        "--realm-definition", type=Path, default=Path("deploy/glpi/keycloak/servicemind-realm.json")
+    )
     args = parser.parse_args()
     environment = _env(args.env_file)
     desired = _desired(args.realm_definition, args.client_id)
     with httpx.Client(base_url=args.base_url, timeout=20, trust_env=False) as client:
-        token = client.post("/realms/master/protocol/openid-connect/token", data={
-            "grant_type": "password", "client_id": "admin-cli",
-            "username": environment["KEYCLOAK_ADMIN_USERNAME"],
-            "password": environment["KEYCLOAK_ADMIN_PASSWORD"],
-        })
+        token = client.post(
+            "/realms/master/protocol/openid-connect/token",
+            data={
+                "grant_type": "password",
+                "client_id": "admin-cli",
+                "username": environment["KEYCLOAK_ADMIN_USERNAME"],
+                "password": environment["KEYCLOAK_ADMIN_PASSWORD"],
+            },
+        )
         token.raise_for_status()
         headers = {"Authorization": f"Bearer {token.json()['access_token']}"}
-        response = client.get(f"/admin/realms/{args.realm}/clients", params={"clientId": args.client_id}, headers=headers)
+        response = client.get(
+            f"/admin/realms/{args.realm}/clients",
+            params={"clientId": args.client_id},
+            headers=headers,
+        )
         response.raise_for_status()
         matches = response.json()
         if len(matches) != 1:
@@ -79,15 +89,29 @@ def main() -> int:
         if findings and not args.check:
             attributes = dict(actual.get("attributes") or {})
             attributes["pkce.code.challenge.method"] = desired["pkce"]
-            update = {**actual, "redirectUris": desired["redirectUris"], "webOrigins": desired["webOrigins"],
-                "publicClient": True, "standardFlowEnabled": True, "attributes": attributes}
-            saved = client.put(f"/admin/realms/{args.realm}/clients/{actual['id']}", headers=headers, json=update)
+            update = {
+                **actual,
+                "redirectUris": desired["redirectUris"],
+                "webOrigins": desired["webOrigins"],
+                "publicClient": True,
+                "standardFlowEnabled": True,
+                "attributes": attributes,
+            }
+            saved = client.put(
+                f"/admin/realms/{args.realm}/clients/{actual['id']}", headers=headers, json=update
+            )
             saved.raise_for_status()
-            verified = client.get(f"/admin/realms/{args.realm}/clients/{actual['id']}", headers=headers)
+            verified = client.get(
+                f"/admin/realms/{args.realm}/clients/{actual['id']}", headers=headers
+            )
             verified.raise_for_status()
             findings = _mismatches(verified.json(), desired)
         status = "PASS" if not findings else "FAIL"
-        print(json.dumps({"status": status, "mode": "check" if args.check else "apply", "findings": findings}))
+        print(
+            json.dumps(
+                {"status": status, "mode": "check" if args.check else "apply", "findings": findings}
+            )
+        )
         return 0 if status == "PASS" else 1
 
 

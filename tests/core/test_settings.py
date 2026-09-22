@@ -336,9 +336,7 @@ def test_frontend_cors_origins_must_be_exact(origins: str):
         },
         clear=True,
     ):
-        assert Settings(_env_file=None).SERVICEMIND_FRONTEND_ORIGINS == [
-            "https://ops.example.com"
-        ]
+        assert Settings(_env_file=None).SERVICEMIND_FRONTEND_ORIGINS == ["https://ops.example.com"]
 
 
 def test_the_startup_cap_bound_is_the_same_number_the_builder_enforces():

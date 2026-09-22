@@ -28,7 +28,11 @@ def build_snapshot() -> dict[str, Any]:
     structure_checks = structure.get("checks", {})
     rag_metrics = rag.get("external_silver", {}).get("metrics", {})
     blockers = rag.get("release_blockers", [])
-    if not isinstance(structure_checks, dict) or not isinstance(blockers, list) or len(blockers) < 3:
+    if (
+        not isinstance(structure_checks, dict)
+        or not isinstance(blockers, list)
+        or len(blockers) < 3
+    ):
         raise ValueError("release reports do not match the expected schema")
     return {
         "generated_at": phase5["evaluated_at"],

@@ -12,6 +12,12 @@ test("authenticated operator console is usable and has no serious accessibility 
   await page.getByRole("button", { name: /sign in/i }).click();
 
   await expect(page.getByRole("heading", { name: "工作台" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "向运维智能体提问" })).toBeVisible();
+  const prompt = page.getByRole("textbox", { name: "你的问题" });
+  await expect(prompt).toBeVisible();
+  await prompt.fill("分析该工单的 VPN 连接失败原因，并给出已验证的处置建议。");
+  await expect(prompt).toHaveValue("分析该工单的 VPN 连接失败原因，并给出已验证的处置建议。");
+  await expect(page.getByRole("spinbutton", { name: "关联 GLPI 工单" })).toBeVisible();
   if (testInfo.project.name === "desktop") {
     await expect(page.getByText("受控环境")).toBeVisible();
   } else {

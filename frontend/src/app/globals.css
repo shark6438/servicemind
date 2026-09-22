@@ -73,15 +73,16 @@ h1, h2, h3 { scroll-margin-top: 64px; }
 .eyebrow, .section-kicker { margin: 0; color: var(--muted); font-size: 12px; font-weight: 600; }
 
 .dashboard-grid { display: grid; grid-template-columns: minmax(520px, 1.5fr) minmax(280px, .7fr); gap: 20px; align-items: start; }
-.dispatch-form, .summary-panel, .panel, .decision-box, .data-section, .caveats { background: var(--surface); border: 1px solid var(--line); }
-.dispatch-form { padding: 22px; display: grid; grid-template-columns: 180px 1fr; gap: 16px 20px; }
-.dispatch-form header { grid-column: 1 / -1; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
-.dispatch-form h2, .summary-panel h2, .section-title h2, .panel h2, .data-section h2, .caveats h2 { margin: 0; font-size: 17px; }
-.dispatch-form header p, .section-title p { color: var(--muted); margin: 4px 0 0; font-size: 12px; }
-.dispatch-form label, .decision-panel label, .decision-box label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
-.dispatch-form label:nth-of-type(2) { grid-column: 2; grid-row: span 2; }
-.dispatch-form .switch-line { grid-column: 1 / -1; }
-.dispatch-form .form-actions, .dispatch-form .form-error { grid-column: 1 / -1; }
+.conversation-composer, .summary-panel, .panel, .decision-box, .data-section, .caveats { background: var(--surface); border: 1px solid var(--line); }
+.conversation-composer { padding: 22px; display: grid; gap: 16px; }
+.conversation-composer header { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.conversation-composer h2, .summary-panel h2, .section-title h2, .panel h2, .data-section h2, .caveats h2 { margin: 0; font-size: 17px; }
+.conversation-composer header p, .section-title p { color: var(--muted); margin: 4px 0 0; font-size: 12px; }
+.conversation-composer label, .decision-panel label, .decision-box label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.conversation-prompt textarea { min-height: 126px; resize: vertical; }
+.conversation-options { display: grid; grid-template-columns: 180px minmax(0, 1fr); align-items: end; gap: 20px; }
+.conversation-composer footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.conversation-composer footer p { margin: 0; color: var(--muted); font-size: 12px; }
 .form-actions { display: flex; justify-content: flex-end; }
 input, textarea, select { width: 100%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); padding: 9px 10px; border-radius: 2px; }
 input:hover, textarea:hover, select:hover { border-color: #8c99a6; }
@@ -296,9 +297,9 @@ tbody tr:hover { background: #fafbfd; }
   .page { padding: 22px max(14px, env(safe-area-inset-right)) calc(56px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
   .workspace-header, .page-header { flex-direction: column; gap: 10px; }
   .page-actions { width: 100%; }
-  .dispatch-form { grid-template-columns: 1fr; }
-  .dispatch-form label:nth-of-type(2), .dispatch-form .switch-line, .dispatch-form .form-actions, .dispatch-form .form-error, .dispatch-form header { grid-column: 1; grid-row: auto; }
-  .dispatch-form .form-actions .button { width: 100%; }
+  .conversation-options { grid-template-columns: 1fr; }
+  .conversation-composer footer { align-items: stretch; flex-direction: column; }
+  .conversation-composer footer .button { width: 100%; }
   .approval-row { grid-template-columns: 1fr auto; gap: 7px 12px; }
   .approval-row time { grid-column: 1; }
   .approval-row > svg { grid-column: 2; }

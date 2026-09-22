@@ -93,8 +93,7 @@ def build_report() -> dict[str, Any]:
         and "script-src 'self' 'unsafe-inline'" not in csp
         and bool(script_tags)
         and all(f'nonce="{nonce}"' in tag for tag in script_tags),
-        "container_nonroot": str(container["Config"].get("User", ""))
-        not in {"", "0", "root"},
+        "container_nonroot": str(container["Config"].get("User", "")) not in {"", "0", "root"},
         "container_read_only": container["HostConfig"].get("ReadonlyRootfs") is True,
         "deployed_image_scan_clean": image_scan.get("Metadata", {}).get("ImageID")
         == container["Image"]
