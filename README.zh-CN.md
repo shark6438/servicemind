@@ -128,6 +128,85 @@ uv run servicemind-api
 uv run streamlit run src/streamlit_app.py
 ```
 
+### D. 运维控制台(Next.js 16)
+
+`frontend/` 是面向运维人员的控制台(工作台 / 运行记录 / 审批中心 / 记忆复核 / 审计记录 /
+质量与发布)。它通过 Keycloak OIDC 登录,每个请求都带用户令牌;租户、角色、实体、组、
+审批、记忆策略与精确快照的判定始终以后端为准。控制台**没有直连 GLPI 的写路径**,只能发起
+受治理的运行、并对已冻结的动作做裁决。
+
+```sh
+cd frontend
+docker build -t servicemind-frontend:local .
+systemctl --user enable --now servicemind-frontend.service   # 单元见 deploy/systemd/
+```
+
+默认监听 <http://127.0.0.1:3000>。运行时要求 Node.js 24;开发与门禁命令见
+[frontend/README.md](frontend/README.md)。
+
+## 使用案例
+
+控制台按角色裁剪左侧导航。**导航栏只是可见性提示,真正的裁决点在服务端的 `require_role`
+依赖里** —— 即使有人手动构造请求,越权调用仍会被 403 拒绝。
+
+| 账号 | 角色 | 可见导航 |
+| --- | --- | --- |
+| `acme-analyst` | `viewer`、`analyst` | 工作台、运行记录、质量与发布 |
+| `acme-approver` | `viewer`、`analyst`、`operator`、`approver` | 全部(另含审批中心、记忆复核、审计记录) |
+
+> **数据前提 —— 请先读这一条。** `POST /v1/servicemind/runs` 要求 `ticket_id ≥ 1`,且每次
+> 运行的第一个任务都是 `get_ticket`。**如果 GLPI 中不存在被引用的工单**,GLPI 会返回 404,
+> 工具网关把它记为 `provider_not_found`(映射见
+> [src/servicemind/tool_platform/gateway.py](src/servicemind/tool_platform/gateway.py)),
+> T1 失败后 Supervisor 重规划两次仍无法推进,运行最终以 `waiting_review` 升级人工。
+> 这不是产品缺陷,是缺数据:发起运行前请先在 GLPI 里建好对应的工单。
+
+### 案例 1 —— 只读故障调查(analyst)
+
+1. 打开 <http://127.0.0.1:3000>,点「使用企业身份登录」,在 Keycloak 页面用 `acme-analyst` 登录。
+2. 工作台左侧「向运维智能体提问」:问题填「这台笔记本连不上公司 VPN,帮我定位原因」,
+   「关联 GLPI 工单」填一个**真实存在**的工单号,**不勾**「允许生成写操作建议」,
+   点「发送给智能体」(或按 Ctrl / ⌘ + Enter)。
+3. 浏览器跳转到 `/runs/{id}`。运行详情里能看到 Supervisor 的任务 DAG:
+   T1 `get_ticket`(取工单上下文)、T2 `knowledge`(RAG / Graph-RAG 检索)、
+   T3 `analysis`、T4 `reviewer`,以及每一步的证据引用与评审结论。
+4. `acme-analyst` 是只读角色,**看不到批准按钮是预期行为**。
+
+### 案例 2 —— 写操作建议 + 人工审批(analyst 发起 / approver 批准)
+
+1. 用 `acme-analyst` 发起,这次**勾选**「允许生成写操作建议」。
+2. 运行通过策略校验后会冻结一个 `action_intent`,其中包含动作类型、目标、参数、风险等级、
+   动作哈希、意图版本、策略版本、复核摘要、证据摘要、证据引用、过期时间等,状态进入
+   `waiting_approval`。
+3. 换 `acme-approver` 登录,进左侧「审批中心」,核对冻结意图与所依据的证据,再批准或拒绝。
+4. **批准和拒绝都会写入 `audit_events`** 这本治理账本,可在「审计记录」页追溯。
+
+### 案例 3 —— 复核升级的处理
+
+当前置任务失败、评审要求重规划而重规划次数已用尽时,运行会以 `waiting_review` 结束,并在
+时间线里写明升级理由(例如「T1 两次失败,上下文未建立,无法安全推进分析」)。
+`acme-approver` 可在运行详情中用 review-resolution 处置这条升级。
+
+### 案例 4 —— 长期记忆复核(approver)
+
+进入「记忆复核」查看被隔离的长期记忆快照,逐条激活或拒绝。裁决作用于**精确快照**
+(带版本与内容摘要),不是模糊匹配 —— 这样复核过的内容不会被后续写入悄悄替换。
+
+### 案例 5 —— 审计追溯
+
+「审计记录」是一本**只读、追加写**的治理账本,与运行时间线**是两本不同的账**:
+
+- `run_events`(运行时间线)—— 记录运行内部发生的事:路由、计划、派发、Agent 完成、升级。
+- `audit_events`(治理审计账本)—— 记录治理动作:创建运行、批准、取消等。
+
+可见角色为 `operator` / `approver` / `tenant_admin`。
+
+### 案例 6 —— 质量与发布
+
+「质量与发布」渲染仓库中已验收的机器报告快照(`frontend/public/release-status.json`)。
+它是一份**冻结、脱敏**的制品,不声称实时遥测;在租户领域证据补齐之前,它会持续显示
+「领域质量尚未认证」这条例外。
+
 ## 配置
 
 全部通过 [`.env.example`](.env.example) 的环境变量驱动。主要分组:

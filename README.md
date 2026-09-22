@@ -172,6 +172,100 @@ uv run servicemind-api
 uv run streamlit run src/streamlit_app.py
 ```
 
+### D. Operator console (Next.js 16)
+
+`frontend/` is the operator-facing console (workbench / runs / approvals / memory review /
+audit / quality and release). It authenticates through Keycloak OIDC and attaches the user
+token to every request; tenant, role, entity, group, approval, memory-policy and
+exact-snapshot decisions always stay with the backend. The console has **no direct GLPI
+write path** — it can only start a governed run and decide already-frozen actions.
+
+```sh
+cd frontend
+docker build -t servicemind-frontend:local .
+systemctl --user enable --now servicemind-frontend.service   # unit in deploy/systemd/
+```
+
+It listens on <http://127.0.0.1:3000>. Node.js 24 is required; development and gate
+commands live in [frontend/README.md](frontend/README.md).
+
+## Usage walkthrough
+
+The console trims its navigation by role. **The navigation is only a visibility hint — the
+real decision point is the server-side `require_role` dependency**, so a hand-crafted
+request from the wrong role is still rejected with 403.
+
+| Account | Roles | Visible navigation |
+| --- | --- | --- |
+| `acme-analyst` | `viewer`, `analyst` | Workbench, Runs, Quality and release |
+| `acme-approver` | `viewer`, `analyst`, `operator`, `approver` | Everything (plus Approvals, Memory review, Audit) |
+
+> **Data prerequisite — read this first.** `POST /v1/servicemind/runs` requires
+> `ticket_id ≥ 1`, and every run's first task is `get_ticket`. **If the referenced ticket
+> does not exist in GLPI**, GLPI answers 404, the tool gateway records that as
+> `provider_not_found` (mapping in
+> [src/servicemind/tool_platform/gateway.py](src/servicemind/tool_platform/gateway.py)),
+> T1 fails, the Supervisor replans twice without progress and the run ends as
+> `waiting_review` escalated to a human. That is missing data, not a product defect —
+> create the ticket in GLPI before starting the run.
+
+### Case 1 — read-only incident investigation (analyst)
+
+1. Open <http://127.0.0.1:3000>, click "使用企业身份登录" and sign in to Keycloak as
+   `acme-analyst`.
+2. In the workbench's "向运维智能体提问" form, describe the problem, put a **ticket that
+   actually exists** in "关联 GLPI 工单", leave "允许生成写操作建议" **unchecked**, and
+   press "发送给智能体" (or Ctrl / ⌘ + Enter).
+3. The browser lands on `/runs/{id}`, showing the Supervisor's task DAG — T1 `get_ticket`
+   (ticket context), T2 `knowledge` (RAG / Graph-RAG retrieval), T3 `analysis`,
+   T4 `reviewer` — together with the evidence references and the review verdict.
+4. `acme-analyst` is read-only, so **not seeing an approve button is expected**.
+
+### Case 2 — write-action proposal and human approval (analyst files, approver decides)
+
+1. Start the run as `acme-analyst` with "允许生成写操作建议" **checked**.
+2. Once policy checks pass, the run freezes an `action_intent` carrying the action type,
+   target, arguments, risk level, action hash, intent version, policy version, review
+   digest, evidence digest, evidence refs and expiry; the status becomes `waiting_approval`.
+3. Sign in as `acme-approver`, open "审批中心", check the frozen intent against the
+   evidence it cites, then approve or reject.
+4. **Both outcomes are written to `audit_events`**, the governance ledger, and are
+   traceable from the "审计记录" page.
+
+### Case 3 — handling a review escalation
+
+When a prerequisite task fails, the Reviewer demands a revised plan and the replan budget
+is exhausted, the run ends as `waiting_review` and the timeline states the reason (for
+example, "T1 failed twice, the incident context was never established, no safe analytical
+progress is possible"). An `acme-approver` resolves it through review-resolution on the
+run detail page.
+
+### Case 4 — long-term memory review (approver)
+
+"记忆复核" lists quarantined long-term memory snapshots for individual activation or
+rejection. The decision binds to an **exact snapshot** (version plus content digest)
+rather than a fuzzy match, so reviewed content cannot be silently replaced by a later
+write.
+
+### Case 5 — audit traceability
+
+"审计记录" is a **read-only, append-only** governance ledger, and it is **a different
+ledger from the run timeline**:
+
+- `run_events` (run timeline) — what happened inside a run: routing, planning, dispatch,
+  agent completion, escalation.
+- `audit_events` (governance ledger) — governance actions: run creation, approval,
+  cancellation.
+
+Visible to `operator` / `approver` / `tenant_admin`.
+
+### Case 6 — quality and release
+
+"质量与发布" renders the repository's accepted machine-report snapshot
+(`frontend/public/release-status.json`). It is a **frozen, sanitized** artifact that does
+not claim real-time telemetry, and it keeps surfacing the "领域质量尚未认证" exception
+until tenant-domain evidence closes it.
+
 ## Configuration
 
 Everything is environment-driven through [`.env.example`](.env.example). Main groups:
