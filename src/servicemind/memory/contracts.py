@@ -214,6 +214,54 @@ class MemoryRecord(BaseModel):
             and (self.expires_at is None or self.expires_at > when)
         )
 
+    def model_payload(self) -> dict[str, Any]:
+        """This record as a model may see it: what it says, and who wrote it.
+
+        A memory reached the prompt as its bare ``content`` string, while evidence --
+        also untrusted text -- arrived as a whole row with its provider, hash and
+        citation. The asymmetry hid the one field that matters most about a memory
+        written by the run middleware: ``created_by``. ``POST_RUN_MEMORY_WRITER`` is
+        already a first-class distinction in this module, used at the serving boundary
+        to refuse pre-5.1 rows, so a passage whose ``outcome`` is prose a *previous
+        run's model* wrote was being read as an undifferentiated fact about the estate.
+
+        Everything the record knows about itself *as a row* is dropped: ``memory_id``,
+        ``lineage_id``, ``tenant_id``, ``source_run_id``, ``content_hash``,
+        ``idempotency_key`` and ``version`` are keys the reader cannot resolve -- the
+        item's own ``item_id`` already names this record, and ``provenance`` carries
+        the ticket and review a human would recognise instead. ``scope`` is an ACL
+        coordinate the query already enforced; restating it invites the model to reason
+        about authorization it cannot act on. ``created_at``/``updated_at``/``status``
+        are storage: a record only reaches a prompt while it is active.
+        ``evidence_refs``/``supporting_episode_ids`` are ids the model does not cite,
+        and ``taint_labels`` is already stated on the context item that carries this
+        payload. Nothing that describes the warrant is dropped -- ``created_by``,
+        ``provenance``, ``activation_reason``, ``consent_ref`` and the validity window
+        all travel, because a reader deciding how much to trust a passage needs exactly
+        those. The line matters: a full row cost ~650 characters to carry a 65-character
+        memory, and the memory channel competes for a shared token budget.
+        """
+        return self.model_dump(
+            mode="json",
+            exclude={
+                "memory_id",
+                "lineage_id",
+                "tenant_id",
+                "source_run_id",
+                "content_hash",
+                "source_trace_id",
+                "evidence_refs",
+                "supporting_episode_ids",
+                "version",
+                "idempotency_key",
+                "taint_labels",
+                "scope",
+                "status",
+                "created_at",
+                "updated_at",
+            },
+        )
+
 
 class MemoryQuery(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)

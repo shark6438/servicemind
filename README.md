@@ -208,6 +208,28 @@ request from the wrong role is still rejected with 403.
 > T1 fails, the Supervisor replans twice without progress and the run ends as
 > `waiting_review` escalated to a human. That is missing data, not a product defect —
 > create the ticket in GLPI before starting the run.
+>
+> To get a workable corpus in one step, seed the demo tickets (idempotent — it never
+> rewrites an existing ticket's fields, only fills in a missing followup timeline):
+>
+> ```bash
+> uv run python scripts/seed_demo_glpi_tickets.py            # add --dry-run to preview
+> ```
+>
+> It writes 23 tickets through the same tenant integration the product uses, so the
+> entity and profile match production exactly. Verified against the local stack: first
+> run reports `已创建: 8 条；已存在跳过: 15 条` plus the timelines it backfilled, a second
+> run reports `已创建: 0 条；已存在跳过: 23 条`.
+>
+> **What a run does with this corpus** (measured, not projected): tickets whose recorded
+> facts and followup timeline support the analysis end `succeeded` with
+> `review.decision = passed`; tickets the policy classifies as major-priority
+> (e.g. urgency 5 / impact 4 → priority 5) end `waiting_review` with
+> `HUMAN_REVIEW_REQUIRED` — the deterministic gate stops them before the semantic judge
+> is even consulted; and a request for a root cause the evidence cannot support ends
+> `passed` with the gap written into `unresolved_questions` instead of a fabricated
+> hypothesis. A run started with the write flag ends `waiting_approval` on a frozen
+> `action_intent`, and nothing reaches GLPI until an approver decides.
 
 ### Case 1 — read-only incident investigation (analyst)
 

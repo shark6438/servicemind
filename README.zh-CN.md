@@ -160,6 +160,24 @@ systemctl --user enable --now servicemind-frontend.service   # 单元见 deploy/
 > [src/servicemind/tool_platform/gateway.py](src/servicemind/tool_platform/gateway.py)),
 > T1 失败后 Supervisor 重规划两次仍无法推进,运行最终以 `waiting_review` 升级人工。
 > 这不是产品缺陷,是缺数据:发起运行前请先在 GLPI 里建好对应的工单。
+>
+> 想一步拿到可用语料,可先灌入演示工单(幂等 —— 绝不改写已存在工单的字段,只补写缺失的
+> 跟进时间线):
+>
+> ```bash
+> uv run python scripts/seed_demo_glpi_tickets.py            # 加 --dry-run 可先预览
+> ```
+>
+> 脚本通过与产品相同的租户集成写入 23 张工单,实体与档案和生产完全一致。本地实测:首次运行
+> 报 `已创建: 8 条；已存在跳过: 15 条` 并补写若干时间线,再次运行报
+> `已创建: 0 条；已存在跳过: 23 条`。
+>
+> **语料下的实际运行结果**(实测,非预测):工单记录与跟进时间线足以支撑分析时,运行以
+> `succeeded` 结束且 `review.decision = passed`;被政策判定为重大优先级的工单(如
+> urgency 5 / impact 4 → 优先级 5)以 `waiting_review` 结束,原因码 `HUMAN_REVIEW_REQUIRED`
+> —— 确定性门禁在语义判官被调用之前就拦下了它;而要求一个证据无法支撑的根因时,运行同样
+> `passed`,但把缺口写进 `unresolved_questions` 而不是编造一个假设。带写标记发起的运行以
+> `waiting_approval` 停在冻结的 `action_intent` 上,在审批人裁决之前没有任何内容写入 GLPI。
 
 ### 案例 1 —— 只读故障调查(analyst)
 

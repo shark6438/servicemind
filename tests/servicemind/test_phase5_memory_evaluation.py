@@ -732,11 +732,31 @@ def _with_evidence_cap(corpus: MemoryScenarioCorpus, cap: int | None) -> MemoryS
 
 @pytest.mark.asyncio
 async def test_a_required_memory_the_budget_evicts_turns_the_gate_red(corpus_v2):
-    """Falsification: green must be reachable *only* while the record actually fits."""
+    """Falsification: green must be reachable *only* while the record actually fits.
+
+    Uncapping the evidence channel is what makes room scarce enough to evict at all --
+    it is the defect shape the sibling test documents. Under the declared load -- 3
+    evidence items of 7000 characters, which is what the production budget and the
+    parent-chunk ceiling imply -- the envelope has 2184 of its 10720 usable tokens left
+    once evidence has taken its fill, so the record has to cost more than that to be
+    evicted.
+
+    The factor is not a reading of today's numbers, and it used to be: at x50 the record
+    cost 2163 tokens against 2184 of room, 21 tokens short of eviction. The test then
+    reported a *delivered* memory as the expected outcome and had been failing on the
+    fixture ever since the declared load grew -- a falsification test that no longer
+    falsified. x90 is the widest margin the 8000-character record ceiling admits
+    (88 x 90 = 7920 characters), chosen so a future drift has to move the envelope by
+    thousands of tokens rather than tens before this stops measuring anything.
+    """
     baseline = await evaluate(corpus_v2, scoring_model="lexical-jaccard")
     assert baseline.delivery_gate.passed, baseline.delivery_gate.violations
 
-    inflated = _inflate(_with_evidence_cap(corpus_v2, None), "w-user-preference", times=50)
+    inflated = _inflate(_with_evidence_cap(corpus_v2, None), "w-user-preference", times=90)
+    record = next(step for step in inflated.steps if step.id == "w-user-preference").candidate[
+        "content"
+    ]
+    assert len(record) <= 8000, "the record ceiling is what bounds this fixture's reach"
     report = await evaluate(inflated, scoring_model="lexical-jaccard")
 
     outcome = next(o for o in report.probe_outcomes if o.probe_id == "p-preference")
@@ -745,8 +765,18 @@ async def test_a_required_memory_the_budget_evicts_turns_the_gate_red(corpus_v2)
     assert outcome.pruned_required == ["w-user-preference"]
 
     assert not report.delivery_gate.passed
-    assert [v.probe_id for v in report.delivery_gate.violations] == ["p-preference"]
-    assert report.delivery_gate.violations[0].reason == "token_budget_exceeded"
+    # The two claims that are this test's own: the inflation is what the gate objects
+    # to, and the gate names exactly the probes whose required memory was evicted --
+    # it neither misses one nor invents one.
+    evicted = {o.probe_id for o in report.probe_outcomes if o.pruned_required}
+    assert {v.probe_id for v in report.delivery_gate.violations} == evicted
+    assert {v.reason for v in report.delivery_gate.violations} == {"token_budget_exceeded"}
+    assert outcome.probe_id in evicted
+    # *Which other* probes appear in that list is not this test's subject. It follows
+    # from what one memory record costs, and with ~250 tokens of room every probe is
+    # within a few records of the edge -- so pinning the list made this a second,
+    # undeclared assertion about record size, which broke the moment a record grew.
+    # The declared requirement is checked by the baseline above, in the declared shape.
 
 
 @pytest.mark.asyncio

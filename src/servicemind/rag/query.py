@@ -85,6 +85,7 @@ class QueryProcessor:
                 hashlib.sha256(normalized.encode()).hexdigest(),
             )
         if model_allowed:
+            proposal: QueryProposal | None = None
             try:
                 runnable = structured_output(get_model(settings.DEFAULT_MODEL), QueryProposal)
                 value = await runnable.ainvoke(
@@ -108,6 +109,16 @@ class QueryProcessor:
                     ]
                 )
                 proposal = QueryProposal.model_validate(value)
+            except Exception:
+                logger.exception(
+                    "LLM query rewrite failed; falling back to deterministic processing."
+                )
+            # Built outside the rewrite guard on purpose: a KnowledgeQuery contract
+            # violation is a caller/contract bug, not a rewrite failure. Keeping it
+            # inside meant an over-long raw_query was logged as "query rewrite failed"
+            # -- hiding the real cause -- and then raised again, uncaught, from the
+            # deterministic path below.
+            if proposal is not None:
                 if _looks_injected(proposal.normalized_query) or any(
                     _looks_injected(item) for item in proposal.rewritten_queries
                 ):
@@ -125,10 +136,6 @@ class QueryProcessor:
                         intent=proposal.intent,
                         language=proposal.language,
                     )
-            except Exception:
-                logger.exception(
-                    "LLM query rewrite failed; falling back to deterministic processing."
-                )
         lowered = normalized.casefold()
         intent = (
             RetrievalIntent.HISTORICAL_CASE

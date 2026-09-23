@@ -4,7 +4,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from servicemind.domain.evidence import Evidence, EvidenceSourceType
+from servicemind.domain.evidence import (
+    EVIDENCE_RESOURCE_ID_MAX,
+    EVIDENCE_SOURCE_REF_MAX,
+    Evidence,
+    EvidenceSourceType,
+)
 from servicemind.domain.knowledge import KnowledgeQuery, RetrievalPrincipal
 from servicemind.graphrag.domain import (
     EdgeKind,
@@ -13,7 +18,7 @@ from servicemind.graphrag.domain import (
     GraphSubgraph,
     NodeKind,
 )
-from servicemind.graphrag.store import GraphStore
+from servicemind.graphrag.store import GraphAccessError, GraphStore
 
 
 class GraphFinding(BaseModel):
@@ -44,18 +49,52 @@ class GraphFinding(BaseModel):
         return ordered
 
 
+#: How many neighbours one finding names, and therefore how many it cites. Every producer
+#: below renders a list into a sentence and then handed the *unabridged* list to the
+#: finding as citation metadata; the prose was sliced and the data was not. The two lists
+#: were never the same list, and the second one is the one that ships: ``to_graph_evidence``
+#: serializes every node and edge into ``Evidence.metadata``, which is unbounded, and
+#: ``GraphFinding.narrative`` is not -- a node label is a ref plus a title at their
+#: ceilings, so five of them already reach the 8000-character narrative cap. A CI with
+#: forty dependent services therefore raised inside ``_build``, and ``graph_evidence``
+#: answers any exception by discarding the whole side channel: the richest topologies got
+#: no graph evidence at all, silently. One number, applied to the sentence and to its
+#: citations, keeps the two from drifting apart again.
+_CITED_MAX = 6
+
+
+def _bounded(value: str, limit: int) -> str:
+    """Clip a graph identifier to the Evidence contract, marking the cut honestly.
+
+    ``GraphNode.ref`` and ``GraphNode.key`` are bounded by Graph-RAG's own, looser limits,
+    and they are built from external references this platform does not control -- a GLPI
+    URI, a deep corpus path. Those values have to be bounded where they become evidence;
+    the alternative was a ``ValidationError`` from ``Evidence.create``, which the
+    knowledge branch read as "the graph side channel failed" and answered by discarding
+    the task's text evidence along with it.
+    """
+    if len(value) <= limit:
+        return value
+    marker = "…[clipped]"
+    return value[: limit - len(marker)] + marker
+
+
 def to_graph_evidence(
     tenant_id: UUID,
     findings: list[GraphFinding],
-    query: KnowledgeQuery,
 ) -> list[Evidence]:
+    """Turn graph findings into evidence that says nothing about the query.
+
+    The signature deliberately has no ``query``: a finding's evidence must be the
+    finding. See the note on the metadata below.
+    """
     return [
         Evidence.create(
             tenant_id=tenant_id,
             source_type=EvidenceSourceType.GRAPH,
-            source_ref=finding.source_refs[0],
+            source_ref=_bounded(finding.source_refs[0], EVIDENCE_SOURCE_REF_MAX),
             resource_type=f"graph_{finding.relation}",
-            resource_id=finding.anchor.key,
+            resource_id=_bounded(finding.anchor.key, EVIDENCE_RESOURCE_ID_MAX),
             content=finding.narrative,
             provider=finding.provider,
             retrieval_method=f"graph_{finding.relation}",
@@ -82,7 +121,12 @@ def to_graph_evidence(
                     for e in finding.edges
                 ],
                 "source_refs": finding.source_refs,
-                "query": query.model_dump(mode="json"),
+                # No ``query`` here. It used to carry the processed retrieval query,
+                # which the governance layer serializes into the model-visible evidence
+                # content; on a re-retrieval round that query is built from the
+                # Reviewer's own feedback, so the model read its previous critique back
+                # as retrieved evidence. Bookkeeping about how a fact was found is not
+                # part of the fact.
             },
         )
         for finding in findings
@@ -121,8 +165,29 @@ def _runbooks_forward(sub: GraphSubgraph, keys: list[str]) -> list[tuple[GraphEd
     return out
 
 
+#: How much of one node's identity a sentence may quote. ``GraphNode.ref`` and
+#: ``GraphNode.title`` each allow 1000 characters, so a single label could be 2000 -- and a
+#: sentence naming six of them is 12,000 characters against ``GraphFinding.narrative``'s
+#: 8,000 ceiling. The label exists to be read inside a finding; the node's full ref and
+#: title travel in the finding's ``nodes``, which is where a consumer that needs them
+#: exactly should look. Clipping here is what keeps the sentence and its citations the same
+#: material at two different resolutions.
+_LABEL_PART_MAX = 300
+
+
 def _label(node: GraphNode) -> str:
-    return f"{node.ref} '{node.title}'"
+    return f"{_bounded(node.ref, _LABEL_PART_MAX)} '{_named(node)}'"
+
+
+def _named(node: GraphNode) -> str:
+    """A node's display name as a sentence may quote it; ``_LABEL_PART_MAX`` applies here too.
+
+    Half the narratives name a node by title alone -- "which service(s) depend on" -- and
+    those joins were unbounded strings straight off the graph: six services at the title
+    ceiling is 5,400 characters in one sentence, which is most of the narrative contract
+    spent on names nobody reads.
+    """
+    return _bounded(node.title, _LABEL_PART_MAX)
 
 
 class GraphRetriever:
@@ -141,11 +206,13 @@ class GraphRetriever:
         max_seed_anchors: int = 4,
         max_findings: int = 8,
         max_nodes: int = 200,
+        max_edges: int = 2_000,
     ) -> None:
         self.max_hops = max_hops
         self.max_seed_anchors = max_seed_anchors
         self.max_findings = max_findings
         self.max_nodes = max_nodes
+        self.max_edges = max_edges
 
     async def retrieve(
         self,
@@ -153,23 +220,29 @@ class GraphRetriever:
         principal: RetrievalPrincipal,
         store: GraphStore,
     ) -> list[GraphFinding]:
+        # Refused rather than degraded. A store that cannot filter by the principal
+        # would answer this query with nodes the caller has no claim to, and the caller
+        # -- which treats every failure of this side channel as "no structural findings"
+        # -- would read that as an ordinary empty result. ``graph_evidence`` catches this
+        # one separately for exactly that reason.
+        if not store.supports_node_acl:
+            raise GraphAccessError(store.label)
         identifiers = list(query.identifiers)
         entities = list(query.entities)
         if not identifiers and not entities:
             return []
-        matched = await store.match_nodes(
-            principal.tenant_id, identifiers=identifiers, entities=entities
-        )
+        matched = await store.match_nodes(principal, identifiers=identifiers, entities=entities)
         if not matched:
             return []
         event_like = (NodeKind.TICKET, NodeKind.PROBLEM, NodeKind.CHANGE)
         anchors = [node for node in matched if node.kind in event_like] or matched
         anchors = anchors[: self.max_seed_anchors]
         sub = await store.subgraph(
-            principal.tenant_id,
+            principal,
             [node.key for node in anchors],
             max_hops=self.max_hops,
             max_nodes=self.max_nodes,
+            max_edges=self.max_edges,
         )
         provider = f"{store.label}-graph"
         findings = [finding for anchor in anchors for finding in self._find(anchor, sub, provider)]
@@ -200,32 +273,36 @@ class GraphRetriever:
             history = _backward(sub, anchor.key, EdgeKind.AFFECTS)
             incident_nodes = [node for _, node in history if node.kind is NodeKind.TICKET]
             if incident_nodes:
-                edges = [edge for edge, _ in history]
-                names = ", ".join(_label(node) for node in incident_nodes[:6])
+                cited = incident_nodes[:_CITED_MAX]
+                cited_edges = [edge for edge, _ in history][:_CITED_MAX]
+                names = ", ".join(_label(node) for node in cited)
                 findings.append(
                     self._build(
                         anchor,
                         "ci_incident_history",
-                        f"{len(incident_nodes)} incident(s) target {anchor.title} "
+                        f"{len(incident_nodes)} incident(s) target {_named(anchor)} "
                         f"({anchor.ref}): {names}. Sibling incidents on the same CI are a "
                         "shared-root-cause signal for this outage.",
-                        incident_nodes[:6],
-                        edges,
+                        cited,
+                        cited_edges,
                         provider,
                     )
                 )
             services = [node for _, node in _forward(sub, anchor.key, EdgeKind.DEPENDS_ON)]
             if services:
                 dependencies = _forward(sub, anchor.key, EdgeKind.DEPENDS_ON)
+                cited = services[:_CITED_MAX]
+                cited_edges = [edge for edge, _ in dependencies][:_CITED_MAX]
                 findings.append(
                     self._build(
                         anchor,
                         "service_configuration_scope",
-                        f"CI {anchor.title} ({anchor.ref}) carries service(s) "
-                        f"{', '.join(node.title for node in services)}. Impact assessment "
-                        "must include these services before declaring a service outage.",
-                        services,
-                        [edge for edge, _ in dependencies],
+                        f"CI {_named(anchor)} ({anchor.ref}) carries {len(services)} "
+                        f"service(s): {', '.join(_named(node) for node in cited)}. Impact "
+                        "assessment must include these services before declaring a "
+                        "service outage.",
+                        cited,
+                        cited_edges,
                         provider,
                     )
                 )
@@ -245,20 +322,20 @@ class GraphRetriever:
                     seen_keys.add(node.key)
                     unique_tickets.append((edge, node))
             if unique_tickets:
-                incident_names = ", ".join(_label(node) for _, node in unique_tickets[:6])
-                ci_names = ", ".join(node.title for node in cus[:4])
-                finding_nodes = [node for _, node in unique_tickets[:8]]
-                finding_nodes.extend(cus[:4])
+                cited_tickets = unique_tickets[:_CITED_MAX]
+                cited_cis = cus[:_CITED_MAX]
+                incident_names = ", ".join(_label(node) for _, node in cited_tickets)
+                ci_names = ", ".join(_named(node) for node in cited_cis)
                 findings.append(
                     self._build(
                         anchor,
                         "service_incident_history",
                         f"{len(unique_tickets)} incident(s) touch service "
-                        f"{anchor.title} ({anchor.ref}) through affected CI(s) "
+                        f"{_named(anchor)} ({anchor.ref}) through affected CI(s) "
                         f"{ci_names}: {incident_names}. Recurring incidents under the same "
                         "service point to a service-level fault, not a single CI.",
-                        finding_nodes,
-                        [edge for edge, _ in unique_tickets],
+                        [node for _, node in cited_tickets] + list(cited_cis),
+                        [edge for edge, _ in cited_tickets],
                         provider,
                     )
                 )
@@ -274,42 +351,43 @@ class GraphRetriever:
                 for sibling_edge, node in _backward(sub, ci.key, EdgeKind.AFFECTS)
                 if node.kind is NodeKind.TICKET and node.key != anchor.key
             ]
-            related: list[GraphNode] = [ci, *siblings]
-            edges = [
-                edge,
-                *[
-                    e
-                    for e, _ in _backward(sub, ci.key, EdgeKind.AFFECTS)
-                    if e.source_key != anchor.key
-                ],
+            sibling_edges = [
+                e for e, _ in _backward(sub, ci.key, EdgeKind.AFFECTS) if e.source_key != anchor.key
             ]
+            cited_siblings = siblings[:_CITED_MAX]
             if siblings:
                 findings.append(
                     self._build(
                         anchor,
                         "same_ci_incidents",
-                        f"{_label(anchor)} affects CI {ci.title} ({ci.ref}); "
+                        f"{_label(anchor)} affects CI {_named(ci)} ({ci.ref}); "
                         f"{len(siblings)} sibling incident(s) hit the same CI: "
-                        f"{', '.join(_label(node) for node in siblings[:6])}. Same-CI "
+                        f"{', '.join(_label(node) for node in cited_siblings)}. Same-CI "
                         "correlation points at a shared root cause rather than an "
                         "isolated fault.",
-                        related[:7],
-                        edges,
+                        [ci, *cited_siblings],
+                        [edge, *sibling_edges[:_CITED_MAX]],
                         provider,
                     )
                 )
             services = [node for _, node in _forward(sub, ci.key, EdgeKind.DEPENDS_ON)]
             if services:
+                cited = services[:_CITED_MAX]
                 findings.append(
                     self._build(
                         anchor,
                         "affected_service_impact",
-                        f"{_label(anchor)} affects CI {ci.title}, which service(s) "
-                        f"{', '.join(node.title for node in services)} depend on. "
+                        f"{_label(anchor)} affects CI {_named(ci)}, which {len(services)} "
+                        f"service(s) depend on: {', '.join(_named(node) for node in cited)}. "
                         "Declare user-facing impact on those services and follow their "
                         "runbooks.",
-                        [ci, *services],
-                        [edge, *[e for e, _ in _forward(sub, ci.key, EdgeKind.DEPENDS_ON)]],
+                        [ci, *cited],
+                        [
+                            edge,
+                            *[e for e, _ in _forward(sub, ci.key, EdgeKind.DEPENDS_ON)][
+                                :_CITED_MAX
+                            ],
+                        ],
                         provider,
                     )
                 )
@@ -324,9 +402,10 @@ class GraphRetriever:
             runbooks = _runbooks_forward(sub, [ci.key])
             if not runbooks:
                 continue
+            cited = runbooks[:_CITED_MAX]
             narrative = (
-                f"{_label(anchor)} affects CI {ci.title} ({ci.ref}), whose operating "
-                f"runbook is {', '.join(_label(node) for _, node in runbooks)}. Follow "
+                f"{_label(anchor)} affects CI {_named(ci)} ({ci.ref}), whose operating "
+                f"runbook is {', '.join(_label(node) for _, node in cited)}. Follow "
                 "that runbook's procedure for triage and recovery."
             )
             findings.append(
@@ -334,8 +413,8 @@ class GraphRetriever:
                     anchor,
                     "ci_runbook",
                     narrative,
-                    [ci, *[node for _, node in runbooks]],
-                    [edge for edge, _ in runbooks],
+                    [ci, *[node for _, node in cited]],
+                    [edge for edge, _ in cited],
                     provider,
                 )
             )
@@ -354,19 +433,26 @@ class GraphRetriever:
             for _, node in _backward(sub, problem.key, EdgeKind.LINKED_TO):
                 if node.kind is NodeKind.TICKET and not any(t.key == node.key for t in tickets):
                     tickets.append(node)
-        runbooks = [node for _, node in _runbooks_forward(sub, [ci.key for ci in cis])]
+        runbook_pairs = _runbooks_forward(sub, [ci.key for ci in cis])
+        runbooks = [node for _, node in runbook_pairs]
+        cited_problems = problems[:_CITED_MAX]
+        cited_tickets = tickets[:_CITED_MAX]
+        cited_cis = cis[:_CITED_MAX]
+        cited_runbooks = runbooks[:_CITED_MAX]
         parts = [f"Change {_label(anchor)}"]
         if problems:
             parts.append(
-                "resolves known problem(s) " + ", ".join(_label(node) for node in problems[:4])
+                "resolves known problem(s) " + ", ".join(_label(node) for node in cited_problems)
             )
         if tickets:
-            parts.append("linked to incident(s) " + ", ".join(_label(node) for node in tickets[:4]))
+            parts.append(
+                "linked to incident(s) " + ", ".join(_label(node) for node in cited_tickets)
+            )
         if cis:
-            parts.append("modifying CI(s) " + ", ".join(node.title for node in cis[:4]))
+            parts.append("modifying CI(s) " + ", ".join(_named(node) for node in cited_cis))
         if runbooks:
             parts.append(
-                "with operating runbook(s) " + ", ".join(_label(node) for node in runbooks[:4])
+                "with operating runbook(s) " + ", ".join(_label(node) for node in cited_runbooks)
             )
         parts.append("Correlate new occurrences with this approved change and its runbook.")
         return [
@@ -374,16 +460,20 @@ class GraphRetriever:
                 anchor,
                 "known_change_scope",
                 " ".join(parts),
-                [*problems, *cis, *tickets, *runbooks],
+                [*cited_problems, *cited_cis, *cited_tickets, *cited_runbooks],
                 [
-                    *[edge for edge, _ in _backward(sub, anchor.key, EdgeKind.RESOLVED_BY)],
-                    *[edge for edge, _ in _forward(sub, anchor.key, EdgeKind.MODIFIES)],
+                    *[edge for edge, _ in _backward(sub, anchor.key, EdgeKind.RESOLVED_BY)][
+                        :_CITED_MAX
+                    ],
+                    *[edge for edge, _ in _forward(sub, anchor.key, EdgeKind.MODIFIES)][
+                        :_CITED_MAX
+                    ],
                     *[
                         edge
-                        for problem in problems
+                        for problem in cited_problems
                         for edge, _ in _backward(sub, problem.key, EdgeKind.LINKED_TO)
-                    ],
-                    *[edge for edge, _ in _runbooks_forward(sub, [ci.key for ci in cis])],
+                    ][:_CITED_MAX],
+                    *[edge for edge, _ in runbook_pairs][:_CITED_MAX],
                 ],
                 provider,
             )
@@ -413,14 +503,19 @@ class GraphRetriever:
                 if node.kind is NodeKind.TICKET and not any(t.key == node.key for t in tickets):
                     tickets.append(node)
                     ticket_edges.append(edge)
+        cited_cis = cis[:_CITED_MAX]
+        cited_tickets = tickets[:_CITED_MAX]
+        # ``owners`` and ``owner_edges`` are built together, one pair per HAS_RUNBOOK edge,
+        # so slicing them to the same length keeps every cited edge attached to a cited node.
+        cited_owners = owners[:_CITED_MAX]
         narrative = (
             f"Runbook {_label(anchor)} is the operating procedure for "
-            f"{', '.join(node.title for node in cis[:4])}. "
+            f"{len(cis)} CI(s): {', '.join(_named(node) for node in cited_cis)}. "
         )
         if tickets:
             narrative += (
                 f"{len(tickets)} incident(s) affected these CI(s): "
-                f"{', '.join(_label(node) for node in tickets[:4])}. "
+                f"{', '.join(_label(node) for node in cited_tickets)}. "
             )
         narrative += "Follow this runbook when handling the current incident."
         return [
@@ -428,8 +523,8 @@ class GraphRetriever:
                 anchor,
                 "runbook_applicability",
                 narrative,
-                [*owners, *tickets],
-                [*owner_edges, *ticket_edges],
+                [*cited_owners, *cited_tickets],
+                [*owner_edges[:_CITED_MAX], *ticket_edges[:_CITED_MAX]],
                 provider,
             )
         ]
@@ -457,16 +552,20 @@ class GraphRetriever:
             ]
             runbook_pairs = _runbooks_forward(sub, [node.key for node in modified])
             runbooks = [node for _, node in runbook_pairs]
+            cited_changes = changes[:_CITED_MAX]
+            cited_modified = modified[:_CITED_MAX]
+            cited_runbooks = runbooks[:_CITED_MAX]
             narrative = (
                 f"Known-problem path for {_label(anchor)}: problem {problem.ref} "
-                f"'{problem.title}' is resolved by change(s) "
-                f"{', '.join(_label(node) for node in changes[:4])}"
+                f"'{_named(problem)}' is resolved by change(s) "
+                f"{', '.join(_label(node) for node in cited_changes)}"
             )
             if modified:
-                narrative += f" modifying {', '.join(node.title for node in modified[:4])}"
+                narrative += f" modifying {', '.join(_named(node) for node in cited_modified)}"
             if runbooks:
                 narrative += (
-                    f" with operating runbook(s) {', '.join(_label(node) for node in runbooks[:4])}"
+                    " with operating runbook(s) "
+                    f"{', '.join(_label(node) for node in cited_runbooks)}"
                 )
             narrative += ". Correlate new occurrences with the approved change before acting."
             findings.append(
@@ -474,15 +573,15 @@ class GraphRetriever:
                     anchor,
                     "known_problem_change_path",
                     narrative,
-                    [problem, *changes, *modified, *runbooks],
+                    [problem, *cited_changes, *cited_modified, *cited_runbooks],
                     [
-                        *change_edges,
+                        *change_edges[:_CITED_MAX],
                         *[
                             edge
-                            for change in changes
+                            for change in cited_changes
                             for edge, _ in _forward(sub, change.key, EdgeKind.MODIFIES)
-                        ],
-                        *[edge for edge, _ in runbook_pairs],
+                        ][:_CITED_MAX],
+                        *[edge for edge, _ in runbook_pairs][:_CITED_MAX],
                     ],
                     provider,
                 )

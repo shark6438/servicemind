@@ -54,26 +54,26 @@ file fails the gate rather than passing silently.
 
 | package | depends on |
 | --- | --- |
-| `_root` | `domain`, `harness`, `integrations`, `interfaces`, `orchestration`, `persistence`, `security` |
-| `agents` | `context`, `domain`, `integrations`, `rag`, `runtime`, `security` |
+| `_root` | `domain`, `harness`, `integrations`, `interfaces`, `model_gateway`, `orchestration`, `persistence`, `security` |
+| `agents` | `context`, `domain`, `foundation`, `integrations`, `rag`, `runtime`, `security` |
 | `context` | `foundation`, `persistence` |
 | `domain` | — |
-| `evaluation` | `context`, `domain`, `memory`, `orchestration` |
+| `evaluation` | `context`, `domain`, `graphrag`, `integrations`, `memory`, `orchestration`, `persistence` |
 | `foundation` | — |
 | `graphrag` | `domain` |
 | `harness` | `domain`, `integrations`, `persistence`, `security` |
 | `integrations` | `persistence`, `security` |
 | `interfaces` | `memory`, `persistence`, `security` |
 | `mcp` | `persistence`, `security`, `tool_platform` |
-| `memory` | `persistence` |
+| `memory` | `domain`, `persistence` |
 | `model_gateway` | `domain`, `persistence` |
 | `observability` | `context` |
-| `orchestration` | `agents`, `context`, `domain`, `harness`, `integrations`, `memory`, `model_gateway`, `observability`, `persistence`, `rag`, `runtime`, `security`, `skills` |
+| `orchestration` | `agents`, `context`, `domain`, `foundation`, `harness`, `integrations`, `memory`, `model_gateway`, `observability`, `persistence`, `rag`, `runtime`, `security`, `skills` |
 | `persistence` | — |
 | `rag` | `context`, `domain`, `foundation`, `graphrag`, `integrations`, `persistence`, `runtime`, `security` |
 | `reliability` | `persistence` |
 | `runtime` | `domain`, `integrations`, `model_gateway`, `security`, `tool_platform` |
-| `security` | — |
+| `security` | `domain` |
 | `skills` | `context` |
 | `tool_platform` | `domain`, `graphrag`, `integrations`, `memory`, `persistence`, `security` |
 

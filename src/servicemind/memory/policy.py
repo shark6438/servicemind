@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 
+from servicemind.domain.integrity import contains_injection_marker
 from servicemind.memory.contracts import (
     PII_PATTERN,
     SECRET_PATTERN,
@@ -11,46 +12,6 @@ from servicemind.memory.contracts import (
     MemoryWriteDecision,
     SemanticSubtype,
 )
-
-#: One canonical deterministic prompt-injection vocabulary shared by every
-#: model-facing policy boundary. Keeping a smaller write-time table than the
-#: read-time tripwire allowed records to become ACTIVE even though the retriever
-#: would later refuse to serve them. That state was misleading to operators and
-#: unsafe for consumers that read the repository without the retriever.
-#:
-#: The read path still scans independently as defense in depth; it consumes this
-#: exact tuple instead of maintaining a second vocabulary.
-INJECTION_MARKERS = (
-    "ignore previous",
-    "ignore all prior",
-    "override policy",
-    "bypass approval",
-    "system prompt",
-    "ignore your instructions",
-    "ignore all previous",
-    "disregard previous",
-    "disregard all prior",
-    "override the system",
-    "you are now",
-    "act as the system",
-    "act as the assistant",
-    "developer message",
-    "system message",
-    "forget previous",
-    "忽略所有",
-    "忽略系统提示",
-    "绕过审批",
-    "无视系统",
-    "无视之前",
-    "现在扮演",
-    "跳过审批",
-)
-
-
-def contains_injection_marker(value: str) -> bool:
-    """Return whether untrusted text hits the canonical deterministic tripwire."""
-    normalized = value.casefold()
-    return any(marker in normalized for marker in INJECTION_MARKERS)
 
 
 class MemoryGovernancePolicy:

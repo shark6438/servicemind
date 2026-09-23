@@ -69,7 +69,12 @@ class SupervisorPolicy:
         ready = self.dispatcher.ready_tasks(plan)
         ready_agents = {task.agent for task in ready}
         legal: set[SupervisorAction] = set()
-        if ready_agents & {AgentName.DATA, AgentName.KNOWLEDGE}:
+        if ready_agents & {AgentName.DATA, AgentName.KNOWLEDGE} and self.dispatcher.available_slots(
+            plan
+        ):
+            # Parallelism is a property of the transition, not of the plan: with every
+            # slot taken by a running task there is nothing to dispatch into, however
+            # many tasks are dependency-ready.
             legal.add(SupervisorAction.DISPATCH)
         if AgentName.ANALYSIS in ready_agents:
             legal.add(SupervisorAction.ANALYZE)
@@ -94,18 +99,38 @@ class SupervisorPolicy:
             )
         if decision.action is SupervisorAction.DISPATCH:
             plan = TaskPlan.model_validate(state["task_plan"])
-            ready = {
+            # Readiness first, eligibility second, and neither of them truncated by
+            # the other -- see ``TaskDispatcher.ready_tasks``. An id that is missing
+            # from this set is one of two different mistakes, and the Supervisor gets
+            # exactly one retry, so the retry only helps if it is told which.
+            dispatchable = {
                 task.task_id: task
                 for task in self.dispatcher.ready_tasks(plan)
                 if task.agent in {AgentName.DATA, AgentName.KNOWLEDGE}
             }
+            agents = {task.task_id: task.agent.value for task in plan.tasks}
             selected = decision.selected_task_ids
             if not selected:
                 raise SupervisorPolicyError("DISPATCH requires selected_task_ids")
             if len(selected) != len(set(selected)):
                 raise SupervisorPolicyError("DISPATCH task IDs must be unique")
-            if len(selected) > plan.max_parallel:
-                raise SupervisorPolicyError("DISPATCH exceeds max_parallel")
+            unknown = set(selected) - dispatchable.keys()
+            if unknown:
+                misrouted = sorted(item for item in unknown if item in agents)
+                if misrouted:
+                    raise SupervisorPolicyError(
+                        "DISPATCH may only select data or knowledge tasks; "
+                        + ", ".join(f"{item} is a {agents[item]} task" for item in misrouted)
+                    )
+                raise SupervisorPolicyError(
+                    f"DISPATCH selected tasks that are not ready: {sorted(unknown)}"
+                )
+            slots = self.dispatcher.available_slots(plan)
+            if len(selected) > slots:
+                raise SupervisorPolicyError(
+                    f"DISPATCH starts {len(selected)} tasks with {slots} of "
+                    f"{plan.max_parallel} parallel slots free"
+                )
             control = RuntimeControl.model_validate(state.get("control", {}))
             remaining_tools = max(
                 plan.budget.max_tool_calls - control.tool_call_count,
@@ -114,11 +139,6 @@ class SupervisorPolicy:
             if len(selected) > remaining_tools:
                 raise SupervisorPolicyError(
                     "DISPATCH has fewer remaining tool calls than selected tasks"
-                )
-            unknown = set(selected) - ready.keys()
-            if unknown:
-                raise SupervisorPolicyError(
-                    f"DISPATCH selected tasks that are not ready: {sorted(unknown)}"
                 )
         elif decision.action in {SupervisorAction.ANALYZE, SupervisorAction.REVIEW}:
             plan = TaskPlan.model_validate(state["task_plan"])

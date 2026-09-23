@@ -33,6 +33,7 @@ import pytest
 import servicemind.agents.reviewer as reviewer_module
 from servicemind.agents.reviewer import ReviewerAgent, SemanticReview
 from servicemind.domain.analysis import (
+    CLAIM_TYPE_BAR_TEXT,
     AnalysisClaim,
     AnalysisResult,
     AnalysisStatus,
@@ -172,6 +173,18 @@ class FakeRunnable:
         self.result = result
 
     async def ainvoke(self, messages):
+        return self.result
+
+
+class _RecordingRunnable(FakeRunnable):
+    """Keeps every message the judge was handed, which is the assertion here."""
+
+    def __init__(self, result) -> None:
+        super().__init__(result)
+        self.messages: list[list[object]] = []
+
+    async def ainvoke(self, messages):
+        self.messages.append(list(messages))
         return self.result
 
 
@@ -327,7 +340,7 @@ async def test_clean_semantic_judge_passes(monkeypatch) -> None:
         max_replans=2,
     )
     assert result.decision is ReviewDecision.PASSED
-    assert result.policy_version == "servicemind-review-policy-v3"
+    assert result.policy_version == "servicemind-review-policy-v5"
 
 
 @pytest.mark.asyncio
@@ -686,3 +699,37 @@ async def test_supervisor_retrieve_then_abstain_terminal(monkeypatch) -> None:
     assert "abstain" not in result["trajectory"]  # decision label lives on review result
     # No human escalation interrupt was reached for an ordinary info gap.
     assert "human_escalation" not in result["trajectory"]
+
+
+@pytest.mark.asyncio
+async def test_the_judge_is_handed_the_bar_the_analyst_was_shown(monkeypatch) -> None:
+    """One vocabulary, one bar -- quoted into both roles, not re-derived by each.
+
+    Live regression, 2026-09-23, ACC-07. Three runs of one deterministic input returned
+    passed, abstain, passed. The abstention listed a claim whose statement quotes a cited
+    graph row word for word and keeps the attribution ("...and the graph states this
+    same-CI correlation points at a shared root cause") -- and the judge's own feedback
+    conceded the evidence states it. The judge was not reading the bar the Analyst had
+    been given; there was no such bar, only two readings of the same five names. A listed
+    claim is terminal, so the disagreement decided the run's answer.
+    """
+    joined = _joined()
+    judge = _RecordingRunnable(_semantic())
+    monkeypatch.setattr(reviewer_module, "structured_output", lambda model, schema: judge)
+    reviewer = ReviewerAgent(enable_semantic_review=True, model_factory=lambda: object())
+
+    await reviewer.review(
+        analysis=_analysis(evidence_refs=joined.evidence_refs),
+        evidence=joined,
+        request_write=False,
+        retrieval_round=1,
+        replan_count=0,
+        max_replans=2,
+    )
+
+    prompt = str(getattr(judge.messages[0][0], "content", ""))
+    assert CLAIM_TYPE_BAR_TEXT in prompt
+    # ...and the other half of the same contract: the Analyst reads this text through the
+    # schema it is told to answer with, so a bar that reached only one of the two roles
+    # would be the same defect one edit later.
+    assert json.dumps(CLAIM_TYPE_BAR_TEXT)[1:-1] in json.dumps(AnalysisResult.model_json_schema())

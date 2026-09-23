@@ -89,6 +89,12 @@ class ToolCall(BaseModel):
     user_id: str = Field(min_length=1, max_length=255)
     roles: frozenset[str]
     entity_ids: frozenset[int] = Field(default_factory=frozenset)
+    #: The group scope the caller is actually holding. Absent until the graph tool needed
+    #: it, which is the same shape as the defect this field closes: ``TenantContext``
+    #: carried it, the tool boundary dropped it, and a group-restricted resource was
+    #: then unreachable *or* reachable depending on which side of the boundary you read.
+    #: Empty means the caller holds no group -- denial, not a wildcard.
+    group_ids: frozenset[int] = Field(default_factory=frozenset)
     capabilities: frozenset[str]
     tool_name: str
     tool_version: str

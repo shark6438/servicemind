@@ -6,12 +6,22 @@ from typing import Any, Protocol
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from servicemind.persistence.database import global_session, tenant_session
 from servicemind.persistence.models import McpTaskRecord, Tenant
 from servicemind.security.crypto import CredentialCipher
+
+#: How long a task stays queryable after it was created. The server advertises this to
+#: every MCP client as ``ttlMs`` on every task payload, which makes it a promise about how
+#: long a result can still be fetched -- and until now nothing kept it. A client that read
+#: the TTL and a platform that ignored it disagreed about whether a task still existed,
+#: and the in-memory store, which is the default, kept every task and every idempotency
+#: record its process had ever created, each one holding the full tool output, with
+#: nothing ever released. One number, declared where the retention is enforced and quoted
+#: by the payload that announces it, so the two cannot drift apart again.
+TASK_TTL_MS = 3_600_000
 
 
 class StoredMcpTask(BaseModel):
@@ -25,6 +35,10 @@ class StoredMcpTask(BaseModel):
     cancellation_requested: bool = False
     created_at: datetime
     updated_at: datetime
+
+
+def _expired(task: StoredMcpTask, now: datetime) -> bool:
+    return task.created_at + timedelta(milliseconds=TASK_TTL_MS) <= now
 
 
 class McpTaskStore(Protocol):
@@ -65,9 +79,27 @@ class InMemoryMcpTaskStore:
         self.values: dict[tuple[UUID, UUID], StoredMcpTask] = {}
         self.requests: dict[tuple[UUID, UUID], tuple[UUID, tuple[Any, ...]]] = {}
 
+    def _forget_expired(self, now: datetime) -> None:
+        """Release every task past ``TASK_TTL_MS``, and its idempotency record with it.
+
+        The two maps have to be released together. ``create`` resolves a repeated request
+        id through ``requests`` and then indexes ``values`` by the task id it finds there,
+        so forgetting a task while keeping its request record turns a late retry -- the
+        exact thing idempotency exists for -- into a ``KeyError``.
+        """
+        expired = {key for key, task in self.values.items() if _expired(task, now)}
+        if not expired:
+            return
+        for key in expired:
+            del self.values[key]
+        for request_key, (task_id, _identity) in tuple(self.requests.items()):
+            if (request_key[0], task_id) in expired:
+                del self.requests[request_key]
+
     async def recover_interrupted(self) -> int:
         recovered = 0
         now = datetime.now(UTC)
+        self._forget_expired(now)
         for key, current in tuple(self.values.items()):
             if current.status == "working":
                 self.values[key] = current.model_copy(
@@ -81,10 +113,12 @@ class InMemoryMcpTaskStore:
         return recovered
 
     async def heartbeat(self, tenant_id: UUID, task_id: UUID) -> bool:
+        self._forget_expired(datetime.now(UTC))
         current = self.values.get((tenant_id, task_id))
         return current is not None and current.status == "working"
 
     async def create(self, tenant_id: UUID, **values: Any) -> StoredMcpTask:
+        self._forget_expired(datetime.now(UTC))
         request_key = (tenant_id, values["request_id"])
         identity = (
             values["run_id"],
@@ -114,6 +148,7 @@ class InMemoryMcpTaskStore:
         return task
 
     async def get(self, tenant_id: UUID, task_id: UUID) -> StoredMcpTask | None:
+        self._forget_expired(datetime.now(UTC))
         return self.values.get((tenant_id, task_id))
 
     async def finish(
@@ -126,6 +161,7 @@ class InMemoryMcpTaskStore:
         output_hash: str | None = None,
         error_code: str | None = None,
     ) -> StoredMcpTask | None:
+        self._forget_expired(datetime.now(UTC))
         key = (tenant_id, task_id)
         current = self.values.get(key)
         if current is None or current.status != "working":
@@ -143,6 +179,7 @@ class InMemoryMcpTaskStore:
         return task
 
     async def cancel(self, tenant_id: UUID, task_id: UUID) -> StoredMcpTask | None:
+        self._forget_expired(datetime.now(UTC))
         key = (tenant_id, task_id)
         current = self.values.get(key)
         if current is None or current.status != "working":
@@ -165,17 +202,24 @@ class PostgresMcpTaskStore:
         self.worker_id = f"mcp-{uuid4()}"
 
     async def recover_interrupted(self) -> int:
-        """Close only expired tasks, preserving work owned by healthy replicas."""
+        """Close expired tasks and release finished ones past their TTL.
+
+        Closing preserves work owned by healthy replicas: only tasks whose lease has run
+        out are failed. Releasing is the other half -- a row answers a task lookup for
+        ``TASK_TTL_MS`` and then has to stop existing, or the table accumulates every task
+        the deployment has ever run, each holding an encrypted tool output.
+        """
         async with global_session() as session:
             tenant_ids = tuple((await session.scalars(select(Tenant.id))).all())
         recovered = 0
+        now = datetime.now(UTC)
         for tenant_id in tenant_ids:
             async with tenant_session(tenant_id) as session:
                 result = await session.execute(
                     update(McpTaskRecord)
                     .where(
                         McpTaskRecord.status == "working",
-                        McpTaskRecord.lease_expires_at <= datetime.now(UTC),
+                        McpTaskRecord.lease_expires_at <= now,
                     )
                     .values(
                         status="failed",
@@ -184,6 +228,11 @@ class PostgresMcpTaskStore:
                     .returning(McpTaskRecord.task_id)
                 )
                 recovered += len(result.scalars().all())
+                await session.execute(
+                    delete(McpTaskRecord).where(
+                        McpTaskRecord.created_at <= now - timedelta(milliseconds=TASK_TTL_MS)
+                    )
+                )
         return recovered
 
     async def heartbeat(self, tenant_id: UUID, task_id: UUID) -> bool:
@@ -239,6 +288,12 @@ class PostgresMcpTaskStore:
             row = await session.scalar(
                 select(McpTaskRecord).where(McpTaskRecord.task_id == task_id)
             )
+            if row and _record_expired(row, datetime.now(UTC)):
+                # Past the TTL the server advertised for it, the task is no longer a task
+                # -- answering with its output would keep a result retrievable for longer
+                # than the client was told, which is the disagreement the TTL exists to
+                # settle.
+                return None
             if row and row.status == "working" and row.lease_expires_at <= datetime.now(UTC):
                 row.status = "failed"
                 row.error_code = "Task executor lease expired"
@@ -291,6 +346,10 @@ class PostgresMcpTaskStore:
                 select(McpTaskRecord).where(McpTaskRecord.task_id == task_id)
             )
             return _to_task(row, self.cipher) if row else None
+
+
+def _record_expired(row: McpTaskRecord, now: datetime) -> bool:
+    return row.created_at + timedelta(milliseconds=TASK_TTL_MS) <= now
 
 
 def _to_task(row: McpTaskRecord, cipher: CredentialCipher) -> StoredMcpTask:

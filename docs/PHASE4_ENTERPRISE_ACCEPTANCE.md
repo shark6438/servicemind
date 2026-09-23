@@ -214,6 +214,8 @@ reconciled_marked: 399   reconciled_pruned: 0
 | F4 | data | 0 模型预算静默 SUCCEEDED | 显式 `DEGRADED` + `DATA_MODEL_BUDGET_EXHAUSTED`；0 模型 0 工具仍保 GET_TICKET 底 | 同上 |
 | A1/A1b | reviewer | 动作失配/确定性写门在 replan 用尽后仍 REPLAN → 死锁 | 用尽转 ESCALATE | `test_phase4_abstention.py` |
 | A6 | reviewer | 语义 judge 低置信却 PASSED | 置信度 < 0.5 → `SEMANTIC_CONFIDENCE_LOW` ESCALATE | 同上 |
+| A6b | reviewer | judge 未输出 `confidence` 时被当作「低置信」上报，掩盖了模型没作答这一事实（工单 17 实跑：全部主张受支持却报 LOW） | 容忍路径标记 `rating_supplied=False`，判定器据此分流 `SEMANTIC_CONFIDENCE_MISSING`；两者同样 fail-closed，但原因码如实 | `test_semantic_judge_verdict.py`（缺失 → MISSING，显式 0.2 → LOW） |
+| A6c | reviewer | 漏字段是**可复现的随机行为**（11 行 joined evidence、约 19k 字符载荷下 6 次中 1 次漏），导致约每 6 次干净评审就有 1 次因字段缺失而升级人工，而 judge 实际已认可全部主张 | 判决齐备仅缺自评时，在同一证据上追加一次「重发完整 verdict」的受控重问（1 次为限，且不超出 reviewer 的 2 次模型预算）；二次仍缺才按 MISSING 升级，失败仍闭合 | 同上（重问命中 → PASSED；两次皆缺 → MISSING；预算仅剩 1 次 → 不重问） |
 | A7 | reviewer | 尾部注释把“默认关闭语义门”误标为 fail-closed | 修正为事实（默认更宽松，生产单例启用语义 judge） | 文档 |
 | A5 | analysis | revision 模型崩溃被 check 后重标签为通用 grounding 失败，丢失故障信号 | 崩溃直接 DEGRADED 终止，保留 `ANALYSIS_REVISION_FAILURE` + 异常名 | `test_analysis_revision_failure.py` |
 | F5 | policy | PASSED+写 时无条件开放 HANDOFF_ACTION，可能把 run 引向 handoff_node 的 RuntimeError | 仅当存在 ready ACTION 任务才开放；否则仅 REPLAN（可重建 Action） | `test_supervisor_runtime.py::test_policy_handoff_requires_a_ready_action_task` |

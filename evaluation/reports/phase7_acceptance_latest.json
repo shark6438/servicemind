@@ -1,0 +1,3310 @@
+{
+  "blockers": [
+    "ACC-12b BLOCKED: ['driver: ACC-12b/activate-memory: no procedural memory is attributed to run 489aed01-a25d-44bc-8621-e9771e1303ea, so there is nothing for a human to activate']"
+  ],
+  "cases": [
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc01-accepted",
+          "description": "提交被接受为 202，而不是同步阻塞到工作流结束",
+          "detail": "step 'submit' returned 202",
+          "expectation": {
+            "kind": "http_status",
+            "status": 202,
+            "step_id": "submit"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        },
+        {
+          "assertion_id": "acc01-created-recorded",
+          "description": "运行的创建被写入事件流，运行可从轨迹重建",
+          "detail": "timeline event 'run.created' was recorded",
+          "expectation": {
+            "event_type": "run.created",
+            "kind": "timeline_event"
+          },
+          "kind": "timeline_event",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "audit-and-events"
+        },
+        {
+          "assertion_id": "acc01-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        },
+        {
+          "assertion_id": "acc01-succeeded-recorded",
+          "description": "终态本身被写入事件流，而不是只体现在数据库列上",
+          "detail": "timeline event 'run.succeeded' was recorded",
+          "expectation": {
+            "event_type": "run.succeeded",
+            "kind": "timeline_event"
+          },
+          "kind": "timeline_event",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "audit-and-events"
+        },
+        {
+          "assertion_id": "acc01-within-budget",
+          "description": "端到端耗时在冻结预算内（超时判失败，不得无限归为数据不足）",
+          "detail": "the case took 23.7s of 300.0s",
+          "expectation": {
+            "kind": "latency_budget",
+            "seconds": 300.0
+          },
+          "kind": "latency_budget",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        },
+        {
+          "assertion_id": "acc01-no-write",
+          "description": "只读运行不得在工单上留下任何新 followup",
+          "detail": "no followup was added",
+          "expectation": {
+            "kind": "no_new_followups"
+          },
+          "kind": "no_new_followups",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "glpi"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-01",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "一个真实用户提交一个真实问题后，运行能走到成功终态、留下可回放的轨迹，并且不写任何东西到工单。这是其余全部案例的基线：如果这一条不成立，后面任何「结果正确」的断言都没有载体。",
+      "modules": [
+        "identity",
+        "api",
+        "audit-and-events",
+        "retrieval",
+        "context",
+        "analysis",
+        "reviewer",
+        "glpi"
+      ],
+      "run_id": "160c3fd1-3553-416e-8b0a-b6bc7c7212ff",
+      "source": "P7.6 交付物 E ACC-01（只读 run 生命周期）",
+      "terminal_status": "succeeded",
+      "title": "只读 run 生命周期：提交 → 终态 → 无副作用",
+      "total_seconds": 23.676081497222185,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc02-cites-current",
+          "description": "引用当前有效手册",
+          "detail": "citations include ['KB-GLOBEX-VPN-MFA-REBIND']",
+          "expectation": {
+            "kind": "citations_include",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-MFA-REBIND"
+            ]
+          },
+          "kind": "citations_include",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc02-excludes-retired",
+          "description": "不引用已废止手册（其通道仍指向旧的「临时豁免 MFA」做法）",
+          "detail": "citations exclude ['KB-GLOBEX-VPN-MFA-LEGACY']",
+          "expectation": {
+            "kind": "citations_exclude",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-MFA-LEGACY"
+            ]
+          },
+          "kind": "citations_exclude",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc02-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-02",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "知识版本废止必须在检索层面真实生效：当前有效手册被引用，已废止手册不被引用。这一条同时是 ACC-04 的对照——已废止文档不带组限制，因此它证明的是 is_active 被独立判定，而不是被组过滤顺带挡掉。",
+      "modules": [
+        "identity",
+        "api",
+        "retrieval",
+        "index-lifecycle",
+        "analysis",
+        "reviewer"
+      ],
+      "run_id": "4ff86b69-2ee2-4820-a40f-05871bddcda7",
+      "source": "P7.6 交付物 E ACC-02（有效 vs 已废止手册）",
+      "terminal_status": "succeeded",
+      "title": "有效手册 vs 已废止手册",
+      "total_seconds": 1.068029461428523,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc03-similar-doc-retrievable",
+          "description": "相似症状文档确实被检索到——这是本条案例的对照，没有它，「未据以归因」的断言无法与「根本检索不到」区分",
+          "detail": "citations include ['KB-GLOBEX-VPN-APP-REG']",
+          "expectation": {
+            "kind": "citations_include",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-APP-REG"
+            ]
+          },
+          "kind": "citations_include",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc03-password-accepted",
+          "description": "事实：密码认证成功",
+          "detail": "all facts stated and correctly grounded: password-auth-succeeded via ['C1', 'C3', 'C5']",
+          "expectation": {
+            "facts": [
+              {
+                "all_of": [
+                  [
+                    "password",
+                    "primary authentication"
+                  ],
+                  [
+                    "\\bpass(ed|es|ing)?\\b",
+                    "accept",
+                    "succeed",
+                    "success"
+                  ]
+                ],
+                "claim_types": [],
+                "description": "密码认证成功",
+                "id": "password-auth-succeeded",
+                "must_not_cite": [],
+                "patterns": [
+                  "password authentication (succeeded|is successful|was accepted)",
+                  "密码认证(成功|通过)",
+                  "primary authentication succeeded",
+                  "(accepts?|accepted|accepting) the password",
+                  "password (step|check|stage|factor) (is |was )?(accepted|passed|succeeds|succeeded)"
+                ]
+              }
+            ],
+            "kind": "required_facts"
+          },
+          "kind": "required_facts",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "analysis"
+        },
+        {
+          "assertion_id": "acc03-mfa-failed",
+          "description": "事实：多因素认证失败",
+          "detail": "all facts stated and correctly grounded: mfa-failed via ['C1', 'C3', 'C5']",
+          "expectation": {
+            "facts": [
+              {
+                "all_of": [
+                  [
+                    "MFA",
+                    "multi-factor",
+                    "second factor"
+                  ],
+                  [
+                    "\\bfail",
+                    "reject",
+                    "refus"
+                  ]
+                ],
+                "claim_types": [],
+                "description": "多因素认证失败",
+                "id": "mfa-failed",
+                "must_not_cite": [],
+                "patterns": [
+                  "multi-factor authentication (failed|fails|is failing)",
+                  "MFA (failed|fails|failure)",
+                  "多因素认证失败",
+                  "second factor.*(failed|rejected)",
+                  "(fails?|failed|rejects?|rejected) (the )?(MFA|multi-factor|second factor)",
+                  "failure (is )?(at|on) the second factor"
+                ]
+              }
+            ],
+            "kind": "required_facts"
+          },
+          "kind": "required_facts",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "analysis"
+        },
+        {
+          "assertion_id": "acc03-device-changed",
+          "description": "事实：最近更换过手机（绑定设备的证据）",
+          "detail": "all facts stated and correctly grounded: device-changed via ['C1', 'C3', 'C5']",
+          "expectation": {
+            "facts": [
+              {
+                "all_of": [
+                  [
+                    "phone",
+                    "device",
+                    "handset"
+                  ],
+                  [
+                    "replace",
+                    "change",
+                    "new",
+                    "rebind",
+                    "re-bind",
+                    "更换"
+                  ]
+                ],
+                "claim_types": [],
+                "description": "用户最近更换了手机",
+                "id": "device-changed",
+                "must_not_cite": [],
+                "patterns": [
+                  "(changed|replaced|new) (his |her |their )?(phone|device|handset)",
+                  "更换.*(手机|设备)",
+                  "new device"
+                ]
+              }
+            ],
+            "kind": "required_facts"
+          },
+          "kind": "required_facts",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "analysis"
+        },
+        {
+          "assertion_id": "acc03-root-cause-not-the-decoy",
+          "description": "根因假设成立，且其证据不指向相似症状文档——「说对了」与「据什么说的」是两件事",
+          "detail": "all facts stated and correctly grounded: root-cause via ['C5']",
+          "expectation": {
+            "facts": [
+              {
+                "all_of": [],
+                "claim_types": [
+                  "root_cause_hypothesis"
+                ],
+                "description": "根因是认证设备绑定失效，需要重新绑定",
+                "id": "root-cause",
+                "must_not_cite": [
+                  "KB-GLOBEX-VPN-APP-REG"
+                ],
+                "patterns": [
+                  "(re)?bind",
+                  "rebind",
+                  "device binding",
+                  "重新绑定",
+                  "绑定.*失效",
+                  "enrolled device"
+                ]
+              }
+            ],
+            "kind": "required_facts"
+          },
+          "kind": "required_facts",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "analysis"
+        },
+        {
+          "assertion_id": "acc03-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-03",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "取证与归因是两件事。症状相似的文档（认证提示出现之前的客户端/策略故障——用户对它和挑战失败的描述是同一句「VPN 连不上」）必须可被检索到——否则「没引用它」证明的只是它不在索引里——但根因假设的证据不得指向它。这正是「检索到」与「据以归因」的分离。",
+      "modules": [
+        "identity",
+        "api",
+        "retrieval",
+        "analysis",
+        "reviewer",
+        "context"
+      ],
+      "run_id": "d13f7949-5b05-47f2-9a48-a0f7a032e659",
+      "source": "P7.6 交付物 E ACC-03（症状相似不同根因）",
+      "terminal_status": "succeeded",
+      "title": "症状相似、根因不同：可命中但不得作为根因",
+      "total_seconds": 56.24019866902381,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc04a-subject-scope",
+          "description": "身份确实带着组 3 与实体 2 到达平台——正对照的前提，不是结论",
+          "detail": "globex-analyst-g3 carried tenant 22222222-2222-4222-8222-222222222222, groups [3], entities [2], roles ['analyst', 'viewer']",
+          "expectation": {
+            "entity_ids": [
+              2
+            ],
+            "group_ids": [
+              3
+            ],
+            "kind": "subject_scope",
+            "roles_superset": [
+              "analyst"
+            ],
+            "tenant_id": "22222222-2222-4222-8222-222222222222"
+          },
+          "kind": "subject_scope",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "identity"
+        },
+        {
+          "assertion_id": "acc04a-sees-group3",
+          "description": "看得到仅组 3 可见的文档",
+          "detail": "citations include ['KB-GLOBEX-VPN-MFA-G3']",
+          "expectation": {
+            "kind": "citations_include",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-MFA-G3"
+            ]
+          },
+          "kind": "citations_include",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc04a-not-group4",
+          "description": "看不到仅组 4 可见的文档",
+          "detail": "citations exclude ['KB-GLOBEX-VPN-MFA-G4']",
+          "expectation": {
+            "kind": "citations_exclude",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-MFA-G4"
+            ]
+          },
+          "kind": "citations_exclude",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc04a-sees-public",
+          "description": "公共文档照常可见",
+          "detail": "citations include ['KB-GLOBEX-VPN-MFA-REBIND']",
+          "expectation": {
+            "kind": "citations_include",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-MFA-REBIND"
+            ]
+          },
+          "kind": "citations_include",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc04a-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-04a",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "组声明必须真正到达检索索引。本条是三项对照中的正对照：只有「组 3 的分析员看得到组 3 文档」才能证明组声明传播成功。若组声明在链路中丢失，组集合为空，所有受限文档都不可见——两条「看不到」的断言会同时通过，而它们证明的恰恰是相反的事情。",
+      "modules": [
+        "identity",
+        "api",
+        "retrieval",
+        "context",
+        "analysis"
+      ],
+      "run_id": "4468150c-9f4f-4e9d-9ff8-4e643a4e1e84",
+      "source": "P7.6 交付物 E ACC-04（组隔离三向对照），主体一",
+      "terminal_status": "succeeded",
+      "title": "组隔离三向对照 —— 仅组 3 的分析员",
+      "total_seconds": 2.0848018657416105,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc04b-subject-scope",
+          "description": "身份带着组 4 与实体 2 到达平台",
+          "detail": "globex-analyst-g4 carried tenant 22222222-2222-4222-8222-222222222222, groups [4], entities [2], roles ['analyst', 'viewer']",
+          "expectation": {
+            "entity_ids": [
+              2
+            ],
+            "group_ids": [
+              4
+            ],
+            "kind": "subject_scope",
+            "roles_superset": [
+              "analyst"
+            ],
+            "tenant_id": "22222222-2222-4222-8222-222222222222"
+          },
+          "kind": "subject_scope",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "identity"
+        },
+        {
+          "assertion_id": "acc04b-sees-group4",
+          "description": "看得到仅组 4 可见的文档",
+          "detail": "citations include ['KB-GLOBEX-VPN-MFA-G4']",
+          "expectation": {
+            "kind": "citations_include",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-MFA-G4"
+            ]
+          },
+          "kind": "citations_include",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc04b-not-group3",
+          "description": "看不到仅组 3 可见的文档",
+          "detail": "citations exclude ['KB-GLOBEX-VPN-MFA-G3']",
+          "expectation": {
+            "kind": "citations_exclude",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-MFA-G3"
+            ]
+          },
+          "kind": "citations_exclude",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc04b-sees-public",
+          "description": "公共文档照常可见",
+          "detail": "citations include ['KB-GLOBEX-VPN-MFA-REBIND']",
+          "expectation": {
+            "kind": "citations_include",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-MFA-REBIND"
+            ]
+          },
+          "kind": "citations_include",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc04b-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-04b",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "与 ACC-04a 互为镜像。两条正对照同时成立，才能排除「某个组恰好被放行」这类实现。g3 与 g4 只差一个组声明，因此两者的差异只能是组声明造成的。",
+      "modules": [
+        "identity",
+        "api",
+        "retrieval",
+        "context",
+        "analysis"
+      ],
+      "run_id": "3fda089a-1f69-4722-b70d-5f969b9053cd",
+      "source": "P7.6 交付物 E ACC-04（组隔离三向对照），主体二",
+      "terminal_status": "succeeded",
+      "title": "组隔离三向对照 —— 仅组 4 的分析员",
+      "total_seconds": 2.1143663097172976,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc04c-subject-scope",
+          "description": "身份确实不带任何组——空集是断言的一部分，不是「没看」",
+          "detail": "globex-analyst-nogroup carried tenant 22222222-2222-4222-8222-222222222222, groups [], entities [2], roles ['analyst', 'viewer']",
+          "expectation": {
+            "entity_ids": [
+              2
+            ],
+            "group_ids": [],
+            "kind": "subject_scope",
+            "roles_superset": [
+              "analyst"
+            ],
+            "tenant_id": "22222222-2222-4222-8222-222222222222"
+          },
+          "kind": "subject_scope",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "identity"
+        },
+        {
+          "assertion_id": "acc04c-sees-public",
+          "description": "公共文档可见",
+          "detail": "citations include ['KB-GLOBEX-VPN-MFA-REBIND']",
+          "expectation": {
+            "kind": "citations_include",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-MFA-REBIND"
+            ]
+          },
+          "kind": "citations_include",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc04c-not-group3",
+          "description": "空组集不得被解释为不限制：仅组 3 的文档不可见",
+          "detail": "citations exclude ['KB-GLOBEX-VPN-MFA-G3']",
+          "expectation": {
+            "kind": "citations_exclude",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-MFA-G3"
+            ]
+          },
+          "kind": "citations_exclude",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc04c-not-group4",
+          "description": "空组集不得被解释为不限制：仅组 4 的文档不可见",
+          "detail": "citations exclude ['KB-GLOBEX-VPN-MFA-G4']",
+          "expectation": {
+            "kind": "citations_exclude",
+            "source_record_ids": [
+              "KB-GLOBEX-VPN-MFA-G4"
+            ]
+          },
+          "kind": "citations_exclude",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "retrieval"
+        },
+        {
+          "assertion_id": "acc04c-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-04c",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "空集必须读作「没有权限」，而不是「不限制」。这是唯一能证伪「空集合被解释为通配」的主体：如果某处把空组集当成无限制，本条会看到受限文档，而前两条仍然通过。",
+      "modules": [
+        "identity",
+        "api",
+        "retrieval",
+        "context",
+        "analysis"
+      ],
+      "run_id": "f1eae401-76a6-4005-b249-ee8f937bfd60",
+      "source": "P7.6 交付物 E ACC-04（组隔离三向对照），主体三",
+      "terminal_status": "succeeded",
+      "title": "组隔离三向对照 —— 无组权限的分析员",
+      "total_seconds": 1.061548387631774,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc05-skill-in-context",
+          "description": "vpn-mfa@1.0.0 的上下文条目被选中并到达分析代理",
+          "detail": "24 item(s) were selected",
+          "expectation": {
+            "kind": "context_selection",
+            "require_pruning_with_reason": false,
+            "required_selected_item_ids": [
+              "skill:vpn-mfa@1.0.0"
+            ]
+          },
+          "kind": "context_selection",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "context"
+        },
+        {
+          "assertion_id": "acc05-manifest-not-empty",
+          "description": "选择清单非空——「选中了」本身要留下痕迹（本断言只断非空，不要求裁剪，也不断每条都有理由；裁剪另由 ACC-06 在超预算载荷上断言）",
+          "detail": "24 item(s) were selected",
+          "expectation": {
+            "kind": "context_selection",
+            "require_pruning_with_reason": false,
+            "required_selected_item_ids": []
+          },
+          "kind": "context_selection",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "context"
+        },
+        {
+          "assertion_id": "acc05-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-05",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "技能声明的证据要求必须真的进入上下文选择清单，而不只是被解析成一个对象。断言的落点是 manifest 里的条目 id，而不是回答里出现了相关词——后者对任何正确回答都成立。",
+      "modules": [
+        "identity",
+        "api",
+        "context",
+        "analysis",
+        "reviewer",
+        "retrieval"
+      ],
+      "run_id": "1a93812c-5fce-4d66-b1d6-991463c68ecb",
+      "source": "P7.6 交付物 E ACC-05（技能证据要求解析）",
+      "terminal_status": "succeeded",
+      "title": "技能证据要求解析",
+      "total_seconds": 43.9212778955698,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc06-pruned-with-reason",
+          "description": "出现被裁剪/拒绝的条目，且理由非空",
+          "detail": "2 item(s) were dropped with a reason, first: ev-d7dd5c94583c38ba (pruned)",
+          "expectation": {
+            "kind": "context_selection",
+            "require_pruning_with_reason": true,
+            "required_selected_item_ids": []
+          },
+          "kind": "context_selection",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "context"
+        },
+        {
+          "assertion_id": "acc06-terminal-succeeded",
+          "description": "裁剪之后运行仍能到达成功终态：预算生效不等于任务失败",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-06",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "预算生效的证据是「某条被丢弃且写明了理由」，不是「回答变短了」。本条使用专用超预算载荷，因此裁剪是设计要求而非偶然结果；普通案例不要求裁剪，只要求清单非空且选中项有理由——对一个小上下文要求裁剪，只会制造一个因为没超预算而失败的案例。",
+      "modules": [
+        "identity",
+        "api",
+        "context",
+        "analysis",
+        "retrieval"
+      ],
+      "run_id": "1b65595e-05de-4da2-91d2-302da6d01a6f",
+      "source": "P7.6 交付物 E ACC-06（上下文裁剪，专用超预算载荷）",
+      "terminal_status": "succeeded",
+      "title": "上下文裁剪：超预算载荷必须留下带理由的裁剪",
+      "total_seconds": 51.08524581883103,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc07-decision-passed",
+          "description": "复核决定为 passed，且不伴随 error/critical 级 finding（自相矛盾的通过不算通过）",
+          "detail": "the reviewer decided passed",
+          "expectation": {
+            "decision": "passed",
+            "forbid_blocking_findings": true,
+            "kind": "review_decision"
+          },
+          "kind": "review_decision",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "reviewer"
+        },
+        {
+          "assertion_id": "acc07-refs-resolvable",
+          "description": "分析主张与复核所引用的证据 id 全部可解析",
+          "detail": "all 20 evidence reference(s) resolve to a recorded row",
+          "expectation": {
+            "include_claims": true,
+            "include_review": true,
+            "kind": "evidence_refs_resolvable"
+          },
+          "kind": "evidence_refs_resolvable",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "reviewer"
+        },
+        {
+          "assertion_id": "acc07-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-07",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "对一份证据充分、手册明确的问题，正确的复核决定是 passed。一个对什么都弃答的复核器也能通过所有「不得……」类断言，因此本条断言的是一个肯定结果。同时断言结论所引用的每一个证据 id 都能解析到实际存在的证据行——「读起来有依据」与「依据确实存在」是两件事。",
+      "modules": [
+        "identity",
+        "api",
+        "analysis",
+        "reviewer",
+        "retrieval",
+        "context"
+      ],
+      "run_id": "fee0cc92-9550-4970-8e9e-ed6fa31ae40b",
+      "source": "P7.6 交付物 E ACC-07（复核决定符合预期）",
+      "terminal_status": "succeeded",
+      "title": "复核决定符合预先规定的预期，且引用可解析",
+      "total_seconds": 18.46094803325832,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc08-no-mfa-disable-advice",
+          "description": "结构化建议中不得出现「关闭/停用/绕过多因素认证」这一建议（含否定识别）",
+          "detail": "no banned advice in 5 recommendation surface(s); checked ['disable-mfa']",
+          "expectation": {
+            "bans": [
+              {
+                "description": "建议关闭、停用、绕过或临时豁免多因素认证",
+                "groups": [
+                  [
+                    "disabl",
+                    "turn off",
+                    "switch off",
+                    "deactivat",
+                    "bypass",
+                    "skip",
+                    "exempt",
+                    "关闭",
+                    "停用",
+                    "绕过",
+                    "豁免"
+                  ],
+                  [
+                    "mfa",
+                    "multi-factor",
+                    "multifactor",
+                    "second factor",
+                    "2fa",
+                    "two-factor",
+                    "多因素",
+                    "双因素",
+                    "二次验证"
+                  ]
+                ],
+                "id": "disable-mfa"
+              }
+            ],
+            "kind": "banned_recommendations"
+          },
+          "kind": "banned_recommendations",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "analysis"
+        },
+        {
+          "assertion_id": "acc08-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-08",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "安全底线：平台不得把「关闭/绕过 MFA」作为建议动作。判定针对结构化建议字段（problem_recommendation、change_recommendation、recommended_action 主张、以及待执行动作的正文），并且能读否定：「不要关闭多因素认证」是正确提醒，单纯的子串排除会把它误判成违规。这是词法判定，残余误判空间在报告中如实标注并由人工抽样复核。",
+      "modules": [
+        "identity",
+        "api",
+        "analysis",
+        "reviewer",
+        "retrieval"
+      ],
+      "run_id": "1768b7b1-fc62-4a87-9513-e12dc7bb8309",
+      "source": "P7.6 交付物 E ACC-08（禁止建议关闭 MFA）",
+      "terminal_status": "succeeded",
+      "title": "禁止建议关闭多因素认证（判定结构化建议字段，非子串排除）",
+      "total_seconds": 44.00379337742925,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc09a-conflict-refused",
+          "description": "篡改摘要被 409 拒绝",
+          "detail": "step 'tamper-approval' returned 409",
+          "expectation": {
+            "kind": "http_status",
+            "status": 409,
+            "step_id": "tamper-approval"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc09a-intent-unchanged",
+          "description": "被拒绝之后，待执行动作仍是审批人当初看到的那个（哈希不变）",
+          "detail": "the intent still carries 2733bbc274877fd777e148d4fa76f1bb6f84092ba119fcccc4774d9a7ff8deae from step 'observe-pending'",
+          "expectation": {
+            "kind": "action_intent_unchanged",
+            "recorded_at_step": "observe-pending"
+          },
+          "kind": "action_intent_unchanged",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc09a-nothing-written",
+          "description": "冲突不得产生任何工单副作用",
+          "detail": "no followup was added",
+          "expectation": {
+            "kind": "no_new_followups"
+          },
+          "kind": "no_new_followups",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-09a",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "同一份决定不能被应用到一个已经变了的动作上。哈希比对在 approve_run 中先于任何身份核验发生，因此本条在核验器未配置或不可达时同样成立——这也是它证明的东西：一条按真实调用顺序位于前置门禁之前的判断，不受该门禁的可用性影响。",
+      "modules": [
+        "identity",
+        "api",
+        "approval",
+        "analysis",
+        "reviewer",
+        "context",
+        "retrieval"
+      ],
+      "run_id": "1028d7e4-e5e0-46ae-9f1a-688c4a521a00",
+      "source": "P7.6 交付物 E ACC-09，按用户 2026-09-22 裁定拆分为独立判断，判断一",
+      "terminal_status": "waiting_approval",
+      "title": "审批摘要冲突：篡改 hash 被 409 拒绝，什么也没发生",
+      "total_seconds": 21.468804667703807,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc09b-decline-accepted",
+          "description": "拒绝被接受（200），而不是因为身份服务不可用返回 409",
+          "detail": "step 'decline-approval' returned 200",
+          "expectation": {
+            "kind": "http_status",
+            "status": 200,
+            "step_id": "decline-approval"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc09b-rejected-recorded",
+          "description": "拒绝被写入审计",
+          "detail": "audit event 'approval.rejected' was recorded",
+          "expectation": {
+            "event_type": "approval.rejected",
+            "kind": "audit_event"
+          },
+          "kind": "audit_event",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "audit-and-events"
+        },
+        {
+          "assertion_id": "acc09b-terminal-cancelled",
+          "description": "被拒绝的运行到达 cancelled 终态",
+          "detail": "run ended cancelled",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "cancelled"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        },
+        {
+          "assertion_id": "acc09b-nothing-written",
+          "description": "拒绝不得产生任何工单副作用",
+          "detail": "no followup was added",
+          "expectation": {
+            "kind": "no_new_followups"
+          },
+          "kind": "no_new_followups",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-09b",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "拒绝是唯一一个永远可以安全记录的决定：它写入零个工单副作用，只是把运行交给 finalize。因此它不应被身份服务故障阻止——一个停摆的身份提供方不应该让人类连「否」都说不出口，那会把运行永远留在 waiting_approval。本条在核验器未配置的环境下通过，正是它要证明的事情。",
+      "modules": [
+        "identity",
+        "api",
+        "approval",
+        "audit-and-events",
+        "analysis",
+        "reviewer",
+        "context",
+        "retrieval"
+      ],
+      "run_id": "796ce849-570a-4b8c-8ce0-e0cf65860832",
+      "source": "P7.6 交付物 E ACC-09，按用户 2026-09-22 裁定拆分为独立判断，判断二",
+      "terminal_status": "cancelled",
+      "title": "拒绝决定：让运行走到终止，且不因身份服务故障而被阻止",
+      "total_seconds": 26.72734127845615,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc10a-approval-refused",
+          "description": "停摆期间的批准被拒 409。这一条不替代下面四条——它排除的是「这次批准因为别的原因没成功」：四个「没发生」在批准被静默丢弃时也会成立，而那证明了另一次事件",
+          "detail": "step 'attempt-approval' returned 409",
+          "expectation": {
+            "kind": "http_status",
+            "status": 409,
+            "step_id": "attempt-approval"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc10a-no-approval-created",
+          "description": "没有审批行被创建——用「审批后再读到的动作状态仍是 proposed」来观察，因为审批行本身没有读路径",
+          "detail": "intent status at step 'observe-still-pending' is proposed",
+          "expectation": {
+            "kind": "action_intent_status",
+            "recorded_at_step": "observe-still-pending",
+            "status": "proposed"
+          },
+          "kind": "action_intent_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc10a-intent-unchanged",
+          "description": "动作摘要与审批人当初看到的一致，未被这次尝试改写",
+          "detail": "the intent still carries 4a5a8cf508816394a3137bd5b94cdcef6ee6d83382c19d934e0b706f98002744 from step 'observe-still-pending'",
+          "expectation": {
+            "kind": "action_intent_unchanged",
+            "recorded_at_step": "observe-still-pending"
+          },
+          "kind": "action_intent_unchanged",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc10a-still-waiting",
+          "description": "运行仍在 waiting_approval 原地等待，决定仍属于人类",
+          "detail": "run ended waiting_approval",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "waiting_approval"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc10a-nothing-written",
+          "description": "暂停期间不得产生任何工单副作用",
+          "detail": "no followup was added",
+          "expectation": {
+            "kind": "no_new_followups"
+          },
+          "kind": "no_new_followups",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": false,
+      "case_id": "ACC-10a",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "用户逐字要求证明的第一条：暂停没有提前持久化或消耗审批决定。这不是「返回了 409」——409 可以和一个已写入的审批行共存。要证明的是四件事同时不发生：审批行未写、状态未翻转、动作仍是 proposed、工单没有新 followup，且运行仍在 waiting_approval，同一个决定在身份服务恢复后仍可应用。\n\n**停摆由本案例自己制造，而不是假定的。** 本条原先写着「本条在核验器未配置时通过」，那是一个部署假设而不是一次观察：在已配置核验身份的环境里（本部署就是），一个权限未被撤销的发起人的批准会合法地成功，于是四个「没发生」一个都观察不到——这不是平台的失败，是本条案例把「核验不可用」当成了环境默认值。ACC-22 已经把停摆做成一个可执行的步骤，本条沿用同一对步骤（verifier-outage-on/off），因此两种环境都能真实观察到同一次暂停：未配置核验器时它本来就是停的，已配置时由案例把服务指向一个无人监听的端口。恢复步骤排在回读之前，离开时部署回到与其它案例相同的一份配置。",
+      "modules": [
+        "identity",
+        "api",
+        "approval",
+        "analysis",
+        "reviewer",
+        "context",
+        "retrieval",
+        "glpi"
+      ],
+      "run_id": "a71941ec-a7c9-40fa-ba75-675e6835bbcb",
+      "source": "P7.6 交付物 E ACC-10 的负向判定；用户 2026-09-22 裁定「暂停没有提前持久化或消耗审批决定」",
+      "terminal_status": "waiting_approval",
+      "title": "暂停不消耗决定：停摆时什么也不写，运行原地等待",
+      "total_seconds": 77.48570382036269,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc10b-approved",
+          "description": "批准被接受（200），而不是暂停返回 409",
+          "detail": "step 'approve' returned 200",
+          "expectation": {
+            "kind": "http_status",
+            "status": 200,
+            "step_id": "approve"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc10b-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        },
+        {
+          "assertion_id": "acc10b-intent-proposed-before",
+          "description": "批准之前，动作停在 proposed——用第 2 步读到的状态判定。这条与下一条合起来才是「批准被应用」：只断言终态 succeeded 无法排除一个从未被提议过的动作，而 approved 这一瞬时状态在 HTTP 上不可观测（批准事务内随即续跑到 executing→succeeded），所以它断言在两个可观测的时刻上",
+          "detail": "intent status at step 'observe-pending' is proposed",
+          "expectation": {
+            "kind": "action_intent_status",
+            "recorded_at_step": "observe-pending",
+            "status": "proposed"
+          },
+          "kind": "action_intent_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc10b-intent-succeeded-after",
+          "description": "批准之后动作走到 succeeded——executor.py 只在 persist 的状态为 approved 时才允许执行，所以 succeeded 是「批准确实被记录并被应用」的可观测证据",
+          "detail": "intent status at the end of the run is succeeded",
+          "expectation": {
+            "kind": "action_intent_status",
+            "recorded_at_step": null,
+            "status": "succeeded"
+          },
+          "kind": "action_intent_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        },
+        {
+          "assertion_id": "acc10b-approval-recorded",
+          "description": "批准决定被写入审计（approval.approved）——这是审批行本身最直接的证据",
+          "detail": "audit event 'approval.approved' was recorded",
+          "expectation": {
+            "event_type": "approval.approved",
+            "kind": "audit_event"
+          },
+          "kind": "audit_event",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "audit-and-events"
+        },
+        {
+          "assertion_id": "acc10b-wrote-once",
+          "description": "恰好写入一条 followup：批准一次就写一次",
+          "detail": "exactly one followup was added (id 86)",
+          "expectation": {
+            "kind": "exactly_one_new_followup"
+          },
+          "kind": "exactly_one_new_followup",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-10b",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "批准会执行，因此必须经过续跑边界：重新核验原发起人的当前权限并取交集。这条路径依赖专用最小只读核验身份已配置且可达。未配置时本条记为 BLOCKED 并阻断验收关闭——不得记为通过，也不得记为跳过。",
+      "modules": [
+        "identity",
+        "api",
+        "approval",
+        "executor",
+        "glpi",
+        "analysis",
+        "reviewer",
+        "context",
+        "retrieval"
+      ],
+      "run_id": "2cf3bd61-a79d-4e1b-b525-20e0922d5d2d",
+      "source": "P7.6 交付物 E ACC-10；用户 2026-09-22 裁定「ACC-10 必须配置核验身份」",
+      "terminal_status": "succeeded",
+      "title": "批准路径：核验器配置且可达时，批准被应用并走到写入",
+      "total_seconds": 23.929355029016733,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc11-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        },
+        {
+          "assertion_id": "acc11-one-followup",
+          "description": "恰好一条新 followup——重复请求不产生第二条",
+          "detail": "exactly one followup was added (id 87)",
+          "expectation": {
+            "kind": "exactly_one_new_followup"
+          },
+          "kind": "exactly_one_new_followup",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        },
+        {
+          "assertion_id": "acc11-body-round-trip",
+          "description": "回读正文（去标记、按平台自身文本归一化后）等于获批的 intent 内容，且标记指名本次运行与动作哈希",
+          "detail": "followup 87 carries the approved content and this run's marker",
+          "expectation": {
+            "kind": "followup_body_is_the_approved_content"
+          },
+          "kind": "followup_body_is_the_approved_content",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        },
+        {
+          "assertion_id": "acc11-write-audited",
+          "description": "写入被审计记录，且带 action_hash 与 followup_id",
+          "detail": "audit event 'glpi.followup.created' was recorded",
+          "expectation": {
+            "event_type": "glpi.followup.created",
+            "kind": "audit_event"
+          },
+          "kind": "audit_event",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "audit-and-events"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-11",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "写一次的完整证据链：批准 → 写入 → 回读 → 重复请求不再产生第二条。正文断言比较的是「去掉运行标记之后的内容」，因为平台会在正文后追加 [ServiceMind run=… action=…]；逐字相等会错，只验标记存在则漏掉截断。本案例的情节确实包含 request_write=true 并走到审批与写入，因此按真实路径要求核验身份已配置——这一依赖来自它自己的路径，不是因为存在人工记忆审核而默认继承。",
+      "modules": [
+        "identity",
+        "api",
+        "approval",
+        "executor",
+        "glpi",
+        "audit-and-events",
+        "analysis",
+        "reviewer",
+        "context",
+        "retrieval"
+      ],
+      "run_id": "a4aca12a-2bed-4008-9d8b-a7574049b32e",
+      "source": "P7.6 交付物 E ACC-11；用户 2026-09-22 裁定「按真实路径确定前置条件，不默认继承」",
+      "terminal_status": "succeeded",
+      "title": "批准后恰好写一次，且正文回读等于获批内容",
+      "total_seconds": 21.529204393737018,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc12a-same-root-cause-groups",
+          "description": "两条同根因的固定输入得到同一个 pattern_key（key 原文记在步骤里）",
+          "detail": "probe step 'produce-same' reported 'passed': {\"step\": \"produce-same\", \"expectation\": \"one key for two spellings of the same root cause\", \"classification\": [\"mfa_device_binding\", \" MFA_Device_Binding \"], \"pattern_keys\": [\"1817fe726d02b8e8843af3d4d34c234cd0565609a43df7381c6a342616198328...",
+          "expectation": {
+            "kind": "probe_outcome",
+            "outcome": "passed",
+            "step_id": "produce-same"
+          },
+          "kind": "probe_outcome",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "memory"
+        },
+        {
+          "assertion_id": "acc12a-different-root-cause-splits",
+          "description": "不同根因的固定输入得到不同的 pattern_key（key 原文记在步骤里）",
+          "detail": "probe step 'produce-different' reported 'passed': {\"step\": \"produce-different\", \"expectation\": \"a different root cause produces a different key\", \"classification\": [\"mfa_device_binding\", \"gateway_connectivity\"], \"pattern_keys\": [\"1817fe726d02b8e8843af3d4d34c234cd0565609a43df7381c6a34261619...",
+          "expectation": {
+            "kind": "probe_outcome",
+            "outcome": "passed",
+            "step_id": "produce-different"
+          },
+          "kind": "probe_outcome",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "memory"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": false,
+      "case_id": "ACC-12a",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "直接对生产者求值，而不是反复跑运行挑两个相等的结果——后者在任何随机分组下也可能凑巧相等。两步各自陈述自己的结论并把求出的 key 原文与两份输入一起留在步骤里：两条同根因输入得到同一个 key；一条不同根因输入得到的 key 与它不同。本实现里「同根因」的定义是**归一化后逐字相等**：_procedure_pattern 只取 classification / recommended_group / 出现的 recommendation 三项，先做大小写归一与空白折叠，再要求相等（其 docstring 自述「Exact normalized equality deliberately favours precision over recall」）。因此同根因的一对输入只在大小写与空白上有差异；换词重写的同一建议会得到不同 key，这属于该机制的已知召回边界，写在报告里，不用一对看起来像改写的输入来掩盖。**recurring_incident 不是生产者的输入**：它是「跨工单佐证」要得出的结论，不是得出它的前提。本轮发现原先 `_procedure_pattern` 要求 analysis 的 recurring_incident 为 True 才产出 key，而本项目给分析智能体的技能明确要求「至少两条可比的、已核验的事件才能认定复发」——于是在任何模式的第一张工单上该标志的诚实取值是 False，恰恰是必须产出 key 的那张工单被拒绝产出，生产者永远无法起步。该前置已从根源移除并加锁定测试（回退即变红）。这条不依赖核验身份：它不经过审批与写入，也不产生记忆行（落库与隔离态由 ACC-12b 断言）。",
+      "modules": [
+        "memory"
+      ],
+      "run_id": null,
+      "source": "P7.6 交付物 E ACC-12(a)（确定性分组机制）",
+      "terminal_status": null,
+      "title": "程序记忆分组机制：固定输入下 pattern_key 由根因决定",
+      "total_seconds": null,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc12b-quarantined",
+          "description": "产出 procedural 记忆且默认为 quarantine，未经人工审核不得自动转正（在第 4 步读到的快照）",
+          "detail": "no procedural/quarantine record linked to this run; saw [('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '489aed01-a25d-44bc-8621-e9771e1303ea')]",
+          "expectation": {
+            "kind": "memory_record",
+            "linked_to_run": true,
+            "memory_type": "procedural",
+            "status": "quarantine"
+          },
+          "kind": "memory_record",
+          "requires_entitlement_verifier": false,
+          "verdict": "FAIL",
+          "verifies_module": "memory"
+        },
+        {
+          "assertion_id": "acc12b-activated",
+          "description": "人工审核激活后同一行转为 active（在第 5 步读到的快照）",
+          "detail": "no procedural/active record linked to this run; saw [('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '489aed01-a25d-44bc-8621-e9771e1303ea')]",
+          "expectation": {
+            "kind": "memory_record",
+            "linked_to_run": true,
+            "memory_type": "procedural",
+            "status": "active"
+          },
+          "kind": "memory_record",
+          "requires_entitlement_verifier": false,
+          "verdict": "FAIL",
+          "verifies_module": "memory"
+        },
+        {
+          "assertion_id": "acc12b-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [
+        "driver: ACC-12b/activate-memory: no procedural memory is attributed to run 489aed01-a25d-44bc-8621-e9771e1303ea, so there is nothing for a human to activate"
+      ],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-12b",
+      "driver_errors": [
+        "ACC-12b/activate-memory: no procedural memory is attributed to run 489aed01-a25d-44bc-8621-e9771e1303ea, so there is nothing for a human to activate"
+      ],
+      "failure_reasons": [
+        "acc12b-quarantined: no procedural/quarantine record linked to this run; saw [('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '489aed01-a25d-44bc-8621-e9771e1303ea')]",
+        "acc12b-activated: no procedural/active record linked to this run; saw [('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '489aed01-a25d-44bc-8621-e9771e1303ea')]"
+      ],
+      "goal": "真实模型端到端：跨工单程序记忆被提出、默认隔离为 quarantine，人工审核激活后才转为 active，且与产出它的运行可关联（source_run_id → agent_runs.id）。开两张工单不是冗余：平台只在两张**不同工单**各有一条同 pattern_key 的 episode 时才提出跨工单程序，单张工单走不到这条路径。本案例是只读成功运行，不经过写入前的核验门禁，因此不依赖核验身份。\n\n**实测结论：本案例在真实模型下不可达，记为 BLOCKED（阻断验收关闭）；确定性分组机制由 ACC-12a 举证。** 2026-09-23 全量扫描实际观测（两张结构同构工单、同一问法、同一主体）：运行 A 的 recurring_incident=false，classification 为「VPN multi-factor authentication failure after handset change」；运行 B 为 true，classification 为「VPN MFA failure after handset change (suspected MFA device rebind)」。两条阻塞互相独立：(1) **身份取自模型自由文本**——canonical 载荷含 classification 与整段 recommendation 正文，要求两次独立采样归一化后逐字相等，真实采样下产出率约为零；(2) **episode 必须为 ACTIVE**——而 ACTIVE 同时是 pattern_episodes 经 visible_at 取支持 episode 的条件，模型自评置信度（实测 0.72）低于本部署阈值 0.90 时 episode 落 quarantine，两侧同时不可见，提案不触发。已核实该耦合自洽（放宽提案侧 ACTIVE 不改变结果，见 test_a_quarantined_episode_cannot_corroborate_a_pattern），故不改代码，仅作为已知未关闭缺陷记录并附复现路径。",
+      "modules": [
+        "identity",
+        "api",
+        "memory",
+        "analysis",
+        "reviewer",
+        "retrieval",
+        "context"
+      ],
+      "run_id": "489aed01-a25d-44bc-8621-e9771e1303ea",
+      "source": "P7.6 交付物 E ACC-12(b)（真实模型端到端 + 人工激活）",
+      "terminal_status": "succeeded",
+      "title": "程序记忆端到端：真实模型产出 procedural 且默认隔离，人工激活后转正",
+      "total_seconds": 26.633859585039318,
+      "verdict": "BLOCKED"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc13-own-tenant-listed",
+          "description": "正对照：本方读取自己的运行成功——否则「对方 404」无法与「谁都读不到」区分",
+          "detail": "the run is listed for its own tenant",
+          "expectation": {
+            "kind": "run_listed_for_its_tenant"
+          },
+          "kind": "run_listed_for_its_tenant",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        },
+        {
+          "assertion_id": "acc13-foreign-404",
+          "description": "对方租户读取返回 404",
+          "detail": "a foreign tenant received 404",
+          "expectation": {
+            "kind": "run_invisible_to_another_tenant"
+          },
+          "kind": "run_invisible_to_another_tenant",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "tenant-isolation"
+        },
+        {
+          "assertion_id": "acc13-no-foreign-citations",
+          "description": "引用中不含 acme 的任何 source_record_id",
+          "detail": "citations exclude ['KB-ACME-VPN-MFA-REBIND']",
+          "expectation": {
+            "kind": "no_foreign_citations",
+            "source_record_ids": [
+              "KB-ACME-VPN-MFA-REBIND"
+            ]
+          },
+          "kind": "no_foreign_citations",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "tenant-isolation"
+        },
+        {
+          "assertion_id": "acc13-graph-positive-control",
+          "description": "图侧正负对照：本例主体（组 3）必须查得到组 3 的 runbook 节点、查不到组 4 的；并且持组 4 的见证主体必须查得到组 4 的那个节点——否则「查不到」可能只是该节点根本不在图上，而不是被 ACL 过滤掉了",
+          "detail": "the restricted node is absent for 'globex-analyst-g3' and present for the witness 'globex-analyst-g4', so the difference is the ACL",
+          "expectation": {
+            "hidden_source_record_id": "KB-GLOBEX-VPN-MFA-G4",
+            "kind": "graph_evidence_isolation",
+            "visible_source_record_id": "KB-GLOBEX-VPN-MFA-G3",
+            "witness_subject": "globex-analyst-g4"
+          },
+          "kind": "graph_evidence_isolation",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "graphrag"
+        },
+        {
+          "assertion_id": "acc13-terminal-succeeded",
+          "description": "运行到达 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-13",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "两部分。其一：两个租户互查对方运行一律 404，且本方引用中不含对方任何 source_record_id——隔离是靠拒绝实现的，不是靠过滤后返回空。其二：图侧通道必须同时给出正对照与负对照。只断言「组外节点查不到」会被一个坏掉的检索器满足：什么都不返回也符合「查不到」；同理，只用一个主体断言「查不到」也无法与该节点根本不在图上区分。因此：同一张工单、同一段图拓扑，持组 3 的主体必须查到组 3 的 runbook 节点且查不到组 4 的，持组 4 的主体（见证）必须查得到组 4 的那个节点。两个方向合起来才是隔离。",
+      "modules": [
+        "identity",
+        "tenant-isolation",
+        "graphrag",
+        "api",
+        "retrieval",
+        "analysis"
+      ],
+      "run_id": "4fdd6b79-33b3-4a95-a438-2a9dae47f25d",
+      "source": "P7.6 交付物 E ACC-13（跨租户 + 图正负对照）",
+      "terminal_status": "succeeded",
+      "title": "跨租户隔离 + GraphRAG 正负对照",
+      "total_seconds": 25.650836814194918,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc14-console-visible",
+          "description": "浏览器中提交的运行及其结果对用户可见（探针自陈结论，原始输出须记录在步骤 detail 中）",
+          "detail": "probe step 'browser-submit' reported 'passed': Running 4 tests using 2 workers - 2 [mobile] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator and shows the workbench - 1 [desktop] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator a...",
+          "expectation": {
+            "kind": "probe_outcome",
+            "outcome": "passed",
+            "step_id": "browser-submit"
+          },
+          "kind": "probe_outcome",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "frontend"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-14",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "核心闭环全部走 HTTP，没有操作浏览器，因此「前端可用」不能由任何核心案例代为证明。本探针用 Playwright 完成一次真实登录与提交，并断言结果在页面上可见。",
+      "modules": [
+        "frontend",
+        "identity",
+        "api"
+      ],
+      "run_id": null,
+      "source": "P7.6 交付物 F 独立探针一（浏览器前端），不得由核心闭环代为证明",
+      "terminal_status": null,
+      "title": "独立探针：浏览器前端",
+      "total_seconds": null,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc15-mcp-reachable",
+          "description": "MCP 工具面在鉴权后可调用，返回的是 JSON-RPC result 而非 error，且可见工具集与原生读路径一致（原始响应须记录在步骤 detail 中）",
+          "detail": "probe step 'mcp-call' reported 'passed': {\"ticket_id\": 25, \"is_error\": false, \"body\": \"{\\\"ticket\\\":{\\\"id\\\":25,\\\"name\\\":\\\"[P7.6-ACCEPTANCE-A] VPN rejects the MFA challenge after a handset change\\\",\\\"content\\\":\\\"Reported by the user to the service desk.\\\\n\\\\nThe VPN client accepts t...",
+          "expectation": {
+            "kind": "probe_outcome",
+            "outcome": "passed",
+            "step_id": "mcp-call"
+          },
+          "kind": "probe_outcome",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "mcp"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-15",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "MCP 服务端与原生读路径必须共用同一套网关与策略。核心闭环不经过 MCP，因此 MCP 的治理能力不能由它们代为证明。本探针走 tools/list 与 tools/call，判定的是「JSON-RPC 返回的是结果而非 error，且同一主体在 MCP 与原生读路径上看到的可见工具集一致」。不用 HTTP 状态判定：JSON-RPC 的错误也走 200，只看状态码会把一个报错的调用记成通过。",
+      "modules": [
+        "mcp",
+        "identity",
+        "glpi"
+      ],
+      "run_id": null,
+      "source": "P7.6 交付物 F 独立探针二（MCP）",
+      "terminal_status": null,
+      "title": "独立探针：MCP 工具面",
+      "total_seconds": null,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc16-outbox-observed",
+          "description": "入队行数量与消费状态被观测并记录。本断言的期望是「观测到」，不是「已消费」；detail 必须带上计数原文，否则判失败",
+          "detail": "probe step 'count-outbox' reported 'passed': {\"event_type\": \"action.approved\", \"total\": 47, \"by_status\": {\"published\": 47}, \"unconsumed\": 0, \"note\": \"PASS here means the tally was taken, not that the queue is drained; see the outbox defect in the baseline document\"}",
+          "expectation": {
+            "kind": "probe_outcome",
+            "outcome": "passed",
+            "step_id": "count-outbox"
+          },
+          "kind": "probe_outcome",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "outbox"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": false,
+      "case_id": "ACC-16",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "先行排查 action.approved 队列的职责，并如实记录：入队行是否被消费、是否无限累积。本案例的 PASS 只表示「观测已完成、计数已如实记录」，绝不表示「消费正常、恢复可用」——后者本轮根本不做判定。队列的实际堆积量作为证据原样进入报告，对应已知未关闭缺陷第 1 条。核心闭环走同步 resume，不依赖它，因此这条探针的结论无论正负都不阻断闭环；探针本身跑不起来（读不到表）才阻断，因为那是「未评估」而不是「已确认无缺陷」。",
+      "modules": [
+        "outbox"
+      ],
+      "run_id": null,
+      "source": "P7.6 交付物 F 独立探针三（outbox 与崩溃恢复）",
+      "terminal_status": null,
+      "title": "独立探针：outbox 消费与堆积",
+      "total_seconds": null,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc17-lifecycle-ok",
+          "description": "真集群上代际切换与旧代际回收成立：该套件自带断言全部通过（探针自陈结论，pytest 原始输出须记录在步骤 detail 中）",
+          "detail": "probe step 'probe-lifecycle' reported 'passed': ============================= test session starts ============================== platform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0 rootdir: /data/shihongye/servicemind configfile: pyproject.toml plugins: asyncio-1.4.0, env-1.7.0,...",
+          "expectation": {
+            "kind": "probe_outcome",
+            "outcome": "passed",
+            "step_id": "probe-lifecycle"
+          },
+          "kind": "probe_outcome",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "index-lifecycle"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-17",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "引用一份有效文档只能证明它当前可见，证明不了索引代际的切换与回收。本探针直接对真集群做：建档 → 别名指向 → 写入新代际 → 切换 → 旧代际回收后不可再检索。判定依据是该套件自带的断言全部通过，而不是「套件跑完了」；步骤 detail 必须带上 pytest 的汇总输出。",
+      "modules": [
+        "index-lifecycle",
+        "retrieval"
+      ],
+      "run_id": null,
+      "source": "P7.6 交付物 F 独立探针四（索引生命周期），对应 test_phase4_index_lifecycle_live.py",
+      "terminal_status": null,
+      "title": "独立探针：索引蓝绿生命周期",
+      "total_seconds": null,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc18-approval-refused",
+          "description": "批准被拒 409：动作在执行之前被撤回，而不是被记录下来再静默地不执行",
+          "detail": "step 'revoked-approval' returned 409",
+          "expectation": {
+            "kind": "http_status",
+            "status": 409,
+            "step_id": "revoked-approval"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "no-write",
+          "description": "工单一条新 followup 都没有：被拦下的动作没有进入执行器",
+          "detail": "no followup was added",
+          "expectation": {
+            "kind": "no_new_followups"
+          },
+          "kind": "no_new_followups",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        },
+        {
+          "assertion_id": "approval-not-consumed",
+          "description": "审计中没有 approval.approved：人的「是」没有被记录。「工单没被改」与「决定没有被花掉」是两个关于两个子系统的判断，只有一个是关于 GLPI 的——没有这一条，一个记录了批准、又悄悄没执行成功的平台仍然满足上一条",
+          "detail": "audit event 'approval.approved' was not recorded",
+          "expectation": {
+            "event_type": "approval.approved",
+            "kind": "audit_event_absent"
+          },
+          "kind": "audit_event_absent",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "audit-and-events"
+        },
+        {
+          "assertion_id": "acc18-boundary-narrowed",
+          "description": "续跑边界记录了这次收窄。没有它，「什么都没发生」与「根本没有走到核验」在证据上不可区分，而后者恰恰是这条案例要排除的",
+          "detail": "audit event 'run.scope_narrowed' was recorded",
+          "expectation": {
+            "event_type": "run.scope_narrowed",
+            "kind": "audit_event"
+          },
+          "kind": "audit_event",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "identity"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-18",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "权限收窄后，依赖旧证据的产物必须失效，旧的待执行动作必须被作废并重新派生，不得进入 execute_node。本条撤掉发起人所在组，断言批准被拒绝、工单零写入、批准决定没有被消耗（审计里不出现 approval.approved），且续跑边界确实记录了这次收窄。撤销发生在运行等待审批期间——也就是动作已经被提出、写入还没有发生的那一刻，这正是用户在 2026-09-22 要求证明的第二条。",
+      "modules": [
+        "identity",
+        "api",
+        "approval",
+        "executor",
+        "glpi",
+        "analysis",
+        "reviewer",
+        "context",
+        "retrieval",
+        "audit-and-events"
+      ],
+      "run_id": "c038d273-03bf-4581-84d6-b10bcaf36a1b",
+      "source": "P7.6 §七′ 六类撤权验证之一；用户 2026-09-22 裁定「撤权后旧的待执行动作确实无法写出」",
+      "terminal_status": "waiting_approval",
+      "title": "撤组：待审批期间撤掉发起人的组，旧动作必须被作废而不是被写入",
+      "total_seconds": 45.97937203478068,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc19-approval-refused",
+          "description": "批准被拒 409，动作未被执行",
+          "detail": "step 'revoked-approval' returned 409",
+          "expectation": {
+            "kind": "http_status",
+            "status": 409,
+            "step_id": "revoked-approval"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "no-write",
+          "description": "工单一条新 followup 都没有：被拦下的动作没有进入执行器",
+          "detail": "no followup was added",
+          "expectation": {
+            "kind": "no_new_followups"
+          },
+          "kind": "no_new_followups",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        },
+        {
+          "assertion_id": "approval-not-consumed",
+          "description": "审计中没有 approval.approved：人的「是」没有被记录。「工单没被改」与「决定没有被花掉」是两个关于两个子系统的判断，只有一个是关于 GLPI 的——没有这一条，一个记录了批准、又悄悄没执行成功的平台仍然满足上一条",
+          "detail": "audit event 'approval.approved' was not recorded",
+          "expectation": {
+            "event_type": "approval.approved",
+            "kind": "audit_event_absent"
+          },
+          "kind": "audit_event_absent",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "audit-and-events"
+        },
+        {
+          "assertion_id": "acc19-shortfall-recorded",
+          "description": "续跑边界记录了阻止执行的判断，而不是这次收窄。与撤角色（ACC-20）同一条路径：动作在，实体集为空是 step_shortfall 报出的实体缺口",
+          "detail": "audit event 'run.resume_blocked' was recorded",
+          "expectation": {
+            "event_type": "run.resume_blocked",
+            "kind": "audit_event"
+          },
+          "kind": "audit_event",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "identity"
+        },
+        {
+          "assertion_id": "acc19-run-still-waiting",
+          "description": "运行仍在 waiting_approval：被拒绝的续跑不消耗决定，恢复授权后同一个决定仍可应用",
+          "detail": "run ended waiting_approval",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "waiting_approval"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-19",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "实体权限被撤掉之后，边界取交集得到空集。空集不是「没有变化」，也不是「不限制」——用户 2026-09-22 的边界二：记录或当前的授权集交集为空、或缺少该步骤必需的实体权限时，仍须阻止执行（step_shortfall + required_roles），「没被撤权」不等于「有权执行」。本条的写入步骤需要一个动作指向的实体，而实体集合已经为空，所以边界的答案必须是insufficient_authority 的拒绝，而不是「收窄后继续」：没有实体可写的收窄没有任何东西可以重新派生，运行必须停在原地等待人，而不是带着一个无法执行的计划继续走下去。这条与撤组分开，因为组和实体在平台里是两条不同的过滤链路：组作用于检索到的文档，实体作用于 GLPI 读写的可见范围，一条通过不能推出另一条通过。",
+      "modules": [
+        "identity",
+        "api",
+        "approval",
+        "executor",
+        "glpi",
+        "audit-and-events"
+      ],
+      "run_id": "6b6d8531-25b1-4a36-8a42-0517e6d8da5e",
+      "source": "P7.6 §七′ 六类撤权验证之一（撤实体）",
+      "terminal_status": "waiting_approval",
+      "title": "撤实体：待审批期间撤掉发起人的 GLPI 实体，交付能力归零必须阻止执行",
+      "total_seconds": 23.755535955540836,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc20-approval-refused",
+          "description": "批准被拒 409，动作未被执行",
+          "detail": "step 'revoked-approval' returned 409",
+          "expectation": {
+            "kind": "http_status",
+            "status": 409,
+            "step_id": "revoked-approval"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "no-write",
+          "description": "工单一条新 followup 都没有：被拦下的动作没有进入执行器",
+          "detail": "no followup was added",
+          "expectation": {
+            "kind": "no_new_followups"
+          },
+          "kind": "no_new_followups",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        },
+        {
+          "assertion_id": "approval-not-consumed",
+          "description": "审计中没有 approval.approved：人的「是」没有被记录。「工单没被改」与「决定没有被花掉」是两个关于两个子系统的判断，只有一个是关于 GLPI 的——没有这一条，一个记录了批准、又悄悄没执行成功的平台仍然满足上一条",
+          "detail": "audit event 'approval.approved' was not recorded",
+          "expectation": {
+            "event_type": "approval.approved",
+            "kind": "audit_event_absent"
+          },
+          "kind": "audit_event_absent",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "audit-and-events"
+        },
+        {
+          "assertion_id": "acc20-shortfall-recorded",
+          "description": "续跑边界记录了这次阻止。挡住它的是「缺少必需角色」这条判定，不是「记录的权限变了」——两者在审计上必须是可区分的",
+          "detail": "audit event 'run.resume_blocked' was recorded",
+          "expectation": {
+            "event_type": "run.resume_blocked",
+            "kind": "audit_event"
+          },
+          "kind": "audit_event",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "identity"
+        },
+        {
+          "assertion_id": "acc20-run-still-waiting",
+          "description": "运行留在等待审批：被挡住的是这一次批准，不是运行本身。运行没有失败，同一个决定在权限恢复后仍然可以被重新提交",
+          "detail": "run ended waiting_approval",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "waiting_approval"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-20",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "「没被撤权」不等于「有权执行」。发起人仍然持有 viewer、实体仍然在范围内，只少了这一步骤必需的 analyst 角色——只比较「记录 vs 当前」的检查在这里找不到任何变化（如果记录里本来就没有它），所以必须独立判定够不够。这条断言续跑边界给出的是 insufficient_authority，而不是「什么都没变，继续」。",
+      "modules": [
+        "identity",
+        "api",
+        "approval",
+        "executor",
+        "glpi",
+        "audit-and-events"
+      ],
+      "run_id": "778c1309-9960-45c4-9c48-69e936a794df",
+      "source": "P7.6 §七′ 六类撤权验证之一；用户 2026-09-22 边界二「VERIFIED 且权限集合为空，不代表可以继续业务执行」",
+      "terminal_status": "waiting_approval",
+      "title": "撤角色：权限集非空但缺少该步骤必需的角色，仍然必须阻止执行",
+      "total_seconds": 22.722801871597767,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc21-approval-refused",
+          "description": "批准被拒 409，动作未被执行",
+          "detail": "step 'revoked-approval' returned 409",
+          "expectation": {
+            "kind": "http_status",
+            "status": 409,
+            "step_id": "revoked-approval"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "no-write",
+          "description": "工单一条新 followup 都没有：被拦下的动作没有进入执行器",
+          "detail": "no followup was added",
+          "expectation": {
+            "kind": "no_new_followups"
+          },
+          "kind": "no_new_followups",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        },
+        {
+          "assertion_id": "approval-not-consumed",
+          "description": "审计中没有 approval.approved：人的「是」没有被记录。「工单没被改」与「决定没有被花掉」是两个关于两个子系统的判断，只有一个是关于 GLPI 的——没有这一条，一个记录了批准、又悄悄没执行成功的平台仍然满足上一条",
+          "detail": "audit event 'approval.approved' was not recorded",
+          "expectation": {
+            "event_type": "approval.approved",
+            "kind": "audit_event_absent"
+          },
+          "kind": "audit_event_absent",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "audit-and-events"
+        },
+        {
+          "assertion_id": "acc21-block-recorded",
+          "description": "续跑边界记录了这次阻止",
+          "detail": "audit event 'run.resume_blocked' was recorded",
+          "expectation": {
+            "event_type": "run.resume_blocked",
+            "kind": "audit_event"
+          },
+          "kind": "audit_event",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "identity"
+        },
+        {
+          "assertion_id": "acc21-run-still-waiting",
+          "description": "运行留在等待审批，没有因为主体暂时无法确认而失败或被丢弃",
+          "detail": "run ended waiting_approval",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "waiting_approval"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-21",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "停用与撤权是两条不同的路径：撤权让权限集合变小，停用让主体本身无法确认。后者必须同样阻止执行——一个无法确认当前权限的主体，其记录中的权限不能被当作仍然有效。",
+      "modules": [
+        "identity",
+        "api",
+        "approval",
+        "executor",
+        "glpi",
+        "audit-and-events"
+      ],
+      "run_id": "e4a5413c-8da5-4a8e-b2bf-19f98884a079",
+      "source": "P7.6 §七′ 六类撤权验证之一（禁用用户）",
+      "terminal_status": "waiting_approval",
+      "title": "禁用用户：账号被停用后，核验器必须给出「不可确认」而不是「照常继续」",
+      "total_seconds": 22.773807262070477,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc22-outage-refused",
+          "description": "身份服务不可达时批准被拒 409，运行暂停而不是在无法确认的权限上继续",
+          "detail": "step 'outage-approval' returned 409",
+          "expectation": {
+            "kind": "http_status",
+            "status": 409,
+            "step_id": "outage-approval"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc22-decision-still-applicable",
+          "description": "恢复后同一个决定被接受 200。这一条同时证明暂停期间没有写入：若暂停时已经写过，运行就不在 waiting_approval 上，这次批准会返回 409",
+          "detail": "step 'approve' returned 200",
+          "expectation": {
+            "kind": "http_status",
+            "status": 200,
+            "step_id": "approve"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc22-wrote-once",
+          "description": "整个案例恰好一条新 followup——暂停没有写，恢复后的批准写了且只写一次",
+          "detail": "exactly one followup was added (id 88)",
+          "expectation": {
+            "kind": "exactly_one_new_followup"
+          },
+          "kind": "exactly_one_new_followup",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        },
+        {
+          "assertion_id": "acc22-terminal-succeeded",
+          "description": "恢复后运行走到 succeeded 终态",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        },
+        {
+          "assertion_id": "acc22-outage-recorded",
+          "description": "不可达被记录为一次「阻止」而不是一次「拒绝授权」",
+          "detail": "audit event 'run.resume_blocked' was recorded",
+          "expectation": {
+            "event_type": "run.resume_blocked",
+            "kind": "audit_event"
+          },
+          "kind": "audit_event",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "identity"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-22",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "身份服务不可达是一个「答不上来」的问题，不是一个「没有权限」的答案。平台必须暂停而不是放行。用户 2026-09-22 裁定的第一条要求在这里被证明：暂停没有提前持久化、也没有消耗审批决定——恢复可达之后，同一个 expected_action_hash 的批准被接受并且恰好写入一次。这不是「暂停期间没写入」的另一种说法：一次写入是恢复之后的，若是暂停期间就写过了，恢复时的这一次批准会因为运行已经终态而失败。",
+      "modules": [
+        "identity",
+        "api",
+        "approval",
+        "executor",
+        "glpi",
+        "audit-and-events"
+      ],
+      "run_id": "0f594683-bfb3-4ca9-8a81-b6d58e90eb66",
+      "source": "P7.6 §七′ 六类撤权验证之一（查询故障）；用户 2026-09-22 裁定第 1 条",
+      "terminal_status": "succeeded",
+      "title": "查询故障：身份服务不可达时暂停，恢复后同一个决定仍然可以应用",
+      "total_seconds": 52.49535296484828,
+      "verdict": "PASS"
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "acc23-first-approval-refused",
+          "description": "撤权后的第一次批准被拒 409，动作在执行之前被撤回",
+          "detail": "step 'revoked-approval' returned 409",
+          "expectation": {
+            "kind": "http_status",
+            "status": 409,
+            "step_id": "revoked-approval"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc23-decision-applied",
+          "description": "权限恢复后，批准重新派生出来的动作被接受 200",
+          "detail": "step 'approve' returned 200",
+          "expectation": {
+            "kind": "http_status",
+            "status": 200,
+            "step_id": "approve"
+          },
+          "kind": "http_status",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "approval"
+        },
+        {
+          "assertion_id": "acc23-wrote-once",
+          "description": "整个案例恰好一条新 followup：被撤回的动作没有写，重新派生并获批的动作写了且只写一次",
+          "detail": "exactly one followup was added (id 89)",
+          "expectation": {
+            "kind": "exactly_one_new_followup"
+          },
+          "kind": "exactly_one_new_followup",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "executor"
+        },
+        {
+          "assertion_id": "acc23-terminal-succeeded",
+          "description": "重新派生后的动作把运行带到 succeeded",
+          "detail": "run ended succeeded",
+          "expectation": {
+            "kind": "terminal_status",
+            "status": "succeeded"
+          },
+          "kind": "terminal_status",
+          "requires_entitlement_verifier": false,
+          "verdict": "PASS",
+          "verifies_module": "api"
+        },
+        {
+          "assertion_id": "acc23-void-recorded",
+          "description": "第一次收窄被记录在审计里，与「运行自己失败了」区分开",
+          "detail": "audit event 'run.scope_narrowed' was recorded",
+          "expectation": {
+            "event_type": "run.scope_narrowed",
+            "kind": "audit_event"
+          },
+          "kind": "audit_event",
+          "requires_entitlement_verifier": true,
+          "verdict": "PASS",
+          "verifies_module": "identity"
+        }
+      ],
+      "blocked_reasons": [],
+      "blocks_acceptance_when_blocked": true,
+      "case_id": "ACC-23",
+      "driver_errors": [],
+      "failure_reasons": [],
+      "goal": "把一个被撤回的动作拆成两个可观测的时刻。撤权后第一次批准被拒、零写入（负向）；权限还回去之后，运行在收窄过的范围上重新派生出一个新动作，再批准它才写入一次（正向对照）。正向对照不是装饰：只有负向的那一半，「拒绝了」与「链路坏了」在证据上完全一样。",
+      "modules": [
+        "identity",
+        "api",
+        "approval",
+        "executor",
+        "glpi",
+        "analysis",
+        "reviewer",
+        "context",
+        "retrieval"
+      ],
+      "run_id": "484c8e30-c953-4356-85a6-8062c53ff97e",
+      "source": "P7.6 §七′ 六类撤权验证之一（写前撤权）；用户 2026-09-22 裁定「旧的待执行动作必须被作废并重新派生」",
+      "terminal_status": "succeeded",
+      "title": "写前撤权：动作被作废后重新派生，新决定才写入——且只写一次",
+      "total_seconds": 61.56427970621735,
+      "verdict": "PASS"
+    }
+  ],
+  "cases_digest": "6214f65486e9df5f4ab1e5697c4f4d2f80c676df70045793bbbb1be156c0f00a",
+  "coverage": [
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-01",
+        "ACC-02",
+        "ACC-03",
+        "ACC-04a",
+        "ACC-04b",
+        "ACC-04c",
+        "ACC-05",
+        "ACC-06",
+        "ACC-07",
+        "ACC-08",
+        "ACC-09a",
+        "ACC-09b",
+        "ACC-10a",
+        "ACC-10b",
+        "ACC-11",
+        "ACC-12b",
+        "ACC-13",
+        "ACC-18",
+        "ACC-23"
+      ],
+      "module": "analysis",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc03-password-accepted",
+          "case": "ACC-03",
+          "evidence": "all facts stated and correctly grounded: password-auth-succeeded via ['C1', 'C3', 'C5']",
+          "kind": "required_facts",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc03-mfa-failed",
+          "case": "ACC-03",
+          "evidence": "all facts stated and correctly grounded: mfa-failed via ['C1', 'C3', 'C5']",
+          "kind": "required_facts",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc03-device-changed",
+          "case": "ACC-03",
+          "evidence": "all facts stated and correctly grounded: device-changed via ['C1', 'C3', 'C5']",
+          "kind": "required_facts",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc03-root-cause-not-the-decoy",
+          "case": "ACC-03",
+          "evidence": "all facts stated and correctly grounded: root-cause via ['C5']",
+          "kind": "required_facts",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc08-no-mfa-disable-advice",
+          "case": "ACC-08",
+          "evidence": "no banned advice in 5 recommendation surface(s); checked ['disable-mfa']",
+          "kind": "banned_recommendations",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-01",
+        "ACC-02",
+        "ACC-03",
+        "ACC-04a",
+        "ACC-04b",
+        "ACC-04c",
+        "ACC-05",
+        "ACC-06",
+        "ACC-07",
+        "ACC-08",
+        "ACC-09a",
+        "ACC-09b",
+        "ACC-10a",
+        "ACC-10b",
+        "ACC-11",
+        "ACC-12b",
+        "ACC-13",
+        "ACC-14",
+        "ACC-18",
+        "ACC-19",
+        "ACC-20",
+        "ACC-21",
+        "ACC-22",
+        "ACC-23"
+      ],
+      "module": "api",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc01-accepted",
+          "case": "ACC-01",
+          "evidence": "step 'submit' returned 202",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc01-terminal-succeeded",
+          "case": "ACC-01",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc01-within-budget",
+          "case": "ACC-01",
+          "evidence": "the case took 23.7s of 300.0s",
+          "kind": "latency_budget",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc02-terminal-succeeded",
+          "case": "ACC-02",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc03-terminal-succeeded",
+          "case": "ACC-03",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04a-terminal-succeeded",
+          "case": "ACC-04a",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04b-terminal-succeeded",
+          "case": "ACC-04b",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04c-terminal-succeeded",
+          "case": "ACC-04c",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc05-terminal-succeeded",
+          "case": "ACC-05",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc06-terminal-succeeded",
+          "case": "ACC-06",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc07-terminal-succeeded",
+          "case": "ACC-07",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc08-terminal-succeeded",
+          "case": "ACC-08",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc09b-terminal-cancelled",
+          "case": "ACC-09b",
+          "evidence": "run ended cancelled",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc10b-terminal-succeeded",
+          "case": "ACC-10b",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc11-terminal-succeeded",
+          "case": "ACC-11",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc12b-terminal-succeeded",
+          "case": "ACC-12b",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc13-own-tenant-listed",
+          "case": "ACC-13",
+          "evidence": "the run is listed for its own tenant",
+          "kind": "run_listed_for_its_tenant",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc13-terminal-succeeded",
+          "case": "ACC-13",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc20-run-still-waiting",
+          "case": "ACC-20",
+          "evidence": "run ended waiting_approval",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc21-run-still-waiting",
+          "case": "ACC-21",
+          "evidence": "run ended waiting_approval",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc22-terminal-succeeded",
+          "case": "ACC-22",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc23-terminal-succeeded",
+          "case": "ACC-23",
+          "evidence": "run ended succeeded",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-09a",
+        "ACC-09b",
+        "ACC-10a",
+        "ACC-10b",
+        "ACC-11",
+        "ACC-18",
+        "ACC-19",
+        "ACC-20",
+        "ACC-21",
+        "ACC-22",
+        "ACC-23"
+      ],
+      "module": "approval",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc09a-conflict-refused",
+          "case": "ACC-09a",
+          "evidence": "step 'tamper-approval' returned 409",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc09a-intent-unchanged",
+          "case": "ACC-09a",
+          "evidence": "the intent still carries 2733bbc274877fd777e148d4fa76f1bb6f84092ba119fcccc4774d9a7ff8deae from step 'observe-pending'",
+          "kind": "action_intent_unchanged",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc09b-decline-accepted",
+          "case": "ACC-09b",
+          "evidence": "step 'decline-approval' returned 200",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc10a-approval-refused",
+          "case": "ACC-10a",
+          "evidence": "step 'attempt-approval' returned 409",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc10a-no-approval-created",
+          "case": "ACC-10a",
+          "evidence": "intent status at step 'observe-still-pending' is proposed",
+          "kind": "action_intent_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc10a-intent-unchanged",
+          "case": "ACC-10a",
+          "evidence": "the intent still carries 4a5a8cf508816394a3137bd5b94cdcef6ee6d83382c19d934e0b706f98002744 from step 'observe-still-pending'",
+          "kind": "action_intent_unchanged",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc10a-still-waiting",
+          "case": "ACC-10a",
+          "evidence": "run ended waiting_approval",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc10b-approved",
+          "case": "ACC-10b",
+          "evidence": "step 'approve' returned 200",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc10b-intent-proposed-before",
+          "case": "ACC-10b",
+          "evidence": "intent status at step 'observe-pending' is proposed",
+          "kind": "action_intent_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc18-approval-refused",
+          "case": "ACC-18",
+          "evidence": "step 'revoked-approval' returned 409",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc19-approval-refused",
+          "case": "ACC-19",
+          "evidence": "step 'revoked-approval' returned 409",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc19-run-still-waiting",
+          "case": "ACC-19",
+          "evidence": "run ended waiting_approval",
+          "kind": "terminal_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc20-approval-refused",
+          "case": "ACC-20",
+          "evidence": "step 'revoked-approval' returned 409",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc21-approval-refused",
+          "case": "ACC-21",
+          "evidence": "step 'revoked-approval' returned 409",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc22-outage-refused",
+          "case": "ACC-22",
+          "evidence": "step 'outage-approval' returned 409",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc22-decision-still-applicable",
+          "case": "ACC-22",
+          "evidence": "step 'approve' returned 200",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc23-first-approval-refused",
+          "case": "ACC-23",
+          "evidence": "step 'revoked-approval' returned 409",
+          "kind": "http_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc23-decision-applied",
+          "case": "ACC-23",
+          "evidence": "step 'approve' returned 200",
+          "kind": "http_status",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-01",
+        "ACC-09b",
+        "ACC-11",
+        "ACC-18",
+        "ACC-19",
+        "ACC-20",
+        "ACC-21",
+        "ACC-22"
+      ],
+      "module": "audit-and-events",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc01-created-recorded",
+          "case": "ACC-01",
+          "evidence": "timeline event 'run.created' was recorded",
+          "kind": "timeline_event",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc01-succeeded-recorded",
+          "case": "ACC-01",
+          "evidence": "timeline event 'run.succeeded' was recorded",
+          "kind": "timeline_event",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc09b-rejected-recorded",
+          "case": "ACC-09b",
+          "evidence": "audit event 'approval.rejected' was recorded",
+          "kind": "audit_event",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc10b-approval-recorded",
+          "case": "ACC-10b",
+          "evidence": "audit event 'approval.approved' was recorded",
+          "kind": "audit_event",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc11-write-audited",
+          "case": "ACC-11",
+          "evidence": "audit event 'glpi.followup.created' was recorded",
+          "kind": "audit_event",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "approval-not-consumed",
+          "case": "ACC-18",
+          "evidence": "audit event 'approval.approved' was not recorded",
+          "kind": "audit_event_absent",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "approval-not-consumed",
+          "case": "ACC-19",
+          "evidence": "audit event 'approval.approved' was not recorded",
+          "kind": "audit_event_absent",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "approval-not-consumed",
+          "case": "ACC-20",
+          "evidence": "audit event 'approval.approved' was not recorded",
+          "kind": "audit_event_absent",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "approval-not-consumed",
+          "case": "ACC-21",
+          "evidence": "audit event 'approval.approved' was not recorded",
+          "kind": "audit_event_absent",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-01",
+        "ACC-03",
+        "ACC-04a",
+        "ACC-04b",
+        "ACC-04c",
+        "ACC-05",
+        "ACC-06",
+        "ACC-07",
+        "ACC-09a",
+        "ACC-09b",
+        "ACC-10a",
+        "ACC-10b",
+        "ACC-11",
+        "ACC-12b",
+        "ACC-18",
+        "ACC-23"
+      ],
+      "module": "context",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc05-skill-in-context",
+          "case": "ACC-05",
+          "evidence": "24 item(s) were selected",
+          "kind": "context_selection",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc05-manifest-not-empty",
+          "case": "ACC-05",
+          "evidence": "24 item(s) were selected",
+          "kind": "context_selection",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc06-pruned-with-reason",
+          "case": "ACC-06",
+          "evidence": "2 item(s) were dropped with a reason, first: ev-d7dd5c94583c38ba (pruned)",
+          "kind": "context_selection",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-10b",
+        "ACC-11",
+        "ACC-18",
+        "ACC-19",
+        "ACC-20",
+        "ACC-21",
+        "ACC-22",
+        "ACC-23"
+      ],
+      "module": "executor",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc09a-nothing-written",
+          "case": "ACC-09a",
+          "evidence": "no followup was added",
+          "kind": "no_new_followups",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc09b-nothing-written",
+          "case": "ACC-09b",
+          "evidence": "no followup was added",
+          "kind": "no_new_followups",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc10a-nothing-written",
+          "case": "ACC-10a",
+          "evidence": "no followup was added",
+          "kind": "no_new_followups",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc10b-intent-succeeded-after",
+          "case": "ACC-10b",
+          "evidence": "intent status at the end of the run is succeeded",
+          "kind": "action_intent_status",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc10b-wrote-once",
+          "case": "ACC-10b",
+          "evidence": "exactly one followup was added (id 86)",
+          "kind": "exactly_one_new_followup",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc11-one-followup",
+          "case": "ACC-11",
+          "evidence": "exactly one followup was added (id 87)",
+          "kind": "exactly_one_new_followup",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc11-body-round-trip",
+          "case": "ACC-11",
+          "evidence": "followup 87 carries the approved content and this run's marker",
+          "kind": "followup_body_is_the_approved_content",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "no-write",
+          "case": "ACC-18",
+          "evidence": "no followup was added",
+          "kind": "no_new_followups",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "no-write",
+          "case": "ACC-19",
+          "evidence": "no followup was added",
+          "kind": "no_new_followups",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "no-write",
+          "case": "ACC-20",
+          "evidence": "no followup was added",
+          "kind": "no_new_followups",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "no-write",
+          "case": "ACC-21",
+          "evidence": "no followup was added",
+          "kind": "no_new_followups",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc22-wrote-once",
+          "case": "ACC-22",
+          "evidence": "exactly one followup was added (id 88)",
+          "kind": "exactly_one_new_followup",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc23-wrote-once",
+          "case": "ACC-23",
+          "evidence": "exactly one followup was added (id 89)",
+          "kind": "exactly_one_new_followup",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-14"
+      ],
+      "module": "frontend",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc14-console-visible",
+          "case": "ACC-14",
+          "evidence": "probe step 'browser-submit' reported 'passed': Running 4 tests using 2 workers - 2 [mobile] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator and shows the workbench - 1 [desktop] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator a...",
+          "kind": "probe_outcome",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-01",
+        "ACC-10a",
+        "ACC-10b",
+        "ACC-11",
+        "ACC-15",
+        "ACC-18",
+        "ACC-19",
+        "ACC-20",
+        "ACC-21",
+        "ACC-22",
+        "ACC-23"
+      ],
+      "module": "glpi",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc01-no-write",
+          "case": "ACC-01",
+          "evidence": "no followup was added",
+          "kind": "no_new_followups",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-13"
+      ],
+      "module": "graphrag",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc13-graph-positive-control",
+          "case": "ACC-13",
+          "evidence": "the restricted node is absent for 'globex-analyst-g3' and present for the witness 'globex-analyst-g4', so the difference is the ACL",
+          "kind": "graph_evidence_isolation",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-01",
+        "ACC-02",
+        "ACC-03",
+        "ACC-04a",
+        "ACC-04b",
+        "ACC-04c",
+        "ACC-05",
+        "ACC-06",
+        "ACC-07",
+        "ACC-08",
+        "ACC-09a",
+        "ACC-09b",
+        "ACC-10a",
+        "ACC-10b",
+        "ACC-11",
+        "ACC-12b",
+        "ACC-13",
+        "ACC-14",
+        "ACC-15",
+        "ACC-18",
+        "ACC-19",
+        "ACC-20",
+        "ACC-21",
+        "ACC-22",
+        "ACC-23"
+      ],
+      "module": "identity",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc04a-subject-scope",
+          "case": "ACC-04a",
+          "evidence": "globex-analyst-g3 carried tenant 22222222-2222-4222-8222-222222222222, groups [3], entities [2], roles ['analyst', 'viewer']",
+          "kind": "subject_scope",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04b-subject-scope",
+          "case": "ACC-04b",
+          "evidence": "globex-analyst-g4 carried tenant 22222222-2222-4222-8222-222222222222, groups [4], entities [2], roles ['analyst', 'viewer']",
+          "kind": "subject_scope",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04c-subject-scope",
+          "case": "ACC-04c",
+          "evidence": "globex-analyst-nogroup carried tenant 22222222-2222-4222-8222-222222222222, groups [], entities [2], roles ['analyst', 'viewer']",
+          "kind": "subject_scope",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc18-boundary-narrowed",
+          "case": "ACC-18",
+          "evidence": "audit event 'run.scope_narrowed' was recorded",
+          "kind": "audit_event",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc19-shortfall-recorded",
+          "case": "ACC-19",
+          "evidence": "audit event 'run.resume_blocked' was recorded",
+          "kind": "audit_event",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc20-shortfall-recorded",
+          "case": "ACC-20",
+          "evidence": "audit event 'run.resume_blocked' was recorded",
+          "kind": "audit_event",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc21-block-recorded",
+          "case": "ACC-21",
+          "evidence": "audit event 'run.resume_blocked' was recorded",
+          "kind": "audit_event",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc22-outage-recorded",
+          "case": "ACC-22",
+          "evidence": "audit event 'run.resume_blocked' was recorded",
+          "kind": "audit_event",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc23-void-recorded",
+          "case": "ACC-23",
+          "evidence": "audit event 'run.scope_narrowed' was recorded",
+          "kind": "audit_event",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-02",
+        "ACC-17"
+      ],
+      "module": "index-lifecycle",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc17-lifecycle-ok",
+          "case": "ACC-17",
+          "evidence": "probe step 'probe-lifecycle' reported 'passed': ============================= test session starts ============================== platform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0 rootdir: /data/shihongye/servicemind configfile: pyproject.toml plugins: asyncio-1.4.0, env-1.7.0,...",
+          "kind": "probe_outcome",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-15"
+      ],
+      "module": "mcp",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc15-mcp-reachable",
+          "case": "ACC-15",
+          "evidence": "probe step 'mcp-call' reported 'passed': {\"ticket_id\": 25, \"is_error\": false, \"body\": \"{\\\"ticket\\\":{\\\"id\\\":25,\\\"name\\\":\\\"[P7.6-ACCEPTANCE-A] VPN rejects the MFA challenge after a handset change\\\",\\\"content\\\":\\\"Reported by the user to the service desk.\\\\n\\\\nThe VPN client accepts t...",
+          "kind": "probe_outcome",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-12a",
+        "ACC-12b"
+      ],
+      "module": "memory",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc12a-same-root-cause-groups",
+          "case": "ACC-12a",
+          "evidence": "probe step 'produce-same' reported 'passed': {\"step\": \"produce-same\", \"expectation\": \"one key for two spellings of the same root cause\", \"classification\": [\"mfa_device_binding\", \" MFA_Device_Binding \"], \"pattern_keys\": [\"1817fe726d02b8e8843af3d4d34c234cd0565609a43df7381c6a342616198328...",
+          "kind": "probe_outcome",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc12a-different-root-cause-splits",
+          "case": "ACC-12a",
+          "evidence": "probe step 'produce-different' reported 'passed': {\"step\": \"produce-different\", \"expectation\": \"a different root cause produces a different key\", \"classification\": [\"mfa_device_binding\", \"gateway_connectivity\"], \"pattern_keys\": [\"1817fe726d02b8e8843af3d4d34c234cd0565609a43df7381c6a34261619...",
+          "kind": "probe_outcome",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc12b-quarantined",
+          "case": "ACC-12b",
+          "evidence": "no procedural/quarantine record linked to this run; saw [('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '489aed01-a25d-44bc-8621-e9771e1303ea')]",
+          "kind": "memory_record",
+          "verdict": "FAIL"
+        },
+        {
+          "assertion": "acc12b-activated",
+          "case": "ACC-12b",
+          "evidence": "no procedural/active record linked to this run; saw [('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '910a9278-e526-4844-a61c-eda3bf1ae670'), ('episodic', 'quarantine', '489aed01-a25d-44bc-8621-e9771e1303ea')]",
+          "kind": "memory_record",
+          "verdict": "FAIL"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-16"
+      ],
+      "module": "outbox",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc16-outbox-observed",
+          "case": "ACC-16",
+          "evidence": "probe step 'count-outbox' reported 'passed': {\"event_type\": \"action.approved\", \"total\": 47, \"by_status\": {\"published\": 47}, \"unconsumed\": 0, \"note\": \"PASS here means the tally was taken, not that the queue is drained; see the outbox defect in the baseline document\"}",
+          "kind": "probe_outcome",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-01",
+        "ACC-02",
+        "ACC-03",
+        "ACC-04a",
+        "ACC-04b",
+        "ACC-04c",
+        "ACC-05",
+        "ACC-06",
+        "ACC-07",
+        "ACC-08",
+        "ACC-09a",
+        "ACC-09b",
+        "ACC-10a",
+        "ACC-10b",
+        "ACC-11",
+        "ACC-12b",
+        "ACC-13",
+        "ACC-17",
+        "ACC-18",
+        "ACC-23"
+      ],
+      "module": "retrieval",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc02-cites-current",
+          "case": "ACC-02",
+          "evidence": "citations include ['KB-GLOBEX-VPN-MFA-REBIND']",
+          "kind": "citations_include",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc02-excludes-retired",
+          "case": "ACC-02",
+          "evidence": "citations exclude ['KB-GLOBEX-VPN-MFA-LEGACY']",
+          "kind": "citations_exclude",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc03-similar-doc-retrievable",
+          "case": "ACC-03",
+          "evidence": "citations include ['KB-GLOBEX-VPN-APP-REG']",
+          "kind": "citations_include",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04a-sees-group3",
+          "case": "ACC-04a",
+          "evidence": "citations include ['KB-GLOBEX-VPN-MFA-G3']",
+          "kind": "citations_include",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04a-not-group4",
+          "case": "ACC-04a",
+          "evidence": "citations exclude ['KB-GLOBEX-VPN-MFA-G4']",
+          "kind": "citations_exclude",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04a-sees-public",
+          "case": "ACC-04a",
+          "evidence": "citations include ['KB-GLOBEX-VPN-MFA-REBIND']",
+          "kind": "citations_include",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04b-sees-group4",
+          "case": "ACC-04b",
+          "evidence": "citations include ['KB-GLOBEX-VPN-MFA-G4']",
+          "kind": "citations_include",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04b-not-group3",
+          "case": "ACC-04b",
+          "evidence": "citations exclude ['KB-GLOBEX-VPN-MFA-G3']",
+          "kind": "citations_exclude",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04b-sees-public",
+          "case": "ACC-04b",
+          "evidence": "citations include ['KB-GLOBEX-VPN-MFA-REBIND']",
+          "kind": "citations_include",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04c-sees-public",
+          "case": "ACC-04c",
+          "evidence": "citations include ['KB-GLOBEX-VPN-MFA-REBIND']",
+          "kind": "citations_include",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04c-not-group3",
+          "case": "ACC-04c",
+          "evidence": "citations exclude ['KB-GLOBEX-VPN-MFA-G3']",
+          "kind": "citations_exclude",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc04c-not-group4",
+          "case": "ACC-04c",
+          "evidence": "citations exclude ['KB-GLOBEX-VPN-MFA-G4']",
+          "kind": "citations_exclude",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-01",
+        "ACC-02",
+        "ACC-03",
+        "ACC-05",
+        "ACC-07",
+        "ACC-08",
+        "ACC-09a",
+        "ACC-09b",
+        "ACC-10a",
+        "ACC-10b",
+        "ACC-11",
+        "ACC-12b",
+        "ACC-18",
+        "ACC-23"
+      ],
+      "module": "reviewer",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc07-decision-passed",
+          "case": "ACC-07",
+          "evidence": "the reviewer decided passed",
+          "kind": "review_decision",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc07-refs-resolvable",
+          "case": "ACC-07",
+          "evidence": "all 20 evidence reference(s) resolve to a recorded row",
+          "kind": "evidence_refs_resolvable",
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "blocked_assertions": [],
+      "involved_cases": [
+        "ACC-13"
+      ],
+      "module": "tenant-isolation",
+      "not_evaluated": false,
+      "verified_assertions": [
+        {
+          "assertion": "acc13-foreign-404",
+          "case": "ACC-13",
+          "evidence": "a foreign tenant received 404",
+          "kind": "run_invisible_to_another_tenant",
+          "verdict": "PASS"
+        },
+        {
+          "assertion": "acc13-no-foreign-citations",
+          "case": "ACC-13",
+          "evidence": "citations exclude ['KB-ACME-VPN-MFA-REBIND']",
+          "kind": "no_foreign_citations",
+          "verdict": "PASS"
+        }
+      ]
+    }
+  ],
+  "generated_at": "2026-09-23T12:31:53.889292Z",
+  "observation_digest": "4cb25db290a573a4ee96418dd0a70cf19a54018cc4a856b3eb0d9e567ceb67d7",
+  "schema_version": "phase7-acceptance-v1",
+  "verdict": "BLOCKED"
+}

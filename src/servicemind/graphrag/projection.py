@@ -21,8 +21,18 @@ def make_node(
     ref: str,
     title: str,
     extra: dict[str, Any] | None = None,
+    entity_ids: frozenset[int] = frozenset(),
+    group_ids: frozenset[int] = frozenset(),
+    profile_ids: frozenset[int] = frozenset(),
 ) -> GraphNode:
-    """Stable key = ``{kind}:{ref}`` so re-projecting the same source is idempotent."""
+    """Stable key = ``{kind}:{ref}`` so re-projecting the same source is idempotent.
+
+    The ACL coordinates have no default *value* to fall back on: they are copied from
+    whatever the source record declares, and a source that declares nothing produces an
+    unrestricted node. Making this a default argument rather than a required one would
+    have been the trap -- a projection site that forgot to pass the coordinates would
+    have produced a node indistinguishable from a deliberately public one.
+    """
     return GraphNode(
         key=f"{kind.value}:{ref}",
         ref=ref,
@@ -30,6 +40,9 @@ def make_node(
         title=title,
         tenant_id=tenant_id,
         extra=extra or {},
+        entity_ids=entity_ids,
+        group_ids=group_ids,
+        profile_ids=profile_ids,
     )
 
 
@@ -71,6 +84,13 @@ class IncidentRecord:
     runbook_ref: str | None = None
     runbook_title: str | None = None
     extra: dict[str, Any] = field(default_factory=dict)
+    #: Who may see the incident this record describes. Every node the record projects --
+    #: the ticket, and the CI/service/problem/change/runbook hanging off it -- inherits
+    #: these, because the record is one source document and a node derived from it is not
+    #: more visible than the document.
+    entity_ids: frozenset[int] = frozenset()
+    group_ids: frozenset[int] = frozenset()
+    profile_ids: frozenset[int] = frozenset()
 
 
 def project_incidents(
@@ -90,8 +110,28 @@ def project_incidents(
     nodes: dict[str, GraphNode] = {}
     edges: dict[tuple[str, str, EdgeKind], GraphEdge] = {}
 
-    def add_node(kind: NodeKind, ref: str, title: str, extra: dict[str, Any]) -> None:
-        node = make_node(tenant_id, kind=kind, ref=ref, title=title, extra=extra)
+    def add_node(
+        kind: NodeKind,
+        ref: str,
+        title: str,
+        extra: dict[str, Any],
+        acl: tuple[frozenset[int], frozenset[int], frozenset[int]] = (
+            frozenset(),
+            frozenset(),
+            frozenset(),
+        ),
+    ) -> None:
+        entity_ids, group_ids, profile_ids = acl
+        node = make_node(
+            tenant_id,
+            kind=kind,
+            ref=ref,
+            title=title,
+            extra=extra,
+            entity_ids=entity_ids,
+            group_ids=group_ids,
+            profile_ids=profile_ids,
+        )
         nodes[node.key] = node
 
     def add_edge(kind: EdgeKind, source: str, target: str, weight: float = 1.0) -> None:
@@ -102,19 +142,20 @@ def project_incidents(
     by_ticket: dict[str, IncidentRecord] = {}
     for record in records:
         by_ticket[record.ticket_ref] = record
-        add_node(NodeKind.TICKET, record.ticket_ref, record.ticket_title, record.extra)
-        add_node(NodeKind.CI, record.ci_ref, record.ci_title, {})
+        acl = (record.entity_ids, record.group_ids, record.profile_ids)
+        add_node(NodeKind.TICKET, record.ticket_ref, record.ticket_title, record.extra, acl)
+        add_node(NodeKind.CI, record.ci_ref, record.ci_title, {}, acl)
         add_edge(EdgeKind.AFFECTS, f"ticket:{record.ticket_ref}", f"ci:{record.ci_ref}")
         if record.service_ref and record.service_title:
-            add_node(NodeKind.SERVICE, record.service_ref, record.service_title, {})
+            add_node(NodeKind.SERVICE, record.service_ref, record.service_title, {}, acl)
             add_edge(EdgeKind.DEPENDS_ON, f"ci:{record.ci_ref}", f"service:{record.service_ref}")
         if record.problem_ref and record.problem_title:
-            add_node(NodeKind.PROBLEM, record.problem_ref, record.problem_title, {})
+            add_node(NodeKind.PROBLEM, record.problem_ref, record.problem_title, {}, acl)
             add_edge(
                 EdgeKind.LINKED_TO, f"ticket:{record.ticket_ref}", f"problem:{record.problem_ref}"
             )
         if record.change_ref and record.change_title:
-            add_node(NodeKind.CHANGE, record.change_ref, record.change_title, {})
+            add_node(NodeKind.CHANGE, record.change_ref, record.change_title, {}, acl)
             if record.problem_ref:
                 add_edge(
                     EdgeKind.RESOLVED_BY,
@@ -123,7 +164,7 @@ def project_incidents(
                 )
             add_edge(EdgeKind.MODIFIES, f"change:{record.change_ref}", f"ci:{record.ci_ref}")
         if record.runbook_ref and record.runbook_title:
-            add_node(NodeKind.RUNBOOK, record.runbook_ref, record.runbook_title, {})
+            add_node(NodeKind.RUNBOOK, record.runbook_ref, record.runbook_title, {}, acl)
             add_edge(
                 EdgeKind.HAS_RUNBOOK,
                 f"ci:{record.ci_ref}",

@@ -21,7 +21,7 @@ from servicemind.mcp.server import (
     mcp_metadata_router,
     mcp_router,
 )
-from servicemind.mcp.tasks import InMemoryMcpTaskStore
+from servicemind.mcp.tasks import TASK_TTL_MS, InMemoryMcpTaskStore
 from servicemind.mcp.transport import MCP_PROTOCOL_VERSION, McpGlpiProvider, StatelessMcpClient
 from servicemind.persistence.models import ToolOutboxRecord
 from servicemind.reliability.outbox import RedisStreamPublisher
@@ -44,7 +44,7 @@ from servicemind.tool_platform.gateway import (
     ToolVerificationFailed,
 )
 from servicemind.tool_platform.policy import DeterministicToolPolicy, OpaToolPolicy
-from servicemind.tool_platform.providers import NativeGlpiProvider
+from servicemind.tool_platform.providers import NativeGlpiProvider, ProductionGlpiBackend
 from servicemind.tool_platform.registry import ToolRegistry
 from servicemind.tool_platform.resilience import (
     CircuitBreaker,
@@ -428,6 +428,63 @@ async def test_native_and_stateless_mcp_provider_contract_parity() -> None:
 
 
 @pytest.mark.asyncio
+async def test_glpi_read_backend_accepts_the_shapes_its_tools_return() -> None:
+    """Pin the read-back strategies that the generic fallback used to break.
+
+    ``glpi.read.groups`` and ``glpi.read.ticket_followups`` both return JSON arrays. The
+    fallback branch of ``ProductionGlpiBackend.verify`` only accepted mappings, so every
+    successful call to either tool was reported as a read-back failure, the tool was
+    retried, the circuit opened, and the run escalated to a human — with no ticket ever
+    reaching the analysis agent.
+    """
+    backend = ProductionGlpiBackend()
+    groups = call(
+        tool_name="glpi.read.groups",
+        capabilities=frozenset({"glpi.read.groups"}),
+        arguments={"ticket_id": 2},
+    )
+    followups = call(
+        tool_name="glpi.read.ticket_followups",
+        capabilities=frozenset({"glpi.read.ticket_followups"}),
+        arguments={"ticket_id": 2},
+    )
+
+    # A real GLPI answer: an array of groups that sit inside the caller's entity scope.
+    assert await backend.verify(
+        "glpi.read.groups",
+        {"ticket_id": 2},
+        [{"id": 1, "name": "Network Team", "entity": {"id": 1, "name": None}}],
+        groups,
+    )
+    # Reading nothing is a legitimate read, not a verification failure.
+    assert await backend.verify("glpi.read.groups", {"ticket_id": 2}, [], groups)
+    # A group owned by another entity must not survive scope verification.
+    assert not await backend.verify(
+        "glpi.read.groups",
+        {"ticket_id": 2},
+        [{"id": 9, "name": "Foreign Team", "entity": {"id": 22222222}}],
+        groups,
+    )
+    # A mapping is not the array shape this tool declares.
+    assert not await backend.verify("glpi.read.groups", {"ticket_id": 2}, {"id": 1}, groups)
+
+    assert await backend.verify(
+        "glpi.read.ticket_followups",
+        {"ticket_id": 2},
+        [{"id": 1, "ticket_id": 2, "content": "restarted the client", "is_private": True}],
+        followups,
+    )
+    assert await backend.verify("glpi.read.ticket_followups", {"ticket_id": 2}, [], followups)
+    # A followup belonging to a different ticket is not evidence of ticket scope.
+    assert not await backend.verify(
+        "glpi.read.ticket_followups",
+        {"ticket_id": 2},
+        [{"id": 5, "ticket_id": 7, "content": "unrelated", "is_private": True}],
+        followups,
+    )
+
+
+@pytest.mark.asyncio
 async def test_mcp_rejects_session_header_and_wrong_issuer() -> None:
     async def token() -> str:
         return "token"
@@ -738,3 +795,76 @@ async def test_redis_outbox_message_contains_references_only() -> None:
     )
     assert await RedisStreamPublisher(client).publish(event) == "1-0"
     assert "password" not in str(client.fields)
+
+
+@pytest.mark.asyncio
+async def test_a_task_stops_existing_when_the_ttl_it_advertised_runs_out() -> None:
+    """``ttlMs`` is told to every client; the store has to be the one that keeps it.
+
+    The payload promises a result is fetchable for ``TASK_TTL_MS``. Nothing enforced it,
+    so the two sides disagreed about whether a task still existed -- and the in-memory
+    store, which is the default, held every task and every idempotency record its process
+    had ever created, each with the full tool output, with nothing ever released.
+    """
+    store = InMemoryMcpTaskStore()
+    task_id, request_id, run_id = uuid4(), uuid4(), uuid4()
+    await store.create(
+        TENANT,
+        task_id=task_id,
+        request_id=request_id,
+        run_id=run_id,
+        workflow_task_id="T1",
+        tool_name="glpi.query_cmdb_dependencies",
+        argument_hash="a" * 64,
+    )
+    await store.finish(TENANT, task_id, status="completed", output={"tickets": []})
+
+    # Age the task past its TTL without waiting an hour for it.
+    key = (TENANT, task_id)
+    store.values[key] = store.values[key].model_copy(
+        update={"created_at": datetime.now(UTC) - timedelta(milliseconds=TASK_TTL_MS + 1)}
+    )
+
+    assert await store.get(TENANT, task_id) is None
+    assert await store.heartbeat(TENANT, task_id) is False
+    assert store.values == {}
+    assert store.requests == {}, "an expired task's idempotency record outlives nothing"
+
+
+@pytest.mark.asyncio
+async def test_a_task_inside_its_ttl_is_untouched() -> None:
+    """The retention must not release the tasks the platform is still serving."""
+    store = InMemoryMcpTaskStore()
+    task_id = uuid4()
+    await store.create(
+        TENANT,
+        task_id=task_id,
+        request_id=uuid4(),
+        run_id=uuid4(),
+        workflow_task_id="T1",
+        tool_name="glpi.query_cmdb_dependencies",
+        argument_hash="a" * 64,
+    )
+
+    assert await store.get(TENANT, task_id) is not None
+    assert await store.heartbeat(TENANT, task_id) is True
+
+
+@pytest.mark.asyncio
+async def test_a_retry_of_a_live_request_still_resolves_to_its_task() -> None:
+    """Idempotency survives retention: a replay inside the TTL returns the same task."""
+    store = InMemoryMcpTaskStore()
+    task_id, request_id, run_id = uuid4(), uuid4(), uuid4()
+    identity = dict(
+        task_id=task_id,
+        request_id=request_id,
+        run_id=run_id,
+        workflow_task_id="T1",
+        tool_name="glpi.query_cmdb_dependencies",
+        argument_hash="a" * 64,
+    )
+    first = await store.create(TENANT, **identity)
+
+    replayed = await store.create(TENANT, **{**identity, "task_id": uuid4()})
+
+    assert replayed.task_id == first.task_id

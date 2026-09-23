@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from core import settings
-from servicemind.domain.task import AgentName, Task, TaskPlan
+from servicemind.domain.task import MAX_PLAN_TASKS, AgentName, Task, TaskPlan
 from servicemind.orchestration.registry import AgentRegistry, agent_registry
 
 
@@ -16,7 +16,15 @@ class PlanValidationError(ValueError):
 
 @dataclass(frozen=True)
 class DagLimits:
-    max_tasks: int = 12
+    # A plan grows across revisions: the first one holds the initial DAG (six tasks
+    # in the live runs), and every retrieval round re-lists everything completed
+    # and adds four more. A 12-task ceiling therefore made the second round
+    # unreachable -- 6 after planning, 10 after the first revision, 14 for the
+    # next -- so the Reviewer's RETRIEVE_MORE could never be honoured. Plan size
+    # is bounded by the compiled ``TaskPlan`` (and, in practice, by the run's step
+    # budget); this validator keeps enforcing acyclicity, control order, per-task
+    # contracts and the parallel/replan policy.
+    max_tasks: int = MAX_PLAN_TASKS
     max_parallel: int = 4
     max_replans: int = 2
 

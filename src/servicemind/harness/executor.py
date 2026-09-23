@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 
+from servicemind.domain.evidence import self_authored_marker
 from servicemind.domain.models import ActionIntent, ExecutionResult
 from servicemind.integrations.glpi.client import GlpiClient
 from servicemind.integrations.glpi.models import html_to_text
@@ -63,7 +64,7 @@ class ControlledActionExecutor:
 
             await repository.update_action_status(intent.id, ActionStatus.EXECUTING)
             config = await resolve_glpi_config(context)
-            marker = f"[ServiceMind run={intent.run_id} action={intent.action_hash[:16]}]"
+            marker = self_authored_marker(intent.run_id, intent.action_hash)
             content = f"{intent.arguments['content']}\n{marker}"
 
             async with GlpiClient(config) as client:

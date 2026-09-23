@@ -169,15 +169,59 @@ class KnowledgeQuery(BaseModel):
     language: str = Field(default="en", min_length=2, max_length=20)
 
 
+#: How many entries one of a principal's ACL sets may hold, quoted from the identity that
+#: produces them (``TenantContext``) and enforced here as well so the port states the bound
+#: its own retrieval depends on.
+#:
+#: These sets are not sized by anything the platform controls: ``entity_ids`` and
+#: ``group_ids`` are read verbatim out of JWT claims, so their length is whatever the
+#: token says. Every retrieval turns each of them into a ``terms`` clause in the search
+#: body, which makes the request body proportional to a client-supplied number -- and when
+#: a set does outgrow the backend's ``index.max_terms_count``, the backend stops at the
+#: ceiling, which for an ACL means the filter is applied to *part* of the identity and the
+#: question "what may this user see" silently becomes "what may the first N of this user's
+#: groups see". A grant set the platform cannot represent is an identity it cannot serve,
+#: so it is refused where it is built rather than truncated where it is used. The number
+#: is far past any real identity (a person belongs to tens of groups, not thousands) and
+#: under the backend's own ceiling, so a complete ACL is always what gets queried.
+ACL_SET_MAX_ENTRIES = 4096
+
+
 class RetrievalPrincipal(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     tenant_id: UUID
     user_id: str
-    entity_ids: frozenset[int] = Field(default_factory=frozenset)
-    group_ids: frozenset[int] = Field(default_factory=frozenset)
-    profile_ids: frozenset[int] = Field(default_factory=frozenset)
+    entity_ids: frozenset[int] = Field(default_factory=frozenset, max_length=ACL_SET_MAX_ENTRIES)
+    group_ids: frozenset[int] = Field(default_factory=frozenset, max_length=ACL_SET_MAX_ENTRIES)
+    profile_ids: frozenset[int] = Field(default_factory=frozenset, max_length=ACL_SET_MAX_ENTRIES)
     query_time: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    def allows_scope(
+        self,
+        *,
+        entity_ids: frozenset[int] = frozenset(),
+        group_ids: frozenset[int] = frozenset(),
+        profile_ids: frozenset[int] = frozenset(),
+    ) -> bool:
+        """The subset of an ACL that says *who* may see a thing, applied on its own.
+
+        Documents are not the only carrier of this: projected graph nodes carry the same
+        coordinates, and the graph side channel reads them through a store that has no
+        access to ``KnowledgeACL``. The rule is written once, here, and whichever carrier
+        is asking delegates to it -- the alternative is two implementations that agree
+        until one is edited, which is how a boundary gets enforced on one path and
+        remembered on the other.
+
+        An empty coordinate means *the resource declares no restriction on that axis*.
+        A principal holding nothing therefore still sees unrestricted resources and no
+        restricted ones, which is the same reading ``allows`` has always had.
+        """
+        return (
+            (not entity_ids or bool(entity_ids & self.entity_ids))
+            and (not group_ids or bool(group_ids & self.group_ids))
+            and (not profile_ids or bool(profile_ids & self.profile_ids))
+        )
 
     def allows(self, acl: KnowledgeACL) -> bool:
         return (
@@ -185,9 +229,11 @@ class RetrievalPrincipal(BaseModel):
             and acl.is_active
             and acl.effective_from <= self.query_time
             and (acl.effective_to is None or acl.effective_to > self.query_time)
-            and (not acl.entity_ids or bool(acl.entity_ids & self.entity_ids))
-            and (not acl.group_ids or bool(acl.group_ids & self.group_ids))
-            and (not acl.profile_ids or bool(acl.profile_ids & self.profile_ids))
+            and self.allows_scope(
+                entity_ids=acl.entity_ids,
+                group_ids=acl.group_ids,
+                profile_ids=acl.profile_ids,
+            )
             and (not acl.user_ids or self.user_id in acl.user_ids)
         )
 

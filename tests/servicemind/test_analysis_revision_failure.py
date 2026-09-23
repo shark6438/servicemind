@@ -129,3 +129,41 @@ async def test_revision_model_crash_is_reported_as_revision_failure(monkeypatch)
     assert result.output.status is AnalysisStatus.DEGRADED
     assert any("RuntimeError" in item for item in result.output.validation_feedback)
     assert result.metrics.model_calls == 2  # draft + one revision attempt
+
+
+@pytest.mark.asyncio
+async def test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing(monkeypatch) -> None:
+    """The draft a revision was sent back to repair is known-bad and must not be forwarded.
+
+    Marking it DEGRADED keeps its references, and those references are what the reviewer
+    resolves and the acceptance assertions read -- so a citation the draft invented
+    outlives the crash and gets reported as the run's failure. Measured on the 2026-09-23
+    baseline (ACC-03): the one revision raised OutputParserException, the unrepaired draft
+    kept ``ev-8cec7c70e10c7b56``, and the reviewer rejected the run for citing evidence
+    that does not exist.
+    """
+    joined = join_evidence(
+        TENANT,
+        [
+            evidence(EvidenceSourceType.GLPI, "ticket", "VPN outage"),
+            evidence(EvidenceSourceType.GLPI, "support_group", "Network Team"),
+        ],
+    )
+    # An otherwise-valid draft citing an id no provider ever issued: this is what the
+    # quality check sends back, and what the crashed revision leaves in place.
+    draft = model_analysis([*joined.evidence_refs, "ev-8cec7c70e10c7b56"])
+    runnable = CrashAfterFirst(draft)
+    monkeypatch.setattr(analysis_module, "structured_output", lambda model, schema: runnable)
+    result = await AnalysisAgent(model_factory=lambda: object()).run(
+        invocation=invocation(),
+        evidence=joined,
+        goal="Analyze VPN incident",
+        request_write=False,
+        ticket_id=2,
+    )
+    assert result.failure_code == "ANALYSIS_REVISION_FAILURE"
+    assert result.output.source == "deterministic_fallback"
+    assert set(result.output.evidence_refs) <= set(joined.evidence_refs)
+    assert all(
+        ref in joined.evidence_refs for claim in result.output.claims for ref in claim.evidence_refs
+    )

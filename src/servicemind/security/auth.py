@@ -10,6 +10,11 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
 from core import settings
+from servicemind.domain.knowledge import ACL_SET_MAX_ENTRIES
+from servicemind.security.entitlements import (
+    KeycloakEntitlementVerifier,
+    configure_entitlement_verifier,
+)
 
 
 def _integer_claim_set(claims: dict[str, Any], name: str) -> set[int]:
@@ -18,6 +23,12 @@ def _integer_claim_set(claims: dict[str, Any], name: str) -> set[int]:
         raw = [raw]
     if not isinstance(raw, list):
         raise ValueError(f"OIDC claim {name!r} must be a list of non-negative integers")
+    # The claim's length is the token's to choose, and every entry becomes a term in the
+    # ACL filter of every retrieval this identity makes. Enforced here, where the claim
+    # becomes an identity, so the refusal names the claim that was too large; see
+    # ``ACL_SET_MAX_ENTRIES`` for why an over-large grant set is refused and not truncated.
+    if len(raw) > ACL_SET_MAX_ENTRIES:
+        raise ValueError(f"OIDC claim {name!r} must hold at most {ACL_SET_MAX_ENTRIES} entries")
     values: set[int] = set()
     for value in raw:
         if isinstance(value, bool) or not (
@@ -29,13 +40,23 @@ def _integer_claim_set(claims: dict[str, Any], name: str) -> set[int]:
     return values
 
 
+#: The identity contract, and the reason it is enforced here rather than at the column.
+#: ``user_id`` is the token's ``sub`` claim verbatim and it is written to
+#: ``agent_runs.user_id`` -- a ``varchar(255)`` -- along with every audit row that
+#: records who decided. A token carrying a longer subject is a token this platform
+#: cannot identify anyone by, so the boundary that turns claims into an identity is the
+#: one that has to say so; left to the column it surfaced as an ``INSERT`` failure, an
+#: HTTP 500 on a request that had already authenticated.
+IDENTITY_MAX_LENGTH = 255
+
+
 class TenantContext(BaseModel):
     tenant_id: UUID
-    user_id: str
-    username: str
+    user_id: str = Field(max_length=IDENTITY_MAX_LENGTH)
+    username: str = Field(max_length=IDENTITY_MAX_LENGTH)
     roles: set[str] = Field(default_factory=set)
-    allowed_glpi_entity_ids: set[int] = Field(default_factory=set)
-    allowed_glpi_group_ids: set[int] = Field(default_factory=set)
+    allowed_glpi_entity_ids: set[int] = Field(default_factory=set, max_length=ACL_SET_MAX_ENTRIES)
+    allowed_glpi_group_ids: set[int] = Field(default_factory=set, max_length=ACL_SET_MAX_ENTRIES)
 
     def require_role(self, role: str) -> None:
         if role not in self.roles:
@@ -161,3 +182,43 @@ async def get_tenant_context(
 
 
 TenantContextDependency = Annotated[TenantContext, Depends(get_tenant_context)]
+
+
+def _entitlement_verifier() -> KeycloakEntitlementVerifier | None:
+    """Build the resume-boundary verifier, or ``None`` when it is not configured.
+
+    ``None`` is a supported outcome, and it is a *pause*, not a degradation: this
+    deployment chose not to hand the serving process realm-admin credentials, so the
+    question "what does this subject hold now?" cannot be answered, and
+    ``resolve_resume_scope`` refuses to resume on an unanswered question rather than
+    proceeding with the scope it never re-confirmed. A default that narrowed silently
+    would be a default that degrades, which is the outcome the refusal exists to avoid.
+    Read-only lookup of one subject is all a verifier needs; realm-admin is more than it
+    needs, and a deployment that would rather pause than hold those credentials is the
+    one this ``None`` is for. See ``security/entitlements.py``.
+    """
+    url = settings.SERVICEMIND_KEYCLOAK_ADMIN_URL
+    username = settings.SERVICEMIND_KEYCLOAK_ADMIN_USERNAME
+    password = settings.SERVICEMIND_KEYCLOAK_ADMIN_PASSWORD
+    if not (url and username and password):
+        return None
+    return KeycloakEntitlementVerifier(
+        base_url=url,
+        username=username,
+        password=password.get_secret_value(),
+        realm=settings.SERVICEMIND_KEYCLOAK_ADMIN_REALM,
+        cache_seconds=settings.SERVICEMIND_ENTITLEMENT_CACHE_SECONDS,
+    )
+
+
+def install_entitlement_verifier() -> KeycloakEntitlementVerifier | None:
+    """Build from settings and install; returns what it installed."""
+    verifier = _entitlement_verifier()
+    configure_entitlement_verifier(verifier)
+    return verifier
+
+
+# Wired here rather than inside ``entitlements`` so that module stays free of the ``core``
+# import the scaffold budget counts. Importing this module is what installs the verifier,
+# and every path that resumes a run reaches ``TenantContext`` through it.
+install_entitlement_verifier()

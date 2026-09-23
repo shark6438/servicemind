@@ -20,14 +20,25 @@ COMPLEX_PATTERNS = (
     r"\b(assign|route|take action)\b",
     r"分派|处理建议|执行|修改",
 )
+#: A question that asks *for* a documented procedure, rather than one that merely
+#: mentions one. The artifact noun alone is not enough: "官方手册给出了明确处置。请给出
+#: 结论。" names a manual and asks for a conclusion, and sending it down the knowledge
+#: fast path would answer the wrong question. What makes a knowledge lookup is the
+#: artifact being the thing asked about -- the same shape as the English ``runbook``
+#: row above, where ``runbook`` is what ``what`` points at.
 KNOWLEDGE_PATTERNS = (
     r"\b(runbook|sop|knowledge|guide|procedure|policy|how to|troubleshoot)\b",
     r"知识库|运行手册|操作手册|标准流程|排障|如何处理|怎么处理|文档|矩阵|规范",
+    r"(?:手册|流程|规程|指引|预案|方案|步骤|做法|清单)\s*(?:是|为|有)?\s*(?:什么|哪些)",
 )
+#: A *data* query is selected by the field it asks about, never by the interrogative.
+#: "是什么" and "who" appear in questions of every kind -- including knowledge questions
+#: that happen to end in them -- so matching on them made this bucket swallow requests
+#: it has no way to answer: the run returned the ticket's raw fields and reported
+#: SUCCEEDED. Every row below now names a subject the data agent actually serves.
 DATA_PATTERNS = (
-    r"\b(status|assignee|owner|priority|urgency|impact|created|updated|current|who|what)\b",
-    r"状态|负责人|指派给谁|当前优先级|紧急度|影响度|创建时间|更新时间|是谁|是什么|字段",
-    r"\bfields?\b",
+    r"\b(status|assignee|owner|priority|urgency|impact|created|updated|fields?)\b",
+    r"状态|负责人|指派给谁|当前优先级|紧急度|影响度|创建时间|更新时间|字段|标题|内容|描述",
 )
 
 

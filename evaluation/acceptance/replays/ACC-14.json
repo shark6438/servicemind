@@ -1,0 +1,75 @@
+{
+  "case_id": "ACC-14",
+  "environment": {
+    "entitlement_verifier_configured": true,
+    "base_url": "http://127.0.0.1:18080",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "recorded_at": "2026-09-23T12:07:27.120744Z",
+    "deployed_revision": "c0d878d0c6a2f61efc249716c2053b447812aacd+dirty(108 files)",
+    "notes": [
+      "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
+      "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
+    ]
+  },
+  "subject": {
+    "username": "globex-approver",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "roles": [
+      "analyst",
+      "approver",
+      "operator",
+      "viewer"
+    ],
+    "entity_ids": [
+      2
+    ],
+    "group_ids": [
+      3,
+      4
+    ]
+  },
+  "steps": [
+    {
+      "id": "browser-login",
+      "description": "在浏览器中完成 Keycloak 登录",
+      "action": "Playwright login",
+      "started_at": "2026-09-23T12:15:53.048348Z",
+      "elapsed_seconds": 4.984512471593916,
+      "http_status": null,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "Running 4 tests using 2 workers\n\n  ✓  1 [mobile] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator and shows the workbench (1.8s)\n  ✓  2 [desktop] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator and shows the workbench (1.9s)\n  -  3 [mobile] › e2e/acceptance-console.spec.ts:72:5 › an operator submits a run in the console and sees it reach a terminal state\n  -  4 [desktop] › e2e/acceptance-console.spec.ts:72:5 › an operator submits a run in the console and sees it reach a terminal state\n\n  2 skipped\n  2 passed (3.2s)\nnpm notice\nnpm notice New major version of npm available! 11.19.0 -> 12.1.0\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v12.1.0\nnpm notice To update run: npm install -g npm@12.1.0\nnpm notice"
+    },
+    {
+      "id": "browser-submit",
+      "description": "通过控制台提交一次运行并等待结果可见，把探针的原始输出写入 detail",
+      "action": "Playwright submit + assert visible",
+      "started_at": "2026-09-23T12:15:58.032976Z",
+      "elapsed_seconds": 35.45264675375074,
+      "http_status": null,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "Running 4 tests using 2 workers\n\n  -  2 [mobile] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator and shows the workbench\n  -  1 [desktop] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator and shows the workbench\n  ✓  3 [mobile] › e2e/acceptance-console.spec.ts:72:5 › an operator submits a run in the console and sees it reach a terminal state (32.2s)\n  ✓  4 [desktop] › e2e/acceptance-console.spec.ts:72:5 › an operator submits a run in the console and sees it reach a terminal state (32.3s)\n\n  2 skipped\n  2 passed (33.7s)\nnpm notice\nnpm notice New major version of npm available! 11.19.0 -> 12.1.0\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v12.1.0\nnpm notice To update run: npm install -g npm@12.1.0\nnpm notice"
+    }
+  ],
+  "run_id": null,
+  "terminal_status": null,
+  "total_seconds": null,
+  "action_intent": null,
+  "citations": [],
+  "evidence": [],
+  "analysis": null,
+  "review": null,
+  "selection_manifest": [],
+  "followups_before": [],
+  "followups_after": [],
+  "timeline_events": [],
+  "audit_events": [],
+  "memory_records": [],
+  "graph_readings": [],
+  "foreign_run_status": null,
+  "listed_for_own_tenant": null,
+  "errors": []
+}

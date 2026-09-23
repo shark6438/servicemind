@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable
+import logging
+from collections.abc import Awaitable, Callable, Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -11,16 +12,22 @@ from uuid import UUID
 from core import settings
 from servicemind.context.builder import ContextBuilder
 from servicemind.context.contracts import (
+    CONTEXT_ITEM_CONTENT_MAX,
     ContextAgent,
+    ContextAssemblyError,
     ContextEnvelope,
     ContextItem,
     ContextSource,
     TrustLabel,
 )
 from servicemind.context.repository import ContextArtifactSink, PostgresContextArtifactSink
-from servicemind.domain.analysis import AnalysisResult
-from servicemind.domain.evidence import JoinedEvidence
-from servicemind.domain.review import ReviewResult
+from servicemind.domain.evidence import (
+    CITATION_KEY,
+    Evidence,
+    EvidenceSourceType,
+    JoinedEvidence,
+)
+from servicemind.domain.knowledge import AuthorityLevel
 from servicemind.domain.task import Task
 from servicemind.memory.contracts import (
     CROSS_TICKET_PROCEDURE_POLICY,
@@ -51,6 +58,111 @@ from servicemind.rag.models import TeiEmbeddingProvider
 from servicemind.runtime.contracts import AgentInvocationContext
 from servicemind.skills.registry import SkillRegistry
 
+logger = logging.getLogger("servicemind.orchestration.phase5_governance")
+
+
+#: Evidence metadata that describes how the fact was *found* rather than what the
+#: fact *is*. None of it may reach the model. On a re-retrieval round the query is
+#: built from the Reviewer's own feedback, so serializing it into the evidence made
+#: the model read its previous critique back as its own grounding passage -- the
+#: analysis was then rejected for failing to match text that had originated in the
+#: review, which re-retrieval could never resolve. Providers no longer emit these
+#: keys (see ``EnterpriseRAG.to_evidence`` and ``to_graph_evidence``); this filter is
+#: the boundary guarantee, so a future provider cannot reintroduce the loop.
+_QUERY_DERIVED_METADATA = frozenset({"query", "model_query", "rewritten_queries"})
+
+
+def _model_visible_evidence(evidence: Evidence) -> str:
+    """Serialize evidence for the model, without retrieval bookkeeping."""
+    payload = evidence.model_dump(mode="json")
+    metadata = payload.get("metadata")
+    if isinstance(metadata, dict):
+        for key in _QUERY_DERIVED_METADATA:
+            metadata.pop(key, None)
+    return json.dumps(payload, ensure_ascii=False)
+
+
+def _citation_check_evidence(evidence: Evidence) -> str:
+    """Serialize evidence the way the Reviewer's judge reads it: id, source, content.
+
+    The Reviewer's model call is a citation check -- "does the row this claim cites
+    actually state the claim" -- and ``ReviewerAgent._semantic_node`` already hands it
+    exactly these fields when there is no governed envelope. The envelope path passed
+    the full row instead, and the two differ by a factor of three: on the ticket-17
+    incident of 2026-09-23 the nine cited rows were 5990 tokens with their provenance,
+    metadata, tenant id and timestamps and 1985 without them. That overhead is what the
+    packer then had to fit, and what it dropped rows to fit -- including the rows under
+    review. It is also information no citation check can use: ``tenant_id`` is the
+    envelope's own tenant, and the retrieval bookkeeping is checked deterministically
+    against the ``Evidence`` objects, not against prose the model reads back.
+
+    The Analysis role keeps ``_model_visible_evidence``. It reasons over the whole row
+    rather than verifying a citation, and its view is the one the operator reads back
+    from the trace, so it is not narrowed to serve a different role's budget.
+    """
+    return json.dumps(
+        {
+            "evidence_id": evidence.evidence_id,
+            "source_type": evidence.source_type.value,
+            "source_ref": evidence.source_ref,
+            "content": evidence.content,
+            "content_hash": evidence.provenance.content_hash,
+            "citation": (
+                evidence.metadata.get(CITATION_KEY)
+                if evidence.source_type is EvidenceSourceType.KNOWLEDGE
+                else None
+            ),
+        },
+        ensure_ascii=False,
+    )
+
+
+def _model_visible_memory(record: MemoryRecord) -> str:
+    """Serialize a memory as a row, the way evidence is serialized.
+
+    Both channels carry text the platform did not author; they now arrive in the same
+    shape, so a reader can compare what they are instead of inferring it from a string.
+    """
+    return json.dumps(record.model_payload(), ensure_ascii=False)
+
+
+def _cited_evidence_ids(analysis: Any) -> frozenset[str]:
+    """Every evidence id the analysis cites, from every place it may cite one.
+
+    The Reviewer's whole job is to check each claim against the evidence it cites, so
+    the Reviewer's envelope has to contain that evidence. It is assembled by a budget
+    packer that ranks every item by authority, and evidence the analysis never mentions
+    ranks just as high -- so on a run with a large analysis the packer prunes cited rows
+    to make room for uncited ones. What the model then does is exactly what it was told
+    to: the semantic judge is handed ``governed_context``, the analysis cites an id that
+    is not in it, and the judge reports the claim as unsupported. That verdict is a
+    property of the delivery decision, not of the analysis, and it is not reproducible:
+    the same pruning passed review on the first pass of the same run and failed on the
+    second (ACC-18 / ACC-23, 2026-09-23), and each false rejection sends the run into a
+    replan / retrieve_more storm until the budget is gone.
+
+    The union is taken over the top-level refs, the per-claim refs and the proposed
+    actions' refs. ``AnalysisResult`` already constrains claims to a subset of the
+    declared refs, but the actions are not constrained, and reading all three costs
+    nothing and keeps this honest if that changes.
+    """
+    if not isinstance(analysis, Mapping):
+        return frozenset()
+    groups: list[Any] = [
+        analysis.get("evidence_refs"),
+        *[
+            claim.get("evidence_refs")
+            for claim in analysis.get("claims") or ()
+            if isinstance(claim, Mapping)
+        ],
+        *[
+            action.get("evidence_refs")
+            for action in analysis.get("proposed_actions") or ()
+            if isinstance(action, Mapping)
+        ],
+    ]
+    return frozenset(ref for group in groups for ref in (group or ()) if isinstance(ref, str))
+
 
 def _procedure_pattern(analysis: dict[str, Any]) -> tuple[str, str] | None:
     """Build a conservative cross-ticket identity and reviewable procedure body.
@@ -59,9 +171,19 @@ def _procedure_pattern(analysis: dict[str, Any]) -> tuple[str, str] | None:
     ticket ids and action arguments are excluded so incident-specific identifiers do
     not become reusable instructions. Exact normalized equality deliberately favours
     precision over recall at this automatic proposal boundary.
+
+    Recurrence is deliberately *not* an input. It is the conclusion corroboration
+    establishes, so requiring ``recurring_incident`` here inverted the dependency and
+    the feature could not start: the key is what lets the second ticket be recognised
+    as the same root cause, and until that happens there is nothing stating an
+    incident recurs. The skill the analysis agent is given says as much -- identify a
+    recurring pattern "only when at least two comparable, verified incidents support
+    it" -- so on the first ticket the honest value of the flag is False, and the gate
+    therefore refused to form the key on exactly the ticket that had to form it. The
+    flag is not discarded with the gate: it still raises a matching episode's
+    importance below, where it is a statement about the incident rather than a
+    precondition for recognising one.
     """
-    if analysis.get("recurring_incident") is not True:
-        return None
     names = ("classification", "recommended_group")
     if any(not isinstance(analysis.get(name), str) or not analysis[name].strip() for name in names):
         return None
@@ -85,6 +207,33 @@ def _procedure_pattern(analysis: dict[str, Any]) -> tuple[str, str] | None:
     return pattern_key, encoded
 
 
+#: Withdraw one stored knowledge document from every future retrieval, by tenant and by
+#: the source record the citation names. The governance layer states the consequence it
+#: needs; the RAG subsystem supplies it. Same shape as ``memory_repository_factory`` --
+#: the adapter names a capability, it does not reach into a subsystem.
+KnowledgeWithdrawal = Callable[[UUID, str], Awaitable[None]]
+
+
+async def withdraw_knowledge_document(tenant_id: UUID, source_record_id: str) -> None:
+    """Suspend a knowledge document in the live index: PostgreSQL first, then search.
+
+    ``is_active`` is ACL, not a soft flag -- the repository row is the authority and the
+    search projection is patched to match, so the pre-filter stops serving the document
+    on the next retrieval rather than on the next re-ingest. It is reversible through
+    the same call, which matters because the tripwire that reaches here matches on
+    substrings and cannot tell a document that *attempts* an injection from one that
+    quotes it as an example.
+    """
+    if not settings.SERVICEMIND_RAG_ENABLED:
+        return
+    # Resolved here rather than at import time, the way ``_skills`` defers the skill
+    # registry: a deployment that never catches an injection never builds the RAG
+    # subsystem, and the import graph keeps orchestration from depending on agents.
+    from servicemind.agents.knowledge import knowledge_agent
+
+    await knowledge_agent.rag.set_document_active(tenant_id, source_record_id, is_active=False)
+
+
 class Phase5Governance:
     """Workflow adapter that keeps Phase 5 services outside domain agents."""
 
@@ -94,11 +243,13 @@ class Phase5Governance:
         context_sink: ContextArtifactSink | None = None,
         memory_repository_factory: Callable[[UUID], MemoryRepository] | None = None,
         memory_embedding: MemoryEmbeddingProvider | None = None,
+        knowledge_withdrawal: KnowledgeWithdrawal | None = None,
     ) -> None:
         self.context_builder = ContextBuilder()
         self.context_sink = context_sink or PostgresContextArtifactSink()
         self.memory_repository_factory = memory_repository_factory or PostgresMemoryRepository
         self.memory_embedding = memory_embedding
+        self.knowledge_withdrawal = knowledge_withdrawal or withdraw_knowledge_document
         if (
             self.memory_embedding is None
             and settings.SERVICEMIND_MEMORY_VECTOR_ENABLED
@@ -111,6 +262,24 @@ class Phase5Governance:
                 )
             )
         self._skill_registry: SkillRegistry | None = None
+
+    async def _withdraw(self, tenant_id: UUID, source_record_id: str, evidence_id: str) -> None:
+        """Suspend a document the tripwire caught, and never fail the run over it.
+
+        The row is already out of this run's envelope -- the taint saw to that -- so a
+        withdrawal that raises would kill a run that is already safe. It is logged
+        instead, at error level with the traceback: a withdrawal that silently did not
+        happen leaves a poisoned document being retrieved and re-detected on every
+        future run, and nothing on the run's own record would say so.
+        """
+        try:
+            await self.knowledge_withdrawal(tenant_id, source_record_id)
+        except Exception:
+            logger.exception(
+                "prompt injection in %s could not be withdrawn from the corpus (document %s)",
+                evidence_id,
+                source_record_id,
+            )
 
     def _skills(self) -> SkillRegistry:
         if self._skill_registry is None:
@@ -250,46 +419,112 @@ class Phase5Governance:
                     provenance_ref=f"policy://{invocation.policy_version}/tools",
                 )
             )
-        output_schema = (
-            AnalysisResult.model_json_schema()
-            if agent is ContextAgent.ANALYSIS
-            else ReviewResult.model_json_schema()
-            if agent is ContextAgent.REVIEWER
-            else None
-        )
-        if output_schema is not None:
-            items.append(
-                ContextItem(
-                    item_id="output-schema",
-                    source=ContextSource.OUTPUT_SCHEMA,
-                    content=json.dumps(output_schema, ensure_ascii=False),
-                    allowed_agents=allowed_agents,
-                    trust=TrustLabel.TRUSTED_CONTROL,
-                    authority=1,
-                    relevance=1,
-                    required=True,
-                    provenance_ref="schema://servicemind/phase5",
-                )
-            )
+        # No role is given an ``output-schema`` item, and that is not a saving made by
+        # dropping a control. Both governed roles already carry the schema of the *only*
+        # schema they are ever asked to emit, in the system prompt, built in the same
+        # process from the same call, as the last thing the model reads before the input:
+        # ``agents/analysis.py`` ends with ``json.dumps(AnalysisResult.model_json_schema())``
+        # and ``agents/reviewer.py`` ends with ``json.dumps(SemanticReview.model_json_schema())``.
+        # The envelope copies restated what had been said one message earlier -- 2985 tokens
+        # for the Analyst (28% of a 10720-token envelope) and 1586 for the Reviewer (15%).
+        #
+        # The Reviewer's copy was worse than duplicated: it carried ``ReviewResult``'s
+        # schema, and ``ReviewResult`` is never requested from a model at all. The
+        # reviewer's one structured call asks for ``SemanticReview`` (``reviewer.py:632``)
+        # and the result it returns is assembled in Python (``reviewer.py:259``). So the
+        # item spent 15% of the reviewer's envelope describing a shape no model is asked
+        # to produce, while the shape it is asked for was already in the prompt.
+        #
+        # Measured on ACC-03 (2026-09-23): the Analyst's copy, together with an evidence cap
+        # charged in rank order, left the runbook the case turns on pruned while 229 tokens
+        # of the envelope sat unused, and the Analyst recorded in ``unresolved_questions``
+        # that no cited evidence stated a mechanism -- because the document that states one
+        # had been cut for room it was not even using. Measured on ACC-06 (2026-09-23): with
+        # the Analyst's copy gone the analysis grew to the room it had been given, and the
+        # reviewer -- whose envelope must hold that analysis *and* every row it cites, both
+        # required -- ran out of budget and failed the run with
+        # ``required_item_exceeds_token_budget``. Two roles paying for the same mistake is
+        # how that mistake gets found; it is fixed once, here, for both.
         items.extend(self._state_items(state, agent, allowed_agents, run_id))
         joined_payload = state.get("joined_evidence") or {}
         if agent in {ContextAgent.ANALYSIS, ContextAgent.REVIEWER} and joined_payload:
             joined = JoinedEvidence.model_validate(joined_payload)
-            items.extend(
-                ContextItem(
-                    item_id=f"evidence:{evidence.evidence_id}",
-                    source=ContextSource.EVIDENCE,
-                    content=evidence.model_dump_json(),
-                    allowed_agents=allowed_agents,
-                    trust=TrustLabel.VERIFIED,
-                    authority=0.95,
-                    relevance=evidence.confidence if evidence.confidence is not None else 0.5,
-                    provenance_ref=evidence.source_ref,
-                    taint_labels=frozenset({"untrusted_content"}),
-                    occurred_at=evidence.provenance.retrieved_at,
-                )
-                for evidence in joined.items
+            # The evidence the analysis cites is the evidence being reviewed: the
+            # Reviewer's envelope must carry it or the review has nothing to check
+            # against. See ``_cited_evidence_ids``. The Analysis role is deliberately left
+            # alone -- it cites from what it was shown, so pinning its own output back
+            # into its input would beg the question rather than answer it.
+            cited = (
+                _cited_evidence_ids(state.get("analysis_result"))
+                if agent is ContextAgent.REVIEWER
+                else frozenset()
             )
+            poisoned: dict[str, str] = {}
+            for evidence in joined.items:
+                taints = evidence.taints()
+                if "prompt_injection" in taints:
+                    # Enforcement is in-process and immediate: the taint is one of
+                    # ``BLOCKED_TAINTS``, so the builder rejects this row with
+                    # ``unresolved_taint`` and the analysis model never reads it. The
+                    # withdrawal below is the slower half -- it stops tomorrow's run
+                    # retrieving the document at all -- and the builder is what makes
+                    # today's run safe, so it runs whether or not the withdrawal does.
+                    record = evidence.source_record_id
+                    if record is not None:
+                        poisoned.setdefault(record, evidence.evidence_id)
+                items.append(
+                    ContextItem(
+                        # The item id *is* the evidence id. The model echoes whichever id it
+                        # is shown when it cites a claim, and every validator
+                        # (AnalysisAgent._quality, ReviewerAgent,
+                        # JoinedEvidence.evidence_refs) resolves citations in the bare
+                        # ``ev-...`` namespace. A namespaced id here made the model cite
+                        # something the validators could never resolve, so every analysis
+                        # came back ANALYSIS_GROUNDING_FAILED and every review saw unknown
+                        # references.
+                        item_id=evidence.evidence_id,
+                        source=ContextSource.EVIDENCE,
+                        content=(
+                            _citation_check_evidence(evidence)
+                            if agent is ContextAgent.REVIEWER
+                            else _model_visible_evidence(evidence)
+                        ),
+                        allowed_agents=allowed_agents,
+                        # Not ``VERIFIED``. This row is retrieved text from a corpus the
+                        # platform did not author -- a runbook, a public post, a ticket
+                        # body, a Graph projection -- and the item said so out of the other
+                        # side of its mouth already, carrying ``untrusted_content`` as a
+                        # taint. One item cannot be both verified and untrusted, and the
+                        # label is what tells the model these are facts to reason over
+                        # rather than instructions to follow.
+                        trust=TrustLabel.UNTRUSTED,
+                        # The source's own ``AuthorityLevel``, rescaled to the envelope's
+                        # 0..1. Every case used to be a constant 0.95 here, which is the
+                        # number the packer sorts on -- so the level each source declares,
+                        # stores and reads back decided nothing, and under a budget the
+                        # surviving evidence was chosen by the tiebreak, an evidence id.
+                        authority=evidence.authority_level / 100,
+                        relevance=evidence.confidence if evidence.confidence is not None else 0.5,
+                        provenance_ref=evidence.source_ref,
+                        taint_labels=taints,
+                        occurred_at=evidence.provenance.retrieved_at,
+                        # Required only when the analysis cites it -- see ``cited`` above.
+                        # A cited row that cannot fit now raises
+                        # ``required_item_exceeds_token_budget`` and the run terminates as
+                        # ``context_assembly_failure``. That is the honest outcome: the
+                        # Reviewer cannot verify a citation it was not shown, and letting
+                        # the packer drop it does not avoid the failure, it renames it
+                        # after the analysis instead.
+                        required=evidence.evidence_id in cited,
+                    )
+                )
+            if poisoned and agent is ContextAgent.ANALYSIS:
+                # Once per run, on the first role that reads evidence. The reviewer is
+                # handed the same joined set in the same run, so withdrawing here covers
+                # both; ``set_document_active`` and the repository write behind it are
+                # idempotent, and doing it twice would only double the round trips.
+                for record, evidence_id in poisoned.items():
+                    await self._withdraw(tenant_id, record, evidence_id)
             # Only ANALYSIS may consume long-term memory: the ContextBuilder
             # allowlist grants MEMORY to ANALYSIS, not REVIEWER (which verifies
             # against task/evidence only). Retrieving for REVIEWER would pay a
@@ -312,10 +547,21 @@ class Phase5Governance:
                     ContextItem(
                         item_id=f"memory:{selection.memory.memory_id}",
                         source=ContextSource.MEMORY,
-                        content=selection.memory.content,
+                        # The row, not the bare string: it carries ``created_by``,
+                        # ``memory_type`` and ``provenance``, which is how a reader
+                        # tells a verified outcome of a past run from a curated
+                        # document -- and how it tells that the prose inside an
+                        # episode was written by the run that resolved it.
+                        content=_model_visible_memory(selection.memory),
                         allowed_agents=allowed_agents,
+                        # Kept VERIFIED, unlike evidence: this passage did not merely
+                        # get retrieved, it passed the deterministic write policy, cites
+                        # only verified evidence, and was reviewed before it was stored.
                         trust=TrustLabel.VERIFIED,
-                        authority=0.7,
+                        # A case resolved by an earlier run, which is the level the
+                        # memory write path already reasoned with -- quoted here rather
+                        # than restated, so the two cannot drift.
+                        authority=AuthorityLevel.TENANT_RESOLVED_CASE / 100,
                         relevance=selection.score,
                         provenance_ref=f"memory://{selection.memory.memory_id}",
                         occurred_at=selection.memory.updated_at,
@@ -397,11 +643,24 @@ class Phase5Governance:
             }
         if not values:
             return []
+        content = json.dumps(values, ensure_ascii=False)
+        if len(content) > CONTEXT_ITEM_CONTENT_MAX:
+            # The state item carries derived model output -- the analysis the reviewer
+            # must judge, the review the action agent must honour -- so its size is not
+            # something this module decides. Clipping it is not an option either: the
+            # reviewer's entire model input is this item, and half a JSON document is
+            # not a smaller analysis, it is an unparseable one. Name the cause and let
+            # the caller terminate the run honestly.
+            raise ContextAssemblyError(
+                "state_item_exceeds_item_ceiling",
+                f"state context item is {len(content)} characters, over the "
+                f"{CONTEXT_ITEM_CONTENT_MAX}-character item ceiling",
+            )
         return [
             ContextItem(
                 item_id="state",
                 source=ContextSource.STATE,
-                content=json.dumps(values, ensure_ascii=False),
+                content=content,
                 allowed_agents=allowed_agents,
                 trust=TrustLabel.TRUSTED_CONTROL,
                 authority=1,
@@ -523,6 +782,16 @@ class Phase5Governance:
         if not settings.SERVICEMIND_MEMORY_PROCEDURAL_PROPOSALS_ENABLED:
             return len(records)
         pattern = _procedure_pattern(result.get("analysis") or {})
+        # ACTIVE here is not a claim about this episode being trustworthy: it is the
+        # same visibility rule the supporting side applies. ``pattern_episodes`` goes
+        # through ``MemoryPatternQuery.allows_record``, which calls ``visible_at``,
+        # which is True only for ACTIVE -- so a quarantined episode is invisible as
+        # support no matter what this gate says. Relaxing this check alone therefore
+        # changes nothing except which runs bother to look: the first version of this
+        # fix dropped the ACTIVE requirement on the grounds that quarantine is the
+        # normal resting state of a post-run episode, and the corroboration still
+        # never fired, because the two episodes it went looking for were quarantined
+        # and so invisible. The gate and the query agree; leave them agreeing.
         if pattern is None or not any(
             record.memory_type is MemoryType.EPISODIC
             and record.status is MemoryStatus.ACTIVE

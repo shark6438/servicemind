@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from servicemind.domain.integrity import stable_digest
+from servicemind.domain.models import ACTION_POLICY_VERSION_MAX
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
 from servicemind.domain.task import BudgetSnapshot
 
@@ -24,7 +25,12 @@ class HandoffEnvelope(BaseModel):
     remaining_budget: BudgetSnapshot
     idempotency_context: dict[str, Any]
     handoff_reason: str = Field(min_length=1, max_length=1000)
-    policy_version: str = Field(default="servicemind-action-policy-v2", min_length=1)
+    #: Quoted from the ``action_intents.policy_version`` contract: this value is handed to
+    #: the Action Agent and written to that column verbatim, so the bound belongs on the
+    #: handoff as much as on the intent it becomes.
+    policy_version: str = Field(
+        default="servicemind-action-policy-v2", min_length=1, max_length=ACTION_POLICY_VERSION_MAX
+    )
     review_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     evidence_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     expires_at: datetime | None = None

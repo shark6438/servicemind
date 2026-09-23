@@ -2,7 +2,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from servicemind.domain.task import AgentName
+from servicemind.domain.task import MAX_PLAN_TASKS, AgentName
 
 
 class ControlOwner(StrEnum):
@@ -49,7 +49,10 @@ class PlanProposal(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     rationale_summary: str = Field(min_length=3, max_length=1500)
-    tasks: list[PlanTaskProposal] = Field(min_length=1, max_length=12)
+    # ``revise_plan`` re-wraps a revision as a ``PlanProposal`` (completed tasks
+    # first, then the new ones), so this ceiling must admit a cumulative revision
+    # too -- it is the compiled ``TaskPlan`` that bounds the run, not this type.
+    tasks: list[PlanTaskProposal] = Field(min_length=1, max_length=MAX_PLAN_TASKS)
     max_parallel: int = Field(default=2, ge=1, le=4)
 
 
@@ -58,5 +61,9 @@ class PlanRevisionProposal(BaseModel):
 
     rationale_summary: str = Field(min_length=3, max_length=1500)
     preserved_task_ids: list[str] = Field(default_factory=list)
-    tasks: list[PlanTaskProposal] = Field(min_length=1, max_length=12)
+    # A revision is cumulative: it re-lists every completed task next to the new
+    # ones, so its ceiling has to match the compiled plan's rather than a first
+    # plan's. At 12, a second revision (10 completed + 4 new) could not be
+    # expressed at all and every run died on the second RETRIEVE_MORE.
+    tasks: list[PlanTaskProposal] = Field(min_length=1, max_length=MAX_PLAN_TASKS)
     max_parallel: int = Field(default=2, ge=1, le=4)

@@ -27,7 +27,7 @@ import pytest
 
 from servicemind.agents.knowledge import KnowledgeAgent
 from servicemind.agents.reviewer import ReviewerAgent
-from servicemind.domain.analysis import AnalysisResult
+from servicemind.domain.analysis import AnalysisResult, AnalysisStatus
 from servicemind.domain.evidence import Evidence, EvidenceSourceType, join_evidence
 from servicemind.domain.knowledge import Citation
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
@@ -40,6 +40,7 @@ from servicemind.orchestration.supervisor_workflow import (
     SupervisorRuntimeServices,
     build_supervisor_graph,
 )
+from servicemind.rag.query import QueryProcessor
 
 TENANT = UUID("11111111-1111-4111-8111-111111111111")
 
@@ -186,6 +187,34 @@ def _closed_plan(goal: str, tasks: list[Task]) -> TaskPlan:
 
 
 # =============================================================== A) reviewer gate
+
+
+@pytest.mark.asyncio
+async def test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure() -> None:
+    """An analysis that never came through the model path is not a citation problem.
+
+    A degraded analysis holds a draft the quality gate already refused, so whatever is
+    wrong with its citations is a symptom of the runtime failure, not the cause. Reading
+    it as evidence of bad grounding cancels the run under the wrong reason and never
+    reaches the DEGRADED_ANALYSIS branch written for this case -- which is what happened
+    on the 2026-09-23 baseline (ACC-03), where a crashed revision left the unresolvable
+    reference ``ev-8cec7c70e10c7b56`` in place.
+    """
+    reviewer = ReviewerAgent()
+    joined = join_evidence(TENANT, [glpi_ticket(), glpi_group()])
+    degraded = analysis([*joined.evidence_refs, "ev-8cec7c70e10c7b56"]).model_copy(
+        update={"status": AnalysisStatus.DEGRADED, "source": "deterministic_fallback"}
+    )
+    result = await reviewer.review(
+        analysis=degraded,
+        evidence=joined,
+        request_write=False,
+        retrieval_round=1,
+        replan_count=0,
+        max_replans=2,
+    )
+    assert result.decision is ReviewDecision.ESCALATE
+    assert [finding.reason_code for finding in result.findings] == ["DEGRADED_ANALYSIS"]
 
 
 @pytest.mark.asyncio
@@ -440,14 +469,14 @@ def initial(goal: str, **updates) -> dict:
     return state
 
 
-def loop_services(supervisor, planner, knowledge, reviewer=None):
+def loop_services(supervisor, planner, knowledge, reviewer=None, data=None):
     return SupervisorRuntimeServices(
         router=FastPathRouter(),
         supervisor=supervisor,
         planner=planner,
         policy=SupervisorPolicy(),
         dispatcher=TaskDispatcher(),
-        data=FakeData(),
+        data=data or FakeData(),
         knowledge=knowledge,
         analysis=LoopAnalysis(),
         reviewer=reviewer or ReviewerAgent(),
@@ -480,6 +509,83 @@ async def test_real_reviewer_retrieve_more_dispatches_second_round_then_passes()
         "knowledge:T2",
         "knowledge:T5",
     ]
+
+
+#: Long enough on its own that quoting it verbatim into a round-1 query overruns the
+#: 4000-character ``KnowledgeQuery.raw_query`` ceiling.
+BULKY_TICKET_CONTENT = "NOC 现场核查记录：VPN 隧道协商失败，逐项核对证书与 MFA 登记状态。" * 200
+
+
+class BulkyTicketData:
+    """Ticket evidence long enough that a verbatim round-1 query would overrun."""
+
+    async def get_ticket_evidence(self, context, ticket_id):
+        return [
+            Evidence.create(
+                tenant_id=TENANT,
+                source_type=EvidenceSourceType.GLPI,
+                source_ref="glpi://tickets/2",
+                resource_type="ticket",
+                resource_id="2",
+                content=BULKY_TICKET_CONTENT,
+                provider="glpi",
+                retrieval_method="api",
+            ),
+            glpi_group(),
+        ]
+
+
+class ContractCheckingKnowledge:
+    """Checks each query against the real domain contract, as the live index does."""
+
+    def __init__(self) -> None:
+        self.rounds: list[int] = []
+        self.queries: list[str] = []
+
+    async def retrieve(self, *, tenant_id, query, retrieval_round=0):
+        self.rounds.append(retrieval_round)
+        self.queries.append(query)
+        await QueryProcessor().process(query, use_model=False)
+        if retrieval_round >= 1:
+            return [
+                knowledge_evidence("Network Team owns VPN gateway faults and owns the runbook.")
+            ]
+        return []
+
+
+@pytest.mark.asyncio
+async def test_second_knowledge_round_stays_within_the_retrieval_query_contract() -> None:
+    """The retrieve-more round must not overrun ``KnowledgeQuery.raw_query``.
+
+    Live failure: ``knowledge_task_node`` concatenated every joined evidence item into
+    the query, so once round 0 had collected a few thousand characters the round-1
+    knowledge task died with "raw_query: String should have at most 4000 characters"
+    and the supervisor replanned three times before cancelling the run. The query is a
+    retrieval signal, not a transcript of everything already retrieved.
+    """
+    FakeRepository.events = []
+    knowledge = ContractCheckingKnowledge()
+    graph = build_supervisor_graph(
+        loop_services(
+            StateDrivenSupervisor(),
+            LoopPlanner(),
+            knowledge,
+            reviewer=ReviewerAgent(),
+            data=BulkyTicketData(),
+        )
+    )
+
+    result = await graph.ainvoke(initial("Analyze VPN with the relevant runbook"))
+
+    assert knowledge.rounds == [0, 1], "second retrieval round must have run"
+    assert result["branch_errors"] == []
+    # The evidence the round-1 query is built from, on its own, overruns the contract:
+    # this is what makes the bound load-bearing rather than cosmetic.
+    assert len(BULKY_TICKET_CONTENT) > 4000
+    assert len(knowledge.queries[1]) <= 4000
+    # The goal still leads the query, so the retrieval signal is preserved.
+    assert knowledge.queries[1].startswith("Analyze VPN with the relevant runbook")
+    assert result["final_result"]["review"]["decision"] == "passed"
 
 
 # =========================================================== C) ACL forwarding

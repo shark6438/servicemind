@@ -5,8 +5,8 @@ from urllib.parse import urlparse
 
 import httpx
 
+from servicemind.domain.integrity import contains_injection_marker
 from servicemind.memory.contracts import SECRET_PATTERN
-from servicemind.memory.policy import contains_injection_marker
 from servicemind.tool_platform.contracts import (
     ToolCall,
     ToolDefinition,

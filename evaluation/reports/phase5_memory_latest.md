@@ -3,7 +3,7 @@
 - 语料：`servicemind-phase5-memory-v2`
 - 打分模式：`lexical`
 - 打分模型：`lexical-jaccard`
-- 时间锚点：`2026-09-22T00:46:59.174019+00:00`
+- 时间锚点：`2026-09-22T12:43:29.864419+00:00`
 
 > 本语料由本项目编写，是对设计所声称保证的**回归契约**，不是任何租户真实记忆
 > 分布的度量，也不能替代生产记忆流量回放。时间以锚点偏移表达。
@@ -62,7 +62,7 @@
 ### 3.2 投递门禁（声明式）
 
 前两节都止步于检索器。**检索不等于投递**：`ContextBuilder` 按 authority 排序后
-丢弃超出 token 预算的可选项，而记忆（authority 0.7）排在 evidence（0.95）之后，
+丢弃超出 token 预算的可选项，而记忆（authority 0.7）排在 evidence（1.0）之后，
 因此一条记忆可以被检索到、排在第 1 位，然后在进入提示前被裁掉——而上面每一行仍然全绿。
 
 本节按真实 `ContextBuilder` 的**选择清单**判定：声明了 `must_deliver` 的探针，
@@ -72,7 +72,7 @@
 - 声明的载荷：预算 12000 token、evidence 3 条（每条约 7000 字符）
 - 载荷依据：按已配置的生产上限推导，不是对观测的拟合：知识包器预算 SERVICEMIND_RAG_CONTEXT_TOKENS=8000 token、单条父块上限 parent_max_chars=7000 字符，故一次填满自身预算的知识任务至少投递 2 条满长父块；joined 信封还叠加 data_task 的工单证据，故声明 3 条 x 7000 字符。分析信封预算取生产实际值 SERVICEMIND_CONTEXT_MAX_INPUT_TOKENS=12000；ANALYSIS 的 SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP=5000，REVIEWER 不应用该上限。此处声明的是要求：记忆必须能在该形态下存活。
 - 记忆通道可支配余量：最紧探针 **5738** token
-- 记忆通道实际占用：占用最多的探针 **206** token
+- 记忆通道实际占用：占用最多的探针 **1003** token
 - **判定：通过**
 
 > 载荷是**声明的运行形态假设，不是生产观测**：生产库中没有任何 `evidence.joined`
@@ -80,10 +80,10 @@
 
 | 探针 | 记忆通道余量 | 实际占用 | 判定 |
 | --- | --- | --- | --- |
-| p-preference | 5749 | 88 | 送达 |
-| p-procedure | 5738 | 137 | 送达 |
-| p-fleet-vpn-causes | 5742 | 206 | 送达 |
-| p-post-run-tenant-episode | 5749 | 202 | 送达 |
+| p-preference | 5749 | 502 | 送达 |
+| p-procedure | 5738 | 765 | 送达 |
+| p-fleet-vpn-causes | 5742 | 1003 | 送达 |
+| p-post-run-tenant-episode | 5749 | 905 | 送达 |
 
 ## 4. 直接播种的记录（绕过写入策略）
 

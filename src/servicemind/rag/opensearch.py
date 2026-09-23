@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import re
+from collections.abc import Iterable
 from typing import Any
 from uuid import UUID
 
@@ -68,6 +69,61 @@ class GenerationStatus(BaseModel):
 def _generation_of(index_name: str) -> str | None:
     match = _GENERATION_SUFFIX.search(index_name)
     return match.group(1) if match else None
+
+
+#: How many buckets one composite page holds. Not a ceiling on how much is read --
+#: ``_distinct_values`` pages until the backend says there is nothing left -- only on
+#: how much arrives per round trip.
+_DISTINCT_PAGE = 1000
+
+
+async def _distinct_values(
+    client: Any,
+    index: str,
+    field: str,
+    *,
+    query: dict[str, Any] | None = None,
+    page: int = _DISTINCT_PAGE,
+) -> set[str]:
+    """Every distinct value of ``field`` in ``index``, read page by page to the end.
+
+    Three callers used to ask this question with one ``search`` and a ``size``, and a
+    ``size`` is a window rather than a total: past it the backend returns a *prefix* of
+    the answer with nothing in the response saying so. Each caller then acted on that
+    prefix as though it were the whole set, and the effects were silent and permanent.
+    ``indexed_document_ids`` fed the reconciliation that confirms ``pending_index`` rows
+    as indexed, so a corpus holding more documents than the window left the surplus
+    pending forever -- and the active alias only flips once nothing is pending, so the
+    generation could never be published. ``replace_document`` used the prefix to decide
+    which parent chunks a rewrite replaces, orphaning the rest. Answering the question
+    completely costs a loop; answering it partially cost a corpus that could not go live
+    and no error anywhere to say why.
+    """
+    values: set[str] = set()
+    after: dict[str, Any] | None = None
+    while True:
+        aggregation: dict[str, Any] = {
+            "values": {
+                "composite": {
+                    "size": page,
+                    "sources": [{field: {"terms": {"field": field, "order": "asc"}}}],
+                }
+            }
+        }
+        if after is not None:
+            aggregation["values"]["composite"]["after"] = after
+        body: dict[str, Any] = {"size": 0, "aggs": aggregation}
+        if query is not None:
+            body["query"] = query
+        response = await client.search(index=index, body=body)
+        composite = response["aggregations"]["values"]
+        buckets = composite["buckets"]
+        if not buckets:
+            return values
+        values.update(bucket["key"][field] for bucket in buckets)
+        if "after_key" not in composite:
+            return values
+        after = composite["after_key"]
 
 
 #: OpenSearch ``hybrid`` refuses more than this many sub-queries in one request.
@@ -421,15 +477,15 @@ class OpenSearchKnowledgeIndex:
         child = self._child_concrete(tenant_id, generation)
         parent = self._parent_concrete(tenant_id, generation)
 
-        previous = await self.client.search(
-            index=child,
-            body={
-                "size": 1000,
-                "_source": ["parent_chunk_id"],
-                "query": {"term": {"source_record_id": document.provenance.source_record_id}},
-            },
+        # Every parent this rewrite replaces, not the first thousand of them: the delete
+        # below is unconditional, so whatever this read misses is orphaned in the parent
+        # index with no child left pointing at it.
+        old_parent_ids = await _distinct_values(
+            self.client,
+            child,
+            "parent_chunk_id",
+            query={"term": {"source_record_id": document.provenance.source_record_id}},
         )
-        old_parent_ids = {hit["_source"]["parent_chunk_id"] for hit in previous["hits"]["hits"]}
         await self.client.delete_by_query(
             index=child,
             body={"query": {"term": {"source_record_id": document.provenance.source_record_id}}},
@@ -526,21 +582,19 @@ class OpenSearchKnowledgeIndex:
     async def _remove_source_records(self, child_concrete: str, source_record_ids: set[str]) -> int:
         if not source_record_ids:
             return 0
-        terms: list[dict[str, Any]] = [
-            {"term": {"source_record_id": value}} for value in source_record_ids
-        ]
-        parent_lookup = await self.client.search(
-            index=child_concrete,
-            body={
-                "size": 10000,
-                "_source": ["parent_chunk_id"],
-                "query": {"bool": {"should": terms, "minimum_should_match": 1}},
-            },
+        # One ``terms`` clause, not one clause per record. The set arrives from a corpus
+        # retraction and is as large as the retraction is, and a ``bool`` pays a clause
+        # budget for every member -- ``indices.query.bool.max_clause_count``, which is 1024
+        # by default, so a retraction of a few thousand records was a query the backend
+        # refuses outright. Membership is the whole question being asked, and ``terms``
+        # asks it in a single clause whatever the set holds.
+        query: dict[str, Any] = {"terms": {"source_record_id": sorted(source_record_ids)}}
+        parent_ids = await _distinct_values(
+            self.client, child_concrete, "parent_chunk_id", query=query
         )
-        parent_ids = {hit["_source"]["parent_chunk_id"] for hit in parent_lookup["hits"]["hits"]}
         removed = await self.client.delete_by_query(
             index=child_concrete,
-            body={"query": {"bool": {"should": terms, "minimum_should_match": 1}}},
+            body={"query": query},
             conflicts="proceed",
             refresh=False,
         )
@@ -602,37 +656,10 @@ class OpenSearchKnowledgeIndex:
         """
         all_stale: set[str] = set()
         for child in await self._list_concrete(self._child_pattern(tenant_id)):
-            present: set[str] = set()
-            after: dict[str, Any] | None = None
-            while True:
-                aggregation: dict[str, Any] = {
-                    "sources": {
-                        "composite": {
-                            "size": 1000,
-                            "sources": [
-                                {
-                                    "source_record_id": {
-                                        "terms": {
-                                            "field": "source_record_id",
-                                            "order": "asc",
-                                        }
-                                    }
-                                }
-                            ],
-                        }
-                    }
-                }
-                if after is not None:
-                    aggregation["sources"]["composite"]["after"] = after  # type: ignore[index]
-                response = await self.client.search(
-                    index=child, body={"size": 0, "aggs": aggregation}
-                )
-                composite = response["aggregations"]["sources"]
-                for bucket in composite["buckets"]:
-                    present.add(bucket["key"]["source_record_id"])
-                if "after_key" not in composite:
-                    break
-                after = composite["after_key"]
+            # Stale means "in the index and not in PostgreSQL", so ``present`` has to be
+            # the whole of what the generation holds -- a prefix would leave the records
+            # it missed out of the retraction.
+            present = await _distinct_values(self.client, child, "source_record_id")
             stale = present - active_source_record_ids
             if stale:
                 await self._remove_source_records(child, stale)
@@ -649,6 +676,15 @@ class OpenSearchKnowledgeIndex:
         )
 
     def _acl_filter(self, principal: RetrievalPrincipal) -> list[dict[str, Any]]:
+        """The ``terms`` filters below are bounded by the principal, not by this method.
+
+        Each set becomes a clause, so the size of the query is the size of the identity --
+        and ``ACL_SET_MAX_ENTRIES`` is what keeps the identity one the backend can filter
+        by in full. A set that outgrew the backend's own terms ceiling would be applied in
+        part, silently turning "what may this user see" into "what may the first N of this
+        user's grants see", so the refusal is at the identity boundary and this is the
+        place that depends on it.
+        """
         now = principal.query_time.isoformat()
 
         def unrestricted_or(field: str, values: list[Any]):
@@ -864,17 +900,49 @@ class OpenSearchKnowledgeIndex:
         }
 
     async def indexed_document_ids(self, tenant_id: UUID) -> set[UUID]:
-        """Document ids currently retrievable via the tenant's active generation."""
+        """Every document id retrievable via the tenant's active generation.
+
+        This set decides which ``pending_index`` rows reconciliation confirms, and
+        ``publish`` only flips the active alias once no row is left pending -- so a
+        *partial* answer here is not a smaller answer, it is a generation that can never
+        be published. It used to be one ``collapse`` search with ``size: 10000``, which
+        is a window: a corpus of 30,000 documents reported its first 10,000 as indexed
+        and the rest stayed pending permanently, with nothing anywhere recording that the
+        read had been cut short.
+        """
         alias = self.child_alias(tenant_id)
         if not await self._resolve_alias(alias):
             return set()
+        indexed = await _distinct_values(self.client, alias, "document_id")
+        return {UUID(value) for value in indexed}
+
+    async def documents_by_source_record_id(
+        self, tenant_id: UUID, source_record_ids: Iterable[str]
+    ) -> dict[str, dict[str, Any]]:
+        """The indexed projection for named source records, as the retrieval filter sees it.
+
+        Read from the search generation rather than from PostgreSQL, because the question
+        a deployment check asks is what the *filter* will see: a document whose ACL is
+        right in the database and wrong in the index is a document that leaks or vanishes,
+        and only the index can answer for itself. One entry per record: the projection is
+        written per chunk, so chunk rows are deduplicated by source record id.
+        """
+        wanted = sorted({value for value in source_record_ids if value})
+        if not wanted:
+            return {}
+        alias = self.child_alias(tenant_id)
+        if not await self._resolve_alias(alias):
+            return {}
         response = await self.client.search(
             index=alias,
             body={
-                "size": 10000,
-                "_source": ["document_id"],
-                "query": {"match_all": {}},
-                "collapse": {"field": "document_id"},
+                "query": {"terms": {"source_record_id": wanted}},
+                "size": len(wanted) * 8,
+                "_source": True,
             },
         )
-        return {UUID(hit["_source"]["document_id"]) for hit in response["hits"]["hits"]}
+        found: dict[str, dict[str, Any]] = {}
+        for hit in response["hits"]["hits"]:
+            source = hit["_source"]
+            found.setdefault(str(source["source_record_id"]), source)
+        return found

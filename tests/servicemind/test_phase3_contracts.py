@@ -4,7 +4,13 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 
-from servicemind.domain.evidence import Evidence, EvidenceSourceType, join_evidence
+from servicemind.domain.evidence import (
+    JOINED_EVIDENCE_MAX,
+    Evidence,
+    EvidenceSourceType,
+    bounded_join,
+    join_evidence,
+)
 from servicemind.domain.handoff import HandoffEnvelope
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
 from servicemind.domain.task import Budget, BudgetSnapshot
@@ -49,6 +55,52 @@ def test_join_deduplicates_without_losing_provenance() -> None:
     assert joined.items == [item]
     assert joined.evidence_refs == [item.evidence_id]
     assert joined.items[0].provenance.provider == "glpi-v2"
+
+
+def directory_row(index: int) -> Evidence:
+    return Evidence.create(
+        tenant_id=TENANT_ID,
+        source_type=EvidenceSourceType.GLPI,
+        source_ref=f"glpi://groups/{index}",
+        resource_type="support_group",
+        resource_id=str(index),
+        content=f"GLPI support group: Team {index}",
+        provider="glpi-v2",
+        retrieval_method="list_groups",
+    )
+
+
+def test_a_run_that_gathers_too_much_evidence_keeps_the_incident_not_the_directory() -> None:
+    """Two channels accumulate across every dispatch, so the join must bound itself.
+
+    ``data_evidence`` and ``knowledge_evidence`` are ``operator.add`` accumulators that no
+    node ever clears: one data task is a ticket plus up to 50 support groups plus up to 15
+    followups, so a second dispatch passes the ceiling. The overflow used to reach
+    ``JoinedEvidence`` and raise there, killing a run that had gathered all of its evidence
+    successfully -- and the evidence the incident is actually explained by was the evidence
+    most likely to be lost, because the directory rows are the bulk of it.
+    """
+    gathered = [evidence(), *[directory_row(index) for index in range(JOINED_EVIDENCE_MAX)]]
+    assert len(gathered) > JOINED_EVIDENCE_MAX
+
+    joined, dropped = bounded_join(TENANT_ID, gathered)
+
+    assert len(joined.items) == JOINED_EVIDENCE_MAX
+    assert dropped == len(gathered) - JOINED_EVIDENCE_MAX
+    # The ticket survives every directory row.
+    assert gathered[0] in joined.items
+    # The kept rows stay a subsequence of what was gathered, in gathering order.
+    kept = [gathered.index(item) for item in joined.items]
+    assert kept == sorted(kept)
+
+
+def test_a_join_within_the_ceiling_drops_nothing_and_preserves_order() -> None:
+    gathered = [evidence(), directory_row(1), directory_row(2)]
+
+    joined, dropped = bounded_join(TENANT_ID, gathered)
+
+    assert dropped == 0
+    assert joined.items == gathered
 
 
 def test_join_rejects_cross_tenant_evidence() -> None:

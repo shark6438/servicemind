@@ -11,7 +11,13 @@ from uuid import UUID
 from opensearchpy import AsyncOpenSearch
 
 from core import settings
-from servicemind.domain.evidence import EVIDENCE_CONTENT_MAX, Evidence, EvidenceSourceType
+from servicemind.domain.evidence import (
+    AUTHORITY_LEVEL_KEY,
+    CITATION_KEY,
+    EVIDENCE_CONTENT_MAX,
+    Evidence,
+    EvidenceSourceType,
+)
 from servicemind.domain.knowledge import (
     Citation,
     ContextItem,
@@ -21,7 +27,7 @@ from servicemind.domain.knowledge import (
     RetrievalPrincipal,
 )
 from servicemind.graphrag.retrieval import GraphRetriever, to_graph_evidence
-from servicemind.graphrag.store import GraphStore
+from servicemind.graphrag.store import GraphAccessError, GraphStore
 from servicemind.rag.chunking import semantic_chunker
 from servicemind.rag.models import (
     BgeM3EmbeddingProvider,
@@ -494,11 +500,22 @@ class EnterpriseRAG:
                     else None
                 ),
                 metadata={
-                    "citation": item.citation.model_dump(mode="json"),
-                    "authority_level": int(item.hit.authority_level),
+                    CITATION_KEY: item.citation.model_dump(mode="json"),
+                    # Read back by ``Evidence.authority_level``, which the context
+                    # envelope orders on. The document's own level, not a restated one:
+                    # this is the only place it survives retrieval.
+                    AUTHORITY_LEVEL_KEY: int(item.hit.authority_level),
                     "license": item.hit.license,
                     "synthetic": item.hit.synthetic,
-                    "query": result.query.model_dump(mode="json"),
+                    # Deliberately no "query". The governance layer serializes this
+                    # metadata into the model-visible evidence content, and on a
+                    # re-retrieval round the query embeds the Reviewer's own feedback
+                    # (SupervisorWorkflow builds it from the review), so each of the N
+                    # retrieved rows handed the judge its previous critique back as a
+                    # VERIFIED passage -- the analysis was then rejected for not
+                    # matching text that originated in the review itself, in a loop
+                    # that no amount of re-retrieval could resolve. It also doubled
+                    # the payload: 1003 of the 2006 bytes here were the echoed query.
                 },
             )
             for item in result.items
@@ -510,17 +527,38 @@ class EnterpriseRAG:
         """Structural side channel over the same processed query (Phase 4 baseline 4.2).
 
         Runs only when a GraphStore was wired in; text retrieval is never blocked on it.
-        Any store/query failure is logged and degrades to no graph findings, because the
+        A store or query failure is logged and degrades to no graph findings, because the
         graph is advisory context, not the knowledge authority.
+
+        Two of those outcomes are not the same and are not logged the same. "The store
+        broke" is a degraded side channel: the text evidence stands, an operator sees a
+        failure. "The store cannot filter by the caller's authority" is not degradation
+        at all -- it means the only answers this channel could give are answers the
+        caller is not entitled to, and both an empty list and an unfiltered one would be
+        read downstream as an ordinary result. So it is logged as an error with its own
+        marker and it still returns nothing: fail closed, and loudly.
         """
         if self.graph_store is None:
             return []
         try:
             findings = await GraphRetriever().retrieve(result.query, principal, self.graph_store)
+            # Conversion belongs inside the guard, not beside it. It only ran outside
+            # before, so a finding whose identifiers exceeded the Evidence contract raised
+            # past this method entirely -- and the caller treats a raised side channel as
+            # a failed knowledge task, discarding the text evidence this method exists to
+            # stand beside. The promise in the docstring above is about the side channel
+            # as a whole, which includes turning findings into evidence.
+            return to_graph_evidence(principal.tenant_id, findings)
+        except GraphAccessError:
+            logger.error(
+                "Graph-RAG refused: store %r cannot apply node ACLs. No graph evidence "
+                "is served, for this query or any other.",
+                self.graph_store.label,
+            )
+            return []
         except Exception:
             logger.exception("Graph-RAG side channel failed; text retrieval stands alone.")
             return []
-        return to_graph_evidence(principal.tenant_id, findings, result.query)
 
 
 def build_enterprise_rag() -> EnterpriseRAG:

@@ -2,12 +2,18 @@
 
 All tests run offline against a recording stand-in for the OpenSearch client so the
 mechanics (identity encoding, blue-green alias switch, superseded-generation
-retirement, per-mode query bodies) are asserted without a live cluster. The
-docker-gated suite covers a real OpenSearch.
+retirement, per-mode query bodies) are asserted without a live cluster.
+
+A stand-in agrees with the code by construction about everything the code does not
+actually send, so it cannot answer whether the cluster accepts a row, whether an alias
+moves without a gap in service, or whether the ACL pre-filter leaves a suspended row out
+of a ranked result. Those live in ``test_phase4_index_lifecycle_live.py``, which is
+docker-gated -- this module proves the requests, that one proves their effect.
 """
 
+import json
 from fnmatch import fnmatch
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -16,6 +22,7 @@ from servicemind.domain.knowledge import (
     RetrievalMode,
     RetrievalPrincipal,
 )
+from servicemind.rag import opensearch
 from servicemind.rag.models import DeterministicEmbeddingProvider
 from servicemind.rag.opensearch import OpenSearchKnowledgeIndex
 
@@ -46,7 +53,18 @@ def test_generation_identity_encodes_model_revision_and_dimension() -> None:
     assert wide != v1
 
 
+class _FakeSerializer:
+    """The one method ``opensearchpy.helpers`` calls to size a bulk request."""
+
+    @staticmethod
+    def dumps(value) -> str:
+        # str, not bytes: the chunker sizes each line with ``.encode("utf-8")`` itself.
+        return json.dumps(value, default=str)
+
+
 class _FakeTransport:
+    serializer = _FakeSerializer()
+
     def __init__(self, owner) -> None:
         self.owner = owner
 
@@ -114,6 +132,30 @@ class _FakeIndices:
         self.owner.calls.append(("refresh", index))
 
 
+def _bulk_deleted_ids(client) -> set[str]:
+    """The ``_id`` of every document the recorded bulk requests asked to delete."""
+    deleted: set[str] = set()
+    for name, *rest in client.calls:
+        if name != "bulk":
+            continue
+        for line in (rest[0] or "").splitlines():
+            action = json.loads(line).get("delete")
+            if action:
+                deleted.add(action["_id"])
+    return deleted
+
+
+def _composite_request(body: dict | None) -> tuple[str, str, int, dict | None] | None:
+    """``(agg name, field, page size, after cursor)`` if this is a composite aggregation."""
+    for name, aggregation in (body or {}).get("aggs", {}).items():
+        composite = aggregation.get("composite")
+        if composite is None:
+            continue
+        field = next(iter(composite["sources"][0]))
+        return name, field, composite["size"], composite.get("after")
+    return None
+
+
 class _FakeClient:
     def __init__(self) -> None:
         self.calls: list = []
@@ -122,26 +164,59 @@ class _FakeClient:
         self.index_count: dict[str, int] = {}
         self.search_response: dict | None = None
         self.source_ids: dict[str, set[str]] = {}
+        #: ``(index, field) -> values`` for aggregations other than ``source_record_id``.
+        self.field_values: dict[tuple[str, str], set[str]] = {}
         self.pipeline = PIPELINE
         self.transport = _FakeTransport(self)
         self.indices = _FakeIndices(self)
 
     async def search(self, *, index=None, body=None, params=None):
         self.calls.append(("search", index, body, params))
-        if body and body.get("aggs"):
-            return {
-                "aggregations": {
-                    "sources": {
-                        "buckets": [
-                            {"key": {"source_record_id": value}}
-                            for value in sorted(self.source_ids.get(index or "", set()))
-                        ]
-                    }
-                }
-            }
+        request = _composite_request(body)
+        if request is not None:
+            return self._composite_page(index or "", request)
         if self.search_response is not None:
             return self.search_response
         return {"hits": {"hits": []}}
+
+    def _composite_page(self, index: str, request: tuple[str, str, int, dict | None]) -> dict:
+        """Answer a composite aggregation the way a real backend does -- page by page.
+
+        Deriving the response from the request instead of hard-coding one shape means a
+        caller that reads only the first page, or ignores ``after_key``, gets a short
+        answer here exactly as it would in production. The old stub always returned every
+        value in one response, so a bounded read that asked for the first thousand looked
+        identical to a complete one.
+        """
+        name, field, size, after = request
+        values = sorted(self._values(index, field))
+        start = (
+            0
+            if after is None
+            else next(
+                (i + 1 for i, value in enumerate(values) if value == after[field]), len(values)
+            )
+        )
+        page = values[start : start + size]
+        aggregation: dict = {"buckets": [{"key": {field: value}} for value in page]}
+        if page and start + size < len(values):
+            aggregation["after_key"] = {field: page[-1]}
+        return {"aggregations": {name: aggregation}}
+
+    def _values(self, index: str, field: str) -> set[str]:
+        """Values for ``field`` under ``index``, resolving an alias to its concretes.
+
+        A search against an alias reads the indices behind it -- that indirection is the
+        whole point of the blue-green switch -- so the stand-in resolves it too, rather
+        than only answering for a concrete name it was told about directly.
+        """
+        targets = self.aliases.get(index) or {index}
+        found: set[str] = set()
+        for target in targets:
+            found |= self.field_values.get((target, field), set())
+            if field == "source_record_id":
+                found |= self.source_ids.get(target, set())
+        return found
 
     async def count(self, *, index):
         self.calls.append(("count", index))
@@ -154,6 +229,12 @@ class _FakeClient:
     async def update_by_query(self, *, index, body=None, conflicts="proceed", refresh=False):
         self.calls.append(("update_by_query", index, body))
         return {"updated": 1}
+
+    async def bulk(self, body=None, *args, **kwargs):
+        # ``helpers.async_bulk`` sends newline-joined JSON action lines; recording the
+        # text as received lets a test read back exactly which ids were addressed.
+        self.calls.append(("bulk", body))
+        return {"errors": False, "items": []}
 
     async def close(self):
         return None
@@ -522,3 +603,103 @@ def test_hybrid_fan_out_drops_case_and_whitespace_duplicates() -> None:
     # texts remain: the dense anchor + a single added lexical arm.
     assert embedding.last_query == "VPN down"
     assert len(body["query"]["hybrid"]["queries"]) == 1 + 2
+
+
+#: Comfortably past ``opensearch._DISTINCT_PAGE``, so every test below crosses the page
+#: boundary the reads used to stop at.
+_BEYOND_ONE_PAGE = 1200
+
+
+@pytest.mark.asyncio
+async def test_indexed_document_ids_reports_the_whole_corpus_not_its_first_page() -> None:
+    """A partial answer here is a generation that can never be published.
+
+    ``reconcile`` confirms ``pending_index`` rows from this set and ``publish`` only flips
+    the active alias once nothing is pending -- so when this read stopped at 10,000 the
+    surplus documents stayed pending permanently and the corpus never went live, with no
+    error recorded anywhere to say why.
+    """
+    client = _FakeClient()
+    index = _make_index(client)
+    child = _publish_active_gen(client)
+    document_ids = {str(uuid4()) for _ in range(_BEYOND_ONE_PAGE)}
+    client.field_values[(child, "document_id")] = document_ids
+
+    assert await index.indexed_document_ids(TENANT) == {UUID(value) for value in document_ids}
+
+
+@pytest.mark.asyncio
+async def test_a_retraction_deletes_every_parent_of_the_records_it_removes() -> None:
+    """``delete_by_query`` is unconditional; whatever this read misses is orphaned.
+
+    The parent chunks of a source record are found by a read, and the parents themselves
+    are deleted by id from that read's result -- so a parent past the first page keeps its
+    row in the parent index with no child left pointing at it.
+    """
+    client = _FakeClient()
+    index = _make_index(client)
+    child = _publish_active_gen(client)
+    parent_ids = {str(uuid4()) for _ in range(_BEYOND_ONE_PAGE)}
+    client.field_values[(child, "parent_chunk_id")] = parent_ids
+
+    await index._remove_source_records(child, {"PAGERDUTY-1"})
+
+    assert _bulk_deleted_ids(client) == parent_ids
+
+
+@pytest.mark.asyncio
+async def test_a_filtered_distinct_read_pages_to_the_end_within_its_filter() -> None:
+    """``_distinct_values`` reports the set its caller asked for, however many pages.
+
+    The same helper answers "every document", "every parent of these records" and "every
+    source record", which is why the pagination is asserted once here rather than relying
+    on each caller to be right about it.
+    """
+    client = _FakeClient()
+    child = _publish_active_gen(client)
+    client.field_values[(child, "parent_chunk_id")] = {
+        str(uuid4()) for _ in range(_BEYOND_ONE_PAGE)
+    }
+
+    found = await opensearch._distinct_values(
+        client, child, "parent_chunk_id", query={"term": {"source_record_id": "PAGERDUTY-1"}}
+    )
+
+    assert found == client.field_values[(child, "parent_chunk_id")]
+    searches = [call for call in client.calls if call[0] == "search"]
+    assert len(searches) > 1, "a set larger than one page must take more than one request"
+    assert all(
+        call[2]["query"] == {"term": {"source_record_id": "PAGERDUTY-1"}} for call in searches
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_large_retraction_stays_one_query_clause() -> None:
+    """The query a retraction sends must not grow with the size of the retraction.
+
+    Source records are asked about by membership, and the ``bool`` shape this used to
+    build spent one clause per record against ``indices.query.bool.max_clause_count``
+    (1024 by default) -- so a corpus retraction of a few thousand records was a query the
+    backend refuses outright, from a code path whose whole job is cleanup.
+    """
+    client = _FakeClient()
+    index = _make_index(client)
+    child = _publish_active_gen(client)
+    retracted = {f"SRC-{i}" for i in range(2048)}
+    client.field_values[(child, "parent_chunk_id")] = {str(uuid4())}
+
+    await index._remove_source_records(child, retracted)
+
+    search = next(body for name, _index, body, _params in client.calls if name == "search")
+    assert search["query"] == {"terms": {"source_record_id": sorted(retracted)}}
+
+
+@pytest.mark.asyncio
+async def test_a_retraction_of_nothing_sends_no_query_at_all() -> None:
+    client = _FakeClient()
+    index = _make_index(client)
+    child = _publish_active_gen(client)
+    client.calls.clear()
+
+    assert await index._remove_source_records(child, set()) == 0
+    assert [call for call in client.calls if call[0] in {"search", "delete_by_query", "bulk"}] == []

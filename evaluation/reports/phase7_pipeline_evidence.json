@@ -1,0 +1,85 @@
+{
+  "generated_at": "2026-09-23T12:27:53.842237+00:00",
+  "repo_revision": "c0d878d0c6a2f61efc249716c2053b447812aacd",
+  "secret_keys_scrubbed": [
+    "ACME_ANALYST_PASSWORD",
+    "ACME_APPROVER_PASSWORD",
+    "GLOBEX_ANALYST_G3_PASSWORD",
+    "GLOBEX_ANALYST_G4_PASSWORD",
+    "GLOBEX_ANALYST_NOGROUP_PASSWORD",
+    "GLOBEX_ANALYST_PASSWORD",
+    "GLOBEX_APPROVER_PASSWORD",
+    "GLPI_ADMIN_PASSWORD",
+    "GLPI_DB_PASSWORD",
+    "KEYCLOAK_ADMIN_PASSWORD",
+    "KEYCLOAK_DB_PASSWORD",
+    "KEYCLOAK_ENTITLEMENT_READER_PASSWORD",
+    "MARIADB_ROOT_PASSWORD",
+    "NEO4J_PASSWORD",
+    "SERVICEMIND_ACME_WEBHOOK_SECRET",
+    "SERVICEMIND_DB_PASSWORD",
+    "SERVICEMIND_GLOBEX_WEBHOOK_SECRET",
+    "SERVICEMIND_GLPI_ACME_PASSWORD",
+    "SERVICEMIND_GLPI_CLIENT_SECRET",
+    "SERVICEMIND_GLPI_GLOBEX_PASSWORD",
+    "SERVICEMIND_GLPI_PASSWORD",
+    "SERVICEMIND_REDIS_PASSWORD",
+    "SERVICEMIND_RUNTIME_PASSWORD"
+  ],
+  "stages": [
+    {
+      "id": "environment",
+      "purpose": "冻结被测环境：服务清单、systemd unit、健康检查、源码版本与未提交改动",
+      "command": "bash -lc echo '--- servicemind containers ---'; docker ps --format '{{.Names}}\t{{.Image}}\t{{.Status}}' | grep -i servicemind | sort; echo '--- api unit ---'; systemctl --user show servicemind-api -p ActiveEnterTimestamp -p ActiveState -p ExecStart -p Restart; echo '--- health ---'; curl -s -m 5 http://127.0.0.1:18080/health; echo; echo '--- revision ---'; git rev-parse HEAD; echo '--- uncommitted files ---'; git status --porcelain | wc -l",
+      "exit_code": 0,
+      "elapsed_seconds": 0.1,
+      "stdout": "--- servicemind containers ---\nservicemind-frontend\tservicemind-frontend:local\tUp 30 hours\nservicemind-glpi-database-1\tmariadb:11.8\tUp 2 weeks (healthy)\nservicemind-glpi-glpi-1\tglpi/glpi:11.0.8\tUp 2 weeks\nservicemind-glpi-keycloak-1\tquay.io/keycloak/keycloak:26.7.3\tUp 2 weeks\nservicemind-glpi-keycloak-database-1\tpostgres:16\tUp 2 weeks (healthy)\nservicemind-glpi-neo4j-1\tneo4j:5.26\tUp 2 weeks (healthy)\nservicemind-glpi-opa-1\topenpolicyagent/opa:1.20.2-static\tUp 9 days (healthy)\nservicemind-glpi-opensearch-1\topensearchproject/opensearch:3.8.0\tUp 2 weeks (healthy)\nservicemind-glpi-rag-embedding-1\tghcr.io/huggingface/text-embeddings-inference:cuda-1.8.3\tUp 9 days (healthy)\nservicemind-glpi-rag-reranker-1\tghcr.io/huggingface/text-embeddings-inference:cuda-1.8.3\tUp 9 days (healthy)\nservicemind-glpi-redis-1\tredis:8.2-alpine\tUp 9 days (healthy)\nservicemind-glpi-servicemind-postgres-1\tpostgres:16\tUp 2 weeks (healthy)\n--- api unit ---\nRestart=on-failure\nExecStart={ path=/home/shihongye/data1/servicemind/.venv/bin/servicemind-api ; argv[]=/home/shihongye/data1/servicemind/.venv/bin/servicemind-api ; ignore_errors=no ; start_time=[Wed 2026-09-23 20:19:28 CST] ; stop_time=[n/a] ; pid=2852867 ; code=(null) ; status=0/0 }\nActiveState=active\nActiveEnterTimestamp=Wed 2026-09-23 20:19:28 CST\n--- health ---\n{\"status\":\"ok\"}\n--- revision ---\nc0d878d0c6a2f61efc249716c2053b447812aacd\n--- uncommitted files ---\n108\n",
+      "stderr": ""
+    },
+    {
+      "id": "identity",
+      "purpose": "身份播种结果核对：四个验收主体存在、凭据可用、无声明漂移（只读）",
+      "command": "uv run python scripts/reconcile_phase7_acceptance_identity.py --check",
+      "exit_code": 0,
+      "elapsed_seconds": 0.9,
+      "stdout": "{\n  \"credentials\": {\n    \"globex-analyst-g3\": \"verified\",\n    \"globex-analyst-g4\": \"verified\",\n    \"globex-analyst-nogroup\": \"verified\",\n    \"globex-approver\": \"verified\"\n  },\n  \"mismatches\": [],\n  \"mode\": \"check\",\n  \"observed_at\": \"2026-09-23T12:26:05Z\",\n  \"roster\": [\n    \"globex-analyst-g3\",\n    \"globex-analyst-g4\",\n    \"globex-analyst-nogroup\",\n    \"globex-approver\"\n  ],\n  \"status\": \"PASS\",\n  \"subjects\": [\n    {\n      \"declared_attributes\": {\n        \"glpi_entity_ids\": [\n          \"2\"\n        ],\n        \"glpi_group_ids\": [\n          \"3\"\n        ],\n        \"tenant_id\": [\n          \"22222222-2222-4222-8222-222222222222\"\n        ]\n      },\n      \"declared_roles\": [\n        \"analyst\",\n        \"viewer\"\n      ],\n      \"effective_claims\": {\n        \"glpi_entity_ids\": [\n          \"2\"\n        ],\n        \"glpi_group_ids\": [\n          \"3\"\n        ],\n        \"roles\": [\n          \"analyst\",\n          \"viewer\"\n        ],\n        \"tenant_id\": \"22222222-2222-4222-8222-222222222222\"\n      },\n      \"id\": \"1557904a-4299-430a-874a-d3d03491224d\",\n      \"username\": \"globex-analyst-g3\"\n    },\n    {\n      \"declared_attributes\": {\n        \"glpi_entity_ids\": [\n          \"2\"\n        ],\n        \"glpi_group_ids\": [\n          \"4\"\n        ],\n        \"tenant_id\": [\n          \"22222222-2222-4222-8222-222222222222\"\n        ]\n      },\n      \"declared_roles\": [\n        \"analyst\",\n        \"viewer\"\n      ],\n      \"effective_claims\": {\n        \"glpi_entity_ids\": [\n          \"2\"\n        ],\n        \"glpi_group_ids\": [\n          \"4\"\n        ],\n        \"roles\": [\n          \"analyst\",\n          \"viewer\"\n        ],\n        \"tenant_id\": \"22222222-2222-4222-8222-222222222222\"\n      },\n      \"id\": \"c39e3626-b1f9-4523-a9b6-938f1253dd19\",\n      \"username\": \"globex-analyst-g4\"\n    },\n    {\n      \"declared_attributes\": {\n        \"glpi_entity_ids\": [\n          \"2\"\n        ],\n        \"tenant_id\": [\n          \"22222222-2222-4222-8222-222222222222\"\n        ]\n      },\n      \"declared_roles\": [\n        \"analyst\",\n        \"viewer\"\n      ],\n      \"effective_claims\": {\n        \"glpi_entity_ids\": [\n          \"2\"\n        ],\n        \"glpi_group_ids\": null,\n        \"roles\": [\n          \"analyst\",\n          \"viewer\"\n        ],\n        \"tenant_id\": \"22222222-2222-4222-8222-222222222222\"\n      },\n      \"id\": \"ce29f98a-8334-4a7f-abab-dba81a2d183b\",\n      \"username\": \"globex-analyst-nogroup\"\n    },\n    {\n      \"declared_attributes\": {\n        \"glpi_entity_ids\": [\n          \"2\"\n        ],\n        \"glpi_group_ids\": [\n          \"3\",\n          \"4\"\n        ],\n        \"tenant_id\": [\n          \"22222222-2222-4222-8222-222222222222\"\n        ]\n      },\n      \"declared_roles\": [\n        \"analyst\",\n        \"approver\",\n        \"operator\",\n        \"viewer\"\n      ],\n      \"effective_claims\": {\n        \"glpi_entity_ids\": [\n          \"2\"\n        ],\n        \"glpi_group_ids\": [\n          \"3\",\n          \"4\"\n        ],\n        \"roles\": [\n          \"analyst\",\n          \"approver\",\n          \"operator\",\n          \"viewer\"\n        ],\n        \"tenant_id\": \"22222222-2222-4222-8222-222222222222\"\n      },\n      \"id\": \"e5e44115-ba9f-41e4-84d2-5076a81c6af8\",\n      \"username\": \"globex-approver\"\n    }\n  ],\n  \"unrepaired\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "id": "identity-drift",
+      "purpose": "既有记忆审核主体的双向漂移核对（只读，不创建身份）",
+      "command": "uv run python scripts/reconcile_phase5_memory_review_identity.py --check",
+      "exit_code": 0,
+      "elapsed_seconds": 0.6,
+      "stdout": "{\"mismatches\": [], \"mode\": \"check\", \"review_users\": [\"acme-approver\", \"globex-analyst-g3\", \"globex-analyst-g4\", \"globex-approver\"], \"status\": \"PASS\", \"unrepaired\": []}\n",
+      "stderr": ""
+    },
+    {
+      "id": "fixtures",
+      "purpose": "知识夹具与工单夹具的幂等核对（只读；未播种时应非零退出）",
+      "command": "uv run python scripts/seed_phase7_acceptance_fixtures.py --check",
+      "exit_code": 0,
+      "elapsed_seconds": 14.5,
+      "stdout": "{\n  \"mode\": \"check\",\n  \"manifest\": \"evaluation/acceptance/fixtures/globex/manifest.json\",\n  \"tenant_id\": \"22222222-2222-4222-8222-222222222222\",\n  \"documents\": {\n    \"KB-GLOBEX-VPN-MFA-REBIND\": {\n      \"group_ids\": [],\n      \"is_active\": true,\n      \"declared_group_ids\": [],\n      \"declared_is_active\": true\n    },\n    \"KB-GLOBEX-VPN-MFA-G3\": {\n      \"group_ids\": [\n        3\n      ],\n      \"is_active\": true,\n      \"declared_group_ids\": [\n        3\n      ],\n      \"declared_is_active\": true\n    },\n    \"KB-GLOBEX-VPN-MFA-G4\": {\n      \"group_ids\": [\n        4\n      ],\n      \"is_active\": true,\n      \"declared_group_ids\": [\n        4\n      ],\n      \"declared_is_active\": true\n    },\n    \"KB-GLOBEX-VPN-MFA-LEGACY\": {\n      \"group_ids\": [\n        3\n      ],\n      \"is_active\": false,\n      \"declared_group_ids\": [\n        3\n      ],\n      \"declared_is_active\": false\n    },\n    \"KB-GLOBEX-VPN-APP-REG\": {\n      \"group_ids\": [],\n      \"is_active\": true,\n      \"declared_group_ids\": [],\n      \"declared_is_active\": true\n    },\n    \"KB-GLOBEX-VPN-MFA-AUDIT\": {\n      \"group_ids\": [],\n      \"is_active\": true,\n      \"declared_group_ids\": [],\n      \"declared_is_active\": true\n    }\n  },\n  \"graph\": {\n    \"store\": \"neo4j\",\n    \"anchors\": [\n      25,\n      26\n    ],\n    \"restricted_runbooks\": {\n      \"KB-GLOBEX-VPN-MFA-G3\": 3,\n      \"KB-GLOBEX-VPN-MFA-G4\": 4\n    },\n    \"problems\": []\n  },\n  \"problems\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "id": "index-lifecycle",
+      "purpose": "真 OpenSearch 上的索引蓝绿生命周期探针",
+      "command": "uv run pytest tests/servicemind/test_phase4_index_lifecycle_live.py --run-docker -q",
+      "exit_code": 0,
+      "elapsed_seconds": 17.5,
+      "stdout": "..                                                                       [100%]\n=============================== warnings summary ===============================\ntests/servicemind/test_phase4_index_lifecycle_live.py::test_a_generation_is_built_aliased_and_then_retired_on_the_cluster\ntests/servicemind/test_phase4_index_lifecycle_live.py::test_a_suspended_row_is_unreachable_through_a_real_filtered_search\n  /data/shihongye/servicemind/.venv/lib/python3.13/site-packages/aiohttp/connector.py:988: DeprecationWarning: enable_cleanup_closed ignored because https://github.com/python/cpython/pull/118960 is fixed in Python version sys.version_info(major=3, minor=13, micro=12, releaselevel='final', serial=0)\n    super().__init__(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n2 passed, 2 warnings in 12.24s\n",
+      "stderr": ""
+    },
+    {
+      "id": "regression",
+      "purpose": "全仓回归：tests/servicemind + tests/service",
+      "command": "uv run pytest tests/servicemind tests/service -q",
+      "exit_code": 0,
+      "elapsed_seconds": 75.8,
+      "stdout": "........................................................................ [  9%]\n........................................................................ [ 19%]\n......................................................................ss [ 29%]\n..........................ss....s....................................... [ 39%]\n........................................................................ [ 48%]\n...................................................................s.... [ 58%]\n........................................................................ [ 68%]\n........................................................................ [ 78%]\n........................................................................ [ 88%]\n........................................................................ [ 97%]\n...............                                                          [100%]\n=============================== warnings summary ===============================\n.venv/lib/python3.13/site-packages/fastapi/testclient.py:1\n  /data/shihongye/servicemind/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\n.venv/lib/python3.13/site-packages/langgraph_supervisor/supervisor.py:431\n.venv/lib/python3.13/site-packages/langgraph_supervisor/supervisor.py:431\n.venv/lib/python3.13/site-packages/langgraph_supervisor/supervisor.py:431\ntests/service/test_service_message_generator.py::test_three_layer_supervisor_hierarchy_agent_with_fake_model\ntests/service/test_service_message_generator.py::test_three_layer_supervisor_hierarchy_agent_with_fake_model\n  /data/shihongye/servicemind/.venv/lib/python3.13/site-packages/langgraph_supervisor/supervisor.py:431: LangGraphDeprecatedSinceV10: create_react_agent has been moved to `langchain.agents`. Please update your import to `from langchain.agents import create_agent`. Deprecated in LangGraph V1.0 to be removed in V2.0.\n    supervisor_agent = create_react_agent(  # type: ignore[deprecated]\n\nsrc/agents/research_assistant.py:4\n  /data/shihongye/servicemind/src/agents/research_assistant.py:4: DeprecationWarning: `langchain-community` is being sunset and is no longer actively maintained. See https://github.com/langchain-ai/langchain-community/issues/674 for details and migration guidance toward standalone integration packages.\n    from langchain_community.tools import DuckDuckGoSearchResults, OpenWeatherMapQueryRun\n\ntests/service/test_agui.py: 9 warnings\ntests/service/test_threads_sqlite.py: 1 warning\n  /data/shihongye/servicemind/.venv/lib/python3.13/site-packages/ag_ui_langgraph/agent.py:179: PydanticDeprecatedSince20: The `copy` method is deprecated; use `model_copy` instead. See the docstring of `BaseModel.copy` for details about how to handle `include` and `exclude`. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/\n    async for event_str in self._handle_stream_events(input.copy(update={\"forwarded_props\": forwarded_props})):\n\ntests/service/test_agui.py: 9 warnings\ntests/service/test_threads_sqlite.py: 1 warning\n  /data/shihongye/servicemind/.venv/lib/python3.13/site-packages/ag_ui_langgraph/agent.py:697: LangGraphDeprecatedSinceV10: `config_schema` is deprecated. Use `get_context_jsonschema` for the relevant schema instead. Deprecated in LangGraph V1.0 to be removed in V2.0.\n    config_schema = self.graph.config_schema().schema()\n\ntests/service/test_agui.py: 9 warnings\ntests/service/test_threads_sqlite.py: 1 warning\n  /data/shihongye/servicemind/.venv/lib/python3.13/site-packages/ag_ui_langgraph/agent.py:697: PydanticDeprecatedSince20: The `schema` method is deprecated; use `model_json_schema` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/\n    config_schema = self.graph.config_schema().schema()\n\ntests/service/test_service_e2e.py::test_agent_stream\n  /data/shihongye/servicemind/.venv/lib/python3.13/site-packages/httpx/_client.py:1053: StarletteDeprecationWarning: You should not use the 'timeout' argument with the TestClient. See https://github.com/Kludex/starlette/issues/1108 for more information.\n    return self.request(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n729 passed, 6 skipped, 38 warnings in 56.84s\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "case_id": "ACC-12a",
+  "environment": {
+    "entitlement_verifier_configured": true,
+    "base_url": "http://127.0.0.1:18080",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "recorded_at": "2026-09-23T12:07:27.120744Z",
+    "deployed_revision": "c0d878d0c6a2f61efc249716c2053b447812aacd+dirty(108 files)",
+    "notes": [
+      "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
+      "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
+    ]
+  },
+  "subject": {
+    "username": "globex-analyst-g3",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "roles": [
+      "analyst",
+      "viewer"
+    ],
+    "entity_ids": [
+      2
+    ],
+    "group_ids": [
+      3
+    ]
+  },
+  "steps": [
+    {
+      "id": "produce-same",
+      "description": "对两条同根因（同一 canonical 载荷，仅大小写与空白不同）的固定输入求 pattern_key，两条必须相同",
+      "action": "procedural memory pattern_key producer",
+      "started_at": "2026-09-23T12:14:35.754842Z",
+      "elapsed_seconds": 0.00015342887490987778,
+      "http_status": null,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "{\"step\": \"produce-same\", \"expectation\": \"one key for two spellings of the same root cause\", \"classification\": [\"mfa_device_binding\", \"  MFA_Device_Binding \"], \"pattern_keys\": [\"1817fe726d02b8e8843af3d4d34c234cd0565609a43df7381c6a342616198328\", \"1817fe726d02b8e8843af3d4d34c234cd0565609a43df7381c6a342616198328\"], \"inputs\": [{\"recurring_incident\": true, \"classification\": \"mfa_device_binding\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}, {\"recurring_incident\": true, \"classification\": \"  MFA_Device_Binding \", \"recommended_group\": \"identity   team\", \"problem_recommendation\": \"Rebind\\t the authentication\\n  device.\"}]}"
+    },
+    {
+      "id": "produce-different",
+      "description": "对一条不同根因的固定输入求 pattern_key，必须与上面那条不同",
+      "action": "procedural memory pattern_key producer",
+      "started_at": "2026-09-23T12:14:35.755047Z",
+      "elapsed_seconds": 0.00005829334259033203,
+      "http_status": null,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "{\"step\": \"produce-different\", \"expectation\": \"a different root cause produces a different key\", \"classification\": [\"mfa_device_binding\", \"gateway_connectivity\"], \"pattern_keys\": [\"1817fe726d02b8e8843af3d4d34c234cd0565609a43df7381c6a342616198328\", \"867c3facb9b30e80590d72b71085c5e1898c01cb10c8ca6ddcfcc59673e1ef1c\"], \"inputs\": [{\"recurring_incident\": true, \"classification\": \"mfa_device_binding\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}, {\"recurring_incident\": true, \"classification\": \"gateway_connectivity\", \"recommended_group\": \"Network Team\", \"problem_recommendation\": \"Replace the gateway.\"}]}"
+    }
+  ],
+  "run_id": null,
+  "terminal_status": null,
+  "total_seconds": null,
+  "action_intent": null,
+  "citations": [],
+  "evidence": [],
+  "analysis": null,
+  "review": null,
+  "selection_manifest": [],
+  "followups_before": [],
+  "followups_after": [],
+  "timeline_events": [],
+  "audit_events": [],
+  "memory_records": [],
+  "graph_readings": [],
+  "foreign_run_status": null,
+  "listed_for_own_tenant": null,
+  "errors": []
+}

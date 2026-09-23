@@ -18,7 +18,9 @@ from servicemind.agents.data import DataAcquisitionPlan, DataAgent, DataToolCall
 from servicemind.domain.evidence import (
     EVIDENCE_CONTENT_MAX,
     EvidenceSourceType,
+    is_self_authored,
     join_evidence,
+    self_authored_marker,
 )
 from servicemind.runtime.contracts import AgentInvocationContext, AgentRunStatus
 from servicemind.runtime.tool_gateway import DataToolName
@@ -224,6 +226,71 @@ async def test_group_and_followup_row_ceilings(monkeypatch) -> None:
     joined = join_evidence(TENANT, result.output)
     assert len(joined.items) <= 100
     assert joined.items[0].source_type is EvidenceSourceType.GLPI
+
+
+# --- F2b: the platform's own followups are not the ticket record ---------------
+
+
+def test_the_authorship_marker_recognises_the_platform_and_only_the_platform() -> None:
+    """The recognizer must not fire on a human who merely quotes it.
+
+    Everything the platform writes carries ``self_authored_marker``; the only thing
+    standing between that and a false positive on a service-desk note is the shape of
+    the pattern, so the shape is what this pins.
+    """
+    written = self_authored_marker(UUID("22222222-2222-4222-8222-222222222222"), "f" * 64)
+    assert written == (
+        "[ServiceMind run=22222222-2222-4222-8222-222222222222 action=ffffffffffffffff]"
+    )
+    assert is_self_authored(f"<p>Analysis complete.</p><p>{written}</p>")
+
+    # A note about the platform, a malformed marker, and a truncated one are all the
+    # desk talking, and must stay in the evidence pool.
+    assert not is_self_authored("ServiceMind run=22222222 action=ffff")
+    assert not is_self_authored("[ServiceMind run=22222222-… action=fffff]")
+    assert not is_self_authored("[ServiceMind run=22222222-2222-4222-8222-222222222222]")
+
+
+@pytest.mark.asyncio
+async def test_platform_authored_followups_never_become_evidence(monkeypatch) -> None:
+    """A run must not read its own prior conclusions back as the ticket record.
+
+    GLPI stores ServiceMind's followups and the service desk's under the same service
+    account, so authorship shows up nowhere but the marker the executor appends. Taken
+    at face value, the platform's restatement of an earlier run arrives as ``GLPI_LIVE``
+    evidence -- authority 100, the top of the ranking -- and outranks both the incident's
+    own record and every retrieved runbook. Measured on the 2026-09-23 acceptance
+    baseline: two such rows took 3774 of the 4921 evidence tokens the Analyst was allowed
+    to see, and pushed every knowledge document out of its context.
+    """
+    marker = self_authored_marker(uuid4(), "b" * 64)
+    followups = [
+        {
+            "id": 41,
+            "content": "<p>Symptom: MFA prompts rejected after a phone change.</p>",
+            "is_private": False,
+        },
+        {
+            "id": 42,
+            "content": f"<p>Likely a stale device binding.</p><p>{marker}</p>",
+            "is_private": True,
+        },
+        {"id": 43, "content": f"<p>Confirmed.</p>{marker}", "is_private": True},
+    ]
+    monkeypatch.setattr(
+        data_module, "structured_output", lambda model, schema: FakeRunnable(full_plan())
+    )
+    agent = DataAgent(gateway=FakeReadGateway(followups=followups), model_factory=lambda: object())
+    result = await agent.run(
+        invocation=invocation(),
+        tenant_context=tenant_context(),
+        objective="Read the followup history for this ticket",
+        ticket_id=2,
+    )
+    followup_rows = [item for item in result.output if item.resource_type == "ticket_followup"]
+    assert [item.resource_id for item in followup_rows] == ["41"]
+    # Excluding the platform's own rows is normal operation, not a degraded run.
+    assert result.status is AgentRunStatus.SUCCEEDED
 
 
 # --- F3: the degrade path is budget-respecting, never raising ------------------

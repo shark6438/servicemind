@@ -3,8 +3,29 @@ from uuid import UUID
 
 from servicemind.domain.analysis import AnalysisResult
 from servicemind.domain.handoff import HandoffEnvelope
-from servicemind.domain.models import ActionIntent, TicketAnalysis
+from servicemind.domain.models import ACTION_PREVIEW_MAX, ActionIntent, TicketAnalysis
 from servicemind.runtime.contracts import stable_digest
+
+#: Room reserved for the elision marker, wide enough for any character count a single
+#: preview can quote, so ``head + marker`` stays inside ``ACTION_PREVIEW_MAX``.
+_PREVIEW_MARKER_BUDGET = 60
+
+
+def _bounded_preview(content: str) -> str:
+    """Clip the dry-run preview to its contract, marking what it left out.
+
+    The preview is derived, not authored: it is the analysis summary and the reviewer's
+    feedback joined with every reviewed evidence reference, and the join is the first
+    place their sizes meet. Only the preview is bounded -- ``arguments["content"]``
+    stays whole, because that string is what is actually appended to the ticket and the
+    preview exists to show it. Truncating the preview rather than the write keeps the
+    operator's view honest about the part it does show, which is what a prefix with an
+    explicit count does and a silently shorter preview would not.
+    """
+    if len(content) <= ACTION_PREVIEW_MAX:
+        return content
+    head = ACTION_PREVIEW_MAX - _PREVIEW_MARKER_BUDGET
+    return content[:head] + f"\n…[{len(content) - head} characters elided]"
 
 
 class ActionAgent:
@@ -96,7 +117,7 @@ class ActionAgent:
             review_digest=handoff.review_digest,
             evidence_digest=evidence_digest,
             expires_at=handoff.expires_at,
-            dry_run_preview=content,
+            dry_run_preview=_bounded_preview(content),
         )
 
 

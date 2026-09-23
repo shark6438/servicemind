@@ -1,0 +1,50 @@
+{
+  "schema_version": "phase7-acceptance-fixtures-v1",
+  "tenant_id": "22222222-2222-4222-8222-222222222222",
+  "glpi_entity_id": 2,
+  "note": "The ACL of a fixture document is declared here rather than in the markdown, so one machine-readable place states what is restricted and what is retired. A restricted document that existed only as prose would let the isolation cases pass against an all-public corpus.",
+  "documents": [
+    {
+      "file": "vpn-mfa-device-rebind.md",
+      "source_record_id": "KB-GLOBEX-VPN-MFA-REBIND",
+      "group_ids": [],
+      "is_active": true,
+      "role": "current remedy; public to the tenant"
+    },
+    {
+      "file": "vpn-mfa-group3-restricted.md",
+      "source_record_id": "KB-GLOBEX-VPN-MFA-G3",
+      "group_ids": [3],
+      "is_active": true,
+      "role": "restricted to GLPI group 3 (Network Team)"
+    },
+    {
+      "file": "vpn-mfa-group4-restricted.md",
+      "source_record_id": "KB-GLOBEX-VPN-MFA-G4",
+      "group_ids": [4],
+      "is_active": true,
+      "role": "restricted to GLPI group 4 (Service Desk)"
+    },
+    {
+      "file": "vpn-mfa-legacy-disable.md",
+      "source_record_id": "KB-GLOBEX-VPN-MFA-LEGACY",
+      "group_ids": [3],
+      "is_active": false,
+      "role": "retired: must never be cited. It is restricted to group 3, which is the group the ACC-02 subject holds, so the group check passes for that subject and the exclusion can only come from is_active -- a retired document nobody is allowed to see would prove nothing about is_active"
+    },
+    {
+      "file": "vpn-mfa-app-registration.md",
+      "source_record_id": "KB-GLOBEX-VPN-APP-REG",
+      "group_ids": [],
+      "is_active": true,
+      "role": "similar symptom, different root cause: retrievable, but must not be cited as the cause"
+    },
+    {
+      "file": "vpn-mfa-enrolment-audit.md",
+      "source_record_id": "KB-GLOBEX-VPN-MFA-AUDIT",
+      "group_ids": [],
+      "is_active": true,
+      "role": "bulk: what makes ACC-06's payload over budget. That case asserts a dropped row with a reason, which only exists if the envelope is genuinely full, and the corpus was sized against an envelope that wasted 2985 tokens on a duplicated output schema and refused rows it had room for. This document is the room that was returned to the envelope: retrievable for any question about VPN MFA, but stating no cause and no remedy, so it can never become the mechanism ACC-03 forbids citing nor the advice ACC-08 forbids giving"
+    }
+  ]
+}

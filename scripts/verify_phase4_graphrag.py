@@ -79,7 +79,6 @@ async def main() -> None:
         incident_evidence = to_graph_evidence(
             TENANT,
             await GraphRetriever().retrieve(incident_query, principal, store),
-            incident_query,
         )
         # Change anchor (CHG-88): known-problem path + the runbook it implements.
         change_query = await query_processor.process(
@@ -89,7 +88,6 @@ async def main() -> None:
         change_evidence = to_graph_evidence(
             TENANT,
             await GraphRetriever().retrieve(change_query, principal, store),
-            change_query,
         )
         evidence = [*incident_evidence, *change_evidence]
         relations = sorted({item.metadata["relation"] for item in evidence})

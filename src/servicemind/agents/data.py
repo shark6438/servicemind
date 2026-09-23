@@ -19,8 +19,10 @@ from servicemind.domain.evidence import (
     EVIDENCE_CONTENT_MAX,
     Evidence,
     EvidenceSourceType,
+    is_self_authored,
 )
 from servicemind.integrations.glpi.client import GlpiAPIError, GlpiClient
+from servicemind.integrations.glpi.models import html_to_text
 from servicemind.integrations.glpi.resolver import resolve_glpi_config
 from servicemind.runtime.contracts import (
     AgentInvocationContext,
@@ -365,6 +367,19 @@ class DataAgent:
                 -_MAX_FOLLOWUP_ROWS:
             ]
             for item in followups:
+                if is_self_authored(html_to_text(str(item.get("content", "")))):
+                    # The platform's own earlier followups are not the ticket record.
+                    # GLPI stores them under the same service account as the desk's notes,
+                    # so authorship is only visible in the marker the executor appends;
+                    # without this check a re-run reads its own prior conclusions back as
+                    # GLPI_LIVE evidence -- authority 100, the top of the ranking -- and
+                    # answers from them instead of from the incident. Measured on the
+                    # 2026-09-23 baseline: two such rows took 3774 of the Analyst's 4921
+                    # evidence tokens and pushed every knowledge document out of its
+                    # context window. The rows are dropped here rather than ranked lower
+                    # because a restatement of an earlier run is not independent evidence
+                    # at any weight, and they remain visible in the GLPI readback.
+                    continue
                 text, truncated = _bounded_json_content(item)
                 evidence.append(
                     Evidence.create(

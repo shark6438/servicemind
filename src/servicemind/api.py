@@ -11,8 +11,16 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from servicemind.domain.models import ApprovalDecision
+from servicemind.domain.task import (
+    EVENT_SEQUENCE_MAX,
+    EVENT_SEQUENCE_MIN,
+    GOAL_MAX_LENGTH,
+    GOAL_MIN_LENGTH,
+    TICKET_ID_MAX,
+)
 from servicemind.harness.webhooks import (
     WebhookValidationError,
+    glpi_webhook_goal,
     parse_glpi_webhook,
     verify_glpi_signature,
     webhook_run_id,
@@ -21,7 +29,12 @@ from servicemind.integrations.glpi.client import GlpiAPIError, GlpiClient
 from servicemind.integrations.glpi.resolver import resolve_glpi_config
 from servicemind.interfaces.http.memory_review import router as memory_review_router
 from servicemind.interfaces.http.operations import router as operations_router
+from servicemind.model_gateway.gateway import model_error_code
 from servicemind.orchestration.runtime import (
+    ResumeBlocked,
+    ResumeScope,
+    decline_run,
+    resolve_resume_scope,
     resume_review_run,
     resume_run,
     start_run,
@@ -66,8 +79,8 @@ async def glpi_health(context: TenantContextDependency) -> GlpiHealth:
 
 
 class CreateRunRequest(BaseModel):
-    ticket_id: int = Field(ge=1)
-    goal: str = Field(min_length=3, max_length=2000)
+    ticket_id: int = Field(ge=1, le=TICKET_ID_MAX)
+    goal: str = Field(min_length=GOAL_MIN_LENGTH, max_length=GOAL_MAX_LENGTH)
     request_write: bool = False
 
 
@@ -101,6 +114,31 @@ class WebhookAccepted(BaseModel):
     accepted: bool
     duplicate: bool
     run_id: UUID
+
+
+def _event_cursor(last_event_id: str | None) -> int:
+    """``Last-Event-ID`` as a position in this run's event log, or a 400 saying why not.
+
+    An absent or blank header means "from the beginning", which is what the SSE spec asks
+    for and what the previous ``or 0`` did correctly. Everything else has to be a sequence
+    this run's log can actually hold -- see ``EVENT_SEQUENCE_MAX`` for why the number is
+    checked here rather than trusted to the column.
+    """
+    if last_event_id is None or not last_event_id.strip():
+        return EVENT_SEQUENCE_MIN
+    try:
+        cursor = int(last_event_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Last-Event-ID must be an event sequence",
+        ) from exc
+    if not EVENT_SEQUENCE_MIN <= cursor <= EVENT_SEQUENCE_MAX:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Last-Event-ID must be {EVENT_SEQUENCE_MIN}..{EVENT_SEQUENCE_MAX}",
+        )
+    return cursor
 
 
 def _run_view(run: AgentRun, action: ActionIntentRecord | None = None) -> RunView:
@@ -144,6 +182,23 @@ async def _process_webhook_run(run: AgentRun, context: TenantContext) -> None:
     try:
         await start_run(run, context)
     except Exception as exc:
+        # The workflow owns its own terminals: a run that reaches ``finalize`` writes both
+        # its result and a ``run.<status>`` event, so this branch only sees a failure that
+        # escaped the graph. Recording the type alone left the operator with a run whose
+        # timeline simply stops -- no cause, no node, nothing to reproduce from -- which is
+        # how the supervisor's schema violation stayed invisible. A failure the platform
+        # cannot describe is a failure it cannot fix.
+        await repository.append_event(
+            run.id,
+            "run.failed",
+            {
+                "status": RunStatus.FAILED.value,
+                "error_type": type(exc).__name__,
+                "error_code": model_error_code(exc),
+                "reason": str(exc)[:1000],
+                "stage": "workflow",
+            },
+        )
         await repository.update_run(run.id, RunStatus.FAILED, error=type(exc).__name__)
 
 
@@ -192,7 +247,7 @@ async def receive_glpi_webhook(
         run_id=deterministic_run_id,
         thread_id=f"glpi-webhook-{deterministic_run_id}",
         ticket_id=webhook.ticket_id,
-        goal=f"Analyze GLPI webhook event {webhook.event}",
+        goal=glpi_webhook_goal(webhook.event),
         event_payload={
             "event": webhook.event,
             "ticket_id": webhook.ticket_id,
@@ -257,6 +312,57 @@ async def approve_run(
     if run.status != RunStatus.WAITING_APPROVAL.value:
         return _run_view(run, action)
 
+    # Resolve the resume scope *before* anything is written. Recording the approval
+    # first would persist a decision, flip the action to APPROVED and enqueue its
+    # outbox event -- all for a resume that can then refuse, leaving an approved
+    # action nothing will ever execute and an approval row that makes the retry
+    # short-circuit instead of resuming. Everything the decision causes comes after
+    # the step that decides whether it can be applied at all.
+    decision = ApprovalDecision(
+        decision=request.decision,
+        decided_by=context.user_id,
+        comment=request.comment,
+    )
+    # A refusal never reaches ``resolve_resume_scope``. It spends nothing -- the approval
+    # node routes it to ``finalize``, which neither retrieves nor writes -- so requiring
+    # the requester's authority to be re-established first would let an identity-provider
+    # outage stop a human from declining, leaving the run in ``WAITING_APPROVAL`` until
+    # the outage clears. An approval does execute, and it is gated below as before.
+    refusal = request.decision == "rejected"
+    scope: ResumeScope | None = None
+    if not refusal:
+        try:
+            scope = await resolve_resume_scope(run, context)
+        except ResumeBlocked as exc:
+            # Nothing is written: the run stays in WAITING_APPROVAL with no approval row,
+            # so the same decision can be applied once the requester's authority can be
+            # established again. Marking it FAILED would spend a human's decision on a
+            # transient identity-provider outage, and recording the approval would spend
+            # it on a resume that never happened.
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"Run paused: the requester's current authority could not be "
+                    f"established ({exc.reason})"
+                ),
+            ) from exc
+
+    if scope is not None and scope.void:
+        # The action the approver was shown was derived from evidence the requester can
+        # no longer reach. There is nothing here to approve: the run goes back to be
+        # re-derived under its narrowed scope, and a fresh action will come back for a
+        # fresh decision. Recording this one would bind a human's "yes" to a document
+        # set they will never be shown again.
+        await resume_run(run, context, decision, scope=scope)
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Action withdrawn: the requester's access narrowed while this approval "
+                "was pending, so the action and its evidence are being re-derived. "
+                "Re-approve the run when it requests approval again."
+            ),
+        )
+
     try:
         _, approval_created = await repository.record_approval(
             run_id=run_id,
@@ -279,13 +385,19 @@ async def approve_run(
         run_id=run_id,
         payload={"action_hash": action.action_hash, "comment": request.comment},
     )
-    decision = ApprovalDecision(
-        decision=request.decision,
-        decided_by=context.user_id,
-        comment=request.comment,
-    )
     try:
-        await resume_run(run, context, decision)
+        if refusal:
+            await decline_run(run, context, decision)
+        else:
+            await resume_run(run, context, decision, scope=scope)
+    except ResumeBlocked as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Run paused: the requester's current authority could not be "
+                f"established ({exc.reason})"
+            ),
+        ) from exc
     except Exception as exc:
         await repository.update_run(run.id, RunStatus.FAILED, error=type(exc).__name__)
         raise HTTPException(status_code=502, detail="ServiceMind resume failed") from exc
@@ -333,6 +445,22 @@ async def resolve_review_escalation(
         raise HTTPException(status_code=404, detail="Run not found")
     if run.status != RunStatus.WAITING_REVIEW.value:
         raise HTTPException(status_code=409, detail="Run is not waiting for human review")
+    # Same ordering as the approval endpoint, for the same reason: a decision that
+    # cannot be applied must not be recorded, or the retry finds a run that looks
+    # decided and an escalation that never advanced.
+    try:
+        scope = await resolve_resume_scope(run, context)
+    except ResumeBlocked as exc:
+        # The run stays in WAITING_REVIEW and nothing is written; the human's answer is
+        # still theirs to give.
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Run paused: the requester's current authority could not be "
+                f"established ({exc.reason})"
+            ),
+        ) from exc
+
     await repository.audit(
         actor_id=context.user_id,
         event_type=f"review_escalation.{request.decision}",
@@ -351,7 +479,19 @@ async def resolve_review_escalation(
                 "comment": request.comment,
                 "decided_by": context.user_id,
             },
+            scope=scope,
         )
+    except ResumeBlocked as exc:
+        # Hand it back to the human queue rather than to FAILED, for the same reason as
+        # the approval endpoint: the decision is not the thing that failed.
+        await repository.update_run(run.id, RunStatus.WAITING_REVIEW)
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Run paused: the requester's current authority could not be "
+                f"established ({exc.reason})"
+            ),
+        ) from exc
     except Exception as exc:
         await repository.update_run(run.id, RunStatus.FAILED, error=type(exc).__name__)
         raise HTTPException(status_code=502, detail="ServiceMind review resume failed") from exc
@@ -369,7 +509,7 @@ async def stream_run_events(
     repository = ServiceMindRepository(context.tenant_id)
     if await repository.get_run(run_id) is None:
         raise HTTPException(status_code=404, detail="Run not found")
-    after = int(last_event_id or 0)
+    after = _event_cursor(last_event_id)
 
     async def generate() -> AsyncGenerator[str, None]:
         for event in await repository.list_events(run_id, after):

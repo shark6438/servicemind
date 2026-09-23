@@ -78,7 +78,6 @@ from servicemind.context.contracts import (
     ContextSource,
     TrustLabel,
 )
-from servicemind.domain.analysis import AnalysisResult
 from servicemind.evaluation.metrics import mrr_at_k, ndcg_at_k, recall_at_k
 from servicemind.memory.contracts import (
     MemoryCandidate,
@@ -516,8 +515,9 @@ class DeliveryGate(BaseModel):
     Every other block in this report stops at the retriever. Retrieval is not delivery:
     ``ContextBuilder`` sorts optional items by authority and then drops whatever no
     longer fits the token budget, and a memory (authority 0.7) sorts *after* evidence
-    (0.95). So a memory can be retrieved, scored, ranked first -- and then pruned on the
-    way into the prompt, with every probe in this file still green.
+    (1.0 for the GLPI rows this harness builds). So a memory can be retrieved, scored,
+    ranked first -- and then pruned on the way into the prompt, with every probe in this
+    file still green.
 
     That is the same shape of hole as a safety probe whose record was never reachable:
     the published number is clean and describes nothing. This gate closes it by reading
@@ -611,11 +611,17 @@ def _delivery_envelope(
     and left over.
 
     The item list mirrors ``Phase5Governance.build_context`` for the ANALYSIS agent:
-    the required control items (task, policy, output schema), the retrieved memories at
-    their production authority, and the evidence that competes with them for the same
-    budget. It deliberately builds through the real :class:`ContextBuilder` rather than
-    modelling the budget here -- a reimplementation would drift from the thing it is
-    supposed to be measuring.
+    the required control items (task, policy), the retrieved memories at their production
+    authority, and the evidence that competes with them for the same budget. It
+    deliberately builds through the real :class:`ContextBuilder` rather than modelling the
+    budget here -- a reimplementation would drift from the thing it is supposed to be
+    measuring.
+
+    There is no ``output-schema`` item here, and there is none in production either: the
+    Analyst's system prompt already carries ``AnalysisResult.model_json_schema()`` verbatim
+    (``agents/analysis.py``), so the envelope copy was 2985 tokens restating the message
+    before it. The fixture keeps no copy for the same reason -- a harness that modelled a
+    control the deployment does not send would measure an envelope no run ever builds.
     """
     load = corpus.delivery
     run_id = uuid5(_DELIVERY_NAMESPACE, f"{corpus.name}/{probe.id}")
@@ -636,17 +642,12 @@ def _delivery_envelope(
     items: list[ContextItem] = [
         control("task", ContextSource.TASK, json.dumps({"goal": probe.text})),
         control("policy", ContextSource.POLICY, json.dumps({"policy_version": "evaluation"})),
-        control(
-            "output-schema",
-            ContextSource.OUTPUT_SCHEMA,
-            json.dumps(AnalysisResult.model_json_schema(), ensure_ascii=False),
-        ),
     ]
     items.extend(
         ContextItem(
             item_id=f"memory:{selection.memory.memory_id}",
             source=ContextSource.MEMORY,
-            content=selection.memory.content,
+            content=json.dumps(selection.memory.model_payload(), ensure_ascii=False),
             allowed_agents=frozenset({ContextAgent.ANALYSIS}),
             trust=TrustLabel.VERIFIED,
             authority=0.7,
@@ -667,8 +668,8 @@ def _delivery_envelope(
                 }
             ),
             allowed_agents=frozenset({ContextAgent.ANALYSIS}),
-            trust=TrustLabel.VERIFIED,
-            authority=0.95,
+            trust=TrustLabel.UNTRUSTED,
+            authority=1.0,
             relevance=1.0,
             provenance_ref=f"glpi://ticket/{1000 + index}",
             taint_labels=frozenset({"untrusted_content"}),
@@ -1192,7 +1193,7 @@ def render_markdown(report: MemoryEvaluationReport) -> str:
         "### 3.2 投递门禁（声明式）",
         "",
         "前两节都止步于检索器。**检索不等于投递**：`ContextBuilder` 按 authority 排序后",
-        "丢弃超出 token 预算的可选项，而记忆（authority 0.7）排在 evidence（0.95）之后，",
+        "丢弃超出 token 预算的可选项，而记忆（authority 0.7）排在 evidence（1.0）之后，",
         "因此一条记忆可以被检索到、排在第 1 位，然后在进入提示前被裁掉——而上面每一行仍然全绿。",
         "",
         "本节按真实 `ContextBuilder` 的**选择清单**判定：声明了 `must_deliver` 的探针，",

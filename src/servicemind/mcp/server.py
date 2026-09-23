@@ -12,7 +12,12 @@ from fastapi import APIRouter, Header, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from core import settings
-from servicemind.mcp.tasks import InMemoryMcpTaskStore, McpTaskStore, StoredMcpTask
+from servicemind.mcp.tasks import (
+    TASK_TTL_MS,
+    InMemoryMcpTaskStore,
+    McpTaskStore,
+    StoredMcpTask,
+)
 from servicemind.persistence.repository import ServiceMindRepository
 from servicemind.security.auth import TenantContextDependency
 from servicemind.tool_platform.contracts import ToolCall, ToolExecutionResult
@@ -27,7 +32,6 @@ MCP_SERVER_ISSUER = "servicemind://glpi-mcp"
 TASK_EXTENSION = "io.modelcontextprotocol/tasks"
 GOVERNED_EXECUTION_EXTENSION = "com.servicemind/governed-execution"
 SERVER_INFO = {"name": "servicemind-glpi", "version": "1.0.0"}
-TASK_TTL_MS = 3_600_000
 TASK_POLL_INTERVAL_MS = 1_000
 TASK_AUGMENTED_TOOLS = frozenset({"glpi.query_cmdb_dependencies"})
 
@@ -429,6 +433,7 @@ async def _tool_call(request: JsonRpcRequest, context, mcp_name: str | None) -> 
         user_id=context.user_id,
         roles=frozenset(context.roles),
         entity_ids=frozenset(context.allowed_glpi_entity_ids),
+        group_ids=frozenset(context.allowed_glpi_group_ids),
         capabilities=frozenset(capabilities),
         tool_name=tool_name,
         tool_version="1.0.0",

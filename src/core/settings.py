@@ -138,6 +138,19 @@ class Settings(BaseSettings):
     SERVICEMIND_OIDC_ISSUER: str | None = None
     SERVICEMIND_OIDC_AUDIENCE: str = "servicemind-api"
     SERVICEMIND_OIDC_JWKS_URL: str | None = None
+    # Keycloak Admin REST, used for exactly one question: what does this user's
+    # identity grant *right now*. See ``security/entitlements.py`` for why a resumed
+    # run asks it, and why the answer is only ever intersected with what the run
+    # already recorded -- never unioned. Unset means no verifier is constructed and
+    # the resume boundary falls back to dropping scope it cannot confirm.
+    SERVICEMIND_KEYCLOAK_ADMIN_URL: str | None = None
+    SERVICEMIND_KEYCLOAK_ADMIN_USERNAME: str | None = None
+    SERVICEMIND_KEYCLOAK_ADMIN_PASSWORD: SecretStr | None = None
+    SERVICEMIND_KEYCLOAK_ADMIN_REALM: str = "servicemind"
+    #: Seconds a verified entitlement answer is reused. Short enough that a revoked
+    #: grant stops being honoured quickly, long enough that a burst of resumes does
+    #: not turn one approval into one realm query per run.
+    SERVICEMIND_ENTITLEMENT_CACHE_SECONDS: float = 30.0
     SERVICEMIND_FRONTEND_ORIGINS: list[str] = Field(
         default_factory=lambda: ["http://127.0.0.1:3000", "http://localhost:3000"]
     )
@@ -149,11 +162,39 @@ class Settings(BaseSettings):
     SERVICEMIND_GLOBEX_WEBHOOK_SECRET: SecretStr | None = None
     SERVICEMIND_OTEL_ENDPOINT: str | None = None
     SERVICEMIND_OTEL_SERVICE_NAME: str = "servicemind-api"
-    SERVICEMIND_MAX_TASKS: int = 12
+    # A plan accumulates across revisions: each one re-lists the completed tasks and
+    # adds an evidence, an analysis and a reviewer task, and a run may revise up to
+    # SERVICEMIND_MAX_REPLANS times. At 12 the second retrieval round was
+    # unreachable (six tasks after planning, ten after the first revision, fourteen
+    # for the next), so the Reviewer's RETRIEVE_MORE always ended in a failed run.
+    # The ceiling still has to stay below SERVICEMIND_MAX_STEPS, since every task
+    # costs at least one step.
+    SERVICEMIND_MAX_TASKS: int = 32
     SERVICEMIND_MAX_PARALLEL: int = 4
     SERVICEMIND_MAX_REPLANS: int = 2
     SERVICEMIND_MAX_STEPS: int = 64
-    SERVICEMIND_MAX_MODEL_CALLS: int = 32
+    # Sized from the plan the platform permits, not from the runs it happens to see.
+    # ``dispatch_node`` and ``_invocation`` grant every task up to two model calls, so
+    # a plan at SERVICEMIND_MAX_TASKS can spend 32 x 2 = 64 of these before the control
+    # plane spends anything at all; the router, the planner and a supervisor decision
+    # per transition (retried once on a policy rejection) account for the rest. At 32
+    # the ceiling was binding on ordinary work, not just on pathological loops: of the
+    # runs recorded on this deployment, the successful ones used 11-31 calls and the
+    # cancelled ones used 32-33 -- and three of those cancellations were plain write
+    # runs that never narrowed their scope. It is also the rail that a scope narrowing
+    # runs into first: narrowing reopens the plan and mandates a full re-derivation
+    # (re-retrieve, re-analyse, re-review, re-approve) from the same counter the first
+    # pass already drew on, and a measured narrowed run (ACC-23, ticket 26) spent 22
+    # calls reaching ``waiting_approval`` with roughly twenty more still to go. The
+    # run was then cancelled with ``budget_exceeded`` while its plan was healthy and
+    # its review had passed, so the platform's own safety rule was unreachable within
+    # the platform's own resource bound. The failure is quiet, too: every remaining
+    # task is clamped by ``min(2, remaining_model, ...)``, so a ceiling approached
+    # mid-run starves the re-derivation to one call per task while the first pass got
+    # two. A ceiling that cancels a live run does not save the work already spent on
+    # it -- 33 calls produced nothing -- it only makes the platform pay for the same
+    # question twice.
+    SERVICEMIND_MAX_MODEL_CALLS: int = 80
     SERVICEMIND_MAX_TOOL_CALLS: int = 32
     SERVICEMIND_RUN_DEADLINE_SECONDS: int = 600
     SERVICEMIND_RAG_ENABLED: bool = False

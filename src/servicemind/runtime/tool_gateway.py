@@ -47,6 +47,7 @@ class TenantGlpiReadGateway:
                     user_id=tenant_context.user_id,
                     roles=frozenset(tenant_context.roles),
                     entity_ids=frozenset(tenant_context.allowed_glpi_entity_ids),
+                    group_ids=frozenset(tenant_context.allowed_glpi_group_ids),
                     capabilities=invocation.allowed_capabilities,
                     tool_name=tool_name.value,
                     tool_version="1.0.0",

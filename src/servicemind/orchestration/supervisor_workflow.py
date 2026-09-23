@@ -16,19 +16,27 @@ from servicemind.agents.data import DataAgent, data_agent
 from servicemind.agents.knowledge import KnowledgeAgent, knowledge_agent
 from servicemind.agents.reviewer import ReviewerAgent, reviewer_agent
 from servicemind.agents.supervisor import SupervisorAgent, supervisor_agent
-from servicemind.context.contracts import ContextAgent
+from servicemind.context.contracts import ContextAgent, ContextAssemblyError, ContextEnvelope
 from servicemind.domain.analysis import AnalysisResult
-from servicemind.domain.evidence import Evidence, JoinedEvidence, join_evidence
+from servicemind.domain.evidence import Evidence, JoinedEvidence, bounded_join
 from servicemind.domain.handoff import HandoffEnvelope
-from servicemind.domain.models import ActionIntent, ApprovalDecision
+from servicemind.domain.models import ACTION_REQUIRED_ROLES, ActionIntent, ApprovalDecision
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
 from servicemind.domain.routing import RouteDecision, RouteType
 from servicemind.domain.supervisor import ControlOwner, SupervisorAction, SupervisorDecision
-from servicemind.domain.task import AgentName, RuntimeControl, Task, TaskPlan, TaskStatus
+from servicemind.domain.task import (
+    TASK_OUTPUT_REF_MAX_LENGTH,
+    AgentName,
+    RuntimeControl,
+    Task,
+    TaskPlan,
+    TaskStatus,
+)
+from servicemind.foundation.errors import bounded_error_text
 from servicemind.harness.executor import ControlledActionExecutor, controlled_executor
 from servicemind.integrations.glpi.client import GlpiAPIError
 from servicemind.model_gateway.contracts import ModelCallContext, ModelPurpose, ModelRisk
-from servicemind.model_gateway.gateway import model_call_scope
+from servicemind.model_gateway.gateway import model_call_scope, model_error_code
 from servicemind.observability.tracing import phase_span
 from servicemind.orchestration.budget import BudgetExceeded, budget_controller
 from servicemind.orchestration.dispatcher import TaskDispatcher, task_dispatcher
@@ -46,6 +54,7 @@ from servicemind.persistence.models import RunStatus
 from servicemind.persistence.repository import ServiceMindRepository
 from servicemind.runtime.contracts import AgentInvocationContext
 from servicemind.security.auth import TenantContext
+from servicemind.security.entitlements import AuthorityWithdrawn, require_still_held
 
 
 @dataclass(frozen=True)
@@ -72,6 +81,11 @@ def _context(state: Phase3State) -> TenantContext:
         username=state["username"],
         roles=set(state["roles"]),
         allowed_glpi_entity_ids=set(state["allowed_glpi_entity_ids"]),
+        # ``state.get`` and not ``state[...]``: a checkpoint written before the group
+        # carrier was populated has no such key, and the only safe reading of a missing
+        # ACL coordinate is the narrow one. A resumed run therefore loses group scope it
+        # never recorded -- it can never acquire scope it was not started with.
+        allowed_glpi_group_ids=set(state.get("group_ids") or ()),
     )
 
 
@@ -99,6 +113,90 @@ def _review(state: Phase3State) -> ReviewResult:
     return ReviewResult.model_validate(state["review_result"])
 
 
+#: ``KnowledgeQuery.raw_query`` caps at 4000 characters.
+_KNOWLEDGE_QUERY_MAX = 4000
+#: Share of that cap the already-collected evidence may claim. The reviewer's feedback
+#: names what the previous round failed to ground, so it must survive the clip;
+#: evidence the run already holds is the weakest retrieval signal of the three and is
+#: bounded first.
+_KNOWLEDGE_QUERY_EVIDENCE_MAX = 1200
+_QUERY_TRUNCATION_SUFFIX = " …[query truncated at retrieval query ceiling]"
+
+
+def _bounded_query_part(text: str, limit: int) -> str:
+    """Clip a query fragment to its share of the contract, marking the cut honestly."""
+    if len(text) <= limit:
+        return text
+    return text[: limit - len(_QUERY_TRUNCATION_SUFFIX)] + _QUERY_TRUNCATION_SUFFIX
+
+
+def _knowledge_query(state: Phase3State, task: Task) -> str:
+    """Compose the retrieval query for one knowledge task, ordered by signal strength.
+
+    The goal and task objective state what to find; the reviewer's feedback states what
+    the previous round could not ground; the evidence already held trails as a bounded
+    digest. Joining every evidence item verbatim was unbounded, and the round that
+    carries joined evidence is exactly ``retrieve_more_knowledge`` -- so the second
+    knowledge round overran ``KnowledgeQuery.raw_query`` and failed with a
+    ValidationError before it ever reached the index. A query that long is also a poor
+    retrieval signal: embedding thousands of characters of what was already retrieved
+    mostly retrieves more of the same.
+    """
+    parts = [state["goal"].strip(), str(task.task_input.get("objective", "")).strip()]
+    if state.get("review_result"):
+        parts.append(_review(state).feedback.strip())
+    if state.get("joined_evidence"):
+        held = " ".join(
+            item.content for item in JoinedEvidence.model_validate(state["joined_evidence"]).items
+        )
+        parts.append(_bounded_query_part(held, _KNOWLEDGE_QUERY_EVIDENCE_MAX))
+    return _bounded_query_part(" ".join(part for part in parts if part), _KNOWLEDGE_QUERY_MAX)
+
+
+def _bounded_output_ref(evidence_ids: list[str]) -> str:
+    """Join an evidence task's ids into the ledger reference, inside its contract.
+
+    A data task returns a ticket, up to 50 support groups and up to 15 followups, so 26
+    evidence ids already exceed ``TASK_OUTPUT_REF_MAX_LENGTH`` -- a size any tenant with
+    25 support groups reaches on every run. The join wrote 519 characters into a
+    500-character field and nothing complained, because ``Task`` does not validate
+    assignments; the failure surfaced one node later as a ``ValidationError`` inside
+    ``TaskPlan.model_validate``, killing a run that had already gathered its evidence.
+    Whole ids are kept and the remainder is counted, so the reference stays a reference
+    instead of a truncation mid-id.
+    """
+    if not evidence_ids:
+        return "none"
+    # Reserve the elision marker's worst case up front: filling to the ceiling first and
+    # appending the marker afterwards would clip the result back over the contract.
+    budget = TASK_OUTPUT_REF_MAX_LENGTH - len(f" …[{len(evidence_ids)} more]")
+    kept: list[str] = []
+    used = 0
+    for evidence_id in evidence_ids:
+        cost = len(evidence_id) + (1 if kept else 0)
+        if used + cost > budget:
+            break
+        kept.append(evidence_id)
+        used += cost
+    if not kept:
+        return "none"
+    dropped = len(evidence_ids) - len(kept)
+    return f"{','.join(kept)} …[{dropped} more]" if dropped else ",".join(kept)
+
+
+def _after_termination(state: Phase3State, onward: str) -> str:
+    """Route a terminated run to ``finalize`` and everything else to ``onward``.
+
+    Nodes that can end a run carry a static edge to their normal successor as well. A
+    ``Command(goto="finalize")`` returned from such a node does not replace that edge --
+    both are followed -- so the successor ran, the Supervisor re-decided, and
+    ``finalize`` ran a second time: one run, two ``run.failed`` events, one wasted
+    control-plane model call, and a timeline that reads as if the run failed twice. A
+    conditional edge makes the choice explicit and single.
+    """
+    return "finalize" if state.get("termination_code") else onward
+
+
 def _ready_by_agent(plan: TaskPlan, dispatcher: TaskDispatcher, agent: AgentName) -> list[Task]:
     return [task for task in dispatcher.ready_tasks(plan) if task.agent is agent]
 
@@ -122,6 +220,59 @@ def _invocation(state: Phase3State, task: Task) -> AgentInvocationContext:
         max_tool_calls=min(6, remaining_tools, reserved_tools),
         policy_version="servicemind-agent-policy-v2",
     )
+
+
+async def _assembled_context(
+    svc: SupervisorRuntimeServices,
+    state: Phase3State,
+    task: Task,
+    agent: ContextAgent,
+) -> tuple[ContextEnvelope | None, dict[str, Any] | None]:
+    """Build the model-visible context, or return the state update that ends the run.
+
+    A governed node's input is assembled from data the control plane does not size --
+    the Reviewer's item *is* the AnalysisResult the model just produced. When that does
+    not fit the context budget, ``build_context`` raises :class:`ContextAssemblyError`
+    and the call sites used to let it escape: the graph errored, no ``finalize`` ran, no
+    trajectory was written, and the run was recorded as FAILED with a bare
+    ``MODEL_VALUEERROR`` -- the same ledger entry a genuine bug in this file would get.
+    The budget is a property of the run, so it terminates the run, with a code that says
+    which of the two happened.
+
+    Returns ``(envelope, None)`` to continue, or ``(None, update)`` for the caller to
+    return as its own state update. It is deliberately a plain update and not a
+    ``Command(goto="finalize")``: these nodes have static outgoing edges, and a Command
+    from such a node fires *in addition to* that edge, so the run reached ``finalize``
+    twice and the ledger recorded two ``run.failed`` events for one run. Setting
+    ``termination_code`` is enough -- ``SupervisorPolicy.legal_actions`` collapses to
+    ``FINALIZE`` and the routing helper below takes it there.
+    """
+    try:
+        envelope = await svc.phase5.build_context(
+            state=cast(dict[str, Any], state),
+            task=task,
+            invocation=_invocation(state, task),
+            agent=agent,
+        )
+    except ContextAssemblyError as exc:
+        control = _control(state)
+        control.errors.append({"node": task.agent.value, "error_type": type(exc).__name__})
+        await svc.repository_factory(UUID(state["tenant_id"])).append_event(
+            UUID(state["run_id"]),
+            "context.assembly_failed",
+            {
+                "agent": agent.value,
+                "task_id": task.task_id,
+                "code": exc.code,
+                "reason": bounded_error_text(str(exc)),
+            },
+        )
+        return None, {
+            "control": control.model_dump(mode="json"),
+            "termination_code": "context_assembly_failure",
+            "trajectory": [task.agent.value, "context_assembly_failed"],
+        }
+    return envelope, None
 
 
 def _control_model_context(
@@ -357,7 +508,30 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                 )
         feedback = None
         decision = None
-        for _ in range(2):
+        failure: BaseException | None = None
+        # One counter, shared by two failures that are not the same fact, and it was 2.
+        #
+        # A *raised* model failure ends the loop on the first attempt (``break`` below):
+        # the governed gateway already spent its schema-repair on that request, and asking
+        # again with the same input is the anti-pattern, not the remedy. That path is
+        # unchanged and still costs one call, whatever this number is.
+        #
+        # A *policy rejection* is information, not a repeat. The decision parsed and the
+        # platform knows exactly why it is illegal -- it hands back the legal set for the
+        # state the model was looking at, which the previous attempt did not have, and the
+        # model uses it: on ticket 26 the rejected ``analyze`` was followed by the correct
+        # ``join_evidence``. At 2 the whole allowance was one such correction, and a
+        # correction that then broke a *different* rule -- action legal, argument not --
+        # ended the run with everything already spent on it: ``finalize`` writes
+        # ``supervisor_policy_failure`` and the plan, the evidence and the analysis are
+        # discarded together. Eight of the runs recorded on this deployment died that way
+        # (2026-09-23), and one of them was ACC-03, ordinary read-only work whose second
+        # proposal was already the right action selected wrongly. The real bound on this
+        # loop is the run's model-call budget, checked at the top of this node; this number
+        # only decides how many informed corrections fit before a confused control plane
+        # has to give up.
+        policy_attempts = 3
+        for _ in range(policy_attempts):
             control.model_call_count += 1
             with model_call_scope(
                 _control_model_context(
@@ -366,9 +540,31 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                     purpose=ModelPurpose.CONTROL,
                 )
             ):
-                candidate = await svc.supervisor.decide(
-                    supervisor_view(state), policy_feedback=feedback
-                )
+                try:
+                    candidate = await svc.supervisor.decide(
+                        supervisor_view(state), policy_feedback=feedback
+                    )
+                except Exception as exc:
+                    # The control plane could not name a legal next transition. The
+                    # governed gateway has already spent its schema-repair attempt on
+                    # this request, so a third identical ask is the anti-pattern rather
+                    # than the remedy -- record what came back and end the run in the
+                    # graph's own terminal. Letting the exception escape instead killed
+                    # the run through ``_process_webhook_run``'s blanket handler, which
+                    # persists nothing but the exception's class name: no termination
+                    # code, no review, no finalize, and a timeline that simply stops.
+                    failure = exc
+                    await repository(state).append_event(
+                        UUID(state["run_id"]),
+                        "supervisor.decision_rejected",
+                        {
+                            "attempt": _ + 1,
+                            "error_type": type(exc).__name__,
+                            "error_code": model_error_code(exc),
+                            "reason": bounded_error_text(str(exc)),
+                        },
+                    )
+                    break
             try:
                 svc.policy.validate(candidate, cast(dict, state))
             except SupervisorPolicyError as exc:
@@ -386,12 +582,20 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             decision = candidate
             break
         if decision is None:
-            control.errors.append({"node": "supervisor", "error_type": "SupervisorPolicyError"})
+            rejected = failure if failure is not None else "SupervisorPolicyError"
+            control.errors.append({"node": "supervisor", "error_type": type(rejected).__name__})
             return Command(
                 update={
                     "control": control.model_dump(mode="json"),
-                    "termination_code": "supervisor_policy_failure",
-                    "trajectory": ["supervisor", "policy_rejected"],
+                    "termination_code": (
+                        "supervisor_decision_failure"
+                        if failure is not None
+                        else "supervisor_policy_failure"
+                    ),
+                    "trajectory": [
+                        "supervisor",
+                        "decision_rejected" if failure is not None else "policy_rejected",
+                    ],
                 },
                 goto="finalize",
             )
@@ -463,17 +667,14 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                     },
                 )
         if task_plan is None:
-            return Command(
-                update={
-                    "termination_code": "critical_error",
-                    "control": _control(state).model_dump(mode="json"),
-                    "trajectory": [
-                        "planner",
-                        f"decision:{SupervisorAction.FINALIZE.value}",
-                    ],
-                },
-                goto="finalize",
-            )
+            return {
+                "termination_code": "critical_error",
+                "control": _control(state).model_dump(mode="json"),
+                "trajectory": [
+                    "planner",
+                    f"decision:{SupervisorAction.FINALIZE.value}",
+                ],
+            }
         await repository(state).append_event(
             UUID(state["run_id"]),
             "plan.validated",
@@ -656,14 +857,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         """
         task = Task.model_validate(state["dispatch_task"])
         started = time.perf_counter()
-        query = f"{state['goal']} {task.task_input.get('objective', '')}"
-        if state.get("joined_evidence"):
-            query += " " + " ".join(
-                item.content
-                for item in JoinedEvidence.model_validate(state["joined_evidence"]).items
-            )
-        if state.get("review_result"):
-            query += " " + _review(state).feedback
+        query = _knowledge_query(state, task)
         kwargs: dict[str, Any] = {
             "tenant_id": UUID(state["tenant_id"]),
             "query": query,
@@ -678,12 +872,11 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                 use_query_model=state.get("invocation_model_budget", 0) > 0,
             )
         invocation = _invocation(state, task)
-        context_envelope = await svc.phase5.build_context(
-            state=cast(dict[str, Any], state),
-            task=task,
-            invocation=invocation,
-            agent=ContextAgent.KNOWLEDGE,
+        context_envelope, refusal = await _assembled_context(
+            svc, state, task, ContextAgent.KNOWLEDGE
         )
+        if refusal is not None:
+            return refusal
         if context_envelope is not None and isinstance(svc.knowledge, KnowledgeAgent):
             kwargs["model_query"] = json.dumps(context_envelope.model_payload(), ensure_ascii=False)
         evidence: list[Evidence] = []
@@ -745,6 +938,10 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                     "attempts": attempts_used,
                     "latency_ms": (time.perf_counter() - started) * 1000,
                 },
+                # Without these a degraded knowledge task reads as a bare status in the
+                # run timeline; the cause was only recoverable from the service journal.
+                "failure_code": type(error).__name__ if error else None,
+                "failure_detail": str(error)[:300] if error else None,
                 "policy_version": "servicemind-agent-policy-v2",
             },
         )
@@ -770,15 +967,23 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         completions = [
             item for item in state.get("task_completions", []) if item["batch_id"] == batch
         ]
-        for completion in completions:
+        # A completion is this batch's result only if the plan is still running that
+        # task. A plan whose tasks sit in PENDING was reopened by a scope narrowing,
+        # and completions arriving for it belong to the life of the plan before the
+        # requester's grants moved: folding them in would restore exactly the results
+        # the narrowing voided, and would try to do it by a transition the task state
+        # machine does not allow.
+        running = {task.task_id for task in plan.tasks if task.status is TaskStatus.RUNNING}
+        applied = [item for item in completions if item["task_id"] in running]
+        for completion in applied:
             status = TaskStatus.SUCCESS if completion["status"] == "success" else TaskStatus.FAILED
             plan = svc.dispatcher.transition(
                 plan,
                 completion["task_id"],
                 status,
-                output_ref=",".join(completion["output_refs"]) or "none",
+                output_ref=_bounded_output_ref(completion["output_refs"]),
             )
-        failures = [item for item in completions if item["status"] == "failed"]
+        failures = [item for item in applied if item["status"] == "failed"]
         control = _control(state)
         control.total_steps += len(completions)
         control.tool_call_count += sum(item.get("tool_calls", 1) for item in completions)
@@ -815,13 +1020,43 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         values = _evidence(state.get("data_evidence", [])) + _evidence(
             state.get("knowledge_evidence", [])
         )
-        joined = join_evidence(UUID(state["tenant_id"]), values)
+        if not values:
+            # ``JoinedEvidence`` requires at least one item, and that is the right
+            # contract: an empty list is not "the evidence, joined", it is the absence of
+            # any. So this is not a join that can be skipped -- it is a run that has
+            # nothing to reason from, and constructing the empty set would raise past
+            # every handler and surface as a 500 on whichever request happened to wake
+            # the run. Naming the terminal is the honest alternative to both.
+            await repository(state).append_event(
+                UUID(state["run_id"]),
+                "evidence.unavailable",
+                {"gathered": 0},
+            )
+            return {
+                "termination_code": "evidence_unavailable",
+                "control_owner": ControlOwner.SUPERVISOR.value,
+                "active_agent": "supervisor",
+                "trajectory": ["evidence_join:empty"],
+            }
+        joined, dropped = bounded_join(UUID(state["tenant_id"]), values)
         control = _control(state)
         control.total_steps += 1
+        if dropped:
+            # The two evidence channels accumulate -- a narrowing resets them, an ordinary
+            # turn only appends -- so a run that retrieves across several rounds can hold
+            # more than a joined set does. The join keeps the incident's record and
+            # retrieved context ahead of enumerable directory rows and says here what it
+            # left out; a silent clip would read afterwards as if nothing had been.
+            control.errors.append({"node": "join_evidence", "error_type": "EvidenceBoundApplied"})
         await repository(state).append_event(
             UUID(state["run_id"]),
             "evidence.joined",
-            {"count": len(joined.items), "evidence_refs": joined.evidence_refs},
+            {
+                "count": len(joined.items),
+                "gathered": len(values),
+                "dropped": dropped,
+                "evidence_refs": joined.evidence_refs,
+            },
         )
         return {
             "joined_evidence": joined.model_dump(mode="json"),
@@ -845,12 +1080,11 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         plan = svc.dispatcher.transition(plan, task.task_id, TaskStatus.RUNNING)
         envelope = None
         invocation = _invocation(state, task)
-        context_envelope = await svc.phase5.build_context(
-            state=cast(dict[str, Any], state),
-            task=task,
-            invocation=invocation,
-            agent=ContextAgent.ANALYSIS,
+        context_envelope, refusal = await _assembled_context(
+            svc, state, task, ContextAgent.ANALYSIS
         )
+        if refusal is not None:
+            return refusal
         with phase_span(
             "servicemind.supervisor.analysis", **{"gen_ai.agent.name": "analysis-agent"}
         ):
@@ -915,12 +1149,11 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         control = _control(state)
         envelope = None
         invocation = _invocation(state, task)
-        context_envelope = await svc.phase5.build_context(
-            state=cast(dict[str, Any], state),
-            task=task,
-            invocation=invocation,
-            agent=ContextAgent.REVIEWER,
+        context_envelope, refusal = await _assembled_context(
+            svc, state, task, ContextAgent.REVIEWER
         )
+        if refusal is not None:
+            return refusal
         if hasattr(svc.reviewer, "run"):
             run_kwargs: dict[str, Any] = {
                 "invocation": invocation,
@@ -1013,7 +1246,20 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         correction = None
         revised = None
         attempts_used = 0
-        for attempt in range(2):
+        # Same allowance, same reasoning as the Supervisor's ``policy_attempts`` above:
+        # a revision has to clear four independent shape rules (new evidence task, new
+        # Analysis and Reviewer tasks, an Action task when the run writes, and a
+        # Knowledge task when the review asked for retrieval), and ``compile_proposal``
+        # raises on the first one it finds. At 2 the model got exactly one informed
+        # correction, so a proposal that fixed the rule it was told about and broke a
+        # different one ended the run -- ACC-03, run 16a6ba03, where attempt 1 was
+        # rejected for adding no evidence task and attempt 2, having added a Data one,
+        # was rejected for not adding a Knowledge one. That correction was never shown
+        # to the model. The real bound is the run's model-call budget; this number only
+        # decides how many informed corrections fit before a confused planner has to
+        # give up.
+        planner_attempts = 3
+        for attempt in range(planner_attempts):
             attempts_used += 1
             try:
                 with model_call_scope(
@@ -1032,32 +1278,38 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                     )
                 break
             except Exception as exc:
-                correction = f"{type(exc).__name__}: {str(exc)[:1000]}"
+                detail = bounded_error_text(str(exc))
+                correction = f"{type(exc).__name__}: {detail}"
                 await repository(state).append_event(
                     UUID(state["run_id"]),
                     "replanner.proposal_rejected",
                     {
                         "attempt": attempt + 1,
                         "error_type": type(exc).__name__,
-                        "reason": str(exc)[:1000],
+                        "reason": detail,
                     },
                 )
         if revised is None:
             # Double replan validation failure is a run-level policy failure: persist
             # it through the normal finalizer instead of raising a raw RuntimeError.
-            return Command(
-                update={
-                    "termination_code": "critical_error",
-                    "analysis_result": {},
-                    "review_result": {},
-                    "control": control.model_dump(mode="json"),
-                    "trajectory": [
-                        "retrieve_more" if retrieve_more else "replan",
-                        f"decision:{SupervisorAction.FINALIZE.value}",
-                    ],
-                },
-                goto="finalize",
-            )
+            #
+            # It must persist *what the run already produced*. This branch used to
+            # return ``analysis_result: {}`` and ``review_result: {}``, and the run that
+            # hit it -- ACC-03, 2026-09-23, run 16a6ba03 -- had a complete, correct
+            # root-cause analysis and a review whose only finding was one misattributed
+            # citation. Both were destroyed at the one moment an operator would need
+            # them, and ``run.failed`` recorded neither. The budget-exhausted branch
+            # above returns ``termination_code`` alone, which is the pattern: state the
+            # failure, do not erase the work. Finalize reads both keys, so omitting them
+            # carries the analysis and the review through to the terminal record.
+            return {
+                "termination_code": "critical_error",
+                "control": control.model_dump(mode="json"),
+                "trajectory": [
+                    "retrieve_more" if retrieve_more else "replan",
+                    f"decision:{SupervisorAction.FINALIZE.value}",
+                ],
+            }
         control.model_call_count += attempts_used
         control.total_steps += 1
         return {
@@ -1127,12 +1379,9 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         task = _ready_by_agent(plan, svc.dispatcher, AgentName.ACTION)[0]
         plan = svc.dispatcher.transition(plan, task.task_id, TaskStatus.READY)
         plan = svc.dispatcher.transition(plan, task.task_id, TaskStatus.RUNNING)
-        await svc.phase5.build_context(
-            state=cast(dict[str, Any], state),
-            task=task,
-            invocation=_invocation(state, task),
-            agent=ContextAgent.ACTION,
-        )
+        _, refusal = await _assembled_context(svc, state, task, ContextAgent.ACTION)
+        if refusal is not None:
+            return refusal
         intent = svc.action.propose_from_handoff(
             HandoffEnvelope.model_validate(state["handoff_envelope"]),
             _analysis(state),
@@ -1200,6 +1449,24 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
 
     def approval_node(state: Phase3State) -> dict[str, Any]:
         decision = interrupt({"type": "approval_required", "action_intent": state["action_intent"]})
+        # A decision can arrive for an action that is no longer the action this run is
+        # entitled to propose: the requester's grants moved while the run sat here, the
+        # evidence behind the intent was invalidated with them, and the intent the human
+        # was shown describes neither. Sending it back to the supervisor is the only
+        # honest disposition -- recording it as an approval would execute a stale
+        # decision, and recording it as a rejection would put words in the approver's
+        # mouth about something they never saw.
+        if isinstance(decision, dict) and decision.get("voided"):
+            # ``evidence_dirty`` is deliberately not written here. The boundary that
+            # voided the action already cleared the evidence, reopened the plan and set
+            # this flag to False; a True written on top of it would say "there is
+            # unjoined evidence to consolidate" when there is none, and the Supervisor
+            # would join an empty set instead of re-dispatching the reopened tasks.
+            return {
+                "control_owner": ControlOwner.SUPERVISOR.value,
+                "active_agent": "supervisor",
+                "trajectory": ["approval:voided"],
+            }
         return {
             "approval": ApprovalDecision.model_validate(decision).model_dump(),
             "control_owner": ControlOwner.HARNESS.value,
@@ -1207,14 +1474,53 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             "trajectory": ["approval"],
         }
 
-    def after_approval(state: Phase3State) -> Literal["execute", "finalize"]:
+    def after_approval(state: Phase3State) -> Literal["execute", "finalize", "supervisor"]:
+        if state.get("control_owner") == ControlOwner.SUPERVISOR.value:
+            return "supervisor"
         return "execute" if state["approval"]["decision"] == "approved" else "finalize"
 
     async def execute_node(state: Phase3State) -> dict[str, Any]:
         if state.get("control_owner") != ControlOwner.HARNESS.value:
             raise PermissionError("Harness does not own control")
+        context = _context(state)
+        try:
+            # The last gate before the write, and the only one that runs at the moment
+            # the authority is actually spent. The approval above it may have been
+            # granted minutes ago, and the resume that carried it here was verified at
+            # its own boundary -- but a grant can be revoked inside that window, and a
+            # cached answer is exactly what would miss it. This check bypasses the
+            # cache, and refuses rather than narrows: the human approved a specific
+            # action on evidence gathered under a scope that no longer exists.
+            await require_still_held(
+                tenant_id=context.tenant_id,
+                user_id=context.user_id,
+                roles=context.roles,
+                entity_ids=context.allowed_glpi_entity_ids,
+                group_ids=context.allowed_glpi_group_ids,
+                # Confirming the subject exists is not the same as confirming the
+                # subject may do this. A verified identity holding no role for the
+                # action, or no GLPI entity for the ticket to live in, is a step that
+                # cannot be performed -- and one that a narrowing can reach without
+                # "revoking" anything, because there was nothing left to revoke.
+                required_roles=ACTION_REQUIRED_ROLES,
+            )
+        except AuthorityWithdrawn as exc:
+            await repository(state).audit(
+                actor_id="servicemind-harness",
+                event_type="action.authority_withdrawn",
+                resource_type="ActionIntent",
+                resource_id=str(state["action_intent"].get("id") or state["run_id"]),
+                run_id=UUID(state["run_id"]),
+                payload={
+                    "reason": exc.reason,
+                    "detail": exc.detail,
+                    "revoked": exc.revoked,
+                    "missing": exc.missing,
+                },
+            )
+            raise
         result = await svc.executor.execute(
-            _context(state), ActionIntent.model_validate(state["action_intent"])
+            context, ActionIntent.model_validate(state["action_intent"])
         )
         await repository(state).append_event(
             UUID(state["run_id"]), "execution.verified", result.model_dump(mode="json")
@@ -1249,23 +1555,31 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         failed = state.get("termination_code") in {
             "critical_error",
             "supervisor_policy_failure",
+            "supervisor_decision_failure",
+            "context_assembly_failure",
+            "evidence_unavailable",
         }
+        # ``or {}`` rather than the ``{}`` default of ``get``: an invalidated product is
+        # a key that is *present* and empty, and a default only covers a key that is
+        # missing. Either way the meaning here is the same -- no decision was recorded --
+        # and the run must not turn "there is nothing to read" into an AttributeError on
+        # the way to its terminal state.
         cancelled = (
             state.get("termination_code") is not None
-            or state.get("approval", {}).get("decision") == "rejected"
-            or state.get("human_review", {}).get("decision") == "stop"
-            or state.get("review_result", {}).get("decision") == "reject"
+            or (state.get("approval") or {}).get("decision") == "rejected"
+            or (state.get("human_review") or {}).get("decision") == "stop"
+            or (state.get("review_result") or {}).get("decision") == "reject"
         )
         # Evidence-insufficiency abstention is a *successful* terminal: the platform
         # fulfilled its duty by refusing to fabricate, so the run is SUCCEEDED but the
         # persisted review carries decision="abstain" and the event below is distinct
         # (run.abstained) so metrics can count abstention-correctness as first-class.
-        abstained = state.get("review_result", {}).get("decision") == "abstain"
+        abstained = (state.get("review_result") or {}).get("decision") == "abstain"
         # A human who answered "continue" on an escalation accepts the reviewer's
         # blocked outcome as the run's result. The run SUCCEEDS without executing any
         # action, and is recorded under a distinct event so metrics can count
         # human-resolved escalations -- it is not a pass and not a silent cancel.
-        escalation_accepted = state.get("human_review", {}).get("decision") == "continue"
+        escalation_accepted = (state.get("human_review") or {}).get("decision") == "continue"
         status = (
             RunStatus.FAILED
             if failed
@@ -1374,16 +1688,28 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
     graph.add_edge("fast_data", END)
     graph.add_edge("fast_knowledge", END)
     graph.add_edge("unsupported", END)
-    graph.add_edge("plan", "supervisor")
+    graph.add_conditional_edges("plan", lambda state: _after_termination(state, "supervisor"))
     graph.add_edge("data_task", "dispatch_barrier")
     graph.add_edge("knowledge_task", "dispatch_barrier")
     graph.add_edge("dispatch_barrier", "supervisor")
-    graph.add_edge("join_evidence", "supervisor")
-    graph.add_edge("analysis", "supervisor")
-    graph.add_edge("reviewer", "supervisor")
-    graph.add_edge("retrieve_more", "supervisor")
-    graph.add_edge("replan", "supervisor")
-    graph.add_edge("action", "approval")
+    graph.add_conditional_edges(
+        "join_evidence", lambda state: _after_termination(state, "supervisor")
+    )
+    graph.add_conditional_edges("analysis", lambda state: _after_termination(state, "supervisor"))
+    graph.add_conditional_edges("reviewer", lambda state: _after_termination(state, "supervisor"))
+    # ``retrieve_more`` is ``replan`` with ``retrieve_more=True`` and ends the run on
+    # exactly the same conditions, so it routes on the same condition. As a static edge
+    # it sent a terminated run back to the Supervisor, whose only legal action was then
+    # FINALIZE -- one control-plane model call spent choosing an action already chosen,
+    # and a rationale written into the timeline for a state the model could not see
+    # correctly. On ACC-03 (run 16a6ba03, 2026-09-23) it produced "no dirty evidence,
+    # failures, or open review feedback. The only legal action is finalize" for a run
+    # whose review had just asked for a repair.
+    graph.add_conditional_edges(
+        "retrieve_more", lambda state: _after_termination(state, "supervisor")
+    )
+    graph.add_conditional_edges("replan", lambda state: _after_termination(state, "supervisor"))
+    graph.add_conditional_edges("action", lambda state: _after_termination(state, "approval"))
     graph.add_conditional_edges("approval", after_approval)
     graph.add_edge("execute", "finalize")
     graph.add_conditional_edges("escalate", after_escalation)

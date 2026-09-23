@@ -48,6 +48,20 @@ class GraphNode(BaseModel):
     tenant_id: UUID
     #: Searchable keyword surface (summary, status, product...) used to match queries.
     extra: dict[str, Any] = Field(default_factory=dict)
+    #: Who may see this node, in the same vocabulary a document ACL uses -- see
+    #: ``RetrievalPrincipal.allows_scope``, which is the rule these three feed. Without
+    #: them the graph was tenant-scoped and nothing finer: an incident projected from a
+    #: group-restricted ticket was reachable through the structural side channel by any
+    #: principal in the tenant, which is a path around the document ACL rather than a
+    #: gap in it -- the text channel would have refused the same content.
+    #:
+    #: Empty means the node declares no restriction on that axis, exactly as it does for
+    #: ``KnowledgeACL``. A node projected from a source that carries no group coordinate
+    #: is unrestricted *because the source said nothing*, not because the projection
+    #: dropped it.
+    entity_ids: frozenset[int] = Field(default_factory=frozenset)
+    group_ids: frozenset[int] = Field(default_factory=frozenset)
+    profile_ids: frozenset[int] = Field(default_factory=frozenset)
 
 
 class GraphEdge(BaseModel):

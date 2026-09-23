@@ -1,0 +1,72 @@
+{
+  "case_id": "ACC-15",
+  "environment": {
+    "entitlement_verifier_configured": true,
+    "base_url": "http://127.0.0.1:18080",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "recorded_at": "2026-09-23T12:07:27.120744Z",
+    "deployed_revision": "c0d878d0c6a2f61efc249716c2053b447812aacd+dirty(108 files)",
+    "notes": [
+      "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
+      "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
+    ]
+  },
+  "subject": {
+    "username": "globex-analyst-g3",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "roles": [
+      "analyst",
+      "viewer"
+    ],
+    "entity_ids": [
+      2
+    ],
+    "group_ids": [
+      3
+    ]
+  },
+  "steps": [
+    {
+      "id": "mcp-list",
+      "description": "调用 MCP tools/list，并同时用原生读路径列出同一主体的可见工具集",
+      "action": "POST /v1/servicemind/mcp tools/list",
+      "started_at": "2026-09-23T12:16:33.570057Z",
+      "elapsed_seconds": 0.06999846640974283,
+      "http_status": 200,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "{\"mcp\": [\"get_ticket_context\", \"query_cmdb_dependencies\", \"search_knowledge\", \"search_tickets\", \"submit_action_intent\"], \"native\": [\"get_ticket_context\", \"query_cmdb_dependencies\", \"search_knowledge\", \"search_tickets\", \"submit_action_intent\"], \"agrees\": true, \"supports_tasks\": false}"
+    },
+    {
+      "id": "mcp-call",
+      "description": "调用 MCP tools/call 走一次读路径，原始响应写入 detail",
+      "action": "POST /v1/servicemind/mcp tools/call",
+      "started_at": "2026-09-23T12:16:33.640136Z",
+      "elapsed_seconds": 0.8821569113060832,
+      "http_status": 200,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "{\"ticket_id\": 25, \"is_error\": false, \"body\": \"{\\\"ticket\\\":{\\\"id\\\":25,\\\"name\\\":\\\"[P7.6-ACCEPTANCE-A] VPN rejects the MFA challenge after a handset change\\\",\\\"content\\\":\\\"Reported by the user to the service desk.\\\\n\\\\nThe VPN client accepts the password and then fails the multi-factor authentication\\\\nchallenge. The failure repeats on every attempt, from every network, and with the\\\\nsame password. The user replaced their handset nine days ago. No lockout is\\\\nrecorded against the account.\\\\n\\\\nWhat is known so far: password authentication succeeded, multi-factor\\\\nauthentication failed, and the user's phone was replaced recently.\\\\n\\\\nNo action has been taken yet.\\\",\\\"type\\\":2,\\\"urgency\\\":3,\\\"impact\\\":3,\\\"priority\\\":3,\\\"external_id\\\":null,\\\"status\\\":{\\\"id\\\":1,\\\"name\\\":\\\"New\\\"},\\\"entity\\\":{\\\"id\\\":2,\\\"name\\\":null},\\\"team\\\":[]},\\\"followups\\\":[{\\\"id\\\":38,\\\"ticket_id\\\":25,\\\"content\\\":\\\"First line check: the account is not locked, and the password step is accepted on every attempt. The failure is at the second factor.\\\",\\\"is_private\\\":false},{\\\"id\\\":39,\\\"ticket_id\\\":25,\\\"content\\\":\\\"The user confirms the handset was replaced nine days ago and that the old device was factory wiped before it was handed on.\\\",\\\"is_private\\\":false},{\\\"id\\\":42,\\\"ticket_id\\\":25,\\\"content\\\":\\\"ServiceMind reviewed analysis: Ticket 25 records a VPN client that accepts the password but fails the MFA challenge on every attempt, from every network, with the same password, with no account lockout recorded; the user replaced their handset nine days ago and no action has been taken yet (ev-1608ee49246cc7ef). First-line follow-up confirms the account is not locked, the password step is accepted on every attempt, and the failure is at the second factor (ev-89cf7ccec5cbd043). The user confirms the handset was replaced nine days ago and the old device was factory wiped before being handed on (ev-f4f6ee00334a9ba3). Graph correlation shows ticket 25 and sibling ticket 26 both affect the Globex VPN gateway CI, which the graph states points at a shared root cause rather than an isolated fault (ev-ff24bc453152bf9d), and the same CI h\", \"error\": null}"
+    }
+  ],
+  "run_id": null,
+  "terminal_status": null,
+  "total_seconds": null,
+  "action_intent": null,
+  "citations": [],
+  "evidence": [],
+  "analysis": null,
+  "review": null,
+  "selection_manifest": [],
+  "followups_before": [],
+  "followups_after": [],
+  "timeline_events": [],
+  "audit_events": [],
+  "memory_records": [],
+  "graph_readings": [],
+  "foreign_run_status": null,
+  "listed_for_own_tenant": null,
+  "errors": []
+}

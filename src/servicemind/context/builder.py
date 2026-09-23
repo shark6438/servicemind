@@ -12,6 +12,7 @@ from servicemind.context.contracts import (
     DEFAULT_OUTPUT_RESERVE,
     DEFAULT_SYSTEM_RESERVE,
     ContextAgent,
+    ContextAssemblyError,
     ContextBudget,
     ContextEnvelope,
     ContextItem,
@@ -210,9 +211,7 @@ class ContextBuilder:
                 pair[0].item_id,
             )
         )
-        selected: list[ContextItem] = []
         used = 0
-        pruned = 0
         caps = dict(source_token_caps or {})
         invalid_caps = {source: cap for source, cap in caps.items() if cap < 0 or cap > usable // 2}
         if invalid_caps:
@@ -221,28 +220,35 @@ class ContextBuilder:
                 f"the usable context budget: {invalid_caps}"
             )
         per_source: Counter[ContextSource] = Counter()
-        for item, tokens in prepared:
+        # Ranks the first pass kept, and the (rank, manifest row) pairs it refused at
+        # their channel's cap, in rank order for the pass below.
+        chosen: set[int] = set()
+        cap_deferred: list[tuple[int, int]] = []
+        for rank, (item, tokens) in enumerate(prepared):
             # A cap bounds how much of the envelope a *bulk* channel may claim; it must
             # never turn a required control item into a budget error, which would report
             # a channel-policy decision as an over-budget run.
             cap = None if item.required else caps.get(item.source)
             if used + tokens <= usable and (cap is None or per_source[item.source] + tokens <= cap):
-                selected.append(item)
+                chosen.add(rank)
                 used += tokens
                 per_source[item.source] += tokens
                 decision, reason = "selected", "ranked_within_budget"
             elif item.required:
-                raise ValueError(f"required context item exceeds token budget: {item.item_id}")
+                raise ContextAssemblyError(
+                    "required_item_exceeds_token_budget",
+                    f"required context item exceeds token budget: {item.item_id} "
+                    f"({tokens} tokens for {usable} usable)",
+                )
             elif cap is not None and used + tokens <= usable:
                 # Fits the budget but not its channel's share. Without this the largest
                 # source simply takes the envelope and every lower-authority channel --
                 # memory in particular, which is small and sorts last -- is starved with
                 # no violation anywhere: the manifest calls the loss "pruned" and every
                 # evaluation block that stops at retrieval still reads green.
-                pruned += tokens
                 decision, reason = "pruned", "source_token_cap_exceeded"
+                cap_deferred.append((rank, len(manifest)))
             else:
-                pruned += tokens
                 decision, reason = "pruned", "token_budget_exceeded"
             manifest.append(
                 ContextSelection(
@@ -254,6 +260,67 @@ class ContextBuilder:
                     reason=reason,
                 )
             )
+
+        # Second pass: spend a channel's leftover share on whatever still fits.
+        #
+        # A cap is a *share* of a contested envelope, not a quota that expires. The pass
+        # above read it as a quota that expires instead: once a channel's share was gone,
+        # every later row of that channel was dropped whether or not the envelope had room
+        # for it, and the manifest blamed channel policy for what was really idle budget.
+        # Measured on the 2026-09-23 baseline, the Analyst's envelope used 9223 of its
+        # 10720 usable tokens and dropped 6412 tokens of evidence as
+        # "source_token_cap_exceeded" -- every knowledge document, both graph findings, the
+        # ticket record and the group directory -- while 1497 tokens sat unused. The share
+        # still decides who wins a contested envelope; only the uncontested remainder is
+        # reassigned, and the reclaimed rows keep their rank positions rather than being
+        # appended, so the model still reads the envelope most-authoritative-first.
+        #
+        # What "uncontested" means had to be settled by measurement, not by argument. An
+        # earlier version of this pass *reserved* a refused channel's unspent share, so a
+        # row ranking below it could not take the room -- on the reading that a cap
+        # decides which channel wins and a fall-through hands the contest to the lowest
+        # authority. That reading is backwards, and the Phase 5 delivery gate says so:
+        # capping the bulk channel is *how* a realistic procedure survives the envelope
+        # (test_capping_the_bulk_channel_is_what_delivers_a_realistic_procedure), so
+        # reserving a capped channel's refused share against the channels ranking below
+        # it takes back precisely what the cap exists to give. The reservation also did
+        # not buy what it was written for: ACC-03 still failed with it in place (the
+        # refused evidence chunk needs 713 tokens, the envelope has 662, reserved or not)
+        # -- every row that lost its place to the reservation lost it for nothing. It is
+        # gone; the ordered passes below are the whole rule.
+        #
+        # The reclaim spends the idle budget breadth-first: a refused row whose own source
+        # has no place in the envelope at all is restored before a refused *second* row of
+        # a source that already got in. Both were refused by the same cap, but they are not
+        # the same loss. Restoring depth to a source already present adds emphasis;
+        # restoring breadth adds a document the run retrieved and the model has never seen.
+        # Measured on ACC-03 (2026-09-23): rank order alone spent the last tokens on a
+        # second graph row and both chunks of the *decoy* runbook, and the runbook that
+        # answers the case -- refused at the cap, ranking below all of them -- was seven
+        # tokens short when the budget ran out. Breadth first admits it with room to spare,
+        # because "not cited because it was never shown" and "not cited because it was
+        # never retrieved" have to be different observations for the case to mean anything.
+        if cap_deferred:
+            admitted = {prepared[rank][0].provenance_ref for rank in chosen}
+            cap_deferred.sort(
+                key=lambda deferred: (
+                    prepared[deferred[0]][0].provenance_ref in admitted,
+                    deferred[0],
+                )
+            )
+        for rank, row in cap_deferred:
+            tokens = prepared[rank][1]
+            if used + tokens > usable:
+                continue
+            chosen.add(rank)
+            used += tokens
+            manifest[row] = manifest[row].model_copy(
+                update={"decision": "selected", "reason": "reclaimed_from_source_cap"}
+            )
+        selected = [item for rank, (item, _) in enumerate(prepared) if rank in chosen]
+        # Counted off the manifest rather than accumulated during the passes, so the
+        # headline "pruned" number and the per-row reasons cannot disagree.
+        pruned = sum(entry.tokens for entry in manifest if entry.decision == "pruned")
         return ContextEnvelope(
             tenant_id=tenant_id,
             run_id=run_id,

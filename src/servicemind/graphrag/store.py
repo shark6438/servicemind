@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from typing import Protocol
 from uuid import UUID
 
+from servicemind.domain.knowledge import RetrievalPrincipal
 from servicemind.graphrag.domain import (
     EdgeKind,
     GraphBatch,
@@ -15,15 +16,58 @@ from servicemind.graphrag.domain import (
 )
 
 
-class GraphStore(Protocol):
-    """Tenant-scoped structural store behind the Graph-RAG side channel.
+class GraphAccessError(RuntimeError):
+    """A store was asked to read a graph it cannot filter to the caller's authority.
 
-    Every read and write is filtered by ``tenant_id``; projection nodes and edges
-    carry the tenant as a first-class key component so an operator can never reach
-    into another tenant's topology through the graph API.
+    The graph side channel used to degrade to "no findings" on any failure, which is the
+    right posture for an advisory channel -- except for this one failure. A store that
+    returns nodes without applying the principal's ACL does not return *fewer* findings,
+    it returns *other people's* findings, and the caller has no way to tell that apart
+    from a query that genuinely matched nothing. So this is raised rather than degraded:
+    the alternative is a side channel that is silently wider than the text channel it
+    stands beside.
+    """
+
+    def __init__(self, store: str) -> None:
+        super().__init__(f"graph store {store!r} cannot apply node ACLs")
+        self.store = store
+
+
+def node_is_visible(node: GraphNode, principal: RetrievalPrincipal) -> bool:
+    """Shared by every store, so no implementation gets to have its own reading.
+
+    Tenant first: a store that filtered only by ACL would serve another tenant's nodes
+    to a principal that happened to hold a matching group id.
+    """
+    return node.tenant_id == principal.tenant_id and principal.allows_scope(
+        entity_ids=node.entity_ids,
+        group_ids=node.group_ids,
+        profile_ids=node.profile_ids,
+    )
+
+
+def visible_nodes(nodes: list[GraphNode], principal: RetrievalPrincipal) -> list[GraphNode]:
+    return [node for node in nodes if node_is_visible(node, principal)]
+
+
+class GraphStore(Protocol):
+    """Tenant- and ACL-scoped structural store behind the Graph-RAG side channel.
+
+    Every read is filtered by ``tenant_id`` *and* by the caller's ACL coordinates;
+    projection nodes and edges carry the tenant as a first-class key component so an
+    operator can never reach into another tenant's topology through the graph API.
+
+    Reads take a ``RetrievalPrincipal`` rather than a bare ``tenant_id``. Passing the
+    tenant alone was how the finer scope went missing: the caller had a principal, the
+    port asked for one field of it, and no implementation could have filtered by the
+    other three even if it had wanted to. A principal cannot disagree with itself the way
+    a tenant id passed alongside a scope can.
     """
 
     label: str
+    #: Declared on the port so the side channel can refuse a store that would read
+    #: without filtering, instead of discovering it from the results.
+    supports_node_acl: bool
 
     async def initialize(self) -> None: ...
 
@@ -37,23 +81,37 @@ class GraphStore(Protocol):
 
     async def match_nodes(
         self,
-        tenant_id: UUID,
+        principal: RetrievalPrincipal,
         *,
         identifiers: Sequence[str] = (),
         entities: Sequence[str] = (),
     ) -> list[GraphNode]:
-        """Ranked candidate nodes a retrieval query can anchor on."""
+        """Ranked candidate nodes a retrieval query can anchor on, within the principal."""
         ...
 
     async def subgraph(
         self,
-        tenant_id: UUID,
+        principal: RetrievalPrincipal,
         seed_keys: list[str],
         *,
         max_hops: int = 2,
         max_nodes: int = 200,
+        max_edges: int = 2_000,
     ) -> GraphSubgraph:
-        """Everything reachable from ``seed_keys`` within ``max_hops``."""
+        """What is reachable from ``seed_keys`` within ``max_hops``, bounded on both sides.
+
+        ``max_nodes`` bounded the node set and nothing bounded the edges, in either
+        implementation. An ITSM graph is not sparse at the middle: one CI that a thousand
+        incidents have affected is a legal, ordinary topology, and every one of those edges
+        is incident to a node that is in the set. The bound has to be declared here, on the
+        port, because both implementations have to honour the same one -- a bound that
+        only one side enforces is the bound that does not exist.
+
+        Reachability is itself filtered: a node the principal may not read is not a
+        neighbour, and an edge into one is not a path. Filtering only the seeds would
+        have left the traversal as the way around the filter -- one hop from a node you
+        are allowed to see is exactly where the interesting unauthorized content is.
+        """
         ...
 
 
@@ -110,6 +168,7 @@ class MemoryGraphStore:
     """
 
     label = "memory"
+    supports_node_acl = True
 
     def __init__(self) -> None:
         self._nodes: dict[UUID, dict[str, GraphNode]] = defaultdict(dict)
@@ -136,28 +195,38 @@ class MemoryGraphStore:
 
     async def match_nodes(
         self,
-        tenant_id: UUID,
+        principal: RetrievalPrincipal,
         *,
         identifiers: Sequence[str] = (),
         entities: Sequence[str] = (),
     ) -> list[GraphNode]:
         return rank_matches(
-            list(self._nodes[tenant_id].values()),
+            visible_nodes(list(self._nodes[principal.tenant_id].values()), principal),
             identifiers=list(identifiers),
             entities=list(entities),
         )
 
     async def subgraph(
         self,
-        tenant_id: UUID,
+        principal: RetrievalPrincipal,
         seed_keys: list[str],
         *,
         max_hops: int = 2,
         max_nodes: int = 200,
+        max_edges: int = 2_000,
     ) -> GraphSubgraph:
-        nodes = self._nodes[tenant_id]
+        tenant_id = principal.tenant_id
+        # Filtered once, before the traversal: every later step reads this dict, so a
+        # node the principal may not see is not in ``nodes`` and therefore cannot be a
+        # neighbour, cannot extend a frontier and cannot be a seed.
+        nodes = {
+            key: node
+            for key, node in self._nodes[tenant_id].items()
+            if node_is_visible(node, principal)
+        }
         edges = list(self._edges[tenant_id].values())
         limit = max(max_nodes, len(seed_keys))
+        edge_limit = max(max_edges, len(seed_keys))
         seen: set[str] = {key for key in seed_keys if key in nodes}
         collected: list[GraphEdge] = []
         collected_markers: set[tuple[str, str, EdgeKind]] = set()
@@ -180,6 +249,8 @@ class MemoryGraphStore:
                         continue
                     marker = (edge.source_key, edge.target_key, edge.kind)
                     if marker not in collected_markers:
+                        if len(collected) >= edge_limit:
+                            continue
                         collected_markers.add(marker)
                         collected.append(edge)
                     if neighbor not in seen:

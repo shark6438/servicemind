@@ -10,13 +10,14 @@ from hashlib import sha256
 from typing import Any, Protocol
 from uuid import UUID
 
+from servicemind.domain.integrity import contains_injection_marker
 from servicemind.memory.contracts import (
     MemoryCandidate,
     MemoryQuery,
     MemoryRecord,
     MemorySelection,
 )
-from servicemind.memory.policy import MemoryGovernancePolicy, contains_injection_marker
+from servicemind.memory.policy import MemoryGovernancePolicy
 from servicemind.memory.repository import MemoryRepository
 
 logger = logging.getLogger("servicemind.memory.service")

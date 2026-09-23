@@ -290,9 +290,21 @@ class ServiceMindRepository:
                 )
             ).scalar_one_or_none()
             if existing:
-                if existing.action_hash != action_hash:
+                if existing.action_hash == action_hash:
+                    return existing
+                if existing.status != ActionStatus.WITHDRAWN.value:
                     raise RuntimeError("run already has a different ActionIntent")
-                return existing
+                # A withdrawn action is not a predecessor to preserve but a slot to
+                # reuse: it was taken back before anybody decided on it, the run has
+                # already re-derived what it should propose instead, and
+                # ``action_intents.run_id`` is unique because a run has exactly one
+                # action it may currently ask a human about. The withdrawn action's own
+                # identity -- id, hash, arguments, evidence -- is not lost to this
+                # delete: ``withdraw_action_intent`` writes it to ``audit_events``
+                # first, which is append-only, so the row's disappearance cannot make
+                # an approval that was never given look like one that was.
+                await session.delete(existing)
+                await session.flush()
             intent = ActionIntentRecord(
                 tenant_id=self.tenant_id,
                 run_id=run_id,
@@ -324,6 +336,37 @@ class ServiceMindRepository:
                     select(ActionIntentRecord).where(ActionIntentRecord.run_id == run_id)
                 )
             ).scalar_one_or_none()
+
+    async def withdraw_action_intent(self, run_id: UUID) -> ActionIntentRecord | None:
+        """Take back the run's pending action, if it still has one to take back.
+
+        The graph has always withdrawn a voided action *in its own state* -- the
+        boundary clears ``action_intent`` and the approval node hands the run back to
+        the supervisor. The row was left ``proposed``, so the platform's record of
+        "a write is waiting for a human" outlived the decision that there was nothing
+        left to approve: an operator reading ``GET /runs/{id}`` still saw a live
+        action, and the re-derived action could not be persisted at all, because the
+        run was still holding the slot of the action it had already withdrawn.
+
+        Only a ``PROPOSED`` action is withdrawable. Anything past that -- approved,
+        rejected, executing, executed -- has been decided or attempted, and rewriting
+        it here would erase the distinction the status column exists to draw. The
+        return value is the row as it stands, so a caller can tell "withdrawn now"
+        from "there was nothing to withdraw".
+        """
+        async with tenant_session(self.tenant_id) as session:
+            action = (
+                await session.execute(
+                    select(ActionIntentRecord)
+                    .where(ActionIntentRecord.run_id == run_id)
+                    .with_for_update()
+                )
+            ).scalar_one_or_none()
+            if action is None or action.status != ActionStatus.PROPOSED.value:
+                return action
+            action.status = ActionStatus.WITHDRAWN.value
+            await session.flush()
+            return action
 
     async def record_approval(
         self,

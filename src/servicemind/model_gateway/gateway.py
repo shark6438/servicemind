@@ -9,6 +9,7 @@ from typing import Any
 from uuid import UUID
 
 from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
 
 from schema.models import DeepseekModelName
@@ -80,13 +81,20 @@ def _message_payload(messages: Any) -> Any:
     return messages
 
 
-def _error_code(error: BaseException) -> str:
+def model_error_code(error: BaseException) -> str:
+    """Classify a failed invocation for the audit ledger.
+
+    ``PARSER`` is grouped with ``VALIDATION``: a structured call that returns prose or
+    malformed JSON is the same defect as one that returns a well-formed object of the
+    wrong shape -- the model did not answer the schema -- and the retry has to treat
+    them alike or it will replay a question the model has already failed.
+    """
     name = type(error).__name__.upper()
     if isinstance(error, TimeoutError):
         return "MODEL_TIMEOUT"
     if "RATE" in name or "429" in str(error):
         return "MODEL_RATE_LIMITED"
-    if "VALIDATION" in name or "JSON" in name:
+    if "VALIDATION" in name or "JSON" in name or "PARSER" in name:
         return "MODEL_SCHEMA_INVALID"
     return f"MODEL_{name[:80]}"
 
@@ -109,6 +117,93 @@ def _retryable(error: BaseException) -> bool:
             "504",
         )
     )
+
+
+#: Ceiling for a transport-class retry. Sub-second is deliberate: a connection reset or
+#: a 503 clears on its own, and the caller's deadline is not what is failing.
+_TRANSIENT_BACKOFF_CEILING_SECONDS = 0.5
+
+#: Throttling is measured in seconds and is a property of *how recently the account
+#: called*, not of the request. These bound the wait when the provider gives no hint.
+_RATE_LIMIT_BACKOFF_BASE_SECONDS = 1.0
+_RATE_LIMIT_BACKOFF_CEILING_SECONDS = 8.0
+
+
+def _retry_after_seconds(error: BaseException) -> float | None:
+    """Return the provider's own ``Retry-After`` delay in seconds, when it sent one.
+
+    Only the delay-seconds form is read; the HTTP-date form is rare and reading it would
+    cost a date parser to improve a wait that already falls back to a bounded one.
+    """
+    headers = getattr(getattr(error, "response", None), "headers", None)
+    if headers is None:
+        return None
+    try:
+        raw = headers.get("retry-after")
+    except Exception:  # a header mapping is provider code, not ours
+        return None
+    try:
+        seconds = float(raw)
+    except (TypeError, ValueError):
+        return None
+    return max(0.0, seconds) if seconds == seconds else None  # reject NaN
+
+
+def _backoff_seconds(
+    error: BaseException, retry: int, *, remaining_seconds: float | None = None
+) -> float:
+    """Seconds to wait before replaying a failed call, decided by *why* it failed.
+
+    A rate limit is not a transport fault and must not be retried like one. The standard
+    schedule here was ``min(0.1 * 2**retry, 0.5)`` for every retryable error, so a 429 was
+    replayed 100 ms after the provider refused it -- inside the same throttle window, which
+    makes the retry a second identical request rather than a second chance. Measured over
+    one day of live acceptance traffic (2026-09-23): nine ``MODEL_RATE_LIMITED`` rows had
+    ``attempts=2``, i.e. the retry never once succeeded, and every one of the nine runs
+    terminated ``waiting_review`` -- analysis degraded, Reviewer escalated on
+    ``DEGRADED_ANALYSIS``. All nine were the analysis call, the largest request the
+    platform makes. The wait is bounded by what is left of the call's own timeout budget,
+    so honouring a long ``Retry-After`` can never convert a throttle into a timeout.
+    """
+    if model_error_code(error) == "MODEL_RATE_LIMITED":
+        hinted = _retry_after_seconds(error)
+        wait = (
+            hinted
+            if hinted is not None
+            else min(
+                _RATE_LIMIT_BACKOFF_BASE_SECONDS * (2**retry),
+                _RATE_LIMIT_BACKOFF_CEILING_SECONDS,
+            )
+        )
+    else:
+        wait = min(0.1 * (2**retry), _TRANSIENT_BACKOFF_CEILING_SECONDS)
+    if remaining_seconds is not None:
+        wait = min(wait, max(0.0, remaining_seconds))
+    return wait
+
+
+#: Appended to the request when a retry follows a schema violation. DeepSeek's
+#: ``json_mode`` advertises the schema in the prompt without enforcing it, so a schema
+#: violation is a deterministic property of the answer to *these* messages: replaying
+#: them byte for byte spends the retry asking the model to make the same mistake twice.
+#: The retry only becomes a new question once it carries what was wrong with the answer.
+_SCHEMA_REPAIR = (
+    "Your previous response did not satisfy the required response schema. The validation "
+    "error was:\n\n{error}\n\nAnswer the same request again and return ONLY the JSON object. "
+    "Every required field must be present, correctly typed and within its stated bounds; do "
+    "not add fields the schema does not define, and do not wrap the object in prose or "
+    "markdown fences."
+)
+
+
+def _repair_messages(messages: Any, error: BaseException) -> Any:
+    """Return the same request with the schema violation fed back to the model."""
+    instruction = _SCHEMA_REPAIR.format(error=str(error)[:1000])
+    if isinstance(messages, str):
+        return f"{messages}\n\n{instruction}"
+    if isinstance(messages, Sequence) and not isinstance(messages, (str, bytes)):
+        return [*messages, HumanMessage(content=instruction)]
+    return messages
 
 
 def _conservative_token_count(value: object) -> int:
@@ -177,6 +272,7 @@ class ModelGateway:
         prompt_hash = stable_hash(payload)
         schema_hash = stable_hash(schema.model_json_schema())
         input_tokens = _conservative_token_count(payload)
+        call_started = time.perf_counter()
         models = [model]
         if self.policy.allow_fallback(context):
             models.extend(fallback_models)
@@ -241,13 +337,20 @@ class ModelGateway:
 
             started = time.perf_counter()
             attempts_for_model = 0
+            # What the next attempt sends. It stays the caller's own request until an
+            # attempt fails on the schema, and only then carries the repair instruction.
+            # ``prompt_hash`` and the cache key were computed from the caller's request
+            # above and are deliberately not re-derived here: a repair that succeeds is
+            # still an answer to the original question, so it belongs under the original
+            # key. That a repair happened stays visible in the audit ``attempts`` count.
+            attempt_messages = messages
             for retry in range(max_retries + 1):
                 attempts_for_model += 1
                 total_attempts += 1
                 try:
                     async with asyncio.timeout(context.timeout_seconds):
                         raw = await _structured(candidate, schema).ainvoke(
-                            messages, config=config, **kwargs
+                            attempt_messages, config=config, **kwargs
                         )
                     usage: dict[str, int] | None = None
                     if isinstance(raw, dict) and "parsed" in raw:
@@ -292,7 +395,16 @@ class ModelGateway:
                     last_error = exc
                     if retry >= max_retries or not _retryable(exc):
                         break
-                    await asyncio.sleep(min(0.1 * (2**retry), 0.5))
+                    if model_error_code(exc) == "MODEL_SCHEMA_INVALID":
+                        attempt_messages = _repair_messages(messages, exc)
+                    await asyncio.sleep(
+                        _backoff_seconds(
+                            exc,
+                            retry,
+                            remaining_seconds=context.timeout_seconds
+                            - (time.perf_counter() - call_started),
+                        )
+                    )
             self._failures[provider] = self._failures.get(provider, 0) + 1
             if self._failures[provider] >= 5:
                 self._open_until[provider] = time.monotonic() + 30
@@ -375,7 +487,7 @@ class ModelGateway:
                 error_code=(
                     "MODEL_COST_BUDGET_EXCEEDED"
                     if cost_exceeded
-                    else _error_code(error)
+                    else model_error_code(error)
                     if error
                     else None
                 ),

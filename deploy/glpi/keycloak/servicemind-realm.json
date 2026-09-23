@@ -141,6 +141,69 @@
       },
       "credentials": [{"type": "password", "value": "${GLOBEX_ANALYST_PASSWORD}", "temporary": false}],
       "realmRoles": ["viewer", "analyst"]
+    },
+    {
+      "username": "globex-analyst-g3",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Globex",
+      "lastName": "Analyst G3",
+      "email": "globex-analyst-g3@example.local",
+      "requiredActions": [],
+      "attributes": {
+        "tenant_id": ["22222222-2222-4222-8222-222222222222"],
+        "glpi_entity_ids": ["2"],
+        "glpi_group_ids": ["3"]
+      },
+      "credentials": [{"type": "password", "value": "${GLOBEX_ANALYST_G3_PASSWORD}", "temporary": false}],
+      "realmRoles": ["viewer", "analyst"]
+    },
+    {
+      "username": "globex-analyst-g4",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Globex",
+      "lastName": "Analyst G4",
+      "email": "globex-analyst-g4@example.local",
+      "requiredActions": [],
+      "attributes": {
+        "tenant_id": ["22222222-2222-4222-8222-222222222222"],
+        "glpi_entity_ids": ["2"],
+        "glpi_group_ids": ["4"]
+      },
+      "credentials": [{"type": "password", "value": "${GLOBEX_ANALYST_G4_PASSWORD}", "temporary": false}],
+      "realmRoles": ["viewer", "analyst"]
+    },
+    {
+      "username": "globex-analyst-nogroup",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Globex",
+      "lastName": "Analyst No Group",
+      "email": "globex-analyst-nogroup@example.local",
+      "requiredActions": [],
+      "attributes": {
+        "tenant_id": ["22222222-2222-4222-8222-222222222222"],
+        "glpi_entity_ids": ["2"]
+      },
+      "credentials": [{"type": "password", "value": "${GLOBEX_ANALYST_NOGROUP_PASSWORD}", "temporary": false}],
+      "realmRoles": ["viewer", "analyst"]
+    },
+    {
+      "username": "globex-approver",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Globex",
+      "lastName": "Approver",
+      "email": "globex-approver@example.local",
+      "requiredActions": [],
+      "attributes": {
+        "tenant_id": ["22222222-2222-4222-8222-222222222222"],
+        "glpi_entity_ids": ["2"],
+        "glpi_group_ids": ["3", "4"]
+      },
+      "credentials": [{"type": "password", "value": "${GLOBEX_APPROVER_PASSWORD}", "temporary": false}],
+      "realmRoles": ["viewer", "analyst", "operator", "approver"]
     }
   ]
 }

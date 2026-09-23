@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from uuid import UUID, uuid4
 
 import pytest
+from pydantic import ValidationError
 
 import servicemind.agents.analysis as analysis_module
 import servicemind.agents.data as data_module
@@ -18,8 +19,14 @@ from servicemind.domain.analysis import AnalysisClaim, AnalysisResult, AnalysisS
 from servicemind.domain.evidence import Evidence, EvidenceSourceType, join_evidence
 from servicemind.domain.handoff import HandoffEnvelope
 from servicemind.domain.knowledge import Citation
+from servicemind.domain.models import (
+    ACTION_POLICY_VERSION_MAX,
+    ACTION_PREVIEW_MAX,
+    INTENT_VERSION_MAX,
+    ActionIntent,
+)
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
-from servicemind.domain.task import BudgetSnapshot
+from servicemind.domain.task import TICKET_ID_MAX, BudgetSnapshot
 from servicemind.harness.executor import ControlledActionExecutor
 from servicemind.runtime.contracts import AgentInvocationContext, AgentRunStatus
 from servicemind.runtime.tool_gateway import DataToolName, TenantGlpiReadGateway
@@ -257,7 +264,7 @@ async def test_reviewer_semantic_judge_cannot_bypass_rule_gate(monkeypatch) -> N
         max_replans=2,
     )
     assert result.output.decision is ReviewDecision.PASSED
-    assert result.output.policy_version == "servicemind-review-policy-v3"
+    assert result.output.policy_version == "servicemind-review-policy-v5"
     assert result.metrics.model_calls == 1
 
 
@@ -294,6 +301,166 @@ def test_action_v2_hash_detects_post_review_mutation() -> None:
     mutated = intent.model_copy(update={"arguments": {"content": "tampered"}})
     with pytest.raises(ValueError, match="integrity"):
         mutated.verify_integrity()
+
+
+def reviewed_pair(
+    *,
+    refs: list[str],
+    summary: str,
+    feedback: str,
+    group: str = "Network Team",
+    policy_version: str = "servicemind-action-policy-v2",
+) -> tuple[HandoffEnvelope, AnalysisResult]:
+    """A passed review plus the analysis it covers, both fully validated.
+
+    The envelope's digests are computed by its validator from these exact fields, so a
+    caller that varies the sizes still gets a handoff the Action Agent will accept --
+    unlike ``model_copy``, which would carry the previous sizes' digests.
+    """
+    analysis = model_analysis(refs).model_copy(
+        update={"reasoning_summary": summary, "recommended_group": group}
+    )
+    review = ReviewResult(
+        decision=ReviewDecision.PASSED,
+        risk_level=RiskLevel.LOW,
+        feedback=feedback,
+        reviewed_evidence_refs=refs,
+    )
+    return HandoffEnvelope(
+        run_id=uuid4(),
+        tenant_id=TENANT,
+        user_id="analyst-1",
+        evidence_refs=refs,
+        review_result=review,
+        allowed_operations=["append_ticket_followup"],
+        risk_level=RiskLevel.LOW,
+        remaining_budget=BudgetSnapshot(
+            remaining_steps=5,
+            remaining_replans=1,
+            remaining_model_calls=1,
+            remaining_tool_calls=1,
+            deadline=datetime.now(UTC) + timedelta(minutes=30),
+        ),
+        idempotency_context={"run_id": "safe"},
+        handoff_reason="Review passed",
+        policy_version=policy_version,
+        expires_at=datetime.now(UTC) + timedelta(minutes=5),
+    ), analysis
+
+
+def test_a_verbose_analysis_previews_with_a_marked_clip_instead_of_raising() -> None:
+    """The preview is a join of three bounded fields, so it needs its own bound.
+
+    Nothing bounded the composition: at the field ceilings it reached ~6600 characters
+    against a 4000-character ``dry_run_preview``, and ``ActionIntent`` rejected it. The
+    raise happened inside ``propose_from_handoff``, which ``action_node`` does not guard,
+    so a verbose analysis ended the run in the graph's error path -- after a passed
+    review, with nothing written to the ticket and no finalize record.
+    """
+    handoff, analysis = reviewed_pair(
+        refs=[f"ev-{index:016x}" for index in range(100)],
+        summary="s" * 2000,
+        feedback="f" * 2000,
+        group="g" * 200,
+    )
+    intent = ActionAgent().propose_from_handoff(handoff, analysis, ticket_id=2)
+
+    preview = intent.dry_run_preview or ""
+    assert len(preview) <= ACTION_PREVIEW_MAX
+    # The clip is accounted for, not silent: the head plus the count is the whole string.
+    head, _, marker = preview.partition("\n…[")
+    assert marker.endswith(" characters elided]")
+    assert len(head) + int(marker.removesuffix(" characters elided]")) == len(
+        intent.arguments["content"]
+    )
+    # Only the preview is bounded. What the Action Agent would append to the ticket is
+    # unchanged, so the operator is reading a prefix of the real thing.
+    assert len(intent.arguments["content"]) > ACTION_PREVIEW_MAX
+    assert intent.arguments["content"].startswith(head)
+
+
+def _bare_intent(**overrides) -> ActionIntent:
+    """The smallest legal intent, so one field can be pushed past its column alone."""
+    fields = {
+        "run_id": uuid4(),
+        "action_type": "append_ticket_followup",
+        "target_id": 2,
+        "arguments": {"content": "x"},
+        "action_hash": "0" * 64,
+    }
+    fields.update(overrides)
+    return ActionIntent(**fields)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("intent_version", "v" * (INTENT_VERSION_MAX + 1)),
+        ("policy_version", "p" * (ACTION_POLICY_VERSION_MAX + 1)),
+        ("target_id", TICKET_ID_MAX + 1),
+    ],
+)
+def test_an_intent_cannot_carry_a_value_its_column_cannot_hold(field: str, value: object) -> None:
+    """``action_intents`` is the contract, and each of these is written into it verbatim.
+
+    None of the three is derived or clipped on the way in: ``intent_version`` and
+    ``policy_version`` arrive from the handoff and ``target_id`` from the request, so an
+    over-long one produced a row the driver refused -- after the review had passed.
+    """
+    with pytest.raises(ValidationError, match=field):
+        _bare_intent(**{field: value})
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("intent_version", "v" * INTENT_VERSION_MAX),
+        ("policy_version", "p" * ACTION_POLICY_VERSION_MAX),
+        ("target_id", TICKET_ID_MAX),
+    ],
+)
+def test_an_intent_at_each_ceiling_is_still_a_valid_intent(field: str, value: object) -> None:
+    """The bounds reject only what they have to; the ceilings themselves stay legal."""
+    assert getattr(_bare_intent(**{field: value}), field) == value
+
+
+def test_a_handoff_cannot_forward_a_policy_version_the_intent_cannot_hold() -> None:
+    """The handoff is where the value is chosen, so the handoff names the same bound."""
+    with pytest.raises(ValidationError, match="policy_version"):
+        reviewed_pair(
+            refs=["ev-1"],
+            summary="Cited evidence.",
+            feedback="Passed independent review.",
+            policy_version="p" * (ACTION_POLICY_VERSION_MAX + 1),
+        )
+
+
+def test_the_preview_ceiling_is_still_a_contract_not_only_a_habit() -> None:
+    """The bound stays at the field, so a future producer cannot forget to clip."""
+    with pytest.raises(ValueError, match="dry_run_preview"):
+        ActionIntent(
+            run_id=uuid4(),
+            action_type="append_ticket_followup",
+            target_id=2,
+            arguments={"content": "x"},
+            action_hash="0" * 64,
+            dry_run_preview="x" * (ACTION_PREVIEW_MAX + 1),
+        )
+
+
+def test_a_preview_inside_its_ceiling_is_returned_whole() -> None:
+    """The bound must not fire on the previews the Action Agent normally composes."""
+    quiet_handoff, quiet = reviewed_pair(
+        refs=[f"ev-{index:016x}" for index in range(3)],
+        summary="Cited evidence.",
+        feedback="Passed independent review.",
+    )
+
+    preview = ActionAgent().propose_from_handoff(quiet_handoff, quiet, ticket_id=2).dry_run_preview
+
+    assert preview is not None and "elided" not in preview
+    assert preview.startswith("ServiceMind reviewed analysis: Cited evidence.")
+    assert preview.endswith("Reviewer: Passed independent review.")
 
 
 @pytest.mark.asyncio
@@ -353,3 +520,44 @@ async def test_harness_compares_runtime_intent_with_persisted_approval(monkeypat
     monkeypatch.setattr(executor_module, "ServiceMindRepository", FakeRepository)
     with pytest.raises(PermissionError, match="persisted approved intent"):
         await ControlledActionExecutor().execute(tenant_context(), intent)
+
+
+@pytest.mark.asyncio
+async def test_the_read_gateway_carries_the_callers_group_scope_into_the_tool_call(
+    monkeypatch,
+) -> None:
+    """The tool boundary is where a scope is most likely to go missing.
+
+    ``TenantContext`` has carried the group coordinate all along, and everything behind
+    the gateway reads it -- the registry's visibility rule, the policy engine, the graph
+    read that builds its own principal. ``ToolCall`` did not, so all of them saw the
+    empty set, and empty means *denial* on that axis: a group-scoped resource was
+    unreachable through the platform while being reachable through the hand-built
+    principal beside it. A field carried on one side of a boundary and dropped on the
+    other is the shape of the defect, not an incidental omission.
+    """
+    import servicemind.runtime.tool_gateway as gateway_module
+    from servicemind.tool_platform.contracts import ToolCall
+
+    captured: list[ToolCall] = []
+
+    class _CapturingGateway:
+        async def execute(self, call: ToolCall):
+            captured.append(call)
+            return SimpleNamespace(output={"id": 2})
+
+    context = tenant_context()
+    context.allowed_glpi_group_ids = {3, 4}
+    monkeypatch.setattr(gateway_module.settings, "SERVICEMIND_TOOL_PLATFORM_ENABLED", True)
+    monkeypatch.setattr(gateway_module, "build_tool_gateway", _CapturingGateway)
+
+    await TenantGlpiReadGateway().execute(
+        invocation=invocation("T1", capabilities=frozenset({DataToolName.GET_TICKET.value})),
+        tenant_context=context,
+        tool_name=DataToolName.GET_TICKET,
+        ticket_id=2,
+    )
+
+    assert len(captured) == 1
+    assert captured[0].group_ids == frozenset({3, 4})
+    assert captured[0].entity_ids == frozenset({1})

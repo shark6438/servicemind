@@ -1,0 +1,63 @@
+{
+  "case_id": "ACC-16",
+  "environment": {
+    "entitlement_verifier_configured": true,
+    "base_url": "http://127.0.0.1:18080",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "recorded_at": "2026-09-23T12:07:27.120744Z",
+    "deployed_revision": "c0d878d0c6a2f61efc249716c2053b447812aacd+dirty(108 files)",
+    "notes": [
+      "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
+      "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
+    ]
+  },
+  "subject": {
+    "username": "globex-approver",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "roles": [
+      "analyst",
+      "approver",
+      "operator",
+      "viewer"
+    ],
+    "entity_ids": [
+      2
+    ],
+    "group_ids": [
+      3,
+      4
+    ]
+  },
+  "steps": [
+    {
+      "id": "count-outbox",
+      "description": "统计 outbox 中 action.approved 行的总数与未消费数，原始输出写入 detail",
+      "action": "outbox tally",
+      "started_at": "2026-09-23T12:16:34.619251Z",
+      "elapsed_seconds": 0.010081189684569836,
+      "http_status": null,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "{\"event_type\": \"action.approved\", \"total\": 47, \"by_status\": {\"published\": 47}, \"unconsumed\": 0, \"note\": \"PASS here means the tally was taken, not that the queue is drained; see the outbox defect in the baseline document\"}"
+    }
+  ],
+  "run_id": null,
+  "terminal_status": null,
+  "total_seconds": null,
+  "action_intent": null,
+  "citations": [],
+  "evidence": [],
+  "analysis": null,
+  "review": null,
+  "selection_manifest": [],
+  "followups_before": [],
+  "followups_after": [],
+  "timeline_events": [],
+  "audit_events": [],
+  "memory_records": [],
+  "graph_readings": [],
+  "foreign_run_status": null,
+  "listed_for_own_tenant": null,
+  "errors": []
+}

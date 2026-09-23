@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
+from servicemind.domain.knowledge import RetrievalPrincipal
 from servicemind.domain.models import ActionIntent
 from servicemind.graphrag.build import build_graph_store
 from servicemind.integrations.glpi.client import GlpiClient
@@ -44,6 +45,7 @@ class ProductionGlpiBackend:
             username=call.user_id,
             roles=set(call.roles),
             allowed_glpi_entity_ids=set(call.entity_ids),
+            allowed_glpi_group_ids=set(call.group_ids),
         )
 
     async def invoke(self, name: str, arguments: dict[str, Any], call: ToolCall) -> Any:
@@ -148,12 +150,23 @@ class ProductionGlpiBackend:
         if store is None:
             raise RuntimeError("tenant CMDB graph is unavailable")
         try:
+            # The call's own scope, not its tenant: the graph is reachable from here as
+            # well as from the knowledge agent, and a read path that hands the store a
+            # tenant id is a read path that does not filter. ``ToolCall`` carries the
+            # group coordinate for the same reason it carries the entity one -- both are
+            # read by this filter, and both are absent from an empty call.
+            principal = RetrievalPrincipal(
+                tenant_id=call.tenant_id,
+                user_id=call.user_id,
+                entity_ids=call.entity_ids,
+                group_ids=call.group_ids,
+            )
             matches = await store.match_nodes(
-                call.tenant_id,
+                principal,
                 identifiers=[str(arguments.get("identifier", arguments.get("resource_id")))],
             )
             graph = await store.subgraph(
-                call.tenant_id,
+                principal,
                 [item.key for item in matches[:5]],
                 max_hops=int(arguments.get("max_hops", 1)),
                 max_nodes=200,
@@ -179,6 +192,28 @@ class ProductionGlpiBackend:
             return output.get("ticket", {}).get("id") == arguments.get("ticket_id")
         if name == "glpi.read.ticket":
             return output.get("id") == arguments.get("ticket_id")
+        if name == "glpi.read.groups":
+            # Declared strategy: schema_and_entity_scope. This read returns an array,
+            # so the dict-shaped fallback below would reject every successful call and
+            # surface as a spurious ToolVerificationFailed. A group that carries no
+            # entity is accepted, matching the convention used by glpi.read.ticket and
+            # glpi.read_resource; a group that names a foreign entity is not.
+            return isinstance(output, list) and all(
+                isinstance(item, dict)
+                and (
+                    not isinstance(item.get("entity"), dict)
+                    or item["entity"].get("id") in call.entity_ids
+                )
+                for item in output
+            )
+        if name == "glpi.read.ticket_followups":
+            # Declared strategy: ticket_scope. Also an array. A followup that cannot be
+            # attributed to the requested ticket is not evidence of scope, so this one
+            # fails closed instead.
+            return isinstance(output, list) and all(
+                isinstance(item, dict) and item.get("ticket_id") == arguments.get("ticket_id")
+                for item in output
+            )
         if name == "glpi.read_resource":
             return output.get("resource", {}).get("id") in {arguments.get("resource_id"), None}
         return isinstance(output, dict)

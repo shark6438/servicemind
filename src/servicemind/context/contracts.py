@@ -43,12 +43,36 @@ class TrustLabel(StrEnum):
     UNTRUSTED = "untrusted"
 
 
+#: Ceiling on one context item's serialized content. Producers of derived items -- the
+#: ones built from model output rather than from control policy -- have to bound against
+#: this before they construct the item; a ``ValidationError`` raised while *assembling*
+#: the model input is not a governance decision, it is a crash.
+CONTEXT_ITEM_CONTENT_MAX = 100_000
+
+
+class ContextAssemblyError(ValueError):
+    """The governed model input cannot be assembled inside its declared contracts.
+
+    Raised where an item is built or selected and its size makes the envelope
+    unsatisfiable. It subclasses ``ValueError`` so it keeps being the answer to "this
+    value does not fit", and it carries a ``code`` so the workflow can terminate the run
+    with a cause that names itself: without one the ledger records every one of these as
+    ``MODEL_VALUEERROR``, and "this run's own data does not fit its context budget" is
+    indistinguishable from "this node has a bug". Only one of those is the run's fault.
+    """
+
+    def __init__(self, code: str, reason: str) -> None:
+        super().__init__(reason)
+        self.code = code
+        self.reason = reason
+
+
 class ContextItem(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     item_id: str = Field(min_length=1, max_length=255)
     source: ContextSource
-    content: str = Field(min_length=1, max_length=100_000)
+    content: str = Field(min_length=1, max_length=CONTEXT_ITEM_CONTENT_MAX)
     allowed_agents: frozenset[ContextAgent]
     trust: TrustLabel
     authority: float = Field(ge=0, le=1)

@@ -2,6 +2,27 @@ import operator
 from typing import Annotated, Any, TypedDict
 
 
+def _reset_or_append(
+    current: list[dict[str, Any]] | None, update: list[dict[str, Any]] | None
+) -> list[dict[str, Any]]:
+    """Accumulate evidence, where ``None`` means "everything gathered so far is void".
+
+    ``operator.add`` cannot say that. Adding an empty list adds nothing, so the
+    narrowing path's ``{"data_evidence": []}`` -- written to strip evidence gathered
+    under a scope the requester has since lost -- left every item in place, and the
+    resumed run was free to cite it into a write. The narrowing was enforced on future
+    retrieval and evaded by past retrieval, which is the exact opposite of what the
+    update that wrote it says it does.
+
+    ``None`` is not a list any node produces as evidence, so it costs nothing to give
+    it this second meaning. It cannot reach the state as a value: on a channel with a
+    reducer, ``None`` is a message to the reducer rather than a value to store.
+    """
+    if update is None:
+        return []
+    return [*(current or []), *update]
+
+
 class Phase2State(TypedDict, total=False):
     run_id: str
     tenant_id: str
@@ -51,8 +72,8 @@ class Phase3State(TypedDict, total=False):
     invocation_tool_budget: int
     task_completions: Annotated[list[dict[str, Any]], operator.add]
     plan_revision: int
-    data_evidence: Annotated[list[dict[str, Any]], operator.add]
-    knowledge_evidence: Annotated[list[dict[str, Any]], operator.add]
+    data_evidence: Annotated[list[dict[str, Any]], _reset_or_append]
+    knowledge_evidence: Annotated[list[dict[str, Any]], _reset_or_append]
     joined_evidence: dict[str, Any]
     analysis_result: dict[str, Any]
     review_result: dict[str, Any]

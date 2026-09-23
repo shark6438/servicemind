@@ -43,6 +43,14 @@ class ActionStatus(StrEnum):
     EXECUTING = "executing"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+    #: The platform took the action back before any human ruled on it, because the
+    #: evidence it was derived from stopped being the requester's to read. Distinct
+    #: from REJECTED, which is a person saying no to something they were shown, and
+    #: from FAILED, which is execution going wrong. Nothing was decided and nothing
+    #: was attempted; the run re-derives the action under its narrowed scope and asks
+    #: again. Only a PROPOSED action can be withdrawn -- once a decision or an
+    #: execution has touched it, it is no longer the platform's to take back.
+    WITHDRAWN = "withdrawn"
 
 
 class IngestionJobStatus(StrEnum):

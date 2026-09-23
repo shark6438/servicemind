@@ -1,0 +1,60 @@
+{
+  "case_id": "ACC-17",
+  "environment": {
+    "entitlement_verifier_configured": true,
+    "base_url": "http://127.0.0.1:18080",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "recorded_at": "2026-09-23T12:07:27.120744Z",
+    "deployed_revision": "c0d878d0c6a2f61efc249716c2053b447812aacd+dirty(108 files)",
+    "notes": [
+      "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
+      "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
+    ]
+  },
+  "subject": {
+    "username": "globex-analyst-g3",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "roles": [
+      "analyst",
+      "viewer"
+    ],
+    "entity_ids": [
+      2
+    ],
+    "group_ids": [
+      3
+    ]
+  },
+  "steps": [
+    {
+      "id": "probe-lifecycle",
+      "description": "运行真集群索引生命周期套件，pytest 汇总输出写入 detail",
+      "action": "pytest tests/servicemind/test_phase4_index_lifecycle_live.py --run-docker",
+      "started_at": "2026-09-23T12:16:34.630104Z",
+      "elapsed_seconds": 17.25675312243402,
+      "http_status": null,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /data/shihongye/servicemind\nconfigfile: pyproject.toml\nplugins: asyncio-1.4.0, env-1.7.0, Faker-40.37.0, langsmith-0.10.10, anyio-4.14.2, cov-7.1.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function\ncollected 2 items\n\ntests/servicemind/test_phase4_index_lifecycle_live.py ..                 [100%]\n\n=============================== warnings summary ===============================\ntests/servicemind/test_phase4_index_lifecycle_live.py::test_a_generation_is_built_aliased_and_then_retired_on_the_cluster\ntests/servicemind/test_phase4_index_lifecycle_live.py::test_a_suspended_row_is_unreachable_through_a_real_filtered_search\n  /data/shihongye/servicemind/.venv/lib/python3.13/site-packages/aiohttp/connector.py:988: DeprecationWarning: enable_cleanup_closed ignored because https://github.com/python/cpython/pull/118960 is fixed in Python version sys.version_info(major=3, minor=13, micro=12, releaselevel='final', serial=0)\n    super().__init__(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 2 passed, 2 warnings in 12.60s ========================"
+    }
+  ],
+  "run_id": null,
+  "terminal_status": null,
+  "total_seconds": null,
+  "action_intent": null,
+  "citations": [],
+  "evidence": [],
+  "analysis": null,
+  "review": null,
+  "selection_manifest": [],
+  "followups_before": [],
+  "followups_after": [],
+  "timeline_events": [],
+  "audit_events": [],
+  "memory_records": [],
+  "graph_readings": [],
+  "foreign_run_status": null,
+  "listed_for_own_tenant": null,
+  "errors": []
+}

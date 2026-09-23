@@ -10,7 +10,15 @@ from servicemind.domain.supervisor import (
     PlanRevisionProposal,
     PlanTaskProposal,
 )
-from servicemind.domain.task import AgentName, Budget, ErrorPolicy, Task, TaskPlan, TaskStatus
+from servicemind.domain.task import (
+    MAX_PLAN_TASKS,
+    AgentName,
+    Budget,
+    ErrorPolicy,
+    Task,
+    TaskPlan,
+    TaskStatus,
+)
 from servicemind.orchestration.registry import AgentRegistry, agent_registry
 from servicemind.orchestration.task_dag import DagValidator, dag_validator
 from servicemind.runtime.structured import structured_output
@@ -91,7 +99,14 @@ class DynamicPlanner:
         result = await runnable.ainvoke(
             [
                 SystemMessage(
-                    content=self._planner_prompt(request_write, correction, PlanRevisionProposal)
+                    content=self._planner_prompt(
+                        request_write,
+                        correction,
+                        PlanRevisionProposal,
+                        retrieve_more=(
+                            review is not None and review.decision is ReviewDecision.RETRIEVE_MORE
+                        ),
+                    )
                 ),
                 HumanMessage(
                     content=json.dumps(
@@ -256,16 +271,50 @@ class DynamicPlanner:
         request_write: bool,
         correction: str | None,
         schema_type: type[PlanProposal] | type[PlanRevisionProposal],
+        *,
+        retrieve_more: bool = False,
     ) -> str:
         schema = json.dumps(schema_type.model_json_schema())
+        shape_rule = ""
+        if schema_type is PlanRevisionProposal:
+            # A revision must *extend* the running plan, not re-number it. Telling the model
+            # "Task IDs must be T1, T2, ..." made it restart the numbering, so the new data
+            # and knowledge tasks took over T5/T6 -- the IDs already held by the completed
+            # Analysis and Reviewer tasks -- and ``revise_plan`` correctly rejected the
+            # proposal. Both retries then failed and the run died instead of performing the
+            # retrieval round the Reviewer had asked for.
+            id_rule = (
+                "List every completed task's exact ID in preserved_task_ids, and re-list each "
+                "one in tasks with its original ID, agent and task_type unchanged. New tasks "
+                "must continue the numbering after the highest ID already in use -- when T1-T6 "
+                "have completed, new tasks are T7, T8, ... -- and must never reuse an ID that a "
+                f"completed task already holds. At most {MAX_PLAN_TASKS} tasks in total. "
+                "Dependencies must be acyclic."
+            )
+            # The shape rules were enforced but never stated, so the only way the model
+            # learned them was by being rejected for one at a time. A revision has to
+            # satisfy all of them at once, and it is told what they are here.
+            shape_rule = (
+                " A revision must add at least one new Data or Knowledge task, and a new "
+                "Analysis task and a new Reviewer task, each with a new ID."
+            )
+            if request_write:
+                shape_rule += " Because request_write is true, it must also add a new Action task."
+            if retrieve_more:
+                shape_rule += (
+                    " The review asked for more evidence, so at least one of the new "
+                    "evidence tasks must use the Knowledge agent."
+                )
+        else:
+            id_rule = "Task IDs must be T1, T2, ... and dependencies must be acyclic."
         return (
             "You are the structured planner used by ServiceMind Supervisor. Build a minimal "
             "DAG from the supplied capability catalog; never invent agents or task types. "
             "Use Data for GLPI facts and actual support groups. Use Knowledge only when the "
             "goal needs runbooks or when evidence review requests it. Analysis must depend on "
             "all evidence tasks. Reviewer must depend on Analysis. If request_write is true, "
-            "Action must depend on Reviewer; otherwise do not add Action. Task IDs must be T1, "
-            "T2, ... and dependencies must be acyclic. Return JSON only. Do not include hidden "
+            "Action must depend on Reviewer; otherwise do not add Action. "
+            f"{id_rule}{shape_rule} Return JSON only. Do not include hidden "
             "reasoning. request_write="
             f"{str(request_write).lower()}."
             + (f" Correct this validation failure: {correction}" if correction else "")

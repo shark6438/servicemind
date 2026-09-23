@@ -29,6 +29,60 @@ def test_router_is_structured_and_deterministic(
     assert decision.reason_code
 
 
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [
+        # Asking *for* a procedure is a knowledge lookup, and the Chinese vocabulary has
+        # to cover the words people actually use for one. The table above already fixes
+        # the intent with its English row ("VPN MFA 的排障 Runbook 是什么？"); these are
+        # the same question, and 「手册」/「流程」 are the words a Chinese operator uses
+        # where that row says "runbook".
+        (
+            "更换手机后 VPN 的多因素认证持续失败。当前有效的处置手册是什么？",
+            RouteType.SIMPLE_KNOWLEDGE_QUERY,
+        ),
+        ("Network Team 的 VPN 多因素认证紧急兜底流程是什么？", RouteType.SIMPLE_KNOWLEDGE_QUERY),
+        ("VPN 多因素认证的官方处置流程是什么？", RouteType.SIMPLE_KNOWLEDGE_QUERY),
+    ],
+)
+def test_asking_for_a_documented_procedure_is_a_knowledge_lookup(
+    query: str, expected: RouteType
+) -> None:
+    assert FastPathRouter().route(query, request_write=False).route is expected
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        # Names a manual, but the thing being asked for is a conclusion. The artifact
+        # noun alone must not steer the route -- if it did, this would be answered by
+        # returning whichever document matched, which is not the question.
+        "更换手机后 VPN 多因素认证失败，官方手册给出了明确处置。请给出结论。",
+        "请穷尽列举与该工单相关的全部知识条目、全部历史 followup 与全部技能要求。",
+    ],
+)
+def test_mentioning_a_document_is_not_the_same_as_asking_for_one(query: str) -> None:
+    assert FastPathRouter().route(query, request_write=False).route is RouteType.COMPLEX_WORKFLOW
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        # The data fast path answers with the ticket's own fields, so it may only be
+        # selected when the question is about one of those fields. A bare interrogative
+        # is not a field: "…是什么" ends questions of every kind, and matching on it sent
+        # knowledge questions to a route whose answer is ``ticket_facts`` -- the run then
+        # reported SUCCEEDED having answered nothing that was asked.
+        "更换手机后 VPN 的多因素认证持续失败。当前有效的处置手册是什么？",
+        "VPN 多因素认证的官方处置流程是什么？",
+        "请按 VPN/MFA 技能的要求组织证据，并说明还缺什么证据。",
+    ],
+)
+def test_a_bare_interrogative_never_selects_the_data_fast_path(query: str) -> None:
+    route = FastPathRouter().route(query, request_write=False).route
+    assert route is not RouteType.SIMPLE_DATA_QUERY
+
+
 def test_dispatcher_enforces_dependencies_parallel_limit_and_transitions() -> None:
     due = datetime.now(UTC) + timedelta(minutes=5)
     budget = Budget(deadline=due)
