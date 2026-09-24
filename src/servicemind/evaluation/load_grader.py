@@ -170,7 +170,10 @@ class BatchHeader(BaseModel):
     deployed_revision: str | None = None
     plan_digest: str = ""
     workload_digest: str = ""
+    workload_size: int = 0
     tiers: tuple[TierTiming, ...] = ()
+    errored: tuple[str, ...] = ()
+    elapsed_seconds: float = 0.0
 
     def timing(self, name: str) -> TierTiming | None:
         for tier in self.tiers:

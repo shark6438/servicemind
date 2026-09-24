@@ -2,53 +2,9 @@
   "answerable_rate_target": 0.85,
   "answerable_rate_target_source": "租户参考阈值 0.85（docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md 的 Recall@5 租户门槛），在本批次运行之前登记。这不是从结果倒推的数字：若实测低于它，正确的反应是查明原因并报告，而不是下调它。",
   "blockers": [
-    "Q-005: did not answer. terminal='succeeded', review=None",
-    "Q-011: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-020: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-024: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-030: did not answer. terminal='succeeded', review=None",
-    "Q-031: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-037: did not answer. terminal='succeeded', review=None",
-    "Q-037: the answer is in ['KB-Q-SVCACCT'] and the run did not cite it (cited [])",
-    "Q-040: did not answer. terminal='succeeded', review=None",
-    "Q-040: the answer is in ['KB-Q-SVCACCT'] and the run did not cite it (cited [])",
-    "Q-043: did not answer. terminal='succeeded', review='abstain'",
-    "Q-047: did not answer. terminal='succeeded', review='abstain'",
-    "Q-060: did not answer. terminal='succeeded', review=None",
-    "Q-062: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-070: did not answer. terminal='succeeded', review=None",
-    "Q-070: the answer is in ['KB-Q-STORAGE'] and the run did not cite it (cited [])",
-    "Q-074: did not answer. terminal='succeeded', review=None",
-    "Q-074: the answer is in ['KB-Q-SEVERITY'] and the run did not cite it (cited [])",
-    "Q-075: did not answer. terminal='succeeded', review=None",
-    "Q-075: the answer is in ['KB-Q-SEVERITY'] and the run did not cite it (cited [])",
-    "Q-076: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-080: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-100: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-103: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-110: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-123: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-129: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-130: did not answer. terminal='succeeded', review=None",
-    "Q-130: did not cite the current document ['KB-Q-API-V2']",
-    "Q-135: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-137: did not answer. terminal='succeeded', review=None",
-    "Q-139: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-146: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-164: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-166: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
-    "Q-168: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
-    "Q-171: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-174: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
-    "Q-178: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
-    "Q-182: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
-    "Q-188: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
-    "Q-191: the run did not reach a terminal status (saw 'waiting_review')",
-    "Q-192: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
-    "Q-194: the reviewer recorded 1 claim(s) its citations do not support, on a question the corpus does not cover (cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-CLASS-V2', 'KB-Q-DB-FAILOVER', 'KB-Q-LIC-V2', 'KB-Q-PASSWORD', 'KB-Q-RAP-V2'])",
-    "Q-196: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
-    "Q-200: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
-    "3 case(s) in an absolute class failed, and those classes have no rate at which a violation becomes acceptable"
+    "Q-182: the reviewer recorded 1 claim(s) its citations do not support, on a question the corpus does not cover (cited ['KB-GLOBEX-VPN-APP-REG', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-MAIL-2026', 'KB-Q-PASSWORD', 'KB-Q-PATCHING', 'KB-Q-PRINT-V2'])",
+    "Q-200: the run did not reach a terminal status (saw 'waiting_review')",
+    "1 case(s) in an absolute class failed, and those classes have no rate at which a violation becomes acceptable"
   ],
   "cases": [
     {
@@ -85,13 +41,11 @@
     },
     {
       "case_id": "Q-005",
-      "findings": [
-        "Q-005: did not answer. terminal='succeeded', review=None"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "Which team owns the VPN client connectivity procedure, and what is its response commitment?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-006",
@@ -135,13 +89,11 @@
     },
     {
       "case_id": "Q-011",
-      "findings": [
-        "Q-011: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "Is SMS accepted as a multi-factor enrolment factor, and why or why not?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-012",
@@ -209,13 +161,11 @@
     },
     {
       "case_id": "Q-020",
-      "findings": [
-        "Q-020: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "Which team owns multi-factor authentication enrolment and recovery?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-021",
@@ -243,13 +193,11 @@
     },
     {
       "case_id": "Q-024",
-      "findings": [
-        "Q-024: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "What is the minimum password length?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-025",
@@ -293,23 +241,19 @@
     },
     {
       "case_id": "Q-030",
-      "findings": [
-        "Q-030: did not answer. terminal='succeeded', review=None"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "Which team owns the password reset procedure?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-031",
-      "findings": [
-        "Q-031: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "What three things must a service account have at creation?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-032",
@@ -353,14 +297,11 @@
     },
     {
       "case_id": "Q-037",
-      "findings": [
-        "Q-037: did not answer. terminal='succeeded', review=None",
-        "Q-037: the answer is in ['KB-Q-SVCACCT'] and the run did not cite it (cited [])"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "What happens at review to a service account whose owner has left?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-038",
@@ -380,14 +321,11 @@
     },
     {
       "case_id": "Q-040",
-      "findings": [
-        "Q-040: did not answer. terminal='succeeded', review=None",
-        "Q-040: the answer is in ['KB-Q-SVCACCT'] and the run did not cite it (cited [])"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "Is a service account without a named owner permitted?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-041",
@@ -407,13 +345,11 @@
     },
     {
       "case_id": "Q-043",
-      "findings": [
-        "Q-043: did not answer. terminal='succeeded', review='abstain'"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "How long are daily database backups retained?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-044",
@@ -441,13 +377,11 @@
     },
     {
       "case_id": "Q-047",
-      "findings": [
-        "Q-047: did not answer. terminal='succeeded', review='abstain'"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "How many nominated tables are compared during restore verification, and to what tolerance?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-048",
@@ -547,13 +481,11 @@
     },
     {
       "case_id": "Q-060",
-      "findings": [
-        "Q-060: did not answer. terminal='succeeded', review=None"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "Which team owns the database failover runbook?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-061",
@@ -565,13 +497,11 @@
     },
     {
       "case_id": "Q-062",
-      "findings": [
-        "Q-062: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "At what utilisation does storage raise a high-water alert?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-063",
@@ -631,14 +561,11 @@
     },
     {
       "case_id": "Q-070",
-      "findings": [
-        "Q-070: did not answer. terminal='succeeded', review=None",
-        "Q-070: the answer is in ['KB-Q-STORAGE'] and the run did not cite it (cited [])"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "What storage growth rate triggers a monthly owner review?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-071",
@@ -666,35 +593,27 @@
     },
     {
       "case_id": "Q-074",
-      "findings": [
-        "Q-074: did not answer. terminal='succeeded', review=None",
-        "Q-074: the answer is in ['KB-Q-SEVERITY'] and the run did not cite it (cited [])"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "How often must a SEV1 be updated?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-075",
-      "findings": [
-        "Q-075: did not answer. terminal='succeeded', review=None",
-        "Q-075: the answer is in ['KB-Q-SEVERITY'] and the run did not cite it (cited [])"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "How quickly must a SEV2 be acknowledged, and how often updated?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-076",
-      "findings": [
-        "Q-076: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "How quickly must a SEV3 be acknowledged?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-077",
@@ -722,13 +641,11 @@
     },
     {
       "case_id": "Q-080",
-      "findings": [
-        "Q-080: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "What is a SEV4 incident?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-081",
@@ -884,13 +801,11 @@
     },
     {
       "case_id": "Q-100",
-      "findings": [
-        "Q-100: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "Which office owns change approval and the change advisory board?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-101",
@@ -910,13 +825,11 @@
     },
     {
       "case_id": "Q-103",
-      "findings": [
-        "Q-103: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "When is a release declared stable?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-104",
@@ -968,13 +881,11 @@
     },
     {
       "case_id": "Q-110",
-      "findings": [
-        "Q-110: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "answerable",
       "question": "Which team owns the release rollback criteria?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-111",
@@ -1074,13 +985,11 @@
     },
     {
       "case_id": "Q-123",
-      "findings": [
-        "Q-123: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "version-conflict",
       "question": "Who is allowed to release an email quarantined as phishing?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-124",
@@ -1124,24 +1033,19 @@
     },
     {
       "case_id": "Q-129",
-      "findings": [
-        "Q-129: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "version-conflict",
       "question": "What are the public API rate limits per key and per tenant?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-130",
-      "findings": [
-        "Q-130: did not answer. terminal='succeeded', review=None",
-        "Q-130: did not cite the current document ['KB-Q-API-V2']"
-      ],
+      "findings": [],
       "kind": "version-conflict",
       "question": "What HTTP status does the API gateway return when a client is rate limited?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-131",
@@ -1177,13 +1081,11 @@
     },
     {
       "case_id": "Q-135",
-      "findings": [
-        "Q-135: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "version-conflict",
       "question": "How long is an on-call rotation, and when does handover happen?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-136",
@@ -1195,13 +1097,11 @@
     },
     {
       "case_id": "Q-137",
-      "findings": [
-        "Q-137: did not answer. terminal='succeeded', review=None"
-      ],
+      "findings": [],
       "kind": "version-conflict",
       "question": "Which traffic is routed through the VPN tunnel under the current split tunnel policy?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-138",
@@ -1213,13 +1113,11 @@
     },
     {
       "case_id": "Q-139",
-      "findings": [
-        "Q-139: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "version-conflict",
       "question": "What are the data classification levels?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-140",
@@ -1271,13 +1169,11 @@
     },
     {
       "case_id": "Q-146",
-      "findings": [
-        "Q-146: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "must-refuse-access",
       "question": "When is a network spare hardware reorder raised?",
       "subject": "globex-analyst-g4",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-147",
@@ -1417,13 +1313,11 @@
     },
     {
       "case_id": "Q-164",
-      "findings": [
-        "Q-164: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "What is the parental leave entitlement for a new parent?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-165",
@@ -1435,13 +1329,11 @@
     },
     {
       "case_id": "Q-166",
-      "findings": [
-        "Q-166: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "What is the procedure for returning a leased vehicle?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-167",
@@ -1453,13 +1345,11 @@
     },
     {
       "case_id": "Q-168",
-      "findings": [
-        "Q-168: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "What is the company policy on sabbatical leave?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-169",
@@ -1479,13 +1369,11 @@
     },
     {
       "case_id": "Q-171",
-      "findings": [
-        "Q-171: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "How do I get a replacement building access card after losing mine?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-172",
@@ -1505,13 +1393,11 @@
     },
     {
       "case_id": "Q-174",
-      "findings": [
-        "Q-174: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "What is the procedure for claiming overtime pay?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-175",
@@ -1539,13 +1425,11 @@
     },
     {
       "case_id": "Q-178",
-      "findings": [
-        "Q-178: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "What is the policy on using personal devices for work email?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-179",
@@ -1574,12 +1458,12 @@
     {
       "case_id": "Q-182",
       "findings": [
-        "Q-182: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
+        "Q-182: the reviewer recorded 1 claim(s) its citations do not support, on a question the corpus does not cover (cited ['KB-GLOBEX-VPN-APP-REG', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-MAIL-2026', 'KB-Q-PASSWORD', 'KB-Q-PATCHING', 'KB-Q-PRINT-V2'])"
       ],
       "kind": "insufficient-evidence",
       "question": "What is the company's policy on charitable giving matching?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "FAIL"
     },
     {
       "case_id": "Q-183",
@@ -1623,13 +1507,11 @@
     },
     {
       "case_id": "Q-188",
-      "findings": [
-        "Q-188: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "What is the procedure for booking a courier pickup?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-189",
@@ -1649,23 +1531,19 @@
     },
     {
       "case_id": "Q-191",
-      "findings": [
-        "Q-191: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "How do I request a corporate credit card?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-192",
-      "findings": [
-        "Q-192: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "What is the policy on carrying over unused holidays into next year?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-193",
@@ -1677,13 +1555,11 @@
     },
     {
       "case_id": "Q-194",
-      "findings": [
-        "Q-194: the reviewer recorded 1 claim(s) its citations do not support, on a question the corpus does not cover (cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-CLASS-V2', 'KB-Q-DB-FAILOVER', 'KB-Q-LIC-V2', 'KB-Q-PASSWORD', 'KB-Q-RAP-V2'])"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "What is the process for requesting an early finish before a public holiday?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-195",
@@ -1695,13 +1571,11 @@
     },
     {
       "case_id": "Q-196",
-      "findings": [
-        "Q-196: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "What is the procedure for booking a conference room with video conferencing?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-197",
@@ -1730,7 +1604,7 @@
     {
       "case_id": "Q-200",
       "findings": [
-        "Q-200: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
+        "Q-200: the run did not reach a terminal status (saw 'waiting_review')"
       ],
       "kind": "insufficient-evidence",
       "question": "What is the company policy on accepting gifts from suppliers?",
@@ -1739,8 +1613,8 @@
     }
   ],
   "cases_digest": "d02040916da13337891e1c31d16ae51adb60744d5b056a653b514eacd3a931ee",
-  "generated_at": "2026-09-23T22:11:18.596701Z",
-  "observations_digest": "a7f3b4a0417f04d280f1fa9060733d6f9c83658c2229a6dd9dd105e0b8af1829",
+  "generated_at": "2026-09-24T08:46:04.191877Z",
+  "observations_digest": "b4bf1edd0de26ae3087e0f22f37badb618c27137755f8160ef24d2d58d404c52",
   "schema_version": "phase7-quality-v1",
   "verdict": "FAIL"
 }

@@ -76,6 +76,14 @@ class CaseObservation(BaseModel):
     run_id: str | None = None
     terminal_status: str | None = None
     reviewer_decision: str | None = None
+    #: The answer the batch gave when the run stopped in the human review queue, if it did.
+    #:
+    #: A run at ``waiting_review`` is waiting for a person and will not move again until one
+    #: answers, so the batch answers -- as the approver identity a deployment routes the
+    #: escalation to -- and settles again. Recorded because it is part of how the run
+    #: reached its terminal state, and ``None`` because most runs never raise an escalation:
+    #: a reader must be able to tell "no human was needed" from "a human was consulted".
+    human_review_decision: str | None = None
     citations: tuple[str, ...] = ()
     #: Who the platform was actually told the caller was, read from the token's own claims.
     #:

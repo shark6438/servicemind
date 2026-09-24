@@ -744,6 +744,26 @@ class Stack:
             },
         )
 
+    async def resolve_review(
+        self, subject: str, run_id: UUID, *, decision: str, comment: str
+    ) -> httpx.Response:
+        """Answer a review escalation, as the reviewer it was routed to answers it.
+
+        An escalated run is not a dead end and not a failure: the platform's own
+        ``finalize_node`` records ``continue`` as *accepting the reviewer's blocked
+        outcome*, leaves the reviewer's ``escalate`` untouched in the result, persists the
+        human's answer beside it, and emits a distinct event so a human-resolved
+        escalation stays countable. A batch that stops at ``waiting_review`` therefore
+        measures the platform's silence rather than its behaviour -- it observes the state
+        the escalation was *in*, never the outcome the platform documents for it.
+        """
+        return await self.request(
+            subject,
+            "POST",
+            f"{self.base_url}/v1/servicemind/runs/{run_id}/review-resolution",
+            json={"decision": decision, "comment": comment},
+        )
+
     async def settle(self, subject: str, run_id: UUID, deadline: float) -> httpx.Response:
         """Poll until the run stops moving, and return the last response seen.
 

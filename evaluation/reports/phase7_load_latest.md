@@ -4,14 +4,14 @@
 
 ## 结论
 
-- 判定：**BLOCKED**
+- 判定：**FAIL**
 - 工作负载：evaluation/quality/cases.v1.json（前 20 条，按文件顺序）
 - 基线档位（并发 1）：`tier-1`
-- 被测版本：**未记录**
-- 观测时间窗：**未记录** ~ **未记录**
-- 生成时间：2026-09-23T22:03:28.509113+00:00（gate 运行时刻，非观测时刻）
+- 被测版本：688dd90854f13f81a08cffa61370dfcedb360b47+dirty(155 files)
+- 观测时间窗：2026-09-24T01:49:43.437049+00:00 ~ 2026-09-24T01:59:04.125379+00:00
+- 生成时间：2026-09-24T08:46:04.562269+00:00（gate 运行时刻，非观测时刻）
 - 单次运行结算预算：240 秒
-- 未通过运行：0 条；观测不足：3 条
+- 未通过运行：41 条；观测不足：0 条
 - plan_digest：`a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd`
 - workload_digest：`6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e`
 
@@ -45,9 +45,9 @@
 
 | 档位 | 并发 | 重复 | 声明运行数 | 实际观测 | 通过 | 未通过 | 未观测 | p50(秒) | p95(秒) | max(秒) | 墙钟(秒) | 运行/分钟 | p95/基线 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| tier-1 | 1 | 1 | 20 | 0 | 0 | 0 | 20 | — | — | — | — | — | — |
-| tier-5 | 5 | 2 | 40 | 0 | 0 | 0 | 20 | — | — | — | — | — | — |
-| tier-10 | 10 | 3 | 60 | 0 | 0 | 0 | 20 | — | — | — | — | — | — |
+| tier-1 | 1 | 1 | 20 | 20 | 20 | 0 | 0 | 17.4 | 23.9 | 26.9 | 360.6 | 3.3 | 1.00× |
+| tier-5 | 5 | 2 | 40 | 40 | 40 | 0 | 0 | 17.5 | 30.1 | 32.0 | 155.1 | 15.5 | 1.26× |
+| tier-10 | 10 | 3 | 60 | 60 | 19 | 41 | 0 | 3.7 | 24.0 | 35.6 | 61.4 | 58.6 | 1.00× |
 
 「运行/分钟」按**声明的运行数**除以档位墙钟计算，不按实际到达数——按到达数除会让一个丢了运行的档位报出更高的速率。
 「p95/基线」是以并发 1 档位 p95 为分母的倍数；该列是相对量，不受本次所跑主机的影响。
@@ -56,21 +56,40 @@
 
 | 档位 | 第几次 | 运行数 | p95(秒) |
 |---|---|---|---|
-| tier-1 | 0 | 0 | — |
-| tier-5 | 0 | 0 | — |
-| tier-5 | 1 | 0 | — |
-| tier-10 | 0 | 0 | — |
-| tier-10 | 1 | 0 | — |
-| tier-10 | 2 | 0 | — |
+| tier-1 | 0 | 20 | 23.9 |
+| tier-5 | 0 | 20 | 30.1 |
+| tier-5 | 1 | 20 | 29.6 |
+| tier-10 | 0 | 20 | 33.2 |
+| tier-10 | 1 | 20 | 24.0 |
+| tier-10 | 2 | 20 | 1.1 |
 
 工作负载在一档内会重复同一批问题，因此服务商侧的提示缓存若对后几遍帮助更大，就会落在这些数字里。
 本批次**不作修正**，把它逐遍列出，让读者看见它是什么，而不是被平均成一个读起来像「平台变快了」的单一数字。
 
-## 观测不足
+## 未通过的运行
 
-- tier-1: 20 of 20 declared run(s) were not observed, so this tier was not measured (first: Q-001#0)
-- tier-5: 40 of 40 declared run(s) were not observed, so this tier was not measured (first: Q-001#0)
-- tier-10: 60 of 60 declared run(s) were not observed, so this tier was not measured (first: Q-001#0)
+共 41 条，列出前 20 条：
+
+- tier-10 Q-001#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-001#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-002#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-002#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-003#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-003#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-004#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-004#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-005#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-005#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-006#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-006#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-007#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-007#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-008#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-008#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-009#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-009#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-010#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-10 Q-010#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
 
 ## 本批次不证明的内容
 

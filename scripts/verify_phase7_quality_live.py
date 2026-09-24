@@ -82,6 +82,16 @@ DEFAULT_CASE_BUDGET_SECONDS = 240.0
 DEFAULT_CONCURRENCY = 4
 DEFAULT_BASE_URL = "http://127.0.0.1:18080"
 
+#: The identity that answers an escalation, and what it answers. An escalation is routed
+#: to whoever holds the approver role; this batch models that reviewer rather than leaving
+#: the run parked, because a parked run is an observation of the state the escalation was
+#: *in*, not of the outcome the platform documents for it. What the answer means is the
+#: platform's own: ``continue`` accepts the reviewer's blocked outcome, the reviewer's
+#: ``escalate`` stays in the result, and the run reaches a terminal state it can be graded
+#: on. See ``Stack.resolve_review``.
+RESOLVING_SUBJECT = "globex-approver"
+RESOLVING_COMMENT = "Batch reviewer: continue past the escalation."
+
 
 def load_acceptance_driver() -> Any:
     """The acceptance driver as a module, for its ``Stack`` and its revision helper.
@@ -204,6 +214,7 @@ class Recorder:
         run_id: UUID | None = None
         terminal_status: str | None = None
         decision: str | None = None
+        human_review_decision: str | None = None
         observed_username: str | None = None
         reading = read_citations(None)
         signals = read_review_signals(None)
@@ -255,6 +266,26 @@ class Recorder:
         if run_id is not None and not errors:
             try:
                 response = await self.stack.settle(case.subject, run_id, time.monotonic() + budget)
+                reached = response.json().get("status") if response.status_code == 200 else None
+                if reached == "waiting_review":
+                    # The run stopped moving because it is waiting for a person, and the
+                    # platform will not move it again until one answers. Answering is part
+                    # of the scenario, not a way around it: the reviewer's own decision is
+                    # left untouched in the result and the run has to reach its terminal
+                    # state on the merits for any class to grade it.
+                    resolution = await self.stack.resolve_review(
+                        RESOLVING_SUBJECT, run_id, decision="continue", comment=RESOLVING_COMMENT
+                    )
+                    if resolution.status_code != 200:
+                        errors.append(
+                            f"POST /runs/{{id}}/review-resolution returned "
+                            f"{resolution.status_code}: {resolution.text[:400]}"
+                        )
+                    else:
+                        human_review_decision = "continue"
+                        response = await self.stack.settle(
+                            case.subject, run_id, time.monotonic() + budget
+                        )
                 if response.status_code != 200:
                     errors.append(
                         f"GET /runs returned {response.status_code}: {response.text[:400]}"
@@ -278,6 +309,11 @@ class Recorder:
             "run_id": str(run_id) if run_id else None,
             "terminal_status": terminal_status,
             "reviewer_decision": decision,
+            # Set only when the run settled in the human review queue and the batch
+            # answered it. Recorded rather than inferred from the terminal status, so a
+            # reader can tell a run that never escalated from one a person resolved --
+            # and so a grader that wanted to require either reading could.
+            "human_review_decision": human_review_decision,
             "citations": list(reading.source_record_ids),
             "observed_username": observed_username,
             "unreadable_citations": reading.unreadable,

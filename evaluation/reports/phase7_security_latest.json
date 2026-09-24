@@ -579,9 +579,9 @@
     }
   ],
   "deployed_revisions": [
-    "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)"
+    "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(121 files)"
   ],
-  "generated_at": "2026-09-24T00:20:31.298431Z",
+  "generated_at": "2026-09-24T08:46:03.875811Z",
   "not_covered": [
     "对抗性投喂的注入词表：本集只验证「已列入词表的标记」被处理，没有任何一条场景向平台投喂过词表之外的新注入变体。",
     "长期或跨 checkpoint 重启的撤权：六类撤权（撤组/撤实体/撤角色/禁用用户/查询故障/写前撤权）已由 ACC-18…ACC-23 实跑覆盖，但「撤权发生在服务重启之后」与「撤权与限流叠加」未测。",
@@ -592,9 +592,9 @@
     "拒绝服务与容量：并发压测、长稳与故障注入属于 P7.6.7，不在本集。",
     "审计日志的篡改检测：本集只验证事件被写下及关联到运行，不验证已写下的审计行不可被有权限的操作者改写。"
   ],
-  "observations_digest": "728c87cc91351e24c1a6c510186224d1b2065770dcedb177f219fb3c6c75eb4c",
-  "observed_from": "2026-09-23T21:01:14.344455Z",
-  "observed_to": "2026-09-23T21:01:14.344455Z",
+  "observations_digest": "04fcba3750397dd14e6b9db9e6156c92c3ef5cc3aa9bf03e5d810b1187abeb3e",
+  "observed_from": "2026-09-24T00:39:04.015708Z",
+  "observed_to": "2026-09-24T00:39:04.015708Z",
   "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f",
   "schema_version": "phase7-security-v1",
   "verdict": "PASS"

@@ -192,7 +192,7 @@ globex entity 2 两张**结构同构**工单，事实固定为「密码认证成
 | **D3** | `src/servicemind/orchestration/state.py`（`Phase3State.analysis_evidence_ids`）、`supervisor_workflow.py`（`analysis_node`，`:1153`）、`phase5_governance.py`（`:497-526`） | 分析节点在 `build_context` 返回后**把信封实际交付的证据 id 写进 state**；评审器构建上下文时，其证据集**以这一份为准**（不再使用裁剪前的全集），并把分析**实际引用过**的 id 并入（`delivered = frozenset(recorded) ∪ cited`）。`recorded is None` 时**退回全集**——那是「根本没有交付决策可镜像」（stub 分析直接读联合集，评审也读同一份），而不是「没有证据」 | 评审器的证据集原为**分析所见集合 ∪ 分析被裁掉的集合**。ACC-03 的 run `96435a80` 逐 id 实测：分析信封选中 **9** 条证据、裁剪 **2** 条（`ev-f380cb32f4a5b880` = 重绑手册分块、`ev-ff24bc453152bf9d`）；评审器选中 **11** 条、裁剪 **0** 条，且 **11 = 9 ∪ 2**（集合相等）。即**评审器读到了重绑手册，而分析代理没读到**，然后按它去判「这个分析据什么说的」——那个判定不是关于这个分析的陈述 |
 | **D16-产品** | `src/servicemind/agents/analysis.py`（`:127` 起） | 分析系统提示明文规定：排除某候选的文档**不构成**所命名根因的证据；根因 claim 的 `evidence_refs` 必须承载**蕴含**该根因的材料，被排除的文档**不得出现在其中**；排除理由写进 claim 的 `statement` 或 `assumptions`，使读者**仅凭 refs** 就能看出根因据什么而立 | v3.1 实测：模型用诱饵文档**排除**另一种故障（「故障发生在提示之前才是策略类故障」），这是**正确**的判别；但它有时把这条判别依据**一并挂进根因 claim 的 `evidence_refs`**——而该文档说的正是相反的结论，于是那条 claim **不由它所引的材料蕴含**。判定器判的是 refs，规则就必须写在**分析代理读得到的提示词**里 |
 | **D16-判定器** | `src/servicemind/evaluation/acceptance.py`（`RequiredFact.must_cite`，`:123`）、`acceptance_grader.py`（`:786-799`）、`evaluation/acceptance/cases.v1.json`（ACC-03 的 `root-cause` fact 加 `"must_cite": ["KB-GLOBEX-VPN-MFA-REBIND"]`） | `RequiredFact` 新增**正向**断言 `must_cite`：取所有匹配 claim 的 `evidence_refs` 的**并集**，其中解析出的 `source_record_id` 必须**包含**列出的每一项；缺失即判 FAIL 并列出「已引用了哪些」 | 只有 `must_not_cite`（负向）时，**一个什么都不引用的 analysis 会被判为合规**——负向断言与空集天然相容。v3.1 的 ACC-03 因此存在一条**空满足路径**：清空根因 claim 的 refs 就能过。`must_cite` 堵的是这条路径，它**不是**「替代」`must_not_cite`，两者是同一 fact 上的两个方向 |
-| **D17** | `scripts/verify_phase7_acceptance_live.py`（`context_pruning_producer`，`:1349`；分派 `:1980`）、`evaluation/acceptance/cases.v1.json`（ACC-06） | 新增一个**确定性探针步骤**：固定输入 `max_input_tokens=2000 / system_reserve=0 / output_reserve=0`（usable = 2000），1 条 required POLICY 控制行 + 6 条各 1802 字符（实测 **799 token**）的 EVIDENCE 行，**各行的内容互不相同**（前缀 `Runbook {index}. `，否则会被 `exact_duplicate` 先去重，测到的就是去重规则而不是预算规则）。断言 = 「至少一条证据行被选中 **且** 至少一条被丢弃并写明非空理由」。判定、逐条 token 数与逐条 reason 全部写进步骤 detail，读者可据此复算。ACC-06 的三条断言改为：实跑清单非空、探针 pass、裁剪后仍到达成功终态 | v3.1 实测：该案例**首轮信封只用 10021/10720**，余额 699，**没有该丢的东西**；重复 5 次**全部零裁剪**（v3.0 的 2 条裁剪来自修订轮，而修订轮是否发生取决于评审器这一次是否放行）。**这是验收套件自身的输入前提不成立**。改法是让断言**不依赖随机事件**，不是削弱它 |
+| **D17** | `scripts/verify_phase7_acceptance_live.py`（`context_pruning_producer`，`:1349`；分派 `:1980`）、`evaluation/acceptance/cases.v1.json`（ACC-06） | 新增一个**确定性探针步骤**：固定输入 `max_input_tokens=2000 / system_reserve=0 / output_reserve=0`（usable = 2000），1 条 required POLICY 控制行 + 6 条各 1802 字符（实测 **799 token**）的 EVIDENCE 行，**各行的内容互不相同**（前缀 `Runbook {index}`，否则会被 `exact_duplicate` 先去重，测到的就是去重规则而不是预算规则）。断言 = 「至少一条证据行被选中 **且** 至少一条被丢弃并写明非空理由」。判定、逐条 token 数与逐条 reason 全部写进步骤 detail，读者可据此复算。ACC-06 的三条断言改为：实跑清单非空、探针 pass、裁剪后仍到达成功终态 | v3.1 实测：该案例**首轮信封只用 10021/10720**，余额 699，**没有该丢的东西**；重复 5 次**全部零裁剪**（v3.0 的 2 条裁剪来自修订轮，而修订轮是否发生取决于评审器这一次是否放行）。**这是验收套件自身的输入前提不成立**。改法是让断言**不依赖随机事件**，不是削弱它 |
 
 ### v3.0 本轮复核的根因修复
 
@@ -414,7 +414,7 @@ v3.1 的结论：**该案例的第一个检索轮次从未超预算，v3.0 的�
 
 本次实测该随机事件的分布：批次内 1 次 + 独立重复 4 次，**5 次评审全部 `passed`**，因此**5 次都没有第二检索轮次，也 5 次都没有任何裁剪**：
 
-```
+```text
 批次内   6253623b：analysis/T5  tokens_used=10021  selected=20  pruned=0
 重复 1   38975c5b：selection_manifest  selected=90   pruned=0
 重复 2   1bc24f19：selection_manifest  selected=45   pruned=0
@@ -426,7 +426,7 @@ v3.1 的结论：**该案例的第一个检索轮次从未超预算，v3.0 的�
 
 **「信封不会裁剪」是错的——它只是不在这条案例上裁剪。** 同批次里 ACC-03 的**每一次**运行（批次内 + 重复 4 次，**5/5**）都产生了 **2 条带非空理由的 `pruned / source_token_cap_exceeded`**：
 
-```
+```text
 37d11c26: selected 49 / pruned 2 (source_token_cap_exceeded)
 776165cd: selected 46 / pruned 2 (source_token_cap_exceeded)
 ed78c5e2: selected 49 / pruned 2 (source_token_cap_exceeded)
@@ -458,14 +458,14 @@ uv run python scripts/gate_phase7_acceptance.py --check --format markdown --repo
 
 逐字输出（`--report` 被拒绝写入，判定未生成；`cases` 一项即篡改后的案例清单摘要）：
 
-```
+```text
 {"configuration_error": "/data/shihongye/servicemind/evaluation/reports/phase7_acceptance_latest.json was generated from a different case list (report c6dfec09cdf68cb06c7dd565757d184341fc85a62b3c5d21700436ea571a0350, cases 3db07dcfc77b09135d935878ad2a51964144ca9f0ae37a844e41c5c4b4799a9c); the recorded verdicts were reached against expectations that have since changed. Re-run the acceptance, or pass --force to replace it anyway"}
 GATE_EXIT=3
 ```
 
 还原该字符后重跑（`sha256sum -c` 成功 + `cmp` 输出 `BYTE_IDENTICAL`，确认与改动前**逐字节相同**），gate 回到它本来的结论：
 
-```
+```text
 cases_digest       c6dfec09cdf68cb06c7dd565757d184341fc85a62b3c5d21700436ea571a0350
 observation_digest 619f01b3fc5ad322854be411e9eb8341b0fa1cffcfc239ee7698fde9c6d43caa
 counts             PASS 28 / FAIL 0 / BLOCKED 0
@@ -631,7 +631,7 @@ EXIT=0
 
 - 本阶段结论限于「核心业务闭环验收」，**结论为通过**；不声明生产容量已认证，不替代 Phase 8 的并发、长稳与灾备演练。
 
-```
+```text
 【当前状态：本阶段无未决裁定项】
 v3.1 停在「需要用户裁定 D16 / D17」，v3.2 已按「不放宽断言」的方向把两条都修掉了：
   D16 → 改的是模型为什么这么引用（提示词）+ 补一条正向断言（must_cite）
