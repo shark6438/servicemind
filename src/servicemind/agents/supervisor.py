@@ -19,8 +19,17 @@ class SupervisorAgent:
     ) -> SupervisorDecision:
         model = get_model(settings.DEFAULT_MODEL)
         runnable = structured_output(model, SupervisorDecision)
+        # Numbered and cumulative, because the corrections are not alternatives: each
+        # one is a rule about the same state that still holds. Told only the most recent
+        # one, a model repairs it by breaking the previous -- the oscillation this list
+        # exists to stop -- so the closing line says outright that an earlier correction
+        # is not spent by a later one.
         feedback = (
-            f"\nYour previous decision was rejected by policy: {policy_feedback}"
+            "\nYour previous decisions were rejected by policy, in the order you made "
+            f"them:\n{policy_feedback}\n"
+            "Every rejection above still applies to the state you are looking at. Do not "
+            "repeat a decision that appears in this list, and do not repair one rejection "
+            "by undoing the correction made for an earlier one."
             if policy_feedback
             else ""
         )

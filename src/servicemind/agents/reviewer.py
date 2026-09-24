@@ -24,6 +24,7 @@ from servicemind.domain.evidence import (
     Evidence,
     EvidenceSourceType,
     JoinedEvidence,
+    group_is_grounded,
 )
 from servicemind.domain.knowledge import Citation
 from servicemind.domain.review import (
@@ -351,11 +352,30 @@ class ReviewerAgent:
         # answered REJECT/UNKNOWN_EVIDENCE_REFERENCE, the run was cancelled as an
         # ungrounded analysis, and the DEGRADED_ANALYSIS branch below -- the one written
         # for this case -- was never reached.
+        #
+        # The *decision* follows the same rule every other branch of this function uses:
+        # a deficit a re-derivation could plausibly fix gets one replan, and only a spent
+        # replan budget hands the matter to a person. A degraded analysis is an absence,
+        # not a disagreement -- the model call failed, so there is no analysis for a
+        # reviewer or a human to adjudicate, and the two answers a person is offered in
+        # that queue ("accept a degraded analysis" or "cancel") are both answers to a
+        # question the platform never managed to ask. The platform already reasons this
+        # way about a runtime failure elsewhere: ``dispatch_barrier`` synthesises a
+        # REPLAN when a dispatched task fails (``supervisor_workflow.py``), so escalating
+        # here was the one place that rule was not applied. The bound is the same one,
+        # ``max_replans``, and it is what keeps a provider that is down from turning a
+        # run into a loop: past the cap this reaches a person exactly as it did before.
         if analysis.status is not AnalysisStatus.MODEL:
+            rederive = state["replan_count"] < state["max_replans"]
             return self._result(
-                decision=ReviewDecision.ESCALATE,
+                decision=ReviewDecision.REPLAN if rederive else ReviewDecision.ESCALATE,
                 risk_level=RiskLevel.HIGH,
-                feedback="Degraded analysis cannot authorize an autonomous handoff.",
+                feedback=(
+                    "Degraded analysis cannot authorize an autonomous handoff: the "
+                    "analysis runtime failed, so the run is re-derived from the evidence."
+                    if rederive
+                    else "Degraded analysis cannot authorize an autonomous handoff."
+                ),
                 evidence=evidence,
                 analysis=analysis,
                 findings=[
@@ -514,12 +534,22 @@ class ReviewerAgent:
                 conflicts=conflicts,
             )
 
-        group_text = " ".join(
-            item.content
-            for item in evidence.items
-            if item.source_type is EvidenceSourceType.GLPI and item.resource_type == "support_group"
-        ).casefold()
-        if analysis.recommended_group.casefold() not in group_text:
+        # The mirror of the Analysis Agent's own rule, and it had the same defect: it
+        # asked the GLPI directory whether the assigned team exists, rather than asking
+        # the run's evidence whether the team was ever named. A run that assigns an
+        # incident to a team its own retrieved documentation names -- the in-code
+        # ``rb-vpn-mfa`` runbook says "Identity Team owns token enrollment faults" -- was
+        # sent back for more evidence it already had, and then escalated. Both roles now
+        # ask one question of the same material; see ``group_is_grounded``.
+        #
+        # The failure is a *grounding* failure, so it is still worth one more retrieval
+        # round before a person is asked: a group name that appears in none of the
+        # delivery may simply not have been retrieved yet.
+        envelope = state.get("context_envelope")
+        grounding: list[str] = [item.content for item in evidence.items]
+        if envelope is not None:
+            grounding.extend(item.content for item in envelope.items)
+        if not group_is_grounded(analysis.recommended_group, grounding):
             decision = (
                 ReviewDecision.RETRIEVE_MORE
                 if state["retrieval_round"] < 1
@@ -528,7 +558,7 @@ class ReviewerAgent:
             return self._result(
                 decision=decision,
                 risk_level=RiskLevel.MEDIUM,
-                feedback="Recommended support group is absent from tenant GLPI evidence.",
+                feedback="Recommended support group is absent from the evidence retrieved.",
                 evidence=evidence,
                 analysis=analysis,
                 findings=[
@@ -537,10 +567,11 @@ class ReviewerAgent:
                         "error",
                         "action_consistency",
                         "UNKNOWN_SUPPORT_GROUP",
-                        f"Group {analysis.recommended_group!r} was not retrieved from GLPI.",
+                        f"Group {analysis.recommended_group!r} was not named by any "
+                        "evidence this run retrieved.",
                     )
                 ],
-                missing_evidence=["existing GLPI support group"],
+                missing_evidence=["an owning team the retrieved evidence names"],
             )
         if analysis.confidence < 0.5 or analysis.priority == 5:
             return self._result(

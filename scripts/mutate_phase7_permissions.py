@@ -1,4 +1,4 @@
-"""Revert each fix in turn and require the suite to notice.
+"""Revert each Phase 7 permission fix in turn and require the suite to notice.
 
 A test that passes both with and without the behaviour it claims to protect has no
 teeth, and this path has produced exactly that before: an earlier version of these
@@ -6,29 +6,19 @@ tests asserted on ``configurable``, which nothing reads, so they were green whil
 narrowing they described was being discarded. Every mutation below reverts one
 decision the design actually rests on.
 
-Equivalent mutants are called out where they were found, because an equivalent mutant
-that reads RED is a false sense of safety and an equivalent mutant left GREEN looks
-like a hole.
+The crash-safety machinery lives in :mod:`mutation_harness`, shared with the other
+experiments; ``EXPERIMENT`` is its stable name for this one's journal and lock.
 """
 
-import atexit
-import json
-import os
 import pathlib
-import signal
-import subprocess
-import sys
 from pathlib import Path
 
+from mutation_harness import Mutation, run_mutations
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-#: Where the pristine snapshot of the last run is kept. Written before the first
-#: mutation and read before the next run, so a tree left dirty by ``SIGKILL`` -- the
-#: one signal no handler can catch -- is reported rather than graded.
-#: ``.runtime/`` rather than the repo root: it is already ignored, so the snapshot
-#: neither shows up as a working-tree change nor is read as a scaffold file by
-#: ``scripts/audit_project_structure.py``.
-MANIFEST = ROOT / ".runtime" / "mutate_phase7_permissions.baseline.json"
-LOCK = ROOT / ".runtime" / "mutate_phase7_permissions.lock"
+#: Stable across runs: an interrupted run journals under this name, and a rename would
+#: orphan the journal at a path the next run never looks at.
+EXPERIMENT = "phase7_permissions"
 RUNTIME = ROOT / "src/servicemind/orchestration/runtime.py"
 SUPERVISOR = ROOT / "src/servicemind/orchestration/supervisor_workflow.py"
 RECOVERY = ROOT / "src/servicemind/orchestration/recovery.py"
@@ -133,7 +123,7 @@ MUTATIONS = [
     (
         "M10 narrowing leaves the wider scope's evidence in place",
         RUNTIME,
-        '        update["knowledge_evidence"] = []\n        update["data_evidence"] = []\n',
+        '        update["knowledge_evidence"] = None\n        update["data_evidence"] = None\n',
         "",
         f"{TEST}::test_narrowing_invalidates_evidence_gathered_under_the_wider_scope",
     ),
@@ -354,7 +344,7 @@ MUTATIONS = [
     (
         "M33 the conclusions drawn from the cleared evidence are left standing",
         RUNTIME,
-        "        for product in _DERIVED_PRODUCTS:\n            update[product] = None\n",
+        "        for product in _DERIVED_PRODUCTS:\n            update[product] = {}\n",
         "",
         f"{TEST}::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
     ),
@@ -519,146 +509,14 @@ MUTATIONS = [
     ),
 ]
 
-#: Pristine text of every file this script mutates, taken once before the first
-#: write. A mutation experiment that dies mid-flight leaves a mutated tree behind,
-#: and a mutated tree is a *silently wrong* tree: the next test run grades the
-#: mutation rather than the fix. The previous version restored only in a ``finally``,
-#: which a ``SIGTERM`` from a supervising timeout skips entirely -- and that is how a
-#: reversal of the entitlement gate survived in ``orchestration/runtime.py``. So the
-#: snapshot is taken up front and restored from an ``atexit`` hook *and* from the
-#: signal handlers, which together cover every exit except ``SIGKILL``; that last
-#: hole is closed by the journal ``_reconcile_interrupted_run`` reads.
-PRISTINE: dict[Path, str] = {}
-
-
-def _restore_all() -> None:
-    for path, text in PRISTINE.items():
-        if path.read_text() != text:
-            path.write_text(text)
-    # Without this the journal would outlive the run it describes and the next
-    # start would report a crash that has already been undone.
-    MANIFEST.unlink(missing_ok=True)
-    LOCK.unlink(missing_ok=True)
-
-
-def _acquire_lock() -> None:
-    """Refuse to run while another copy of this script holds the tree.
-
-    Two runs interleave at file granularity: each snapshots a target, writes its own
-    mutation, and restores *that* snapshot -- so the second run's restore can reinstate
-    the first run's mutation, or erase it, depending on which one lands last. Neither
-    run can detect this from the results, because both are comparing against a file the
-    other one is rewriting. The tree then ends up somewhere neither run intended, which
-    is how a leftover mutation and a *silently reverted fix* both appeared at once.
-    """
-    if LOCK.exists():
-        holder = LOCK.read_text().strip()
-        if holder.isdecimal() and Path(f"/proc/{holder}").exists():
-            raise SystemExit(
-                f"another mutation run is in flight (pid {holder}); refusing to interleave"
-            )
-    LOCK.parent.mkdir(parents=True, exist_ok=True)
-    LOCK.write_text(str(os.getpid()))
-
-
-def _reconcile_interrupted_run() -> None:
-    """Undo a mutation that a previous run never got to revert.
-
-    The journal is written immediately before a file is mutated and deleted
-    immediately after it is restored, so its *presence* means a run died with a
-    mutation in the tree. ``SIGKILL`` -- and the ``timeout(1)`` that sends it -- is
-    uncatchable, so this is the only way that window is ever closed; it is what the
-    earlier reversal of the entitlement gate survived through.
-
-    The three cases are distinguished by content rather than assumed: equal to the
-    pristine text means the run actually finished and only the journal is stale;
-    equal to the mutated text means the crash is real and is undone here; anything
-    else means the file was edited on purpose after the crash, and is left alone.
-    """
-    if not MANIFEST.exists():
-        return
-    record = json.loads(MANIFEST.read_text())
-    MANIFEST.unlink()
-    path, pristine, mutated = Path(ROOT, record["path"]), record["pristine"], record["mutated"]
-    current = path.read_text()
-    if current == pristine:
-        return
-    if current == mutated:
-        path.write_text(pristine)
-        print(
-            f"NOTE: {record['path']} carried an unreverted mutation "
-            f"({record['name']}); it has been restored.",
-            file=sys.stderr,
-        )
-        return
-    print(
-        f"NOTE: {record['path']} changed after the interrupted run "
-        f"({record['name']}); leaving it untouched.",
-        file=sys.stderr,
-    )
-
-
-def _install_restore_handlers() -> None:
-    atexit.register(_restore_all)
-
-    def _handler(signum, _frame):  # noqa: ANN001 - signal handlers take the frame raw
-        _restore_all()
-        print(f"\nreceived signal {signum}; restored the working tree", file=sys.stderr)
-        raise SystemExit(1 if signum != signal.SIGINT else 130)
-
-    signal.signal(signal.SIGTERM, _handler)
-    signal.signal(signal.SIGINT, _handler)
-
-
-targets = sorted({path for _, path, _, _, _ in MUTATIONS})
-for path in targets:
-    PRISTINE[path] = path.read_text()
-# The anchors are checked before any handler is installed: a missing anchor is a
-# stale script, not a detection result, and it must not be reported as one.
-for name, path, old, _new, _tests in MUTATIONS:
-    if old not in PRISTINE[path]:
-        raise SystemExit(f"stale mutation: {name} -- anchor not found in {path}")
-MANIFEST.parent.mkdir(parents=True, exist_ok=True)
-_install_restore_handlers()
-_reconcile_interrupted_run()
-_acquire_lock()
-
-failures = []
-for name, path, old, new, tests in MUTATIONS:
-    original = PRISTINE[path]
-    mutated = original.replace(old, new, 1)
-    MANIFEST.write_text(
-        json.dumps(
-            {
-                "name": name,
-                "path": str(path.relative_to(ROOT)),
-                "pristine": original,
-                "mutated": mutated,
-            }
+if __name__ == "__main__":
+    raise SystemExit(
+        run_mutations(
+            root=ROOT,
+            experiment=EXPERIMENT,
+            mutations=[
+                Mutation(name=name, path=Path(path), old=old, new=new, tests=tuple(tests.split()))
+                for name, path, old, new, tests in MUTATIONS
+            ],
         )
     )
-    path.write_text(mutated)
-    try:
-        proc = subprocess.run(
-            ["uv", "run", "pytest", *tests.split(), "-q", "--no-header", "-p", "no:randomly"],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            timeout=900,
-        )
-        tail = [ln for ln in proc.stdout.strip().splitlines() if ln.strip()][-1]
-    finally:
-        path.write_text(original)
-        MANIFEST.unlink(missing_ok=True)
-    detected = proc.returncode != 0
-    status = "RED (good)" if detected else "GREEN (BAD - no teeth)"
-    print(f"{status:28} | {name}\n{'':28} | {tail}")
-    if not detected:
-        failures.append(name)
-
-print()
-print(
-    f"{len(MUTATIONS)} mutations; "
-    + ("all detected" if not failures else f"UNDETECTED: {failures}")
-)
-sys.exit(1 if failures else 0)

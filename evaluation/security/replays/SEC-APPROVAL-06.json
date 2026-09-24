@@ -1,0 +1,22 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_requester_who_never_held_the_step_role_cannot_approve_it"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M34 the step's own role requirement is not checked before the approval",
+      "outcome": "passed",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-APPROVAL-06",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

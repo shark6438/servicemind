@@ -5,6 +5,7 @@ import logging
 import math
 import time
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 from uuid import UUID
 
@@ -40,7 +41,11 @@ from servicemind.rag.models import (
 from servicemind.rag.opensearch import OpenSearchKnowledgeIndex
 from servicemind.rag.parsing import structure_parser
 from servicemind.rag.query import query_processor
-from servicemind.rag.repository import KnowledgeRepository, knowledge_repository
+from servicemind.rag.repository import (
+    DocumentActivation,
+    KnowledgeRepository,
+    knowledge_repository,
+)
 
 logger = logging.getLogger("servicemind.rag.service")
 
@@ -297,16 +302,39 @@ class EnterpriseRAG:
 
     async def set_document_active(
         self, tenant_id: UUID, source_record_id: str, *, is_active: bool
-    ) -> None:
+    ) -> DocumentActivation:
         """Suspend/activate a document. PostgreSQL authority first, then the search
         projection, so the pre-filter stops (or resumes) serving immediately while
-        future re-ingests keep re-deriving the flag from the ACL."""
-        if self.repository:
+        future re-ingests keep re-deriving the flag from the ACL.
+
+        Returns what the request did rather than nothing. The caller supplies
+        ``source_record_id`` and nothing on this path checks it against the corpus, so
+        without the report a retirement aimed at a mistyped id and a retirement that
+        worked are the same return value -- and the retirement is what an operator
+        reaches for when a document is wrong and must stop being cited.
+        """
+        report = (
             await self.repository.set_document_active(
                 tenant_id, source_record_id, is_active=is_active
             )
+            if self.repository
+            else DocumentActivation()
+        )
         if getattr(self.index, "set_document_active", None):
-            await self.index.set_document_active(tenant_id, source_record_id, is_active=is_active)
+            # Tolerant of an index that reports nothing (older backends, test doubles):
+            # an unobservable projection count is zero, not a reason to fail a
+            # retirement that PostgreSQL has already committed.
+            patched = await self.index.set_document_active(
+                tenant_id, source_record_id, is_active=is_active
+            )
+            report = replace(report, index_rows=int(patched or 0))
+            # The projection is what retrieval pre-filters on, and the patch above is
+            # written unrefreshed by design, so without this the retired document keeps
+            # being served for the near-real-time window. "Retired soon" is retired while
+            # the run the operator is looking at is still reading it.
+            if getattr(self.index, "refresh", None):
+                await self.index.refresh(tenant_id)
+        return report
 
     async def unpublish(self, tenant_id: UUID, source_record_ids: list[str]) -> dict[str, int]:
         """Remove documents entirely (delete propagation). The repository rows go

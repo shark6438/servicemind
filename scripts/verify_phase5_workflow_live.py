@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 
 from core import settings
 from servicemind.agents.knowledge import knowledge_agent
+from servicemind.domain.evidence import evidence_items
 from servicemind.orchestration.runtime import start_run
 from servicemind.persistence.database import close_database, tenant_session
 from servicemind.persistence.models import ContextArtifactRecord, ModelInvocationRecord
@@ -53,7 +54,7 @@ async def verify() -> None:
         ),
     )
     result = state.get("final_result") or {}
-    evidence = result.get("evidence") or []
+    evidence = evidence_items(result.get("evidence"))
     assert evidence, "live workflow returned no RAG evidence"
     assert result.get("trajectory") == ["router", "knowledge"]
     async with tenant_session(ACME) as session:

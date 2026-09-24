@@ -167,10 +167,36 @@ def _cited_evidence_ids(analysis: Any) -> frozenset[str]:
 def _procedure_pattern(analysis: dict[str, Any]) -> tuple[str, str] | None:
     """Build a conservative cross-ticket identity and reviewable procedure body.
 
-    Only explicit problem/change recommendations participate. Free-form reasoning,
-    ticket ids and action arguments are excluded so incident-specific identifiers do
-    not become reusable instructions. Exact normalized equality deliberately favours
-    precision over recall at this automatic proposal boundary.
+    Two returns, and the difference between them is the point: the key decides that
+    two tickets describe the same recurring condition, so it may not move with the
+    evidence any one ticket happened to hold; the body is what the reviewer reads and
+    what the activated procedure carries, so it must.
+
+    The **identity** is ``classification``, ``recommended_group`` and *which*
+    recommendation fields the analysis filled -- never their wording. Wording is the
+    part that varies with evidence. Measured on ACC-12b (2026-09-23): two structurally
+    isomorphic tickets agreed verbatim on both of the first two fields, and the model's
+    ``problem_recommendation`` differed in *polarity* -- the first said no problem
+    record was warranted, the second said one was -- because the second ticket by
+    construction saw one more sibling incident. No normalisation stabilises that, and
+    the earlier identity, which hashed the recommendation prose itself, asked it to.
+    The key exists to let the second ticket be recognised as the same root cause, and
+    it refused on exactly the pair it was built for. Recorded as defect D15.
+
+    ``recommended_group`` stays in the identity and is what keeps this honest: it is
+    the team the procedure tells to run it, so merging two tickets that disagree on it
+    would hand a procedure to the wrong team. Ditto ``classification``.
+
+    The **body** carries the recommendation prose, which is the actionable content, so
+    it is not discarded -- only kept out of the identity. It is therefore one ticket's
+    phrasing rather than a consensus of the supporting pair, which is what the review
+    gate is for: the body is written to quarantine and a human activates it.
+
+    Ticket ids and action arguments are never *read*: the function takes the three
+    named fields and ignores everything else in the analysis, so the ticket's own
+    identifier cannot reach the identity. Free-form recommendation prose is quoted as
+    written, so a model that names an incident inside a recommendation is relayed
+    rather than filtered -- that is a review-time concern, not an identity one.
 
     Recurrence is deliberately *not* an input. It is the conclusion corroboration
     establishes, so requiring ``recurring_incident`` here inverted the dependency and
@@ -195,16 +221,25 @@ def _procedure_pattern(analysis: dict[str, Any]) -> tuple[str, str] | None:
     }
     if not recommendations:
         return None
-    canonical = {
+    identity = {
         "classification": normalize_memory_content(analysis["classification"]),
         "recommended_group": normalize_memory_content(analysis["recommended_group"]),
-        **recommendations,
+        # The shape, not the prose: "this class of ticket warrants a problem record and
+        # a change" is a durable statement about the condition; the sentence that says
+        # it is a statement about this ticket's evidence.
+        "recommendation_fields": sorted(recommendations),
     }
-    encoded = json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-    if len(encoded) > 8000:
+    encoded_identity = json.dumps(
+        identity, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    if len(encoded_identity) > 8000:
         return None
-    pattern_key = hashlib.sha256(encoded.encode()).hexdigest()
-    return pattern_key, encoded
+    body = json.dumps(
+        {**identity, **recommendations}, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    if len(body) > 8000:
+        return None
+    return hashlib.sha256(encoded_identity.encode()).hexdigest(), body
 
 
 #: Withdraw one stored knowledge document from every future retrieval, by tenant and by
@@ -459,8 +494,36 @@ class Phase5Governance:
                 if agent is ContextAgent.REVIEWER
                 else frozenset()
             )
+            # The Reviewer is shown what the Analyst's envelope delivered -- not the
+            # whole joined set. Both roles read the same retrieval, but the Analyst
+            # reads it through a budget packer that prunes, and this branch used to hand
+            # the Reviewer the pre-pruning set: the evidence the Reviewer checked was
+            # then a strict superset of the evidence the Analyst wrote from. The verdict
+            # that produces is not a property of the analysis. Measured on ACC-03
+            # (2026-09-23, run 96435a80): the Analyst's envelope selected 9 evidence ids
+            # and pruned 2 -- ``ev-f380cb32f4a5b880`` (the ``KB-GLOBEX-VPN-MFA-REBIND``
+            # runbook chunk) and ``ev-ff24bc453152bf9d`` -- while the Reviewer's selected
+            # all 11, the union of the two. A root-cause claim is now checked against the
+            # material its author was given, which is the only reading under which
+            # "unsupported" means something about the analysis.
+            #
+            # ``analysis_evidence_ids`` is written by the analysis node from the envelope
+            # it just built (``supervisor_workflow.analysis_node``). It is absent when
+            # no envelope was built at all -- a stub Analyst reads the joined set
+            # directly, and then the Reviewer reads the same set, so absent means "no
+            # delivery decision to mirror" rather than "no evidence". Cited ids are
+            # unioned in for the same reason ``required`` is set from them below: a
+            # citation the Reviewer cannot resolve is a delivery fault, not a finding,
+            # and it sends the run into a replan storm rather than reporting a verdict.
+            delivered: frozenset[str] | None = None
+            if agent is ContextAgent.REVIEWER:
+                recorded = state.get("analysis_evidence_ids")
+                if recorded is not None:
+                    delivered = frozenset(recorded) | cited
             poisoned: dict[str, str] = {}
             for evidence in joined.items:
+                if delivered is not None and evidence.evidence_id not in delivered:
+                    continue
                 taints = evidence.taints()
                 if "prompt_injection" in taints:
                     # Enforcement is in-process and immediate: the taint is one of
@@ -782,19 +845,23 @@ class Phase5Governance:
         if not settings.SERVICEMIND_MEMORY_PROCEDURAL_PROPOSALS_ENABLED:
             return len(records)
         pattern = _procedure_pattern(result.get("analysis") or {})
-        # ACTIVE here is not a claim about this episode being trustworthy: it is the
-        # same visibility rule the supporting side applies. ``pattern_episodes`` goes
-        # through ``MemoryPatternQuery.allows_record``, which calls ``visible_at``,
-        # which is True only for ACTIVE -- so a quarantined episode is invisible as
-        # support no matter what this gate says. Relaxing this check alone therefore
-        # changes nothing except which runs bother to look: the first version of this
-        # fix dropped the ACTIVE requirement on the grounds that quarantine is the
-        # normal resting state of a post-run episode, and the corroboration still
-        # never fired, because the two episodes it went looking for were quarantined
-        # and so invisible. The gate and the query agree; leave them agreeing.
+        # QUARANTINE is admitted alongside ACTIVE, and the gate must agree with the
+        # query it guards: ``pattern_episodes`` goes through
+        # ``MemoryPatternQuery.allows_record``, which calls ``corroborable_at``. If the
+        # two disagree, one of them decides and the other is decoration -- and the
+        # earlier attempt at this fix is the proof. It dropped the ACTIVE requirement
+        # here alone, on the grounds that quarantine is the normal resting state of a
+        # post-run episode, and the corroboration still never fired: the two episodes
+        # it went looking for were quarantined and therefore invisible to the query.
+        # Both sides have now moved together, which is why this one works.
+        #
+        # Admitting quarantine does not widen what a model may see. The episode is a
+        # *supporting* record here, not served content; the procedure derived from it
+        # is written to quarantine below and needs its own human activation, which
+        # revalidates the same support chain through ``_procedural_support_failure``.
         if pattern is None or not any(
             record.memory_type is MemoryType.EPISODIC
-            and record.status is MemoryStatus.ACTIVE
+            and record.status in {MemoryStatus.ACTIVE, MemoryStatus.QUARANTINE}
             and record.provenance.get("procedure_pattern_key") == pattern[0]
             for record in records
         ):

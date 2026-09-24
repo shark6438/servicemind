@@ -1,0 +1,22 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_read_gateway_carries_the_callers_group_scope_into_the_tool_call"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M47 the graph read is handed the tenant instead of the whole principal",
+      "outcome": "passed",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-AUTHZ-09",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

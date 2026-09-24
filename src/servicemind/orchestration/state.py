@@ -66,6 +66,10 @@ class Phase3State(TypedDict, total=False):
     control_owner: str
     active_agent: str
     evidence_dirty: bool
+    # Why a retrieval-only lookup declined to answer, written by ``fast_knowledge_node``
+    # when the best passage it retrieved scored below ``SERVICEMIND_RAG_ANSWER_FLOOR``.
+    # Its presence is what routes the run onward to the Supervisor instead of ending it.
+    lookup_declined: dict[str, Any]
     dispatch_batch_id: str
     dispatch_task: dict[str, Any]
     invocation_model_budget: int
@@ -76,6 +80,15 @@ class Phase3State(TypedDict, total=False):
     knowledge_evidence: Annotated[list[dict[str, Any]], _reset_or_append]
     joined_evidence: dict[str, Any]
     analysis_result: dict[str, Any]
+    # The evidence ids the Analysis envelope actually delivered, written by
+    # ``analysis_node`` right after ``build_context`` returns. The Reviewer's envelope
+    # must be built from this set and not from the whole joined set: the two roles read
+    # the same retrieval but not the same *delivery*, and a reviewer holding a row the
+    # analyst's envelope pruned is judging the analysis against evidence the analysis
+    # was never offered. Absent (a run where the analyst read the joined set directly
+    # because no envelope was built) means "no delivery decision to mirror", and the
+    # reviewer falls back to the full set -- which is then the same set the analyst read.
+    analysis_evidence_ids: list[str]
     review_result: dict[str, Any]
     handoff_envelope: dict[str, Any]
     action_intent: dict[str, Any]

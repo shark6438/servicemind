@@ -251,6 +251,24 @@ class Settings(BaseSettings):
     #: identifier/title matches. This is ranking only; confidence remains the raw,
     #: calibrated reranker score.
     SERVICEMIND_RAG_RERANK_WEIGHT: float = Field(default=0.85, ge=0.0, le=1.0)
+    #: The relevance the best retrieved passage must reach before a *lookup* may be
+    #: answered from it. Below this the corpus is treated as not covering the question,
+    #: and the run is sent down the reviewed pipeline instead of returning the nearest
+    #: passages as if they were the answer.
+    #:
+    #: Retrieval is top-k, not thresholded, so a question no document covers still comes
+    #: back with k rows -- ordered by relevance, but rows. Measured over the 200-case
+    #: quality batch (2026-09-24), the two populations do not overlap: questions the
+    #: corpus covers scored at least 0.19 (median 0.99), and questions it deliberately
+    #: does not cover scored at most 0.010 (median 0.0001). 0.05 sits in the gap, and
+    #: moving it anywhere between those bounds changes no case in that batch.
+    #:
+    #: Erring high is cheap and erring low is not. A *declined* lookup is not a lost
+    #: answer: the run continues into planning, retrieval, analysis and review, which is
+    #: where a question the corpus cannot answer has to be handled anyway -- the reviewer
+    #: is the component that may abstain. A lookup that wrongly proceeds is the expensive
+    #: direction, because nothing downstream sees the score again.
+    SERVICEMIND_RAG_ANSWER_FLOOR: float = Field(default=0.05, ge=0.0, le=1.0)
     SERVICEMIND_EMBEDDING_URL: str | None = None
     SERVICEMIND_RERANKER_URL: str | None = None
 

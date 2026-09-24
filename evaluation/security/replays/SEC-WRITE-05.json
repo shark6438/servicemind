@@ -1,0 +1,43 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase3_security.py::test_the_raw_glpi_write_exists_in_exactly_one_module"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase3_security.py::test_the_harness_reaches_glpi_only_through_the_gateway"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase3_security.py::test_only_phase2_harness_imports_glpi_write_method"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_write_leaves_a_policy_decision_and_an_invocation_behind"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M01 the gateway stops recording the policy decision",
+      "outcome": "passed",
+      "ref": "scripts/mutate_glpi_write_gateway.py"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-WRITE-05",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

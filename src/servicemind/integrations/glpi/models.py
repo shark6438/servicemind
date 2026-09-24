@@ -1,3 +1,4 @@
+import re
 from html.parser import HTMLParser
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -31,6 +32,24 @@ def html_to_text(value: str) -> str:
     parser.feed(value)
     parser.close()
     return " ".join(parser.parts)
+
+
+_WHITESPACE = re.compile(r"\s+")
+
+
+def normalized_text(value: str) -> str:
+    """The one definition of "the same text", for both reading a write back and grading it.
+
+    ``html_to_text`` on its own is not enough to compare a followup against what was
+    written: GLPI may store a newline as a tag and return it as a tag, so the extractor's
+    ``" ".join`` produces ``"a b"`` for text that was handed to it as ``"a\\nb"``. The
+    collapse on top absorbs that, which is a storage detail and not a content change.
+
+    This lives in the platform rather than in a grader because the executor has to answer
+    the same question when it reads its own write back, and two definitions of "the same
+    text" would let a write be verified by one and rejected by the other.
+    """
+    return _WHITESPACE.sub(" ", html_to_text(value)).strip()
 
 
 class GlpiReference(BaseModel):

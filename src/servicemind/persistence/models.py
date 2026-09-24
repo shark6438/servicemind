@@ -470,7 +470,27 @@ class MemoryRecordRow(Base):
 
 
 class MemoryEventRecord(Base):
+    """The append-only ledger of memory transitions.
+
+    ``run_id``/``trace_id`` are the correlation this ledger was missing. A record knows
+    which run authored it (``memory_records.source_run_id``), so the *creation* of a
+    memory could always be traced back; a later transition on it could not. The gap
+    matters most where it is least visible: a revocation is the one event an operator
+    has to explain, and "somebody or something revoked this" is not an explanation.
+
+    Both are nullable, and that is the honest encoding rather than a shortcut. Two of
+    the six writers are maintenance that no run caused (TTL expiry, procedure support
+    revalidation) and one is a human review decision taken outside any run; a NOT NULL
+    column would force those to name a run that does not exist, which is the same class
+    of error as a check that reports success for work it never did.
+    """
+
     __tablename__ = "memory_events"
+    __table_args__ = (
+        # "What did this run do to the tenant's memory?" is the question the correlation
+        # exists to answer, and it is asked per tenant over one run's events.
+        Index("ix_memory_events_run", "tenant_id", "run_id", "created_at"),
+    )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id: Mapped[UUID] = mapped_column(
@@ -483,6 +503,13 @@ class MemoryEventRecord(Base):
     event_type: Mapped[str] = mapped_column(String(80), nullable=False)
     reason_codes: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    # ``SET NULL`` for the same reason ``memory_records.source_run_id`` uses it: this is
+    # an audit ledger, and a row that outlives the run it names must keep stating what
+    # happened even after the run row itself is gone.
+    run_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="SET NULL"), nullable=True
+    )
+    trace_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

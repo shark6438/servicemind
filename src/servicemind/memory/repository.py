@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import re
 from datetime import UTC, datetime
-from typing import Protocol
+from typing import Any, Protocol
 from uuid import UUID, uuid4
 
 from sqlalchemy import and_, func, or_, select, text
@@ -13,6 +13,7 @@ from servicemind.memory.contracts import (
     POST_RUN_MEMORY_WRITER,
     POST_RUN_TENANT_EPISODE_POLICY,
     MemoryCandidate,
+    MemoryEvent,
     MemoryEvidenceRef,
     MemoryPatternQuery,
     MemoryQuery,
@@ -24,6 +25,7 @@ from servicemind.memory.contracts import (
     MemoryType,
     MemoryWriteAction,
     MemoryWriteDecision,
+    memory_event,
 )
 from servicemind.memory.policy import MemoryGovernancePolicy
 from servicemind.persistence.database import tenant_session
@@ -59,10 +61,19 @@ class MemoryRepository(Protocol):
         expected_version: int | None = None,
         expected_content_hash: str | None = None,
         expected_status: MemoryStatus | None = None,
+        run_id: UUID | None = None,
+        trace_id: str | None = None,
     ) -> MemoryRecord: ...
 
     async def revoke_by_evidence(
-        self, evidence_id: str, *, tenant_id: UUID, actor_id: str, reason: str
+        self,
+        evidence_id: str,
+        *,
+        tenant_id: UUID,
+        actor_id: str,
+        reason: str,
+        run_id: UUID | None = None,
+        trace_id: str | None = None,
     ) -> int: ...
 
 
@@ -166,7 +177,10 @@ def _procedural_support_failure(
         if episode.memory_id in expected_ids
         and episode.tenant_id == record.tenant_id
         and episode.memory_type is MemoryType.EPISODIC
-        and episode.visible_at(checked_at)
+        # ``corroborable_at``, not ``visible_at``: an episode that is still awaiting
+        # review is exactly the state two freshly derived episodes are in, and this
+        # predicate is what lets their proposal be activated at all. See its docstring.
+        and episode.corroborable_at(checked_at)
         and not episode.taint_labels
         and all(ref.verified for ref in episode.evidence_refs)
         and (episode.scope == record.scope or episode.scope.scope_type is MemoryScopeType.TENANT)
@@ -330,7 +344,16 @@ class InMemoryMemoryRepository:
     def __init__(self) -> None:
         self._records: dict[UUID, MemoryRecord] = {}
         self._idempotency: dict[tuple[UUID, str], UUID] = {}
+        #: The append-only transition ledger, in the shape PostgreSQL stores. Without it
+        #: this authority was a map, not a repository: ``transition`` and
+        #: ``revoke_by_evidence`` discarded their ``actor_id`` and recorded nothing, so a
+        #: test asking whether a transition was audited could not fail here, and the
+        #: property went unverified everywhere except against a live database.
+        self._events: list[MemoryEvent] = []
         self._lock = asyncio.Lock()
+
+    def _record_event(self, **event: Any) -> None:
+        self._events.append(MemoryEvent(**memory_event(**event)))
 
     async def persist(
         self, candidate: MemoryCandidate, decision: MemoryWriteDecision
@@ -394,6 +417,16 @@ class InMemoryMemoryRepository:
             assert record is not None
             self._records[record.memory_id] = record
             self._idempotency[key] = record.memory_id
+            self._record_event(
+                tenant_id=record.tenant_id,
+                memory_id=record.memory_id,
+                actor_id=candidate.created_by,
+                event_type=f"memory.{record.status.value}",
+                reason_codes=effective_decision.reason_codes,
+                payload={"version": version, "content_hash": candidate.content_hash},
+                run_id=candidate.source_run_id,
+                trace_id=candidate.source_trace_id,
+            )
             return record
 
     def _expire_lapsed_locked(self) -> None:
@@ -415,6 +448,16 @@ class InMemoryMemoryRepository:
             if lapsed:
                 self._records[memory_id] = current.model_copy(
                     update={"status": MemoryStatus.EXPIRED, "updated_at": now}
+                )
+                # No ``run_id``, for the same reason the Postgres writer has none: the
+                # clock expired this row, and the read that noticed is not its cause.
+                self._record_event(
+                    tenant_id=current.tenant_id,
+                    memory_id=memory_id,
+                    actor_id="ttl-maintenance",
+                    event_type="memory.expired",
+                    reason_codes=["TTL_ELAPSED"],
+                    payload={"expired_at": now.isoformat()},
                 )
 
     def _revoke_invalid_procedures_locked(self) -> int:
@@ -438,6 +481,19 @@ class InMemoryMemoryRepository:
                         "support_invalidated_at": now.isoformat(),
                     },
                 }
+            )
+            # No ``run_id``: the procedure's support lapsed; the read that noticed is an
+            # occasion for the check, not its cause.
+            self._record_event(
+                tenant_id=current.tenant_id,
+                memory_id=memory_id,
+                actor_id="procedural-support-revalidator",
+                event_type="memory.revoked",
+                reason_codes=[failure],
+                payload={
+                    "invalidated_at": now.isoformat(),
+                    "expected_support_count": len(set(current.supporting_episode_ids)),
+                },
             )
             count += 1
         return count
@@ -503,8 +559,9 @@ class InMemoryMemoryRepository:
         expected_version: int | None = None,
         expected_content_hash: str | None = None,
         expected_status: MemoryStatus | None = None,
+        run_id: UUID | None = None,
+        trace_id: str | None = None,
     ) -> MemoryRecord:
-        del actor_id
         async with self._lock:
             current = self._records[memory_id]
             _validate_review_snapshot(
@@ -533,6 +590,16 @@ class InMemoryMemoryRepository:
                                 "updated_at": datetime.now(UTC),
                             }
                         )
+                        self._record_event(
+                            tenant_id=other.tenant_id,
+                            memory_id=other_id,
+                            actor_id=actor_id,
+                            event_type="memory.superseded",
+                            reason_codes=["REPLACED_BY_REVIEWED_VERSION"],
+                            payload={"replacement_memory_id": str(memory_id)},
+                            run_id=run_id,
+                            trace_id=trace_id,
+                        )
             updated = current.model_copy(
                 update={
                     "status": status,
@@ -552,12 +619,33 @@ class InMemoryMemoryRepository:
                 }
             )
             self._records[memory_id] = updated
+            self._record_event(
+                tenant_id=updated.tenant_id,
+                memory_id=memory_id,
+                actor_id=actor_id,
+                event_type=f"memory.{status.value}",
+                reason_codes=[reason],
+                payload={
+                    "human_review_ref": human_review_ref,
+                    "review_comment": review_comment,
+                    "reviewed_version": updated.version,
+                    "reviewed_content_hash": updated.content_hash,
+                },
+                run_id=run_id,
+                trace_id=trace_id,
+            )
             return updated
 
     async def revoke_by_evidence(
-        self, evidence_id: str, *, tenant_id: UUID, actor_id: str, reason: str
+        self,
+        evidence_id: str,
+        *,
+        tenant_id: UUID,
+        actor_id: str,
+        reason: str,
+        run_id: UUID | None = None,
+        trace_id: str | None = None,
     ) -> int:
-        del actor_id
         async with self._lock:
             count = 0
             affected = _revocation_closure(
@@ -578,12 +666,27 @@ class InMemoryMemoryRepository:
                         "provenance": {**current.provenance, "revocation_reason": reason},
                     }
                 )
+                self._record_event(
+                    tenant_id=current.tenant_id,
+                    memory_id=memory_id,
+                    actor_id=actor_id,
+                    event_type="memory.revoked",
+                    reason_codes=[reason],
+                    payload={"evidence_id": evidence_id},
+                    run_id=run_id,
+                    trace_id=trace_id,
+                )
                 count += 1
             return count
 
     @property
     def records(self) -> tuple[MemoryRecord, ...]:
         return tuple(self._records.values())
+
+    @property
+    def events(self) -> tuple[MemoryEvent, ...]:
+        """Every transition this authority has applied, oldest first."""
+        return tuple(self._events)
 
 
 def _to_domain(row: MemoryRecordRow) -> MemoryRecord:
@@ -738,7 +841,15 @@ class PostgresMemoryRepository:
         if query.tenant_id != self.tenant_id:
             raise PermissionError("pattern query tenant does not match repository tenant")
         return [
-            MemoryRecordRow.status == MemoryStatus.ACTIVE.value,
+            # The SQL pre-filter must be a *superset* of ``allows_record``, which is the
+            # authority and runs on every row this returns. Pinning it to ACTIVE here
+            # made it a subset instead, and no amount of widening the predicate could
+            # show: the rows it was meant to admit never reached it. This is the third
+            # place D15 had to move, after the producer's gate and the query predicate --
+            # the two the tests exercise are in the in-memory repository, which has no
+            # SQL layer, so a fix that stops there passes the suite and still does
+            # nothing in the deployment.
+            MemoryRecordRow.status.in_((MemoryStatus.ACTIVE.value, MemoryStatus.QUARANTINE.value)),
             MemoryRecordRow.memory_type == MemoryType.EPISODIC.value,
             MemoryRecordRow.scope_type == MemoryScopeType.TENANT.value,
             MemoryRecordRow.valid_from <= query.at,
@@ -860,12 +971,18 @@ class PostgresMemoryRepository:
             await session.flush()
             session.add(
                 MemoryEventRecord(
-                    tenant_id=self.tenant_id,
-                    memory_id=row.id,
-                    actor_id=candidate.created_by,
-                    event_type=f"memory.{status.value}",
-                    reason_codes=reason_codes,
-                    payload={"version": version, "content_hash": candidate.content_hash},
+                    **memory_event(
+                        tenant_id=self.tenant_id,
+                        memory_id=row.id,
+                        actor_id=candidate.created_by,
+                        event_type=f"memory.{status.value}",
+                        reason_codes=reason_codes,
+                        payload={"version": version, "content_hash": candidate.content_hash},
+                        # The run that authored the memory authored this event: it is the
+                        # candidate's own provenance, not a run inferred from the caller.
+                        run_id=candidate.source_run_id,
+                        trace_id=candidate.source_trace_id,
+                    )
                 )
             )
             await session.flush()
@@ -906,12 +1023,19 @@ class PostgresMemoryRepository:
             row.updated_at = now
             session.add(
                 MemoryEventRecord(
-                    tenant_id=self.tenant_id,
-                    memory_id=row.id,
-                    actor_id="ttl-maintenance",
-                    event_type="memory.expired",
-                    reason_codes=["TTL_ELAPSED"],
-                    payload={"expired_at": now.isoformat()},
+                    **memory_event(
+                        tenant_id=self.tenant_id,
+                        memory_id=row.id,
+                        actor_id="ttl-maintenance",
+                        event_type="memory.expired",
+                        reason_codes=["TTL_ELAPSED"],
+                        payload={"expired_at": now.isoformat()},
+                        # No ``run_id``: a lapse is the clock's doing. This runs at the top
+                        # of whichever read happens to be first after the deadline, so the
+                        # run that triggered it did not cause it, and attributing the
+                        # expiry to that run would make the ledger read as if a run had
+                        # decided to end the memory's life.
+                    )
                 )
             )
             count += 1
@@ -972,15 +1096,20 @@ class PostgresMemoryRepository:
             }
             session.add(
                 MemoryEventRecord(
-                    tenant_id=self.tenant_id,
-                    memory_id=row.id,
-                    actor_id="procedural-support-revalidator",
-                    event_type="memory.revoked",
-                    reason_codes=[failure],
-                    payload={
-                        "invalidated_at": now.isoformat(),
-                        "expected_support_count": len(set(row.supporting_episode_ids)),
-                    },
+                    **memory_event(
+                        tenant_id=self.tenant_id,
+                        memory_id=row.id,
+                        actor_id="procedural-support-revalidator",
+                        event_type="memory.revoked",
+                        reason_codes=[failure],
+                        payload={
+                            "invalidated_at": now.isoformat(),
+                            "expected_support_count": len(set(row.supporting_episode_ids)),
+                        },
+                        # No ``run_id``: what invalidated this procedure is the state of its
+                        # supporting episodes, checked whenever the corpus is next read.
+                        # The reading run is an occasion for the check, not its cause.
+                    )
                 )
             )
             count += 1
@@ -1087,6 +1216,8 @@ class PostgresMemoryRepository:
         expected_version: int | None = None,
         expected_content_hash: str | None = None,
         expected_status: MemoryStatus | None = None,
+        run_id: UUID | None = None,
+        trace_id: str | None = None,
     ) -> MemoryRecord:
         async with tenant_session(self.tenant_id) as session:
             await self._write_lock(session)
@@ -1139,12 +1270,16 @@ class PostgresMemoryRepository:
                     prior.updated_at = datetime.now(UTC)
                     session.add(
                         MemoryEventRecord(
-                            tenant_id=self.tenant_id,
-                            memory_id=prior.id,
-                            actor_id=actor_id,
-                            event_type="memory.superseded",
-                            reason_codes=["REPLACED_BY_REVIEWED_VERSION"],
-                            payload={"replacement_memory_id": str(memory_id)},
+                            **memory_event(
+                                tenant_id=self.tenant_id,
+                                memory_id=prior.id,
+                                actor_id=actor_id,
+                                event_type="memory.superseded",
+                                reason_codes=["REPLACED_BY_REVIEWED_VERSION"],
+                                payload={"replacement_memory_id": str(memory_id)},
+                                run_id=run_id,
+                                trace_id=trace_id,
+                            )
                         )
                     )
             row.status = status.value
@@ -1154,24 +1289,35 @@ class PostgresMemoryRepository:
                 row.provenance = {**row.provenance, "human_review_ref": human_review_ref}
             session.add(
                 MemoryEventRecord(
-                    tenant_id=self.tenant_id,
-                    memory_id=memory_id,
-                    actor_id=actor_id,
-                    event_type=f"memory.{status.value}",
-                    reason_codes=[reason],
-                    payload={
-                        "human_review_ref": human_review_ref,
-                        "review_comment": review_comment,
-                        "reviewed_version": row.version,
-                        "reviewed_content_hash": row.content_hash,
-                    },
+                    **memory_event(
+                        tenant_id=self.tenant_id,
+                        memory_id=memory_id,
+                        actor_id=actor_id,
+                        event_type=f"memory.{status.value}",
+                        reason_codes=[reason],
+                        payload={
+                            "human_review_ref": human_review_ref,
+                            "review_comment": review_comment,
+                            "reviewed_version": row.version,
+                            "reviewed_content_hash": row.content_hash,
+                        },
+                        run_id=run_id,
+                        trace_id=trace_id,
+                    )
                 )
             )
             await session.flush()
             return _to_domain(row)
 
     async def revoke_by_evidence(
-        self, evidence_id: str, *, tenant_id: UUID, actor_id: str, reason: str
+        self,
+        evidence_id: str,
+        *,
+        tenant_id: UUID,
+        actor_id: str,
+        reason: str,
+        run_id: UUID | None = None,
+        trace_id: str | None = None,
     ) -> int:
         if tenant_id != self.tenant_id:
             raise PermissionError("revocation tenant does not match repository tenant")
@@ -1198,12 +1344,16 @@ class PostgresMemoryRepository:
                 row.provenance = {**row.provenance, "revocation_reason": reason}
                 session.add(
                     MemoryEventRecord(
-                        tenant_id=self.tenant_id,
-                        memory_id=row.id,
-                        actor_id=actor_id,
-                        event_type="memory.revoked",
-                        reason_codes=[reason],
-                        payload={"evidence_id": evidence_id},
+                        **memory_event(
+                            tenant_id=self.tenant_id,
+                            memory_id=row.id,
+                            actor_id=actor_id,
+                            event_type="memory.revoked",
+                            reason_codes=[reason],
+                            payload={"evidence_id": evidence_id},
+                            run_id=run_id,
+                            trace_id=trace_id,
+                        )
                     )
                 )
             await session.flush()

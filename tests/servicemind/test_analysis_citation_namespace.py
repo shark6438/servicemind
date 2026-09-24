@@ -202,6 +202,39 @@ async def test_the_analysis_prompt_marks_memory_and_skills_as_uncitable(monkeypa
     assert "never put their item_id in evidence_refs" in prompt
 
 
+@pytest.mark.asyncio
+async def test_the_analysis_prompt_forbids_grounding_a_root_cause_in_what_it_ruled_out(
+    monkeypatch,
+) -> None:
+    """A ruled-out document is not support for the cause that was named.
+
+    ACC-03 measures this, and what it caught was not a wrong answer: the root-cause claim
+    named the right condition and listed the ruled-out runbook among the refs meant to
+    support it. The document says the opposite of the claim, so the claim was not entailed
+    by what it cited -- the analysis was right for a reason it could not give. The reviewer
+    grades the refs, so the rule has to be in the prompt the analyst reads; the case cannot
+    fix it, and a case that only checked which document was *not* cited could not see it.
+    """
+    joined = joined_evidence()
+    runnable = RecordingRunnable(analysis_citing(list(joined.evidence_refs)))
+    monkeypatch.setattr(analysis_module, "structured_output", lambda model, schema: runnable)
+
+    await AnalysisAgent(model_factory=lambda: object()).run(
+        invocation=invocation(),
+        evidence=joined,
+        goal="Analyze the VPN client upgrade",
+        request_write=False,
+        ticket_id=4,
+    )
+
+    prompt = system_prompt(runnable.messages[0])
+    assert "rules a candidate out is not evidence for the cause you do name" in prompt
+    assert "must not appear among them" in prompt
+    # And it says where the exclusion goes instead, so the model is not left with a rule
+    # that forbids the only place it had to say what it considered.
+    assert "in assumptions instead" in prompt
+
+
 def test_the_citable_universe_is_the_joined_evidence_set() -> None:
     """Pin the asymmetry the prompt now describes, so it cannot drift silently."""
     joined = joined_evidence()

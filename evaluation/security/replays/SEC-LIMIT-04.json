@@ -1,0 +1,43 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_deadline_bound_is_not_the_providers_bound"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M10 the wait ignores the run's deadline",
+      "outcome": "passed",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M11 the deadline is spent down to zero instead of leaving the later stages room",
+      "outcome": "passed",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-LIMIT-04",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

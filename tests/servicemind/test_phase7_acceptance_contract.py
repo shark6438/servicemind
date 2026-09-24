@@ -27,15 +27,17 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from servicemind.domain.evidence import Evidence, EvidenceSourceType
+from servicemind.domain.evidence import CITATION_KEY, Evidence, EvidenceSourceType
 from servicemind.evaluation.acceptance import (
     AcceptanceCase,
     AcceptanceCaseSet,
     CaseExecution,
     CaseStep,
     Expectation,
+    MemoryRecordExpectation,
     ObservedEnvironment,
     ObservedFollowup,
+    ObservedMemoryRecord,
     ObservedSubject,
     ProbeOutcomeExpectation,
     RequiredFact,
@@ -256,6 +258,55 @@ def test_a_case_that_needs_two_tickets_declares_both(shipped: AcceptanceCaseSet)
     # And the case's own ticket is one of them, so the run the execution records is one of
     # the two the bootstrap created rather than a name nothing resolves.
     assert case.ticket_ref in submitted
+
+
+def test_a_ticket_a_case_writes_to_belongs_to_that_case_alone(
+    shipped: AcceptanceCaseSet,
+) -> None:
+    """A ticket an acceptance case appends a followup to may not be shared with any other.
+
+    This is what makes the suite re-runnable. A ticket accumulates: a case that writes
+    leaves it different from how the next run finds it, and a ticket's followups are part
+    of the evidence the *next* case's run retrieves. So a read-only case sharing a ticket
+    with a writer is a case whose verdict is a function of what ran before it, and two
+    writers on one ticket are two cases whose inputs differ between run one and run two --
+    the same batch stops being the same batch.
+
+    Declared, not inferred: ``writes_followups`` says a case appends to its ticket, which
+    is a different statement from ``request_write``, which says what the run asks for.
+    Most write-requesting cases are refusals that append nothing, and inferring the
+    writers from that flag would give eleven tickets where four are needed.
+
+    The check is deliberately one-directional -- a *reader* ticket may be shared by any
+    number of readers, since none of them changes it.
+    """
+    users: dict[str, list[str]] = {}
+    for case in shipped.cases:
+        for reference in {case.ticket_ref} | {step.ticket_ref for step in case.steps}:
+            if reference is not None:
+                users.setdefault(reference, []).append(case.id)
+    shared = {
+        reference: sorted(set(case_ids))
+        for reference, case_ids in users.items()
+        if len(set(case_ids)) > 1
+        and any(case.writes_followups for case in shipped.cases if case.id in set(case_ids))
+    }
+    assert shared == {}, f"a written ticket is shared: {shared}"
+
+
+def test_the_written_tickets_are_the_cases_that_actually_write(shipped: AcceptanceCaseSet) -> None:
+    """Cross-check against the other direction: every writer owns its own ticket.
+
+    The rule above is satisfiable by declaring nothing a writer, so the declaration is
+    pinned here to the four cases whose assertions claim a followup is appended. A case
+    that starts writing without saying so would get away with it above and is caught here.
+    """
+    writers = sorted(case.id for case in shipped.cases if case.writes_followups)
+    assert writers == ["ACC-10b", "ACC-11", "ACC-22", "ACC-23"]
+    for case in shipped.cases:
+        if case.writes_followups:
+            assert case.request_write, f"{case.id} writes with request_write=false"
+            assert case.ticket_ref is not None, f"{case.id} writes without naming its ticket"
 
 
 def test_a_case_list_without_a_discriminating_assertion_still_parses(
@@ -494,6 +545,129 @@ def test_a_concept_group_fact_needs_every_group_not_just_one(statement: str) -> 
     case = _fact_case()
     verdict, _, _ = _judge(case, case.assertions[0], _fact_execution(statement))
     assert verdict is Verdict.FAIL
+
+
+def _grounding_execution(claim_refs: list[str]) -> CaseExecution:
+    """An execution whose one root-cause claim cites exactly these sources.
+
+    Named by source record id, or ``"ticket"`` for the incident row -- which is citable
+    and carries no cause, and is how a legal analysis grounds a root cause in nothing.
+    Three rows, so "cites the right document", "cites the ruled-out document" and "cites
+    neither" are three executions rather than one execution read three ways.
+    """
+    documents = [
+        Evidence.create(
+            tenant_id=TENANT,
+            source_type=EvidenceSourceType.GLPI,
+            source_ref="glpi://tickets/42",
+            resource_type="ticket",
+            resource_id="42",
+            content="Globex VPN ticket 42: MFA challenge failed after the password.",
+            provider="glpi",
+            retrieval_method="read",
+        ),
+        *[
+            Evidence.create(
+                tenant_id=TENANT,
+                source_type=EvidenceSourceType.KNOWLEDGE,
+                source_ref=f"kb://globex/{record_id}",
+                resource_type="document",
+                resource_id=record_id,
+                content=f"Globex runbook {record_id}.",
+                provider="opensearch",
+                retrieval_method="search",
+                metadata={CITATION_KEY: {"source_record_id": record_id}},
+            )
+            for record_id in ("KB-GLOBEX-VPN-MFA-REBIND", "KB-GLOBEX-VPN-APP-REG")
+        ],
+    ]
+    by_record: dict[str, str] = {"ticket": documents[0].evidence_id}
+    by_record.update(
+        {item.source_record_id: item.evidence_id for item in documents[1:] if item.source_record_id}
+    )
+    refs = [by_record[record] for record in claim_refs]
+    return _execution(
+        steps=[_step("s", outcome="passed", detail="raw output")],
+        evidence=documents,
+        analysis={
+            "classification": "network/vpn",
+            "impact": 3,
+            "urgency": 3,
+            "priority": 3,
+            "recommended_group": "Network Team",
+            "recurring_incident": False,
+            "problem_recommendation": "no problem record warranted",
+            "change_recommendation": "no change record warranted",
+            "proposed_actions": [],
+            "reasoning_summary": "contract",
+            "evidence_refs": refs,
+            "confidence": 0.9,
+            "source": "model",
+            "claims": [
+                {
+                    "claim_id": "C1",
+                    "claim_type": "root_cause_hypothesis",
+                    "statement": "the enrolled device binding lapsed and must be rebound",
+                    "confidence": 0.9,
+                    "evidence_refs": refs,
+                }
+            ],
+            "unresolved_questions": [],
+        },
+    )
+
+
+def _grounding_case() -> AcceptanceCase:
+    return _case(
+        [
+            {
+                "id": "a",
+                "description": "a",
+                "expect": {
+                    "kind": "required_facts",
+                    "facts": [
+                        {
+                            "id": "root-cause",
+                            "description": "根因是认证设备绑定失效，需要重新绑定",
+                            "patterns": ["(re)?bind", "device binding"],
+                            "claim_types": ["root_cause_hypothesis"],
+                            "must_not_cite": ["KB-GLOBEX-VPN-APP-REG"],
+                            "must_cite": ["KB-GLOBEX-VPN-MFA-REBIND"],
+                        }
+                    ],
+                },
+            }
+        ],
+        steps=["s"],
+    )
+
+
+def test_a_fact_can_require_the_document_it_must_be_grounded_in() -> None:
+    """``must_cite`` and ``must_not_cite`` are different faults, not one with a sign.
+
+    ACC-03 held only the negative half and was therefore satisfied by an analysis that
+    said nothing: a claim that was never made cites nothing, so the forbidden document is
+    never cited and the fact passes. The two cases below are that gap -- the same
+    forbidden-document outcome, reached by naming the right cause and by naming nothing.
+    """
+    case = _grounding_case()
+    assertion = case.assertions[0]
+    rebind, decoy = "KB-GLOBEX-VPN-MFA-REBIND", "KB-GLOBEX-VPN-APP-REG"
+
+    verdict, detail, _ = _judge(case, assertion, _grounding_execution([rebind]))
+    assert verdict is Verdict.PASS, detail
+
+    # Names the forbidden document: fails on the negative half.
+    verdict, detail, _ = _judge(case, assertion, _grounding_execution([rebind, decoy]))
+    assert verdict is Verdict.FAIL
+    assert decoy in detail
+
+    # Names the right cause and grounds it in the incident ticket, which states the
+    # symptom and carries no cause: passes the negative half and fails the positive one.
+    # This is the execution a negative-only case could not tell apart from the first.
+    verdict, detail, _ = _judge(case, assertion, _grounding_execution(["ticket"]))
+    assert verdict is Verdict.FAIL
+    assert rebind in detail
 
 
 def test_a_fact_with_no_matcher_is_refused() -> None:
@@ -1072,6 +1246,123 @@ def test_a_case_edited_without_a_rerun_changes_the_digest(shipped: AcceptanceCas
     assert case_set_digest(edited) != case_set_digest(shipped)
 
 
+def test_a_memory_record_may_be_attributed_to_any_run_the_case_submitted() -> None:
+    """Which of a case's runs reached a conclusion is not the case's to require.
+
+    ACC-12b submits a *pair* of runs so that a cross-ticket pattern becomes corroborable,
+    and the platform attributes the derived procedure to the run whose post-run step
+    reached it -- on a tenant that already holds an episode for the pattern, that is the
+    first submission rather than the second. Judging the record against the case's named
+    run alone encoded the submission order as a requirement, and turned a correct
+    attribution into a blocked case. Legacy replays carry no ``case_run_ids`` and fall
+    back to the named run, which is the stricter reading.
+    """
+    expectation = MemoryRecordExpectation(memory_type="procedural", status="quarantine")
+    first, second = UUID(int=1), UUID(int=2)
+    record = ObservedMemoryRecord(
+        memory_id=UUID(int=3),
+        memory_type="procedural",
+        status="quarantine",
+        source_run_id=first,
+    )
+    case = _case(
+        [
+            {
+                "id": "acc-memory",
+                "description": "a quarantined procedure exists",
+                "expect": expectation.model_dump(mode="json"),
+            }
+        ]
+    )
+
+    attributed_to_the_earlier_submission = _execution(
+        "ACC-99",
+        run_id=second,
+        case_run_ids=[first, second],
+        memory_records=[record],
+    )
+    assert _judge_one(case, attributed_to_the_earlier_submission) is Verdict.PASS
+
+    # A run this case did not submit is still refused, and so is a replay old enough to
+    # predate the field, where only the named run is known to be this case's.
+    foreign = ObservedMemoryRecord(
+        memory_id=UUID(int=4),
+        memory_type="procedural",
+        status="quarantine",
+        source_run_id=UUID(int=9),
+    )
+    assert (
+        _judge_one(
+            case,
+            _execution(
+                "ACC-99", run_id=second, case_run_ids=[first, second], memory_records=[foreign]
+            ),
+        )
+        is Verdict.FAIL
+    )
+    assert (
+        _judge_one(case, _execution("ACC-99", run_id=second, memory_records=[record]))
+        is Verdict.FAIL
+    )
+
+
 def test_a_case_step_is_declared_before_it_is_asserted_on() -> None:
     step = CaseStep(id="s", description="s", action="s")
     assert step.id == "s"
+
+
+def test_the_knowledge_probe_agrees_with_the_fixture_manifest() -> None:
+    """The probe's declaration and the seeded corpus must say the same thing.
+
+    ``knowledge_probe`` repeats the restricted documents rather than importing the
+    manifest, on purpose -- a probe that took its expectations from the artefact under
+    test would move both sides of the comparison together, and a manifest that lost its
+    group restriction would leave the probe reporting a green narrowing over a corpus with
+    nothing restricted in it. Repeating the declaration is what buys that independence,
+    and this test is what keeps the two copies from drifting apart.
+
+    The probe does not have to read *every* restricted document, and deliberately does
+    not. The corpus also holds a group-4 runbook and a retired group-3 handbook, and
+    folding either into this probe would put a second variable into an experiment whose
+    whole value is that it changes one: group 4 is a different axis reading, and the
+    retired handbook is ``is_active``, which ACC-02 owns. What is checked is that each
+    document the probe *does* read is restricted in the manifest with exactly the group
+    the probe names, and that none of them is a document whose absence would be explained
+    by something other than the group.
+    """
+    from servicemind.evaluation.knowledge_probe import (
+        CORPUS_RESTRICTED_BY_GROUP,
+        PUBLIC_CONTROL_DOCUMENT,
+    )
+
+    manifest = json.loads(
+        (
+            Path(__file__).resolve().parent.parent.parent
+            / "evaluation"
+            / "acceptance"
+            / "fixtures"
+            / "globex"
+            / "manifest.json"
+        ).read_text(encoding="utf-8")
+    )
+    by_id = {document["source_record_id"]: document for document in manifest["documents"]}
+
+    for source_record_id, group_id in CORPUS_RESTRICTED_BY_GROUP.items():
+        document = by_id[source_record_id]
+        assert document["group_ids"] == [group_id], (
+            f"the probe reads {source_record_id} as restricted to group {group_id}, but the "
+            f"seeded corpus declares {document['group_ids']}; a probe asserting an isolation "
+            f"the corpus does not have would pass for the wrong reason"
+        )
+        assert document["is_active"], (
+            f"{source_record_id} is retired in the seeded corpus. Its absence from a reading "
+            "would then be explained by is_active rather than by the group, which is ACC-02's "
+            "axis and not this probe's"
+        )
+
+    control = by_id[PUBLIC_CONTROL_DOCUMENT]
+    assert not control["group_ids"] and control["is_active"], (
+        "the probe's control document has to be unrestricted and current: a control that is "
+        "itself restricted, or retired, would be missing from one reading for a reason that "
+        "is not the group axis"
+    )

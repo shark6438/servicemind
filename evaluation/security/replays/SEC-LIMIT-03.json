@@ -1,0 +1,64 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M04 the provider's own hint is ignored in favour of the schedule",
+      "outcome": "passed",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M05 a header that is not a delay is parsed as one",
+      "outcome": "passed",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M06 the schedule has no ceiling",
+      "outcome": "passed",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M09 the wait is unbounded in total",
+      "outcome": "passed",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-LIMIT-03",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

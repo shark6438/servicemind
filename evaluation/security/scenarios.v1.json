@@ -1,0 +1,911 @@
+{
+  "schema_version": "phase7-security-v1",
+  "description": "P7.6.5 安全与故障场景集。每条场景声明「平台必须继续拒绝什么」，并指名判定它的可重跑证据：pytest 节点（跑到就算数，不信任历史）、变异实验中的具名变异（删掉该行为后同一条测试必须变红）、以及已记录的验收案例。逐条判定由 servicemind.evaluation.security_grader 做出，本文件只陈述。",
+  "scenarios": [
+    {
+      "id": "SEC-TENANT-01",
+      "category": "tenant-isolation",
+      "title": "另一个租户的 checkpoint 不得被续跑",
+      "defends_against": "调用方用自己的凭据去续跑一个属于别的租户的运行，从而借用对方范围内的证据与动作。",
+      "teeth": "M04 把租户校验改成接受，同一条测试立即变红：说明这条断言挂在租户坐标的比较上，而不是挂在「有没有抛错」上。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_checkpoint_from_another_tenant_cannot_be_resumed"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M04 a checkpoint from another tenant is accepted"}
+      ]
+    },
+    {
+      "id": "SEC-TENANT-02",
+      "category": "tenant-isolation",
+      "title": "组受限文档只对其组可读，无限制文档对租户内所有人可读",
+      "defends_against": "「加了组限制反而谁都读不到」与「标了组限制却不生效」这两种对称的 ACL 失效。第二条同时是空语料的对照组：只证明受限文档读不到，无法区分「被过滤」与「根本没读到」。",
+      "teeth": "M41 让共享可见性规则不再读组轴，test_a_restricted_node_is_found_by_its_group_and_by_no_one_else 立刻变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_group_restricted_document_is_readable_by_its_group_and_no_other"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_an_unrestricted_document_is_readable_by_everyone_in_the_tenant"},
+        {"kind": "acceptance", "ref": "ACC-04c", "note": "无组分析员的三向对照实测"},
+        {"kind": "acceptance", "ref": "ACC-23", "note": "写前撤权后重新派生的检索范围不再含该组手册"}
+      ]
+    },
+    {
+      "id": "SEC-TENANT-03",
+      "category": "tenant-isolation",
+      "title": "MCP 任务按租户隔离，且终态不可改写",
+      "defends_against": "一个租户猜到另一个租户的 MCP 任务 id 后读写它；以及任务到达终态后仍被后续请求改写，使「已完成」变成可重开的可变状态。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase6_tool_platform.py::test_mcp_tasks_are_tenant_scoped_and_terminal_state_is_immutable"}
+      ]
+    },
+    {
+      "id": "SEC-TENANT-04",
+      "category": "tenant-isolation",
+      "title": "语义缓存按租户分区",
+      "defends_against": "一个租户的模型回答被另一个租户的相似查询命中，形成跨租户的内容泄漏通道。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_semantic_cache_is_tenant_partitioned"}
+      ]
+    },
+    {
+      "id": "SEC-TENANT-05",
+      "category": "tenant-isolation",
+      "title": "模型网关的租户白名单取交集，未注册租户被拒",
+      "defends_against": "把调用方声明的租户与配置中的白名单做并集，使一个未注册的租户因为出现在请求里而获得调用资格。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_model_gateway_tenant_allowlist_is_an_intersection"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_model_gateway_configured_tenant_map_denies_unregistered_tenant"}
+      ]
+    },
+    {
+      "id": "SEC-TENANT-06",
+      "category": "outbox-retention",
+      "title": "outbox 清理的删除保持在租户范围内，且一个租户的失败不波及其他租户",
+      "defends_against": "清理语句越出 RLS 边界删掉别的租户的行；以及某个租户的清理异常终止整轮清理，使其余租户的行永远不被退休。",
+      "teeth": "M09 让一个租户的清理失败放弃其余租户，同一条测试变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_leaves_another_tenants_rows_alone"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M09 one tenant's retention failure abandons the others"}
+      ]
+    },
+    {
+      "id": "SEC-AUTHZ-01",
+      "category": "entity-and-group-authorization",
+      "title": "起跑必须把调用方的组坐标写进图状态",
+      "defends_against": "组声明在 token → 图边界之间丢失，使租户内的按组授权在检索链路上根本不存在。",
+      "teeth": "M01 停掉 group_ids 的写入，test_start_run_carries_group_scope_into_the_graph 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_start_run_carries_group_scope_into_the_graph"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M01 start_run stops writing the group carrier"}
+      ]
+    },
+    {
+      "id": "SEC-AUTHZ-02",
+      "category": "entity-and-group-authorization",
+      "title": "缺失的组坐标按「无范围」读，不得读成「不限制」",
+      "defends_against": "旧 checkpoint 里没有组字段时被解释成「没有限制」，于是一次迁移之后所有老运行都获得了全部组。",
+      "teeth": "M02 让缺失坐标读成不限制，两条测试同时变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_graph_rebuilds_group_scope_from_state"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_checkpoint_without_group_scope_reads_as_no_group_scope"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M02 a missing group coordinate reads as unrestricted"}
+      ]
+    },
+    {
+      "id": "SEC-AUTHZ-03",
+      "category": "entity-and-group-authorization",
+      "title": "范围外的 GLPI 实体不得回退到租户级集成",
+      "defends_against": "调用方对某实体没有权限时，解析逻辑退回租户的默认集成，于是一次越权读取被当成正常配置解析。",
+      "teeth": "M38 让范围外实体回退到租户集成，test_no_glpi_entity_in_scope_is_not_a_tenant_wide_integration 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_no_glpi_entity_in_scope_is_not_a_tenant_wide_integration"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M38 an out-of-scope GLPI entity resolves to the tenant's integration anyway"}
+      ]
+    },
+    {
+      "id": "SEC-AUTHZ-04",
+      "category": "entity-and-group-authorization",
+      "title": "绑定实体的工具对该实体之外不可见",
+      "defends_against": "工具可见性只看「调用方持有任意实体」，使一个只持有实体 A 的调用方看到并调用实体 B 的工具。",
+      "teeth": "M39 放宽为「持有任意实体即可见」，test_a_tool_bound_to_an_entity_is_invisible_without_that_entity 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M39 an entity-bound tool is visible to a caller holding any entity at all"}
+      ]
+    },
+    {
+      "id": "SEC-AUTHZ-05",
+      "category": "entity-and-group-authorization",
+      "title": "没有任何实体在范围内时写入被拒",
+      "defends_against": "「记录集与当前集都为空」被读成「没有变化」，于是空集合在下游被当成不限制而不是没有权限。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_write_is_refused_when_no_entity_is_in_scope"}
+      ]
+    },
+    {
+      "id": "SEC-AUTHZ-06",
+      "category": "entity-and-group-authorization",
+      "title": "身份可携带的 ACL 集合有上限，超限是 401 而不是 500",
+      "defends_against": "一个自行签发的超大授权集会撑爆下游的过滤结构，或以 500 的形式暴露内部形状而不是干净地拒绝身份。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_identity_boundary.py::test_a_grant_set_larger_than_an_identity_can_carry_is_not_an_identity"},
+        {"kind": "test", "ref": "tests/servicemind/test_identity_boundary.py::test_an_over_large_grant_set_is_a_401_not_a_500"},
+        {"kind": "test", "ref": "tests/servicemind/test_identity_boundary.py::test_a_principal_cannot_hold_an_acl_the_retrieval_cannot_filter_by"}
+      ]
+    },
+    {
+      "id": "SEC-AUTHZ-07",
+      "category": "entity-and-group-authorization",
+      "title": "GraphRAG 图遍历必须过滤整条路径，而不只是过滤种子",
+      "defends_against": "从一个可见节点出发、经由一条不受限的边到达受限节点，于是受限内容通过「路径」而不是「种子」泄漏。",
+      "teeth": "M42 只过滤种子不过滤路径、M45 让 Cypher 遍历不再过滤远端端点，两条对应的测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase4_graphrag.py::test_a_restricted_node_is_not_reachable_from_a_visible_one"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase4_graphrag.py::test_both_cypher_read_paths_filter_the_whole_path"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M42 the traversal filters the seeds but not the path"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M45 the Cypher traversal stops filtering the far endpoint"}
+      ]
+    },
+    {
+      "id": "SEC-AUTHZ-08",
+      "category": "entity-and-group-authorization",
+      "title": "无法执行节点 ACL 的图存储必须被拒绝，而不是降级为空",
+      "defends_against": "把「这个存储过滤不了」降级成「没有命中」，让隔离失效伪装成空结果——这正是「返回空即隔离」的老毛病。",
+      "teeth": "M43 让检索器不再拒绝不可过滤的存储、M44 让侧通道把拒绝折叠进普通降级，两条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase4_graphrag.py::test_the_retriever_refuses_a_store_that_cannot_apply_node_acls"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase4_graphrag.py::test_the_side_channel_reports_an_unfilterable_store_rather_than_degrading"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M43 the retriever stops refusing a store that cannot apply node ACLs"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M44 the side channel folds a refusal into the ordinary degradation"}
+      ]
+    },
+    {
+      "id": "SEC-AUTHZ-09",
+      "category": "entity-and-group-authorization",
+      "title": "图读取拿到的是完整主体，而不是只有租户",
+      "defends_against": "检索器只把 tenant_id 传下去，于是组与实体两个轴在图上完全不被过滤。",
+      "teeth": "M47 把完整主体换回租户，test_the_read_gateway_carries_the_callers_group_scope_into_the_tool_call 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_read_gateway_carries_the_callers_group_scope_into_the_tool_call"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M47 the graph read is handed the tenant instead of the whole principal"}
+      ]
+    },
+    {
+      "id": "SEC-NARROW-01",
+      "category": "principal-narrowing",
+      "title": "审批不得把审批员的权限借给运行",
+      "defends_against": "续跑时用 HTTP 调用方（审批员）的 context 重建主体，于是一次审批让运行获得审批员的组与实体——审批员比自己组多即扩权。",
+      "teeth": "M03 让续跑重新以调用者身份运行，test_approving_does_not_lend_the_approver_scope 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_approving_does_not_lend_the_approver_scope"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M03 the resume runs as the caller again (the original escalation)"}
+      ]
+    },
+    {
+      "id": "SEC-NARROW-02",
+      "category": "principal-narrowing",
+      "title": "没有 checkpoint 的运行不得以调用者身份续跑",
+      "defends_against": "找不到原发起人主体时退回调用方的作用域，把「没有记录」变成「用调用方的权限」。",
+      "teeth": "M05 让无 checkpoint 的运行以调用者身份续跑，对应测试变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_run_with_no_checkpoint_cannot_be_resumed"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M05 a run with no checkpoint resumes as the caller"}
+      ]
+    },
+    {
+      "id": "SEC-NARROW-03",
+      "category": "principal-narrowing",
+      "title": "有效主体必须是「记录 ∩ 当前」，且只能收窄",
+      "defends_against": "把交集当成一个「可配置项」传下去而不落进 checkpoint；以及用「当前授权」或「记录授权」单边替换交集，两个方向都会扩权。",
+      "teeth": "M06 把交集降级为可配置项、M09 用记录授权单边替换，两条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_revoked_group_is_enforced_into_the_checkpoint"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_resume_that_narrows_nothing_writes_no_audit"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M06 the intersection is handed over as configurable only (the original bug)"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M09 the intersection is replaced by the recorded grants alone"}
+      ]
+    },
+    {
+      "id": "SEC-NARROW-04",
+      "category": "principal-narrowing",
+      "title": "崩溃恢复路径同样强制交集，并如实记录主体来源",
+      "defends_against": "恢复路径自造一个服务主体（历史上是 {viewer, analyst} 加整个集成实体），任意缩权或扩权，且审计里看不出主体是从哪来的。",
+      "teeth": "M07 让恢复跳过 aupdate_state、M23 让恢复重新发明服务主体、M24 让恢复永远声称来源是 checkpoint，三条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_mid_run_recovery_enforces_the_intersection_into_the_checkpoint"},
+        {"kind": "test", "ref": "tests/servicemind/test_recovery.py::test_recovery_hands_over_identity_and_nothing_else"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M07 a mid-run recovery skips aupdate_state"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M23 recovery invents a service principal again"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M24 recovery always claims the checkpoint was the source"}
+      ]
+    },
+    {
+      "id": "SEC-NARROW-05",
+      "category": "principal-narrowing",
+      "title": "无法确认授权时暂停，而不是收窄后继续",
+      "defends_against": "把「查不到」当成「没有权限」，于是身份服务的一次抖动变成一次静默缩权；以及把暂停这件事本身漏掉不写审计。",
+      "teeth": "M11 让未确认的授权收窄后继续、M14 让暂停边界不再记录原因，两条测试变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M11 an unestablished authority narrows and continues instead of pausing"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M14 the resume boundary stops auditing why it paused"},
+        {"kind": "acceptance", "ref": "ACC-21", "note": "账号被停用后核验器必须给出「不可确认」而不是「照常继续」"}
+      ]
+    },
+    {
+      "id": "SEC-NARROW-06",
+      "category": "principal-narrowing",
+      "title": "收窄必须让在更宽范围下取得的证据失效",
+      "defends_against": "只清空 evidence 列表，而把由更宽范围证据推导出的结论、复核、交接与待执行动作留在原地。",
+      "teeth": "M10 让收窄后更宽范围的证据留在原地，test_narrowing_invalidates_evidence_gathered_under_the_wider_scope 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_narrowing_invalidates_evidence_gathered_under_the_wider_scope"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M10 narrowing leaves the wider scope's evidence in place"},
+        {"kind": "acceptance", "ref": "ACC-18", "note": "撤组后旧动作被作废而不是被写入"}
+      ]
+    },
+    {
+      "id": "SEC-NARROW-07",
+      "category": "principal-narrowing",
+      "title": "收窄必须作废待执行动作，并作废到数据行上",
+      "defends_against": "只在图状态里宣布作废、不落进行，使待执行动作仍可被写入；以及把作废当成「换个范围继续」，让依赖旧证据的产物被保留。",
+      "teeth": "M31 把作废改成重新定范围后继续、M32 让作废不进入续跑载荷、M33 让被清空证据得出的结论留在原地，三条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_withdrawal_reaches_the_row_and_not_only_the_checkpoint"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_survives_a_resume_that_narrows_nothing"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M31 a narrowed action is re-scoped and carried on instead of withdrawn"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M32 the void is announced but not carried into the resume payload"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M33 the conclusions drawn from the cleared evidence are left standing"},
+        {"kind": "acceptance", "ref": "ACC-19", "note": "撤实体后交付能力归零必须阻止执行"},
+        {"kind": "acceptance", "ref": "ACC-20", "note": "权限集非空但缺少该步骤必需角色，仍然必须阻止执行"}
+      ]
+    },
+    {
+      "id": "SEC-NARROW-08",
+      "category": "principal-narrowing",
+      "title": "收窄后该步骤所需角色不再具备时暂停",
+      "defends_against": "只比较「记录 vs 当前」有没有变化，两边都不含该步骤必需角色时找不到差异，于是放行。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_narrowed_run_with_no_role_left_for_the_step_pauses"}
+      ]
+    },
+    {
+      "id": "SEC-APPROVAL-01",
+      "category": "approval-binding",
+      "title": "暂停不消耗决定、不翻状态、不写任何东西",
+      "defends_against": "续跑在能够应用之前就把审批记下来并翻转状态，于是一次暂停凭空用掉了一个决定，恢复后同一个决定无法再应用。",
+      "teeth": "M29 让审批先于可能拒绝它的续跑被记录、M30 让升级审计与状态翻转先于范围解析落地，两条测试变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_paused_resume_records_no_approval"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_paused_review_resolution_writes_nothing"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M29 the approval is recorded before the resume that can refuse it"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M30 the escalation audit and status flip land before the scope is resolved"},
+        {"kind": "acceptance", "ref": "ACC-10a", "note": "停摆时什么也不写，运行原地等待"}
+      ]
+    },
+    {
+      "id": "SEC-APPROVAL-02",
+      "category": "approval-binding",
+      "title": "被作废的动作必须重新派生，而不是被既有决定裁决",
+      "defends_against": "一个到达已被作废动作上的批准被直接应用，或把作废本身当成审批节点的决定记下来，使旧决定落在新派生的动作上。",
+      "teeth": "M35 让审批节点把作废记成它到达时的决定、M36 让作废由审批自己的分支路由而不是交回监督者，两条测试变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M35 the approval node records a void as the decision it arrived with"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M36 the void is routed by the approval's own branch instead of the supervisor"},
+        {"kind": "acceptance", "ref": "ACC-23", "note": "动作被作废后重新派生，新决定才写入，且只写一次"}
+      ]
+    },
+    {
+      "id": "SEC-APPROVAL-03",
+      "category": "approval-binding",
+      "title": "审批摘要冲突在身份核验之前就被拒绝，且什么都不发生",
+      "defends_against": "篡改 expected_action_hash 后仍能触发一次续跑，或在被拒之前留下任何写入。",
+      "teeth": "该项由验收案例 ACC-09a 的实跑观测背书：篡改一个字符得到 409、intent 不变、0 条新 followup。这条判断按真实调用顺序先于身份核验，因此它不依赖核验器是否可用。",
+      "evidence": [
+        {"kind": "acceptance", "ref": "ACC-09a"}
+      ]
+    },
+    {
+      "id": "SEC-APPROVAL-04",
+      "category": "approval-binding",
+      "title": "终态不是常备授权：引用未获批意图的调用被拒",
+      "defends_against": "任何被引用到的 intent 都授权一次写入，尤其是已经被消费过的；以及把一个终态状态读成「一直有效」。",
+      "teeth": "M13 让只有未被认领的审批才授权、M14 让状态完全不被查询、M15 让终态被读成常备授权，三条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused"},
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_write_proceeds_while_the_executor_holds_the_claim"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M13 only an unclaimed approval authorises the write the executor is performing"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M14 the status is never consulted, so any cited intent authorises a write"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M15 a terminal status is read as a standing approval"}
+      ]
+    },
+    {
+      "id": "SEC-APPROVAL-05",
+      "category": "approval-binding",
+      "title": "拒绝不是执行：它能扛过身份服务停摆，也不能被借用去批准",
+      "defends_against": "把拒绝也挂在核验器上，使一次身份服务故障连「拒绝」都做不了；以及把拒绝路径的捷径变成一个可以拿来表示同意的参数。",
+      "teeth": "M48 让拒绝重新依赖核验器、M49 让拒绝的续跑以调用者身份运行、M50 让拒绝路径接受非拒绝的输入，三条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_refusal_does_not_need_the_requester_reestablished"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_refusal_path_cannot_be_borrowed_to_approve"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_refusal_resumes_as_the_requester_without_narrowing"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M48 a refusal is gated on the verifier again (an outage can stop a decline)"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M49 the refusal resume runs as the approver who called it"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M50 the refusal path stops refusing anything but a refusal"},
+        {"kind": "acceptance", "ref": "ACC-09b", "note": "拒绝决定让运行走到终止，且不因身份服务故障而被阻止"},
+        {"kind": "acceptance", "ref": "ACC-22", "note": "身份服务不可达时暂停，恢复后同一个决定仍然可以应用"}
+      ]
+    },
+    {
+      "id": "SEC-APPROVAL-06",
+      "category": "approval-binding",
+      "title": "发起人必须持有该步骤的角色，才谈得上批准它",
+      "defends_against": "只要动作摘要对得上就允许批准，而从不问这个人的授权集里有没有该步骤要求的角色——没被撤权不等于有权执行。",
+      "teeth": "M34 不再校验步骤自身的角色要求，test_a_requester_who_never_held_the_step_role_cannot_approve_it 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_requester_who_never_held_the_step_role_cannot_approve_it"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M34 the step's own role requirement is not checked before the approval"}
+      ]
+    },
+    {
+      "id": "SEC-WRITE-01",
+      "category": "write-path-authorization",
+      "title": "execute_node 在写入前重新校验，而不是只信审批时的结论",
+      "defends_against": "审批通过之后、写入之前发生的撤权不被发现，于是一个已经失去权限的发起人仍然写出了动作。",
+      "teeth": "M21 让 execute_node 不再重新校验，test_a_grant_revoked_after_approval_stops_the_write 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_grant_revoked_after_approval_stops_the_write"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M21 execute_node stops re-checking before the write"}
+      ]
+    },
+    {
+      "id": "SEC-WRITE-02",
+      "category": "write-path-authorization",
+      "title": "写前校验绕过缓存，取当次的授权",
+      "defends_against": "用一份缓存过的授权回答去批准一次写，使写前的撤权在缓存窗口内不可见。",
+      "teeth": "M15 让写请求的续跑从缓存取、M22 让写前校验不绕过缓存，两条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_write_requester_revalidation_bypasses_the_cache"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_write_proceeds_when_every_grant_is_still_held"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M15 a write-requesting resume is served from the cache"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M22 the pre-write check does not bypass the cache"}
+      ]
+    },
+    {
+      "id": "SEC-WRITE-03",
+      "category": "write-path-authorization",
+      "title": "网关不写审批未覆盖的正文，也不信调用方自选的标记",
+      "defends_against": "调用方在审批之后改掉正文，或自己选一个标记，使一次获批的写入被换成另一次写入。",
+      "teeth": "M07 让提供方写调用方给的任何正文、M08 让提供方信任调用方选的标记，两条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover"},
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M07 the provider writes whatever body the caller sent"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M08 the provider trusts a marker the caller chose"},
+        {"kind": "acceptance", "ref": "ACC-11", "note": "批准后恰好写一次，且正文回读等于获批内容"}
+      ]
+    },
+    {
+      "id": "SEC-WRITE-04",
+      "category": "write-path-authorization",
+      "title": "回读要重新问 GLPI，并逐字比对正文",
+      "defends_against": "回读只验标记是否存在，于是正文被截断或篡改仍被判为写入成功；以及把读不到的行当成已验证。",
+      "teeth": "M10 让回读信任写入而不重新询问、M11 让回读找到行却不再比对正文、M12 让缺失的行算作已验证，三条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_write_whose_stored_body_was_truncated_is_not_verified"},
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_write_glpi_does_not_have_is_not_verified"},
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_write_whose_stored_body_matches_is_verified"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M10 the read-back trusts the write instead of asking GLPI again"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M11 the read-back finds the row but stops comparing the text"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M12 a missing row counts as a verified write"}
+      ]
+    },
+    {
+      "id": "SEC-WRITE-05",
+      "category": "write-path-authorization",
+      "title": "原始 GLPI 写入只存在于一个模块，且必须经过网关",
+      "defends_against": "任何一个代理绕开 ToolGateway 直接调用 GLPI 写接口，使统一策略与调用审计对这条路径不成立。",
+      "teeth": "该项只由通过的测试背书：三条都是源码级 AST 断言，比较的是模块集合的相等，而不是「没有出现违规」——把调用整体删掉同样会失败。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase3_security.py::test_the_raw_glpi_write_exists_in_exactly_one_module"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase3_security.py::test_the_harness_reaches_glpi_only_through_the_gateway"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase3_security.py::test_only_phase2_harness_imports_glpi_write_method"},
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_write_leaves_a_policy_decision_and_an_invocation_behind"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M01 the gateway stops recording the policy decision"}
+      ]
+    },
+    {
+      "id": "SEC-WRITE-06",
+      "category": "write-path-authorization",
+      "title": "失败的调用不被留成「未尝试」，崩溃恢复出的重复被记为重复",
+      "defends_against": "一次失败的写入把动作留成看起来从未尝试过，使它可以被无限重试；以及把一次去重协调记成第二次创建。",
+      "teeth": "M05 让失败的调用留下未尝试的样子、M06 让协调出的重复被审计成第二次创建，两条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_principal_without_the_action_role_cannot_write"},
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_the_approved_body_is_suppressed"},
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_a_different_body_is_refused"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M05 a failed call leaves the action looking untried"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M06 a reconciled duplicate is audited as a second creation"},
+        {"kind": "mutation", "ref": "scripts/mutate_glpi_write_gateway.py", "mutation": "M09 the reconcile branch stops comparing the body it found"}
+      ]
+    },
+    {
+      "id": "SEC-LIMIT-01",
+      "category": "rate-limit-and-degradation",
+      "title": "只有限流才等待，别的原因直接失败",
+      "defends_against": "任何一次失败都被当成限流来重试，于是一次传输故障被反复等待，把一次快速失败拖成一次超时。",
+      "teeth": "M01 让每个失败都被等待，test_a_failure_with_no_timing_in_it_is_not_waited_for 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_failure_with_no_timing_in_it_is_not_waited_for"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_broken_model_path_degrades_without_waiting"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M01 every failure is waited for, not just a throttle"}
+      ]
+    },
+    {
+      "id": "SEC-LIMIT-02",
+      "category": "rate-limit-and-degradation",
+      "title": "Retry-After: 0 是「立刻重试」，不是「这不是限流」",
+      "defends_against": "把零值时间提示折叠进「没有提示」，于是一次被显式要求立即重试的限流不再被重试；以及把 0 当作假值在调用点被当作「不是限流」。",
+      "teeth": "M02 与 M03 分别从两个方向把零值提示读错、M08 让调用点拒绝零值，三条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M02 a nil hint is read as 'not a throttle'"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M03 a nil hint is collapsed into the not-a-throttle answer"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M08 a nil hint is refused at the call site"}
+      ]
+    },
+    {
+      "id": "SEC-LIMIT-03",
+      "category": "rate-limit-and-degradation",
+      "title": "提供方的提示优先，调度有上限，总等待有上限",
+      "defends_against": "忽略提供方给的重试窗口、自己按无上限的指数退避等待、或把整轮重试的等待时间累积到超过运行自身的截止时间。",
+      "teeth": "M04 忽略提供方提示、M05 把非延迟的头解析成延迟、M06 让调度没有上限、M09 让总等待无界，四条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M04 the provider's own hint is ignored in favour of the schedule"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M05 a header that is not a delay is parsed as one"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M06 the schedule has no ceiling"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M09 the wait is unbounded in total"}
+      ]
+    },
+    {
+      "id": "SEC-LIMIT-04",
+      "category": "rate-limit-and-degradation",
+      "title": "等待尊重运行截止时间，并给后续阶段留余量",
+      "defends_against": "在运行已经到达截止时间时仍然等待，或把剩余时间全部花在第一阶段的退避上，使后面的分析阶段无时间可用。",
+      "teeth": "M10 让等待忽略运行截止时间、M11 把截止时间花到零，两条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_deadline_bound_is_not_the_providers_bound"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M10 the wait ignores the run's deadline"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M11 the deadline is spent down to zero instead of leaving the later stages room"}
+      ]
+    },
+    {
+      "id": "SEC-LIMIT-05",
+      "category": "rate-limit-and-degradation",
+      "title": "超过等待的限流按「限流」降级，且重试次数有界",
+      "defends_against": "无限重试同一阶段；以及把一次限流记成模型自身缺陷，使运维排查方向被误导。",
+      "teeth": "M12 让限流被无限重问、M13 让挺过等待的限流被报成模型缺陷，两条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M12 a throttle is re-asked indefinitely instead of a bounded number of times"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M13 a throttle that survived the wait is reported as a model defect"},
+        {"kind": "mutation", "ref": "scripts/mutate_rate_limit_degradation.py", "mutation": "M14 the revision call gives up on a throttle the draft path would have waited out"}
+      ]
+    },
+    {
+      "id": "SEC-LIMIT-06",
+      "category": "rate-limit-and-degradation",
+      "title": "预算为 0 的降级是显式的，且不发明缺失的能力",
+      "defends_against": "模型或工具预算耗尽后悄悄返回一个看似正常的空结果，而不是一个可被计数的降级终态；以及在没有任何能力的情况下凭空造出一次调用。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_data_bounds.py::test_zero_model_budget_is_an_explicit_degraded"},
+        {"kind": "test", "ref": "tests/servicemind/test_data_bounds.py::test_zero_tool_budget_performs_no_convenience_read"},
+        {"kind": "test", "ref": "tests/servicemind/test_data_bounds.py::test_degraded_plan_never_invents_a_missing_capability"},
+        {"kind": "test", "ref": "tests/servicemind/test_data_bounds.py::test_plan_degrade_drops_followups_when_tool_budget_is_two"},
+        {"kind": "test", "ref": "tests/servicemind/test_data_bounds.py::test_plan_degrade_keeps_single_ticket_read_at_budget_one"}
+      ]
+    },
+    {
+      "id": "SEC-INJECT-01",
+      "category": "prompt-injection",
+      "title": "每个规范注入标记在写入时被隔离，且词表不可悄悄缩小",
+      "defends_against": "一个已知的注入短语被写进记忆或语料后成为可用证据；以及有人删掉词表里的一条，使覆盖范围静默缩小而没有任何测试变红。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验；但第二条测试本身就是防缩小断言（词表必须仍覆盖它名字所指的那些攻击）。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_every_canonical_injection_marker_is_quarantined_on_write"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_the_shared_vocabulary_still_covers_the_attacks_it_is_named_for"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase6_tool_platform.py::test_tool_policy_uses_the_canonical_injection_vocabulary"}
+      ]
+    },
+    {
+      "id": "SEC-INJECT-02",
+      "category": "prompt-injection",
+      "title": "已存的注入标记在读取侧仍被拦截",
+      "defends_against": "在词表建立之前就已入库的行绕过写入侧检查，此后每次读取都把它当正常证据交给模型。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_read_side_injection_tripwire_blocks_stored_marker"}
+      ]
+    },
+    {
+      "id": "SEC-INJECT-03",
+      "category": "prompt-injection",
+      "title": "注入行被标记、不得到达模型，并从语料中撤下",
+      "defends_against": "注入内容仅被标注却仍进入模型输入；以及被污染的文档留在语料里，在后续每次运行中被反复检索到。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_an_injected_row_is_marked_and_an_ordinary_one_is_not"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_an_injected_row_never_reaches_the_model"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_an_injected_document_is_withdrawn_from_the_corpus"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_a_withdrawal_that_fails_still_leaves_the_run_safe"}
+      ]
+    },
+    {
+      "id": "SEC-INJECT-04",
+      "category": "prompt-injection",
+      "title": "模型读取的边界声明它来自哪条通道，且记忆带着作者身份",
+      "defends_against": "检索到的文本与指令在提示里不可区分，使一段文档内容被模型当作指令执行。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_the_boundary_a_model_reads_from_says_which_channel_it_is"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_a_memory_reaches_the_model_with_the_identity_of_who_wrote_it"}
+      ]
+    },
+    {
+      "id": "SEC-BOUNDS-01",
+      "category": "data-bounds",
+      "title": "超大载荷被截断而不是崩溃，且截断被标记",
+      "defends_against": "一张正文超长的工单或 followup 让证据构建抛错，使整个运行失败；以及内容被截断却不留标记，让下游以为是完整内容。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_data_bounds.py::test_oversized_ticket_payload_never_crashes_evidence"},
+        {"kind": "test", "ref": "tests/servicemind/test_data_bounds.py::test_oversized_followups_each_bounded"},
+        {"kind": "test", "ref": "tests/servicemind/test_data_bounds.py::test_bounded_json_content_truncates_oversized_payload"}
+      ]
+    },
+    {
+      "id": "SEC-BOUNDS-02",
+      "category": "data-bounds",
+      "title": "行数上限成立，且平台自产的 followup 不计入证据",
+      "defends_against": "一次读取把整张工单历史拉进证据，挤掉真正相关的知识行。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_data_bounds.py::test_group_and_followup_row_ceilings"}
+      ]
+    },
+    {
+      "id": "SEC-BOUNDS-03",
+      "category": "data-bounds",
+      "title": "超长身份是 401 而不是 500",
+      "defends_against": "一个超长 subject 或 username 让身份解析在数据库层抛错，把一次身份拒绝暴露成一次服务端故障。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_identity_boundary.py::test_an_over_long_subject_is_a_401_not_a_500"},
+        {"kind": "test", "ref": "tests/servicemind/test_identity_boundary.py::test_an_over_long_username_is_a_401_too"},
+        {"kind": "test", "ref": "tests/servicemind/test_identity_boundary.py::test_an_identity_longer_than_its_column_is_not_an_identity"}
+      ]
+    },
+    {
+      "id": "SEC-BOUNDS-04",
+      "category": "data-bounds",
+      "title": "有界错误保留说明成因的那一端",
+      "defends_against": "错误文本只截头端，使 schema 违规一类把成因写在末尾的失败变成不可诊断的一行，运维无法定位。",
+      "teeth": "该项只由通过的测试背书；此前的头端切片版本正是 ACC-07 的实测成因。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_foundation_errors.py::test_a_bounded_error_keeps_the_end_that_states_the_cause"},
+        {"kind": "test", "ref": "tests/servicemind/test_foundation_errors.py::test_a_bounded_error_reports_the_exception_type_and_leaves_short_text_alone"},
+        {"kind": "test", "ref": "tests/servicemind/test_foundation_errors.py::test_a_bounded_error_is_the_one_clip_the_orchestration_layer_uses"}
+      ]
+    },
+    {
+      "id": "SEC-SELF-01",
+      "category": "self-authored-evidence",
+      "title": "平台自产的 followup 不得成为后续运行的证据",
+      "defends_against": "平台自己写的评审 followup 在后续运行中被当成工单记录重新纳入证据池，因来源是 GLPI 而权威更高，形成自我强化回路。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验；标记的误识别边界（近似但不成立的标记不得被判为自产）也在同一条测试里锁住。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_data_bounds.py::test_the_authorship_marker_recognises_the_platform_and_only_the_platform"},
+        {"kind": "test", "ref": "tests/servicemind/test_data_bounds.py::test_platform_authored_followups_never_become_evidence"}
+      ]
+    },
+    {
+      "id": "SEC-SELF-02",
+      "category": "self-authored-evidence",
+      "title": "评审器按分析实际看到的证据集判定",
+      "defends_against": "评审器看到的证据是「分析所见 ∪ 分析被裁掉的」，即按分析代理从未见过的材料判定它。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_the_reviewer_is_judged_against_the_evidence_the_analyst_was_shown"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_a_cited_row_the_analyst_was_not_shown_still_reaches_the_reviewer"}
+      ]
+    },
+    {
+      "id": "SEC-SELF-03",
+      "category": "self-authored-evidence",
+      "title": "检索查询不得回显进模型可见的证据",
+      "defends_against": "查询文本（含模型改写后的查询与评审反馈原文）随证据行进入模型输入，形成一条把上游指令回灌进下游提示的通道。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验；第三条测试同时锁住误伤——非查询来源的元数据不得被一并剥掉。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_evidence_query_echo.py::test_knowledge_evidence_does_not_carry_the_retrieval_query"},
+        {"kind": "test", "ref": "tests/servicemind/test_evidence_query_echo.py::test_the_model_visible_boundary_strips_query_bookkeeping"},
+        {"kind": "test", "ref": "tests/servicemind/test_evidence_query_echo.py::test_metadata_that_is_not_query_derived_is_never_dropped"}
+      ]
+    },
+    {
+      "id": "SEC-IDEM-01",
+      "category": "idempotency",
+      "title": "同一个幂等键配不同参数必须被拒绝",
+      "defends_against": "重放一个已用过的幂等键但换掉参数，使第二次调用拿到第一次的结果或被当成一次新调用执行。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase6_tool_platform.py::test_gateway_enforces_contract_policy_audit_and_exact_replay"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase6_tool_platform.py::test_idempotency_ledger_is_bounded_and_failed_entries_can_be_released"}
+      ]
+    },
+    {
+      "id": "SEC-IDEM-02",
+      "category": "idempotency",
+      "title": "一次运行只撤下一篇文档，干净的运行什么都不撤",
+      "defends_against": "同一次运行中对同一篇文档反复发起撤回，制造重复的撤回事件；以及无污染的运行误撤文档。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_one_run_withdraws_a_document_once"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_a_clean_run_withdraws_nothing"}
+      ]
+    },
+    {
+      "id": "SEC-IDEM-03",
+      "category": "idempotency",
+      "title": "TTL 之内的重试解析到同一个任务",
+      "defends_against": "客户端重试一次长任务时拿到第二个任务，同一次业务动作被平台执行两遍。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase6_tool_platform.py::test_a_retry_of_a_live_request_still_resolves_to_its_task"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase6_tool_platform.py::test_a_task_inside_its_ttl_is_untouched"}
+      ]
+    },
+    {
+      "id": "SEC-OUTBOX-01",
+      "category": "outbox-retention",
+      "title": "发布到出箱流时有界，且载荷只带引用不带正文",
+      "defends_against": "流无限增长最终撑爆 Redis；以及出箱消息里带着业务正文，使一次内部投递成为一次数据外扩。",
+      "teeth": "M01 让发布不带界、M02 让界变成精确裁剪使每次发布都要付出查找代价，两条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M01 the stream is published to without a bound"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M02 the stream bound is exact, so every publish pays to find the cut"}
+      ]
+    },
+    {
+      "id": "SEC-OUTBOX-02",
+      "category": "outbox-retention",
+      "title": "清理只退休「已投递且已过龄」的行",
+      "defends_against": "清理删掉尚未投递的行，使一次尚未发生的投递被永久取消；以及以「等待时长」而不是「投递时刻」计量，把刚投递的行当成已过龄。",
+      "teeth": "M03 到 M06 分别让清理忘记已投递、忘记等待过龄、用等待替代投递、连未投递的行一起删，四条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M03 retention forgets which rows it has delivered"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M04 retention forgets to wait for the delivery record to age"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M05 retention measures the wait, not the delivery"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M06 retention also retires the rows that were never delivered"}
+      ]
+    },
+    {
+      "id": "SEC-OUTBOX-03",
+      "category": "outbox-retention",
+      "title": "清理分页、有上限、有节奏，且可被取消",
+      "defends_against": "一次清理只处理一页导致积压永不消退；一次清理没有上限以至于压住它本该服务的发布；以及关闭 worker 被当成清理失败而卡住停机。",
+      "teeth": "M07 让一次只取一页、M08 让一次没有上限、M11 让清理根本到不了、M12 让它每次投递都跑、M10 让停机被当成要停下来的失败，五条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M07 one sweep takes a single page however much has aged out"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M08 one sweep has no ceiling, so it can outlast the publishing it interrupts"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M10 shutting the worker down is treated as a retention failure to stop on"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M11 the sweep is never reached from the delivery loop"},
+        {"kind": "mutation", "ref": "scripts/mutate_outbox_retention.py", "mutation": "M12 the sweep is un-scheduled and would run on every delivery"}
+      ]
+    },
+    {
+      "id": "SEC-CRASH-01",
+      "category": "crash-recovery",
+      "title": "暂停的运行既不被恢复也不被标记失败",
+      "defends_against": "一次无法确认授权的暂停在恢复扫描里被当成「需要重跑」而重新启动，或干脆被标记为失败，使一次等待变成一次终止。",
+      "teeth": "M25 让暂停的运行被标记 FAILED，test_a_paused_run_is_neither_recovered_nor_failed 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_recovery.py::test_a_paused_run_is_neither_recovered_nor_failed"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M25 a paused run is marked FAILED"}
+      ]
+    },
+    {
+      "id": "SEC-CRASH-02",
+      "category": "crash-recovery",
+      "title": "崩溃的修订不得发布它正在修复的草稿",
+      "defends_against": "修订模型崩溃后，那个正被修复的、已知有缺陷的草稿被当成最终答案发布；以及把这次崩溃记成一次「事实基础不足」，掩盖真实成因，并让一次没有发生的模型调用计入预算。",
+      "teeth": "M01 到 M04 分别让草稿留在原地、把崩溃改标为事实基础失败、不说明是什么崩溃了、以及让未发生的调用占用预算，四条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing"},
+        {"kind": "test", "ref": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure"},
+        {"kind": "mutation", "ref": "scripts/mutate_revision_crash.py", "mutation": "M01 the crashed revision leaves the draft it was repairing in place"},
+        {"kind": "mutation", "ref": "scripts/mutate_revision_crash.py", "mutation": "M02 the crashed revision is relabeled as a grounding failure"},
+        {"kind": "mutation", "ref": "scripts/mutate_revision_crash.py", "mutation": "M03 the crash is recorded without saying what crashed"},
+        {"kind": "mutation", "ref": "scripts/mutate_revision_crash.py", "mutation": "M04 the crashed revision still counts against the model budget it never spent"}
+      ]
+    },
+    {
+      "id": "SEC-CRASH-03",
+      "category": "crash-recovery",
+      "title": "装配不了的上下文、被 schema 拒绝的决定、双重失败都走向 finalize",
+      "defends_against": "编排层的异常直接打崩图，使运行停在「时间线突然中断」的状态——没有成因、没有节点、无法复现。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_the_graph"},
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_graph"},
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_replan_double_failure_finalizes_without_raw_runtime_error"},
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_control_plane_that_cannot_choose_still_terminates"}
+      ]
+    },
+    {
+      "id": "SEC-CRASH-04",
+      "category": "crash-recovery",
+      "title": "每个终态路径发布同一种证据形状",
+      "defends_against": "成功、取消、弃答三条终态写出三种不同的 result.evidence 形状，使下游按形状分支时把「没有证据」读成「另一种编码」。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_every_terminal_path_publishes_one_evidence_shape"},
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_run_that_joined_nothing_still_publishes_the_envelope"}
+      ]
+    },
+    {
+      "id": "SEC-CRASH-05",
+      "category": "crash-recovery",
+      "title": "监督者的历次拒绝在重试后仍然有效",
+      "defends_against": "一个被拒绝的方案在重试时只带着最新一条拒绝去改写，使更早被否决的写法重新出现在下一版方案里。",
+      "teeth": "M01 让一条拒绝被下一条拒绝消耗掉、M02 提示词只列拒绝不说它们仍然有效、M03 只保留最新一条，三条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it"},
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold"},
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_two_rejections_in_a_row_are_still_correctable"},
+        {"kind": "mutation", "ref": "scripts/mutate_supervisor_feedback.py", "mutation": "M01 a rejection is spent by the rejection that follows it"},
+        {"kind": "mutation", "ref": "scripts/mutate_supervisor_feedback.py", "mutation": "M02 the prompt lists the rejections without saying they still hold"},
+        {"kind": "mutation", "ref": "scripts/mutate_supervisor_feedback.py", "mutation": "M03 the prompt keeps only the newest rejection"}
+      ]
+    },
+    {
+      "id": "SEC-VERIFIER-01",
+      "category": "verifier-availability",
+      "title": "默认不安装任何核验器",
+      "defends_against": "为了让续跑能跑通而默认启用一个需要 realm 只读管理员凭据的核验器，把一次安全默认换成一次便利。",
+      "teeth": "M26 让部署装配永不安装核验器（反向：正对照必须能装上一个 Keycloak 核验器），两条测试分别变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_default_configuration_installs_no_verifier"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_configured_deployment_installs_a_keycloak_verifier"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M26 the deployment wiring never installs a verifier"}
+      ]
+    },
+    {
+      "id": "SEC-VERIFIER-02",
+      "category": "verifier-availability",
+      "title": "不可达的身份服务是「不可用」，不是「空授权集」",
+      "defends_against": "一次网络故障被当成一个「该用户没有任何权限」的回答，于是身份服务的一次抖动变成一次静默缩权，甚至一次写入被拒。",
+      "teeth": "M20 让不可达的 realm 被读成空授权集，test_an_unreachable_realm_is_unavailable_not_empty 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_an_unreachable_realm_is_unavailable_not_empty"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_default_configuration_pauses_every_resume"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M20 an unreachable realm is read as an empty grant set"}
+      ]
+    },
+    {
+      "id": "SEC-VERIFIER-03",
+      "category": "verifier-availability",
+      "title": "realm 读取把每个 HTTP 回答映射到它自己的结果",
+      "defends_against": "把 404 读成服务端故障、把禁用账号读成启用账号、或用可变的名字而不是不可变 id 去寻址主体，使一次身份服务的否定被读成肯定。",
+      "teeth": "M16 到 M19 与 M27 分别让失败被缓存成回答、404 被读成服务端错误、禁用被读成启用、用名字寻址、缓存过的回答不被标记为缓存，五条测试全部指向同一条映射测试。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_realm_reader_maps_each_answer_to_its_own_outcome"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M16 the realm reader caches a failure as if it were an answer"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M17 an HTTP 404 is read as a server error instead of an unknown subject"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M18 a disabled subject is read as an enabled one"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M19 the subject is addressed by name instead of by immutable id"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M27 a cached answer is not marked as cached"}
+      ]
+    },
+    {
+      "id": "SEC-VERIFIER-04",
+      "category": "verifier-availability",
+      "title": "决定所用的授权时间窗被记录，新回答不记",
+      "defends_against": "一次决策无法说明它依据的是哪一段授权快照，使「这次写入是凭什么获批的」无法回溯。",
+      "teeth": "M28 让决策所用授权的时间窗不被记录，test_the_revocation_window_a_decision_used_is_recorded 变红。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_revocation_window_a_decision_used_is_recorded"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_fresh_answer_records_no_staleness"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_an_established_but_empty_grant_set_is_not_a_failure"},
+        {"kind": "mutation", "ref": "scripts/mutate_phase7_permissions.py", "mutation": "M28 the revocation window the decision used is not recorded"}
+      ]
+    },
+    {
+      "id": "SEC-WEBHOOK-01",
+      "category": "webhook-authenticity",
+      "title": "签名绑定正文、时间戳与密钥",
+      "defends_against": "只用正文或只用签名的一部分做校验，使攻击者可以在不改签名的情况下改掉时间戳或正文。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_webhooks.py::test_signature_is_body_timestamp_and_secret_bound"},
+        {"kind": "test", "ref": "tests/servicemind/test_webhooks.py::test_parse_glpi_webhook"}
+      ]
+    },
+    {
+      "id": "SEC-WEBHOOK-02",
+      "category": "webhook-authenticity",
+      "title": "畸形签名头是干净的拒绝，不是 500",
+      "defends_against": "非 ASCII 时间戳、过短摘要、大写十六进制或空签名让校验抛出一个未捕获的类型错误，把一次拒绝暴露成一次服务端故障。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_webhooks.py::test_a_malformed_signature_header_is_a_clean_rejection_not_a_500"}
+      ]
+    },
+    {
+      "id": "SEC-WEBHOOK-03",
+      "category": "webhook-authenticity",
+      "title": "过期投递与超长事件在进入运行之前被拒",
+      "defends_against": "重放一个早已过期的合法投递；以及一个超长事件被拼进 run 的 goal，越过下游对 goal 长度的契约。",
+      "teeth": "该项只由通过的测试背书；第三条测试锁住的是算术——事件长度上限与 goal 长度上限必须恰好相等，多一个字符就要失败。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_webhooks.py::test_expired_webhook_is_rejected"},
+        {"kind": "test", "ref": "tests/servicemind/test_webhooks.py::test_an_over_long_event_is_rejected_before_it_reaches_the_run_goal"},
+        {"kind": "test", "ref": "tests/servicemind/test_webhooks.py::test_every_admissible_event_composes_into_a_goal_the_plan_contract_accepts"},
+        {"kind": "test", "ref": "tests/servicemind/test_webhooks.py::test_webhook_run_id_is_deterministic_and_tenant_scoped"}
+      ]
+    },
+    {
+      "id": "SEC-CRED-01",
+      "category": "credential-handling",
+      "title": "跨租户的调用在解析凭证之前被拒；动作代理不持有凭证",
+      "defends_against": "先按调用方给的租户去取凭证、再检查租户是否匹配，使一次越权调用已经在别的租户的凭证上留下了痕迹；以及把集成凭证明文交给生成建议的代理，让它成为提示注入的一个可读目标。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验；第一条测试断言的正是「拒绝发生在解析之前」这个顺序，而不只是「最后抛了错」。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_enterprise_subagents.py::test_tool_gateway_rejects_cross_tenant_before_resolving_credentials"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase3_agents.py::test_action_agent_is_credential_free_and_requires_passed_handoff"}
+      ]
+    },
+    {
+      "id": "SEC-CRED-02",
+      "category": "credential-handling",
+      "title": "密钥类内容被网关与记忆硬门禁拦下，不落进证据",
+      "defends_against": "一段被标记为 secret 的参数穿过工具契约进入调用，或一条含密钥的记忆被当成可用证据交给模型，使一次凭据泄露经由平台自身的治理链路完成。",
+      "teeth": "该项只由通过的测试背书，没有对应的变异实验。",
+      "evidence": [
+        {"kind": "test", "ref": "tests/servicemind/test_phase6_tool_platform.py::test_gateway_rejects_schema_capability_role_entity_taint_and_secret"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase5_governance.py::test_memory_hard_gates_block_secrets_and_quarantine_unverified_evidence"}
+      ]
+    }
+  ],
+  "not_covered": [
+    "对抗性投喂的注入词表：本集只验证「已列入词表的标记」被处理，没有任何一条场景向平台投喂过词表之外的新注入变体。",
+    "长期或跨 checkpoint 重启的撤权：六类撤权（撤组/撤实体/撤角色/禁用用户/查询故障/写前撤权）已由 ACC-18…ACC-23 实跑覆盖，但「撤权发生在服务重启之后」与「撤权与限流叠加」未测。",
+    "凭证的静态保护：上面两条只证明「凭证不被交给不该拿它的代理」与「密钥类内容被拦下」， CredentialCipher 的 InvalidToken 失败路径没有测试，轮换密钥后旧密文的可读性也未评估。",
+    "跨租户令牌在 get_tenant_context 处被拒：目前只由 checkpoint 的租户校验间接背书，没有一条场景直接投递一个别的 realm 的有效令牌。",
+    "人工记忆审查界面的授权边界：memory_review 端点的角色与租户约束没有一条场景覆盖。",
+    "依赖组件的供应链与镜像漏洞：由 CI 的 trivy 扫描与 SBOM 承担，不在本场景集内。",
+    "拒绝服务与容量：并发压测、长稳与故障注入属于 P7.6.7，不在本集。",
+    "审计日志的篡改检测：本集只验证事件被写下及关联到运行，不验证已写下的审计行不可被有权限的操作者改写。"
+  ]
+}

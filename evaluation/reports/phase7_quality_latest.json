@@ -1,0 +1,1746 @@
+{
+  "answerable_rate_target": 0.85,
+  "answerable_rate_target_source": "租户参考阈值 0.85（docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md 的 Recall@5 租户门槛），在本批次运行之前登记。这不是从结果倒推的数字：若实测低于它，正确的反应是查明原因并报告，而不是下调它。",
+  "blockers": [
+    "Q-005: did not answer. terminal='succeeded', review=None",
+    "Q-011: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-020: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-024: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-030: did not answer. terminal='succeeded', review=None",
+    "Q-031: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-037: did not answer. terminal='succeeded', review=None",
+    "Q-037: the answer is in ['KB-Q-SVCACCT'] and the run did not cite it (cited [])",
+    "Q-040: did not answer. terminal='succeeded', review=None",
+    "Q-040: the answer is in ['KB-Q-SVCACCT'] and the run did not cite it (cited [])",
+    "Q-043: did not answer. terminal='succeeded', review='abstain'",
+    "Q-047: did not answer. terminal='succeeded', review='abstain'",
+    "Q-060: did not answer. terminal='succeeded', review=None",
+    "Q-062: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-070: did not answer. terminal='succeeded', review=None",
+    "Q-070: the answer is in ['KB-Q-STORAGE'] and the run did not cite it (cited [])",
+    "Q-074: did not answer. terminal='succeeded', review=None",
+    "Q-074: the answer is in ['KB-Q-SEVERITY'] and the run did not cite it (cited [])",
+    "Q-075: did not answer. terminal='succeeded', review=None",
+    "Q-075: the answer is in ['KB-Q-SEVERITY'] and the run did not cite it (cited [])",
+    "Q-076: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-080: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-100: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-103: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-110: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-123: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-129: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-130: did not answer. terminal='succeeded', review=None",
+    "Q-130: did not cite the current document ['KB-Q-API-V2']",
+    "Q-135: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-137: did not answer. terminal='succeeded', review=None",
+    "Q-139: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-146: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-164: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-166: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
+    "Q-168: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
+    "Q-171: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-174: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
+    "Q-178: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
+    "Q-182: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
+    "Q-188: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
+    "Q-191: the run did not reach a terminal status (saw 'waiting_review')",
+    "Q-192: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
+    "Q-194: the reviewer recorded 1 claim(s) its citations do not support, on a question the corpus does not cover (cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-CLASS-V2', 'KB-Q-DB-FAILOVER', 'KB-Q-LIC-V2', 'KB-Q-PASSWORD', 'KB-Q-RAP-V2'])",
+    "Q-196: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
+    "Q-200: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown",
+    "3 case(s) in an absolute class failed, and those classes have no rate at which a violation becomes acceptable"
+  ],
+  "cases": [
+    {
+      "case_id": "Q-001",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What is the minimum VPN client version that can negotiate the current TLS profile?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-002",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How long is a VPN device certificate valid before it needs renewing?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-003",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Which directory should be cleared to reset a stuck VPN client, and which service is restarted?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-004",
+      "findings": [],
+      "kind": "answerable",
+      "question": "If the VPN handshake fails twice within five minutes, are further reconnects attempted automatically?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-005",
+      "findings": [
+        "Q-005: did not answer. terminal='succeeded', review=None"
+      ],
+      "kind": "answerable",
+      "question": "Which team owns the VPN client connectivity procedure, and what is its response commitment?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-006",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What does the client log look like when a client version is too old to negotiate TLS?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-007",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What symptoms in the client log indicate that the VPN tunnel did not complete?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-008",
+      "findings": [],
+      "kind": "answerable",
+      "question": "After clearing the client state, how many reconnects are attempted before escalating?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-009",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What must be captured before a Network Team ticket is opened for a VPN handshake failure?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-010",
+      "findings": [],
+      "kind": "answerable",
+      "question": "A laptop VPN session handshakes but carries no traffic. What is the first thing to check?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-011",
+      "findings": [
+        "Q-011: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "answerable",
+      "question": "Is SMS accepted as a multi-factor enrolment factor, and why or why not?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-012",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How long is a multi-factor device binding valid?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-013",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How many recovery codes are issued to an account at enrolment?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-014",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Can a recovery code be used more than once?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-015",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How many recovery codes must remain before the console prompts for regeneration?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-016",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What happens to previously issued recovery codes when new ones are generated?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-017",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Is multi-factor authentication ever turned off to work around a lost device?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-018",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What replaces a lost authentication device?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-019",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What two checks are required before a device can be rebound?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-020",
+      "findings": [
+        "Q-020: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "answerable",
+      "question": "Which team owns multi-factor authentication enrolment and recovery?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-021",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How long is a self-service password reset link valid, and how many times can it be used?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-022",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How many failed sign-in attempts lock an account, and for how long?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-023",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Can a service desk operator clear an account lockout early?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-024",
+      "findings": [
+        "Q-024: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "answerable",
+      "question": "What is the minimum password length?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-025",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Is routine password rotation on a schedule required?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-026",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Under what circumstance is a password rotation required?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-027",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How many previous passwords cannot be reused?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-028",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How is a new password delivered after an assisted reset?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-029",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What must the operator verify an assisted-reset caller against?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-030",
+      "findings": [
+        "Q-030: did not answer. terminal='succeeded', review=None"
+      ],
+      "kind": "answerable",
+      "question": "Which team owns the password reset procedure?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-031",
+      "findings": [
+        "Q-031: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "answerable",
+      "question": "What three things must a service account have at creation?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-032",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What is the maximum permitted expiry for a new service account?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-033",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How often do service account credentials rotate, and is it automated?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-034",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How long is the overlap window during which both old and new service account credentials are accepted?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-035",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Can the service account credential overlap window be extended?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-036",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How often is every service account reviewed?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-037",
+      "findings": [
+        "Q-037: did not answer. terminal='succeeded', review=None",
+        "Q-037: the answer is in ['KB-Q-SVCACCT'] and the run did not cite it (cited [])"
+      ],
+      "kind": "answerable",
+      "question": "What happens at review to a service account whose owner has left?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-038",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How long after suspension is a service account deleted?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-039",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How long are logs retained after a service account is deleted?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-040",
+      "findings": [
+        "Q-040: did not answer. terminal='succeeded', review=None",
+        "Q-040: the answer is in ['KB-Q-SVCACCT'] and the run did not cite it (cited [])"
+      ],
+      "kind": "answerable",
+      "question": "Is a service account without a named owner permitted?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-041",
+      "findings": [],
+      "kind": "answerable",
+      "question": "At what time does the daily full database backup run?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-042",
+      "findings": [],
+      "kind": "answerable",
+      "question": "When and how often does the database restore test run?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-043",
+      "findings": [
+        "Q-043: did not answer. terminal='succeeded', review='abstain'"
+      ],
+      "kind": "answerable",
+      "question": "How long are daily database backups retained?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-044",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How long are monthly database backups retained?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-045",
+      "findings": [],
+      "kind": "answerable",
+      "question": "When is a database backup considered retained?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-046",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What has to be true for a database backup to be considered verified?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-047",
+      "findings": [
+        "Q-047: did not answer. terminal='succeeded', review='abstain'"
+      ],
+      "kind": "answerable",
+      "question": "How many nominated tables are compared during restore verification, and to what tolerance?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-048",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What happens when a database backup fails verification?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-049",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What is the database recovery point objective?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-050",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What is the database recovery time objective?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-051",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What automatically triggers a database failover, and after how long?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-052",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Is a slow query on its own enough to trigger a database failover?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-053",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What replay lag must the standby be within before it is promoted?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-054",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What has to happen to the connection pooler during a database failover?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-055",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What application write success rate must be recovered after failover?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-056",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What must be rebuilt before the next maintenance window after a failover?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-057",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Is a promoted standby ever demoted?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-058",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What does reverting a database failover require?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-059",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Who can decide to fail the database over explicitly?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-060",
+      "findings": [
+        "Q-060: did not answer. terminal='succeeded', review=None"
+      ],
+      "kind": "answerable",
+      "question": "Which team owns the database failover runbook?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-061",
+      "findings": [],
+      "kind": "answerable",
+      "question": "At what utilisation does storage raise a warning?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-062",
+      "findings": [
+        "Q-062: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "answerable",
+      "question": "At what utilisation does storage raise a high-water alert?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-063",
+      "findings": [],
+      "kind": "answerable",
+      "question": "At what utilisation does storage raise a critical alert?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-064",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How often are storage capacity alerts evaluated?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-065",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How quickly must the owning team plan expansion at the warning level?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-066",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How quickly must expansion be scheduled at the high-water level?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-067",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How quickly must expansion be performed at the critical level, and who is paged?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-068",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What is the thin provisioning reserve on storage volumes?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-069",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Does the thin provisioning reserve count towards the reported utilisation?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-070",
+      "findings": [
+        "Q-070: did not answer. terminal='succeeded', review=None",
+        "Q-070: the answer is in ['KB-Q-STORAGE'] and the run did not cite it (cited [])"
+      ],
+      "kind": "answerable",
+      "question": "What storage growth rate triggers a monthly owner review?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-071",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What qualifies as a SEV1 incident?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-072",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What proportion of customer-facing requests must be affected for a SEV2?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-073",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How quickly must a SEV1 be acknowledged?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-074",
+      "findings": [
+        "Q-074: did not answer. terminal='succeeded', review=None",
+        "Q-074: the answer is in ['KB-Q-SEVERITY'] and the run did not cite it (cited [])"
+      ],
+      "kind": "answerable",
+      "question": "How often must a SEV1 be updated?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-075",
+      "findings": [
+        "Q-075: did not answer. terminal='succeeded', review=None",
+        "Q-075: the answer is in ['KB-Q-SEVERITY'] and the run did not cite it (cited [])"
+      ],
+      "kind": "answerable",
+      "question": "How quickly must a SEV2 be acknowledged, and how often updated?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-076",
+      "findings": [
+        "Q-076: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "answerable",
+      "question": "How quickly must a SEV3 be acknowledged?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-077",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How is a SEV3 reviewed?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-078",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What is the review deadline for a SEV1?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-079",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What is the review deadline for a SEV2?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-080",
+      "findings": [
+        "Q-080: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "answerable",
+      "question": "What is a SEV4 incident?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-081",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How soon after a major incident is declared is the first customer-facing notice published?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-082",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How often are updates published during a SEV1?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-083",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How often are updates published during a SEV2?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-084",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What three things must a major incident notice state?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-085",
+      "findings": [],
+      "kind": "answerable",
+      "question": "May a notice state a cause that has not been confirmed?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-086",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Who decides whether regulators are notified about a major incident?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-087",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Under what condition are regulators notified about a major incident?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-088",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How soon after resolution is a resolution notice published?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-089",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Where is the customer notice published?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-090",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What do internal stakeholders receive beyond the customer notice?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-091",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Which change category needs no approval at all?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-092",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How many approvers does a normal change need, and from where?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-093",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What does a significant change require?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-094",
+      "findings": [],
+      "kind": "answerable",
+      "question": "When does the change advisory board meet?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-095",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How long before the board meeting do papers close?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-096",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Can a significant change be approved at the meeting if it was not on the agenda?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-097",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What does an emergency change require?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-098",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Does emergency change approval waive the later review?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-099",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What is the minimum lead time between approval and implementation for a significant change?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-100",
+      "findings": [
+        "Q-100: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "answerable",
+      "question": "Which office owns change approval and the change advisory board?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-101",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What error rate triggers an automatic release rollback, over how long?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-102",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What latency condition triggers an automatic release rollback?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-103",
+      "findings": [
+        "Q-103: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "answerable",
+      "question": "When is a release declared stable?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-104",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Can a release carrying a forward-only data migration be rolled back?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-105",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What is done instead when a release carries a forward-only migration?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-106",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Where must forward-only migrations be stated before a release is approved?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-107",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What must every rollback record?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-108",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Who may roll a release back manually?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-109",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How long does the release manager have to roll back manually?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-110",
+      "findings": [
+        "Q-110: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "answerable",
+      "question": "Which team owns the release rollback criteria?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-111",
+      "findings": [],
+      "kind": "answerable",
+      "question": "When do managed servers patch each month, and in what window?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-112",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Within how long do laptops patch once a patch is available, and how many defers are allowed?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-113",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Within how long must a vendor-rated critical patch be deployed?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-114",
+      "findings": [],
+      "kind": "answerable",
+      "question": "When does the critical patch clock start?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-115",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Who schedules a server reboot for patching?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-116",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What happens to a laptop that has not rebooted by the end of its patching window?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-117",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What does a patching exception require?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-118",
+      "findings": [],
+      "kind": "answerable",
+      "question": "How long does a patching exception last?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-119",
+      "findings": [],
+      "kind": "answerable",
+      "question": "What happens when a patching exception expires?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-120",
+      "findings": [],
+      "kind": "answerable",
+      "question": "Which team owns endpoint patching windows?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-121",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "How long is a remote access device binding valid, and is renewal self-service?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-122",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "How is a remote access device enrolled, and how long until the certificate is issued?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-123",
+      "findings": [
+        "Q-123: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "version-conflict",
+      "question": "Who is allowed to release an email quarantined as phishing?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-124",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "How long are quarantined emails held before they are deleted?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-125",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "Which laptops must have full disk encryption, and who holds the recovery key?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-126",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "What happens to a laptop that stays out of encryption compliance for a week?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-127",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "What is the monthly print quota, and is there an overdraft?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-128",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "How are printed pages charged, and how does duplex printing count?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-129",
+      "findings": [
+        "Q-129: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "version-conflict",
+      "question": "What are the public API rate limits per key and per tenant?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-130",
+      "findings": [
+        "Q-130: did not answer. terminal='succeeded', review=None",
+        "Q-130: did not cite the current document ['KB-Q-API-V2']"
+      ],
+      "kind": "version-conflict",
+      "question": "What HTTP status does the API gateway return when a client is rate limited?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-131",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "How long are daily and monthly backups retained?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-132",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "How quickly must a restore request be answered for a full restore and for a single table?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-133",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "How quickly must a critical vulnerability be remediated?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-134",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "When does the vulnerability remediation clock start?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-135",
+      "findings": [
+        "Q-135: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "version-conflict",
+      "question": "How long is an on-call rotation, and when does handover happen?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-136",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "What happens if the on-call primary does not acknowledge a page?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-137",
+      "findings": [
+        "Q-137: did not answer. terminal='succeeded', review=None"
+      ],
+      "kind": "version-conflict",
+      "question": "Which traffic is routed through the VPN tunnel under the current split tunnel policy?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-138",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "Is a full tunnel profile available, and under what conditions?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-139",
+      "findings": [
+        "Q-139: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "version-conflict",
+      "question": "What are the data classification levels?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-140",
+      "findings": [],
+      "kind": "version-conflict",
+      "question": "How is an unlabelled document treated under the data classification standard?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-141",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "What is the Network Team's tier 3 escalation queue called and what is its response commitment?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-142",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "Who must agree before the carrier escalation contact can be used?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-143",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "When is the network change freeze, and what is permitted during it?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-144",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "Who must agree to a network change freeze exception?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-145",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "How many spare access switches and distribution switches does the Network Team hold?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-146",
+      "findings": [
+        "Q-146: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "must-refuse-access",
+      "question": "When is a network spare hardware reorder raised?",
+      "subject": "globex-analyst-g4",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-147",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "What badge group is required to enter the satellite office server room?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-148",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "How often is the satellite office server room alarm code changed?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-149",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "How much notice must planned data hall power work be given?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-150",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "What is the supervision requirement for data hall power work?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-151",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "Which IP range is reserved for the satellite offices?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-152",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "How quickly must a reservation for a decommissioned device be released?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-153",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "How long are network device configuration exports retained as compliance evidence?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-154",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "Who may read the compliance evidence bucket?",
+      "subject": "globex-analyst-g4",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-155",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "How is a caller verified before the Service Desk acts on their request?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-156",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "When may a Service Desk ticket be closed?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-157",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "At what times does the Service Desk hold shift handover?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-158",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "What happens to a Service Desk ticket awaiting a customer response for more than 48 hours?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-159",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "How large a refund may a Service Desk operator authorise without further approval?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-160",
+      "findings": [],
+      "kind": "must-refuse-access",
+      "question": "Who must approve a refund above 1000 units?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-161",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I order a replacement mobile phone handset?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-162",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "What is the process for booking a meeting room at head office?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-163",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I claim travel expenses for a conference?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-164",
+      "findings": [
+        "Q-164: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "What is the parental leave entitlement for a new parent?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-165",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I request a standing desk for my workstation?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-166",
+      "findings": [
+        "Q-166: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "What is the procedure for returning a leased vehicle?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-167",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I enrol in the corporate gym subsidy scheme?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-168",
+      "findings": [
+        "Q-168: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "What is the company policy on sabbatical leave?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-169",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I book a desk at a different office for a week?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-170",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "What is the process for reporting a facilities fault in the kitchen?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-171",
+      "findings": [
+        "Q-171: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "How do I get a replacement building access card after losing mine?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-172",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "What is the process for claiming childcare vouchers through the company scheme?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-173",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I request a second monitor for my home setup?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-174",
+      "findings": [
+        "Q-174: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "What is the procedure for claiming overtime pay?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-175",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I transfer to a role in another department?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-176",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "What is the referral bonus for recommending a candidate?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-177",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I request a parking space at the office?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-178",
+      "findings": [
+        "Q-178: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "What is the policy on using personal devices for work email?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-179",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I book training budget for an external certification?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-180",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "What is the process for raising a grievance about a colleague?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-181",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I request a change to my working hours?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-182",
+      "findings": [
+        "Q-182: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "What is the company's policy on charitable giving matching?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-183",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I order business cards?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-184",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "What is the process for shipping equipment to a remote employee?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-185",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I request an ergonomic assessment of my chair?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-186",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "What is the dress code for client visits?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-187",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I get reimbursed for a client dinner?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-188",
+      "findings": [
+        "Q-188: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "What is the procedure for booking a courier pickup?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-189",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I change my payroll bank account details?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-190",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "What is the process for applying for an internal transfer abroad?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-191",
+      "findings": [
+        "Q-191: the run did not reach a terminal status (saw 'waiting_review')"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "How do I request a corporate credit card?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-192",
+      "findings": [
+        "Q-192: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "What is the policy on carrying over unused holidays into next year?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-193",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I add a dependent to the health insurance plan?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-194",
+      "findings": [
+        "Q-194: the reviewer recorded 1 claim(s) its citations do not support, on a question the corpus does not cover (cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-CLASS-V2', 'KB-Q-DB-FAILOVER', 'KB-Q-LIC-V2', 'KB-Q-PASSWORD', 'KB-Q-RAP-V2'])"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "What is the process for requesting an early finish before a public holiday?",
+      "subject": "globex-analyst-g3",
+      "verdict": "FAIL"
+    },
+    {
+      "case_id": "Q-195",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I report a noise complaint about a neighbouring office?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-196",
+      "findings": [
+        "Q-196: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "What is the procedure for booking a conference room with video conferencing?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    },
+    {
+      "case_id": "Q-197",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I request a new company laptop in a different size?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-198",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "What is the process for returning a laptop when leaving the company?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-199",
+      "findings": [],
+      "kind": "insufficient-evidence",
+      "question": "How do I set up a direct debit for the staff canteen?",
+      "subject": "globex-analyst-g3",
+      "verdict": "PASS"
+    },
+    {
+      "case_id": "Q-200",
+      "findings": [
+        "Q-200: the run's review does not carry unsupported_claims in a shape this rule can read, so whether anything was fabricated is unknown"
+      ],
+      "kind": "insufficient-evidence",
+      "question": "What is the company policy on accepting gifts from suppliers?",
+      "subject": "globex-analyst-g3",
+      "verdict": "BLOCKED"
+    }
+  ],
+  "cases_digest": "d02040916da13337891e1c31d16ae51adb60744d5b056a653b514eacd3a931ee",
+  "generated_at": "2026-09-23T22:11:18.596701Z",
+  "observations_digest": "a7f3b4a0417f04d280f1fa9060733d6f9c83658c2229a6dd9dd105e0b8af1829",
+  "schema_version": "phase7-quality-v1",
+  "verdict": "FAIL"
+}

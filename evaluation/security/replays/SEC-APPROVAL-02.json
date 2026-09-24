@@ -1,0 +1,36 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M35 the approval node records a void as the decision it arrived with",
+      "outcome": "passed",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M36 the void is routed by the approval's own branch instead of the supervisor",
+      "outcome": "passed",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    },
+    {
+      "detail": "acceptance case ACC-23 recorded PASS",
+      "kind": "acceptance",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "ACC-23"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-APPROVAL-02",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

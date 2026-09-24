@@ -55,15 +55,15 @@ file fails the gate rather than passing silently.
 | package | depends on |
 | --- | --- |
 | `_root` | `domain`, `harness`, `integrations`, `interfaces`, `model_gateway`, `orchestration`, `persistence`, `security` |
-| `agents` | `context`, `domain`, `foundation`, `integrations`, `rag`, `runtime`, `security` |
+| `agents` | `context`, `domain`, `foundation`, `integrations`, `model_gateway`, `rag`, `runtime`, `security` |
 | `context` | `foundation`, `persistence` |
 | `domain` | — |
-| `evaluation` | `context`, `domain`, `graphrag`, `integrations`, `memory`, `orchestration`, `persistence` |
+| `evaluation` | `context`, `domain`, `graphrag`, `integrations`, `memory`, `orchestration`, `persistence`, `rag` |
 | `foundation` | — |
 | `graphrag` | `domain` |
-| `harness` | `domain`, `integrations`, `persistence`, `security` |
+| `harness` | `domain`, `persistence`, `security`, `tool_platform` |
 | `integrations` | `persistence`, `security` |
-| `interfaces` | `memory`, `persistence`, `security` |
+| `interfaces` | `agents`, `memory`, `persistence`, `security` |
 | `mcp` | `persistence`, `security`, `tool_platform` |
 | `memory` | `domain`, `persistence` |
 | `model_gateway` | `domain`, `persistence` |

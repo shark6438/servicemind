@@ -1,6 +1,6 @@
 import hashlib
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, Self
@@ -56,9 +56,12 @@ def self_authored_marker(run_id: object, action_hash: str) -> str:
     """The marker the platform appends to every followup it writes back to GLPI.
 
     Named once because three places depend on the exact spelling and a restated literal is
-    how they drift apart: the executor writes it, the executor's crash-recovery path
-    searches for it, and the evidence builder uses it to tell the tenant's ticket record
-    apart from the platform's own prose.
+    how they drift apart: the harness names it in the tool call it submits, the provider
+    writes it and searches for it during crash recovery, and the evidence builder uses it
+    to tell the tenant's ticket record apart from the platform's own prose. That second
+    place is why the harness does not compose the body itself any more: the provider
+    re-derives the marker from the *approved* action hash, so a caller cannot pick the
+    marker that will be searched for.
     """
     return f"[ServiceMind run={run_id} action={action_hash[:16]}]"
 
@@ -262,6 +265,89 @@ class JoinedEvidence(BaseModel):
     @property
     def evidence_refs(self) -> list[str]:
         return [item.evidence_id for item in self.items]
+
+
+#: The key a run's ``result.evidence`` holds its rows under. Named because three
+#: independent readers -- the console, the acceptance driver, the workflow verifier --
+#: each had to guess it, and each guessed differently.
+EVIDENCE_ITEMS_KEY = "items"
+
+
+def evidence_envelope(items: Iterable[Evidence], tenant_id: UUID) -> dict[str, Any]:
+    """The one shape a persisted run's ``result.evidence`` has.
+
+    ``JoinedEvidence`` is the natural carrier and is what a full supervisor run already
+    persisted. The fast paths did not use it: ``fast_data`` and ``fast_knowledge`` wrote
+    the bare list, because they have no join to perform and no minimum to satisfy.
+    Two shapes on one field is not a cosmetic difference -- a reader that understood the
+    envelope saw *no evidence at all* for every fast-path run, which reads as "the run
+    answered without evidence" rather than "the reader looked in the wrong place", and
+    that is a wrong conclusion about the run rather than a formatting complaint.
+
+    Built by hand rather than through ``JoinedEvidence`` so that a fast path with zero
+    rows can still publish the envelope: a run that found nothing must be
+    distinguishable from a run whose evidence nobody can read.
+    """
+    return {
+        "tenant_id": str(tenant_id),
+        EVIDENCE_ITEMS_KEY: [item.model_dump(mode="json") for item in items],
+    }
+
+
+def evidence_items(value: Any) -> list[Any]:
+    """Read rows back out of a persisted ``result.evidence``, whichever shape it is in.
+
+    Tolerant on purpose: runs persisted before the envelope was the only writer are still
+    the history an operator reads back. The tolerance is what the platform's *own*
+    readers no longer need to each reinvent.
+
+    Rows are returned as they were stored rather than filtered here. A row that will not
+    validate as ``Evidence`` is a fact about the run that the caller has to report, and an
+    accessor that quietly dropped it would be the same class of mistake as the reader that
+    quietly saw nothing.
+    """
+    if isinstance(value, Mapping):
+        rows = value.get(EVIDENCE_ITEMS_KEY)
+        return list(rows) if isinstance(rows, list) else []
+    if isinstance(value, list):
+        return list(value)
+    return []
+
+
+def group_is_grounded(group: str, contents: Iterable[str]) -> bool:
+    """Whether the material a run retrieved ever names ``group``.
+
+    Both the Analysis Agent and the Reviewer have to answer "did this run invent the team
+    it is assigning the incident to?", and both answered it by looking only at GLPI
+    ``support_group`` rows. That is a different question. The platform's own retrieved
+    corpus names owning teams that are not GLPI groups -- ``mfa-enrolment-and-recovery.md``
+    says "Owned by the Identity Team", ``vpn-split-tunnel-policy-v2.md`` defers to "the
+    Security Team's agreement" -- and the in-code runbook the Knowledge Agent serves
+    (``agents/knowledge.py``, ``rb-vpn-mfa``) states outright that "Identity Team owns
+    token enrollment faults". A run that retrieves that runbook, follows it, and assigns
+    the incident to Identity Team was reading its sources correctly and was failed for it:
+    measured over the 2026-09-24 quality batch, 16 of the 18 runs parked at
+    ``waiting_review`` carried ``ANALYSIS_GROUNDING_FAILED`` for exactly this, against a
+    tenant whose GLPI directory holds only ``Network Team`` and ``Service Desk``.
+
+    Reading only the directory is also the *fragile* half of the check, independently of
+    the above: ``bounded_join`` ranks ``support_group`` rows last (see
+    ``_ENUMERABLE_DIRECTORY``) precisely so a directory listing cannot crowd out the
+    incident, so a run that retrieves widely arrives here with the directory already
+    pruned and the old rule firing on an empty string -- rejecting every recommendation,
+    including the correct ones, as the run's own evidence grew.
+
+    The question is therefore asked of everything the run retrieved, which is both the
+    wider and the narrower test than it replaces: wider, because a team named by a
+    document now counts as grounded; narrower, because the name still has to appear in
+    something. A team the model produced from nowhere appears in none of it and is still
+    rejected. Matching is casefolded and whitespace-collapsed, because the caller is
+    comparing a model's rendering of a name against prose, not two identifiers.
+    """
+    needle = " ".join(group.casefold().split())
+    if not needle:
+        return False
+    return any(needle in " ".join(content.casefold().split()) for content in contents)
 
 
 #: Which evidence survives when a run gathers more than a joined set may hold. The order

@@ -1,0 +1,2369 @@
+{
+  "schema_version": "phase7-quality-v1",
+  "description": "P7.6.6 业务质量集。200 条 = 120 可答 + 40 证据不足 + 20 版本冲突 + 20 必须拒绝访问。每条预先声明它应当被作答、被拒答，还是必须不引用某篇文档——判定不接受「宽泛允许集合」。",
+  "tenant_id": "22222222-2222-4222-8222-222222222222",
+  "answerable_rate_target": 0.85,
+  "answerable_rate_target_source": "租户参考阈值 0.85（docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md 的 Recall@5 租户门槛），在本批次运行之前登记。这不是从结果倒推的数字：若实测低于它，正确的反应是查明原因并报告，而不是下调它。",
+  "cases": [
+    {
+      "id": "Q-001",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What is the minimum VPN client version that can negotiate the current TLS profile?",
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-002",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How long is a VPN device certificate valid before it needs renewing?",
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-003",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Which directory should be cleared to reset a stuck VPN client, and which service is restarted?",
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-004",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "If the VPN handshake fails twice within five minutes, are further reconnects attempted automatically?",
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-005",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Which team owns the VPN client connectivity procedure, and what is its response commitment?",
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-006",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What does the client log look like when a client version is too old to negotiate TLS?",
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-007",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What symptoms in the client log indicate that the VPN tunnel did not complete?",
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-008",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "After clearing the client state, how many reconnects are attempted before escalating?",
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-009",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What must be captured before a Network Team ticket is opened for a VPN handshake failure?",
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-010",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "A laptop VPN session handshakes but carries no traffic. What is the first thing to check?",
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-011",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Is SMS accepted as a multi-factor enrolment factor, and why or why not?",
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-012",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How long is a multi-factor device binding valid?",
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-013",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How many recovery codes are issued to an account at enrolment?",
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-014",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Can a recovery code be used more than once?",
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-015",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How many recovery codes must remain before the console prompts for regeneration?",
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-016",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What happens to previously issued recovery codes when new ones are generated?",
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-017",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Is multi-factor authentication ever turned off to work around a lost device?",
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-018",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What replaces a lost authentication device?",
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-019",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What two checks are required before a device can be rebound?",
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-020",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Which team owns multi-factor authentication enrolment and recovery?",
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-021",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How long is a self-service password reset link valid, and how many times can it be used?",
+      "expected_citations": [
+        "KB-Q-PASSWORD"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-022",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How many failed sign-in attempts lock an account, and for how long?",
+      "expected_citations": [
+        "KB-Q-PASSWORD"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-023",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Can a service desk operator clear an account lockout early?",
+      "expected_citations": [
+        "KB-Q-PASSWORD"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-024",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What is the minimum password length?",
+      "expected_citations": [
+        "KB-Q-PASSWORD"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-025",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Is routine password rotation on a schedule required?",
+      "expected_citations": [
+        "KB-Q-PASSWORD"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-026",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Under what circumstance is a password rotation required?",
+      "expected_citations": [
+        "KB-Q-PASSWORD"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-027",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How many previous passwords cannot be reused?",
+      "expected_citations": [
+        "KB-Q-PASSWORD"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-028",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How is a new password delivered after an assisted reset?",
+      "expected_citations": [
+        "KB-Q-PASSWORD"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-029",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What must the operator verify an assisted-reset caller against?",
+      "expected_citations": [
+        "KB-Q-PASSWORD"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-030",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Which team owns the password reset procedure?",
+      "expected_citations": [
+        "KB-Q-PASSWORD"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-031",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What three things must a service account have at creation?",
+      "expected_citations": [
+        "KB-Q-SVCACCT"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-032",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What is the maximum permitted expiry for a new service account?",
+      "expected_citations": [
+        "KB-Q-SVCACCT"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-033",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How often do service account credentials rotate, and is it automated?",
+      "expected_citations": [
+        "KB-Q-SVCACCT"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-034",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How long is the overlap window during which both old and new service account credentials are accepted?",
+      "expected_citations": [
+        "KB-Q-SVCACCT"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-035",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Can the service account credential overlap window be extended?",
+      "expected_citations": [
+        "KB-Q-SVCACCT"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-036",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How often is every service account reviewed?",
+      "expected_citations": [
+        "KB-Q-SVCACCT"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-037",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "What happens at review to a service account whose owner has left?",
+      "expected_citations": [
+        "KB-Q-SVCACCT"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-038",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How long after suspension is a service account deleted?",
+      "expected_citations": [
+        "KB-Q-SVCACCT"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-039",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How long are logs retained after a service account is deleted?",
+      "expected_citations": [
+        "KB-Q-SVCACCT"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-040",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Is a service account without a named owner permitted?",
+      "expected_citations": [
+        "KB-Q-SVCACCT"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-041",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "At what time does the daily full database backup run?",
+      "expected_citations": [
+        "KB-Q-DB-BACKUP"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-042",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "When and how often does the database restore test run?",
+      "expected_citations": [
+        "KB-Q-DB-BACKUP"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-043",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "How long are daily database backups retained?",
+      "expected_citations": [
+        "KB-Q-DB-BACKUP"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-044",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "How long are monthly database backups retained?",
+      "expected_citations": [
+        "KB-Q-DB-BACKUP"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-045",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "When is a database backup considered retained?",
+      "expected_citations": [
+        "KB-Q-DB-BACKUP"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-046",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What has to be true for a database backup to be considered verified?",
+      "expected_citations": [
+        "KB-Q-DB-BACKUP"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-047",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "How many nominated tables are compared during restore verification, and to what tolerance?",
+      "expected_citations": [
+        "KB-Q-DB-BACKUP"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-048",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What happens when a database backup fails verification?",
+      "expected_citations": [
+        "KB-Q-DB-BACKUP"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-049",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What is the database recovery point objective?",
+      "expected_citations": [
+        "KB-Q-DB-BACKUP"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-050",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What is the database recovery time objective?",
+      "expected_citations": [
+        "KB-Q-DB-BACKUP"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-051",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What automatically triggers a database failover, and after how long?",
+      "expected_citations": [
+        "KB-Q-DB-FAILOVER"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-052",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "Is a slow query on its own enough to trigger a database failover?",
+      "expected_citations": [
+        "KB-Q-DB-FAILOVER"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-053",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What replay lag must the standby be within before it is promoted?",
+      "expected_citations": [
+        "KB-Q-DB-FAILOVER"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-054",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What has to happen to the connection pooler during a database failover?",
+      "expected_citations": [
+        "KB-Q-DB-FAILOVER"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-055",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What application write success rate must be recovered after failover?",
+      "expected_citations": [
+        "KB-Q-DB-FAILOVER"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-056",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What must be rebuilt before the next maintenance window after a failover?",
+      "expected_citations": [
+        "KB-Q-DB-FAILOVER"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-057",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "Is a promoted standby ever demoted?",
+      "expected_citations": [
+        "KB-Q-DB-FAILOVER"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-058",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What does reverting a database failover require?",
+      "expected_citations": [
+        "KB-Q-DB-FAILOVER"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-059",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "Who can decide to fail the database over explicitly?",
+      "expected_citations": [
+        "KB-Q-DB-FAILOVER"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-060",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "Which team owns the database failover runbook?",
+      "expected_citations": [
+        "KB-Q-DB-FAILOVER"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-061",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "At what utilisation does storage raise a warning?",
+      "expected_citations": [
+        "KB-Q-STORAGE"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-062",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "At what utilisation does storage raise a high-water alert?",
+      "expected_citations": [
+        "KB-Q-STORAGE"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-063",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "At what utilisation does storage raise a critical alert?",
+      "expected_citations": [
+        "KB-Q-STORAGE"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-064",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "How often are storage capacity alerts evaluated?",
+      "expected_citations": [
+        "KB-Q-STORAGE"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-065",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "How quickly must the owning team plan expansion at the warning level?",
+      "expected_citations": [
+        "KB-Q-STORAGE"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-066",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "How quickly must expansion be scheduled at the high-water level?",
+      "expected_citations": [
+        "KB-Q-STORAGE"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-067",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "How quickly must expansion be performed at the critical level, and who is paged?",
+      "expected_citations": [
+        "KB-Q-STORAGE"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-068",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What is the thin provisioning reserve on storage volumes?",
+      "expected_citations": [
+        "KB-Q-STORAGE"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-069",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "Does the thin provisioning reserve count towards the reported utilisation?",
+      "expected_citations": [
+        "KB-Q-STORAGE"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-070",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "What storage growth rate triggers a monthly owner review?",
+      "expected_citations": [
+        "KB-Q-STORAGE"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-071",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "What qualifies as a SEV1 incident?",
+      "expected_citations": [
+        "KB-Q-SEVERITY"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-072",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "What proportion of customer-facing requests must be affected for a SEV2?",
+      "expected_citations": [
+        "KB-Q-SEVERITY"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-073",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "How quickly must a SEV1 be acknowledged?",
+      "expected_citations": [
+        "KB-Q-SEVERITY"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-074",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "How often must a SEV1 be updated?",
+      "expected_citations": [
+        "KB-Q-SEVERITY"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-075",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "How quickly must a SEV2 be acknowledged, and how often updated?",
+      "expected_citations": [
+        "KB-Q-SEVERITY"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-076",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "How quickly must a SEV3 be acknowledged?",
+      "expected_citations": [
+        "KB-Q-SEVERITY"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-077",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "How is a SEV3 reviewed?",
+      "expected_citations": [
+        "KB-Q-SEVERITY"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-078",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "What is the review deadline for a SEV1?",
+      "expected_citations": [
+        "KB-Q-SEVERITY"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-079",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "What is the review deadline for a SEV2?",
+      "expected_citations": [
+        "KB-Q-SEVERITY"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-080",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "What is a SEV4 incident?",
+      "expected_citations": [
+        "KB-Q-SEVERITY"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-081",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "How soon after a major incident is declared is the first customer-facing notice published?",
+      "expected_citations": [
+        "KB-Q-MIM-COMMS"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-082",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "How often are updates published during a SEV1?",
+      "expected_citations": [
+        "KB-Q-MIM-COMMS"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-083",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "How often are updates published during a SEV2?",
+      "expected_citations": [
+        "KB-Q-MIM-COMMS"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-084",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "What three things must a major incident notice state?",
+      "expected_citations": [
+        "KB-Q-MIM-COMMS"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-085",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "May a notice state a cause that has not been confirmed?",
+      "expected_citations": [
+        "KB-Q-MIM-COMMS"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-086",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "Who decides whether regulators are notified about a major incident?",
+      "expected_citations": [
+        "KB-Q-MIM-COMMS"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-087",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "Under what condition are regulators notified about a major incident?",
+      "expected_citations": [
+        "KB-Q-MIM-COMMS"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-088",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "How soon after resolution is a resolution notice published?",
+      "expected_citations": [
+        "KB-Q-MIM-COMMS"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-089",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "Where is the customer notice published?",
+      "expected_citations": [
+        "KB-Q-MIM-COMMS"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-090",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "What do internal stakeholders receive beyond the customer notice?",
+      "expected_citations": [
+        "KB-Q-MIM-COMMS"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-091",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Which change category needs no approval at all?",
+      "expected_citations": [
+        "KB-Q-CAB"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-092",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "How many approvers does a normal change need, and from where?",
+      "expected_citations": [
+        "KB-Q-CAB"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-093",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "What does a significant change require?",
+      "expected_citations": [
+        "KB-Q-CAB"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-094",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "When does the change advisory board meet?",
+      "expected_citations": [
+        "KB-Q-CAB"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-095",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "How long before the board meeting do papers close?",
+      "expected_citations": [
+        "KB-Q-CAB"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-096",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Can a significant change be approved at the meeting if it was not on the agenda?",
+      "expected_citations": [
+        "KB-Q-CAB"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-097",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "What does an emergency change require?",
+      "expected_citations": [
+        "KB-Q-CAB"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-098",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Does emergency change approval waive the later review?",
+      "expected_citations": [
+        "KB-Q-CAB"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-099",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "What is the minimum lead time between approval and implementation for a significant change?",
+      "expected_citations": [
+        "KB-Q-CAB"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-100",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Which office owns change approval and the change advisory board?",
+      "expected_citations": [
+        "KB-Q-CAB"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-101",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "What error rate triggers an automatic release rollback, over how long?",
+      "expected_citations": [
+        "KB-Q-ROLLBACK"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-102",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "What latency condition triggers an automatic release rollback?",
+      "expected_citations": [
+        "KB-Q-ROLLBACK"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-103",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "When is a release declared stable?",
+      "expected_citations": [
+        "KB-Q-ROLLBACK"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-104",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Can a release carrying a forward-only data migration be rolled back?",
+      "expected_citations": [
+        "KB-Q-ROLLBACK"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-105",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "What is done instead when a release carries a forward-only migration?",
+      "expected_citations": [
+        "KB-Q-ROLLBACK"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-106",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Where must forward-only migrations be stated before a release is approved?",
+      "expected_citations": [
+        "KB-Q-ROLLBACK"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-107",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "What must every rollback record?",
+      "expected_citations": [
+        "KB-Q-ROLLBACK"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-108",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Who may roll a release back manually?",
+      "expected_citations": [
+        "KB-Q-ROLLBACK"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-109",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "How long does the release manager have to roll back manually?",
+      "expected_citations": [
+        "KB-Q-ROLLBACK"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-110",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Which team owns the release rollback criteria?",
+      "expected_citations": [
+        "KB-Q-ROLLBACK"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-111",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "When do managed servers patch each month, and in what window?",
+      "expected_citations": [
+        "KB-Q-PATCHING"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-112",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Within how long do laptops patch once a patch is available, and how many defers are allowed?",
+      "expected_citations": [
+        "KB-Q-PATCHING"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-113",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Within how long must a vendor-rated critical patch be deployed?",
+      "expected_citations": [
+        "KB-Q-PATCHING"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-114",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "When does the critical patch clock start?",
+      "expected_citations": [
+        "KB-Q-PATCHING"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-115",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Who schedules a server reboot for patching?",
+      "expected_citations": [
+        "KB-Q-PATCHING"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-116",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "What happens to a laptop that has not rebooted by the end of its patching window?",
+      "expected_citations": [
+        "KB-Q-PATCHING"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-117",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "What does a patching exception require?",
+      "expected_citations": [
+        "KB-Q-PATCHING"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-118",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "How long does a patching exception last?",
+      "expected_citations": [
+        "KB-Q-PATCHING"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-119",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "What happens when a patching exception expires?",
+      "expected_citations": [
+        "KB-Q-PATCHING"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-120",
+      "kind": "answerable",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-change",
+      "question": "Which team owns endpoint patching windows?",
+      "expected_citations": [
+        "KB-Q-PATCHING"
+      ],
+      "forbidden_citations": [],
+      "note": ""
+    },
+    {
+      "id": "Q-121",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How long is a remote access device binding valid, and is renewal self-service?",
+      "expected_citations": [
+        "KB-Q-RAP-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-RAP-V1"
+      ],
+      "note": "the superseded document KB-Q-RAP-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-122",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "How is a remote access device enrolled, and how long until the certificate is issued?",
+      "expected_citations": [
+        "KB-Q-RAP-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-RAP-V1"
+      ],
+      "note": "the superseded document KB-Q-RAP-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-123",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-security",
+      "question": "Who is allowed to release an email quarantined as phishing?",
+      "expected_citations": [
+        "KB-Q-MAIL-2026"
+      ],
+      "forbidden_citations": [
+        "KB-Q-MAIL-2024"
+      ],
+      "note": "the superseded document KB-Q-MAIL-2024 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-124",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-security",
+      "question": "How long are quarantined emails held before they are deleted?",
+      "expected_citations": [
+        "KB-Q-MAIL-2026"
+      ],
+      "forbidden_citations": [
+        "KB-Q-MAIL-2024"
+      ],
+      "note": "the superseded document KB-Q-MAIL-2024 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-125",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-security",
+      "question": "Which laptops must have full disk encryption, and who holds the recovery key?",
+      "expected_citations": [
+        "KB-Q-ENC-V3"
+      ],
+      "forbidden_citations": [
+        "KB-Q-ENC-V2"
+      ],
+      "note": "the superseded document KB-Q-ENC-V2 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-126",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-security",
+      "question": "What happens to a laptop that stays out of encryption compliance for a week?",
+      "expected_citations": [
+        "KB-Q-ENC-V3"
+      ],
+      "forbidden_citations": [
+        "KB-Q-ENC-V2"
+      ],
+      "note": "the superseded document KB-Q-ENC-V2 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-127",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-service",
+      "question": "What is the monthly print quota, and is there an overdraft?",
+      "expected_citations": [
+        "KB-Q-PRINT-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-PRINT-V1"
+      ],
+      "note": "the superseded document KB-Q-PRINT-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-128",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-service",
+      "question": "How are printed pages charged, and how does duplex printing count?",
+      "expected_citations": [
+        "KB-Q-PRINT-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-PRINT-V1"
+      ],
+      "note": "the superseded document KB-Q-PRINT-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-129",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-service",
+      "question": "What are the public API rate limits per key and per tenant?",
+      "expected_citations": [
+        "KB-Q-API-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-API-V1"
+      ],
+      "note": "the superseded document KB-Q-API-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-130",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-service",
+      "question": "What HTTP status does the API gateway return when a client is rate limited?",
+      "expected_citations": [
+        "KB-Q-API-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-API-V1"
+      ],
+      "note": "the superseded document KB-Q-API-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-131",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "How long are daily and monthly backups retained?",
+      "expected_citations": [
+        "KB-Q-RET-V4"
+      ],
+      "forbidden_citations": [
+        "KB-Q-RET-V3"
+      ],
+      "note": "the superseded document KB-Q-RET-V3 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-132",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-infra",
+      "question": "How quickly must a restore request be answered for a full restore and for a single table?",
+      "expected_citations": [
+        "KB-Q-RET-V4"
+      ],
+      "forbidden_citations": [
+        "KB-Q-RET-V3"
+      ],
+      "note": "the superseded document KB-Q-RET-V3 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-133",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-security",
+      "question": "How quickly must a critical vulnerability be remediated?",
+      "expected_citations": [
+        "KB-Q-VULN-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-VULN-V1"
+      ],
+      "note": "the superseded document KB-Q-VULN-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-134",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-security",
+      "question": "When does the vulnerability remediation clock start?",
+      "expected_citations": [
+        "KB-Q-VULN-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-VULN-V1"
+      ],
+      "note": "the superseded document KB-Q-VULN-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-135",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "How long is an on-call rotation, and when does handover happen?",
+      "expected_citations": [
+        "KB-Q-ONCALL-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-ONCALL-V1"
+      ],
+      "note": "the superseded document KB-Q-ONCALL-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-136",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-incident",
+      "question": "What happens if the on-call primary does not acknowledge a page?",
+      "expected_citations": [
+        "KB-Q-ONCALL-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-ONCALL-V1"
+      ],
+      "note": "the superseded document KB-Q-ONCALL-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-137",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Which traffic is routed through the VPN tunnel under the current split tunnel policy?",
+      "expected_citations": [
+        "KB-Q-SPLIT-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-SPLIT-V1"
+      ],
+      "note": "the superseded document KB-Q-SPLIT-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-138",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-access",
+      "question": "Is a full tunnel profile available, and under what conditions?",
+      "expected_citations": [
+        "KB-Q-SPLIT-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-SPLIT-V1"
+      ],
+      "note": "the superseded document KB-Q-SPLIT-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-139",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-security",
+      "question": "What are the data classification levels?",
+      "expected_citations": [
+        "KB-Q-CLASS-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-CLASS-V1"
+      ],
+      "note": "the superseded document KB-Q-CLASS-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-140",
+      "kind": "version-conflict",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-security",
+      "question": "How is an unlabelled document treated under the data classification standard?",
+      "expected_citations": [
+        "KB-Q-CLASS-V2"
+      ],
+      "forbidden_citations": [
+        "KB-Q-CLASS-V1"
+      ],
+      "note": "the superseded document KB-Q-CLASS-V1 answers this too, and is wrong"
+    },
+    {
+      "id": "Q-141",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "What is the Network Team's tier 3 escalation queue called and what is its response commitment?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-ESCALATE"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-142",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "Who must agree before the carrier escalation contact can be used?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-ESCALATE"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-143",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "When is the network change freeze, and what is permitted during it?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-FREEZE"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-144",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "Who must agree to a network change freeze exception?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-FREEZE"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-145",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "How many spare access switches and distribution switches does the Network Team hold?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-STOCK"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-146",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "When is a network spare hardware reorder raised?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-STOCK"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-147",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "What badge group is required to enter the satellite office server room?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-SATELLITE"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-148",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "How often is the satellite office server room alarm code changed?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-SATELLITE"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-149",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "How much notice must planned data hall power work be given?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-POWER"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-150",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "What is the supervision requirement for data hall power work?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-POWER"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-151",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "Which IP range is reserved for the satellite offices?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-IPAM"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-152",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "How quickly must a reservation for a decommissioned device be released?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-IPAM"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-153",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "How long are network device configuration exports retained as compliance evidence?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-COMPLIANCE"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-154",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g4",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "Who may read the compliance evidence bucket?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G3-COMPLIANCE"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-155",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "How is a caller verified before the Service Desk acts on their request?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G4-SCRIPT"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-156",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "When may a Service Desk ticket be closed?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G4-SCRIPT"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-157",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "At what times does the Service Desk hold shift handover?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G4-HANDOVER"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-158",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "What happens to a Service Desk ticket awaiting a customer response for more than 48 hours?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G4-HANDOVER"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-159",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "How large a refund may a Service Desk operator authorise without further approval?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G4-REFUND"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-160",
+      "kind": "must-refuse-access",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-restricted",
+      "question": "Who must approve a refund above 1000 units?",
+      "expected_citations": [],
+      "forbidden_citations": [
+        "KB-Q-G4-REFUND"
+      ],
+      "note": "the answer is only in a document this subject's groups cannot reach"
+    },
+    {
+      "id": "Q-161",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I order a replacement mobile phone handset?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-162",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the process for booking a meeting room at head office?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-163",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I claim travel expenses for a conference?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-164",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the parental leave entitlement for a new parent?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-165",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I request a standing desk for my workstation?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-166",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the procedure for returning a leased vehicle?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-167",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I enrol in the corporate gym subsidy scheme?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-168",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the company policy on sabbatical leave?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-169",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I book a desk at a different office for a week?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-170",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the process for reporting a facilities fault in the kitchen?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-171",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I get a replacement building access card after losing mine?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-172",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the process for claiming childcare vouchers through the company scheme?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; the corpus is a technical runbook set and carries no HR benefits content. Rewritten from an earlier wording about visitors after hours: the satellite office runbook has a Visitors section, so that wording was answerable in part and would have recorded a correct answer as a fabrication"
+    },
+    {
+      "id": "Q-173",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I request a second monitor for my home setup?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-174",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the procedure for claiming overtime pay?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-175",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I transfer to a role in another department?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-176",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the referral bonus for recommending a candidate?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-177",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I request a parking space at the office?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-178",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the policy on using personal devices for work email?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-179",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I book training budget for an external certification?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-180",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the process for raising a grievance about a colleague?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-181",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I request a change to my working hours?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-182",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the company's policy on charitable giving matching?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-183",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I order business cards?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-184",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the process for shipping equipment to a remote employee?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-185",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I request an ergonomic assessment of my chair?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-186",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the dress code for client visits?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-187",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I get reimbursed for a client dinner?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-188",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the procedure for booking a courier pickup?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-189",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I change my payroll bank account details?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-190",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the process for applying for an internal transfer abroad?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-191",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I request a corporate credit card?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-192",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the policy on carrying over unused holidays into next year?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-193",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I add a dependent to the health insurance plan?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-194",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the process for requesting an early finish before a public holiday?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-195",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I report a noise complaint about a neighbouring office?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-196",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the procedure for booking a conference room with video conferencing?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-197",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I request a new company laptop in a different size?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-198",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the process for returning a laptop when leaving the company?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-199",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "How do I set up a direct debit for the staff canteen?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    },
+    {
+      "id": "Q-200",
+      "kind": "insufficient-evidence",
+      "subject": "globex-analyst-g3",
+      "ticket_ref": "globex-quality-uncovered",
+      "question": "What is the company policy on accepting gifts from suppliers?",
+      "expected_citations": [],
+      "forbidden_citations": [],
+      "note": "no document in the corpus addresses this; asserting an answer is the failure"
+    }
+  ]
+}

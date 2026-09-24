@@ -11,10 +11,13 @@ a report has to be able to say when they were laid down:
   without the isolation existing. The bulk document exists to make ACC-06's payload
   genuinely over budget -- see its entry in the manifest for why that case needs the room
   the envelope used to waste.
-* **Tickets.** ``deploy/glpi/bootstrap_phase7_tickets.php`` creates the two tickets in the
-  Globex entity and prints their ids, which are recorded in ``tickets.json`` for the driver
-  to resolve ``ticket_ref`` against. GLPI has no create-ticket method on the product's own
-  client, so this is the only way the cases have real tickets on a fresh volume.
+* **Tickets.** ``deploy/glpi/bootstrap_phase7_tickets.php`` creates one ticket per case
+  that writes, plus the read-only pair, and prints their ids, which are recorded in
+  ``tickets.json`` for the driver to resolve ``ticket_ref`` against. GLPI has no
+  create-ticket method on the product's own client, so this is the only way the cases have
+  real tickets on a fresh volume. The refs are read from the case list rather than listed
+  here, so a case that starts using a new ticket cannot be resolved against a seeder that
+  never heard of it.
 * **Graph.** ``evaluation/graph_probe.py`` projects one CI with two group-restricted
   runbooks hanging off it, reached from the same anchors as the tickets just created. It
   is seeded last because its anchors are the ticket ids, and checked at seed time by
@@ -69,6 +72,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = REPO_ROOT / "evaluation" / "acceptance" / "fixtures" / "globex"
 MANIFEST = FIXTURES / "manifest.json"
 TICKETS = FIXTURES / "tickets.json"
+
+#: The frozen case list. Read here for the ticket refs the fixtures have to provide, so the
+#: seeder and the driver agree about which tickets exist because they read the same file.
+CASES = REPO_ROOT / "evaluation" / "acceptance" / "cases.v1.json"
 
 #: Where the bootstrap lands inside the GLPI container, and how to reach it. Both are
 #: overridable so the script is not welded to one composed stack.
@@ -165,11 +172,35 @@ def recorded_ticket_ids() -> dict[str, int]:
     return {str(name): int(value) for name, value in recorded.get("tickets", {}).items()}
 
 
+def declared_ticket_refs() -> tuple[set[str], set[str]]:
+    """Every ``ticket_ref`` the case list uses, split into the ones a case writes to.
+
+    Read from the cases rather than written down here: a list of refs kept beside the case
+    list is a list that goes stale the first time a case is repointed, and the failure it
+    produces is a fixture that looks seeded and a driver that cannot resolve a ticket.
+    ``writes_followups`` is the case's own declaration that it appends to its ticket, which
+    is what makes the ticket its own.
+    """
+    case_set = json.loads(CASES.read_text(encoding="utf-8"))
+    cases = case_set["cases"] if isinstance(case_set, dict) else case_set
+    read: set[str] = set()
+    written: set[str] = set()
+    for case in cases:
+        refs = {case.get("ticket_ref")} | {step.get("ticket_ref") for step in case.get("steps", [])}
+        refs.discard(None)
+        if case.get("writes_followups"):
+            written |= refs
+        else:
+            read |= refs
+    return read, written
+
+
 def ticket_problems(manifest: dict[str, Any]) -> list[str]:
     if not TICKETS.exists():
         return [f"{TICKETS.relative_to(REPO_ROOT)} does not exist; run without --check first"]
     recorded = json.loads(TICKETS.read_text(encoding="utf-8"))
-    referenced = {"globex-vpn-mfa-a", "globex-vpn-mfa-b"}
+    read, written = declared_ticket_refs()
+    referenced = read | written
     missing = sorted(referenced - set(recorded.get("tickets", {})))
     if missing:
         return [f"no resolved ticket id recorded for {missing}"]
@@ -246,10 +277,19 @@ async def run(*, check_only: bool, container: str) -> int:
                 if not entry["is_active"]
             ]
             for record_id in retired:
-                await rag.set_document_active(tenant_id, record_id, is_active=False)
-            # ``set_document_active`` patches with ``refresh=False``, so the read below
-            # would otherwise race the projection it is checking.
-            await rag.index.refresh(tenant_id)
+                # A retirement that matched nothing is the fixture failing to exist, and
+                # it would read later as "the retired runbook was not cited" -- which is
+                # the same observation ACC-02 wants, obtained by never having seeded the
+                # document. Assert the effect instead of inferring it from its absence.
+                report = await rag.set_document_active(tenant_id, record_id, is_active=False)
+                if not report.found:
+                    raise RuntimeError(
+                        f"{record_id}: declared retired in the manifest but no stored "
+                        "document carries that source_record_id, so the retirement "
+                        "matched nothing"
+                    )
+            # ``set_document_active`` refreshes the projection itself, so the read below
+            # is not racing it.
 
         ticket_ids = recorded_ticket_ids()
         if not check_only:
@@ -283,12 +323,20 @@ async def run(*, check_only: bool, container: str) -> int:
             graph_problems.append("no ticket ids are resolved, so no graph anchor can be named")
         else:
             anchor = ticket_ids["globex-vpn-mfa-a"]
+            # Only the read-only tickets become graph anchors. A writing case's ticket
+            # would otherwise project a node every read case can reach -- the traversal
+            # goes ticket -> CI -> sibling tickets -- so a ticket added for one case would
+            # change what every other case's evidence says about the topology. The writers
+            # do not assert on graph evidence; the readers do.
+            read_refs, _ = declared_ticket_refs()
             if not check_only:
                 await graph_store.apply_batch(
                     graph_fixture_batch(
                         tenant_id,
                         entity_id=int(manifest["glpi_entity_id"]),
-                        ticket_ids=sorted(ticket_ids.values()),
+                        ticket_ids=sorted(
+                            ticket_ids[ref] for ref in read_refs if ref in ticket_ids
+                        ),
                     )
                 )
             graph_problems.extend(

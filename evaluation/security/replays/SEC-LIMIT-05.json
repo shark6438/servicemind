@@ -1,0 +1,50 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M12 a throttle is re-asked indefinitely instead of a bounded number of times",
+      "outcome": "passed",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M13 a throttle that survived the wait is reported as a model defect",
+      "outcome": "passed",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M14 the revision call gives up on a throttle the draft path would have waited out",
+      "outcome": "passed",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-LIMIT-05",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

@@ -199,6 +199,11 @@ async def test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure() -> No
     reaches the DEGRADED_ANALYSIS branch written for this case -- which is what happened
     on the 2026-09-23 baseline (ACC-03), where a crashed revision left the unresolvable
     reference ``ev-8cec7c70e10c7b56`` in place.
+
+    What the gate *decides* is the other half of the same finding (D5): a runtime failure
+    is an absence, not a disagreement, so while a replan is still owed the run is
+    re-derived rather than handed to a person -- the same answer
+    ``dispatch_barrier`` gives to a dispatched task that failed.
     """
     reviewer = ReviewerAgent()
     joined = join_evidence(TENANT, [glpi_ticket(), glpi_group()])
@@ -211,6 +216,33 @@ async def test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure() -> No
         request_write=False,
         retrieval_round=1,
         replan_count=0,
+        max_replans=2,
+    )
+    assert result.decision is ReviewDecision.REPLAN
+    assert [finding.reason_code for finding in result.findings] == ["DEGRADED_ANALYSIS"]
+    assert result.findings[0].severity == "critical"
+    assert result.findings[0].category == "runtime"
+
+
+@pytest.mark.asyncio
+async def test_a_degraded_analysis_reaches_a_person_once_the_replans_are_spent() -> None:
+    """The replan above has to be bounded, or a provider that is down becomes a loop.
+
+    ``max_replans`` is the bound, and it is the same one every other REPLAN in this gate
+    respects. Past it the runtime failure is a person's to resolve exactly as before, so
+    the fix changes where a *repairable* degradation goes without moving the terminal.
+    """
+    reviewer = ReviewerAgent()
+    joined = join_evidence(TENANT, [glpi_ticket(), glpi_group()])
+    degraded = analysis(joined.evidence_refs).model_copy(
+        update={"status": AnalysisStatus.DEGRADED, "source": "deterministic_fallback"}
+    )
+    result = await reviewer.review(
+        analysis=degraded,
+        evidence=joined,
+        request_write=False,
+        retrieval_round=1,
+        replan_count=2,
         max_replans=2,
     )
     assert result.decision is ReviewDecision.ESCALATE

@@ -1,0 +1,43 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M07 the provider writes whatever body the caller sent",
+      "outcome": "passed",
+      "ref": "scripts/mutate_glpi_write_gateway.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M08 the provider trusts a marker the caller chose",
+      "outcome": "passed",
+      "ref": "scripts/mutate_glpi_write_gateway.py"
+    },
+    {
+      "detail": "acceptance case ACC-11 recorded PASS",
+      "kind": "acceptance",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "ACC-11"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-WRITE-03",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

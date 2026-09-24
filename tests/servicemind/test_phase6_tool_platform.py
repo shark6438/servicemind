@@ -24,7 +24,7 @@ from servicemind.mcp.server import (
 from servicemind.mcp.tasks import TASK_TTL_MS, InMemoryMcpTaskStore
 from servicemind.mcp.transport import MCP_PROTOCOL_VERSION, McpGlpiProvider, StatelessMcpClient
 from servicemind.persistence.models import ToolOutboxRecord
-from servicemind.reliability.outbox import RedisStreamPublisher
+from servicemind.reliability.outbox import STREAM_MAXLEN, RedisStreamPublisher
 from servicemind.tool_platform.audit import InMemoryToolAuditSink
 from servicemind.tool_platform.catalog import build_glpi_registry
 from servicemind.tool_platform.contracts import (
@@ -779,8 +779,8 @@ def test_mcp_resources_are_strict_and_direct_update_is_not_exposed() -> None:
 @pytest.mark.asyncio
 async def test_redis_outbox_message_contains_references_only() -> None:
     class Redis:
-        async def xadd(self, stream, fields):
-            self.stream, self.fields = stream, fields
+        async def xadd(self, stream, fields, **options):
+            self.stream, self.fields, self.options = stream, fields, options
             return b"1-0"
 
     client = Redis()
@@ -795,6 +795,11 @@ async def test_redis_outbox_message_contains_references_only() -> None:
     )
     assert await RedisStreamPublisher(client).publish(event) == "1-0"
     assert "password" not in str(client.fields)
+    # The stream is not the durable record, but it is still a thing Redis has to hold.
+    # An `XADD` with no bound grows for as long as the platform publishes events, which
+    # is forever: the stream a consumer never drains is the one that fills the instance.
+    assert client.options["maxlen"] == STREAM_MAXLEN
+    assert client.options["approximate"] is True
 
 
 @pytest.mark.asyncio

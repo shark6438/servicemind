@@ -1,0 +1,50 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M01 the crashed revision leaves the draft it was repairing in place",
+      "outcome": "passed",
+      "ref": "scripts/mutate_revision_crash.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M02 the crashed revision is relabeled as a grounding failure",
+      "outcome": "passed",
+      "ref": "scripts/mutate_revision_crash.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M03 the crash is recorded without saying what crashed",
+      "outcome": "passed",
+      "ref": "scripts/mutate_revision_crash.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M04 the crashed revision still counts against the model budget it never spent",
+      "outcome": "passed",
+      "ref": "scripts/mutate_revision_crash.py"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-CRASH-02",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

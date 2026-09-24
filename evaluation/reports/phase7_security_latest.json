@@ -1,0 +1,601 @@
+{
+  "blockers": [],
+  "cases": [
+    {
+      "category": "tenant-isolation",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-TENANT-01",
+      "title": "另一个租户的 checkpoint 不得被续跑",
+      "verdict": "PASS"
+    },
+    {
+      "category": "tenant-isolation",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-TENANT-02",
+      "title": "组受限文档只对其组可读，无限制文档对租户内所有人可读",
+      "verdict": "PASS"
+    },
+    {
+      "category": "tenant-isolation",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-TENANT-03",
+      "title": "MCP 任务按租户隔离，且终态不可改写",
+      "verdict": "PASS"
+    },
+    {
+      "category": "tenant-isolation",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-TENANT-04",
+      "title": "语义缓存按租户分区",
+      "verdict": "PASS"
+    },
+    {
+      "category": "tenant-isolation",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-TENANT-05",
+      "title": "模型网关的租户白名单取交集，未注册租户被拒",
+      "verdict": "PASS"
+    },
+    {
+      "category": "outbox-retention",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-TENANT-06",
+      "title": "outbox 清理的删除保持在租户范围内，且一个租户的失败不波及其他租户",
+      "verdict": "PASS"
+    },
+    {
+      "category": "entity-and-group-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-AUTHZ-01",
+      "title": "起跑必须把调用方的组坐标写进图状态",
+      "verdict": "PASS"
+    },
+    {
+      "category": "entity-and-group-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-AUTHZ-02",
+      "title": "缺失的组坐标按「无范围」读，不得读成「不限制」",
+      "verdict": "PASS"
+    },
+    {
+      "category": "entity-and-group-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-AUTHZ-03",
+      "title": "范围外的 GLPI 实体不得回退到租户级集成",
+      "verdict": "PASS"
+    },
+    {
+      "category": "entity-and-group-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-AUTHZ-04",
+      "title": "绑定实体的工具对该实体之外不可见",
+      "verdict": "PASS"
+    },
+    {
+      "category": "entity-and-group-authorization",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-AUTHZ-05",
+      "title": "没有任何实体在范围内时写入被拒",
+      "verdict": "PASS"
+    },
+    {
+      "category": "entity-and-group-authorization",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-AUTHZ-06",
+      "title": "身份可携带的 ACL 集合有上限，超限是 401 而不是 500",
+      "verdict": "PASS"
+    },
+    {
+      "category": "entity-and-group-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-AUTHZ-07",
+      "title": "GraphRAG 图遍历必须过滤整条路径，而不只是过滤种子",
+      "verdict": "PASS"
+    },
+    {
+      "category": "entity-and-group-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-AUTHZ-08",
+      "title": "无法执行节点 ACL 的图存储必须被拒绝，而不是降级为空",
+      "verdict": "PASS"
+    },
+    {
+      "category": "entity-and-group-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-AUTHZ-09",
+      "title": "图读取拿到的是完整主体，而不是只有租户",
+      "verdict": "PASS"
+    },
+    {
+      "category": "principal-narrowing",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-NARROW-01",
+      "title": "审批不得把审批员的权限借给运行",
+      "verdict": "PASS"
+    },
+    {
+      "category": "principal-narrowing",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-NARROW-02",
+      "title": "没有 checkpoint 的运行不得以调用者身份续跑",
+      "verdict": "PASS"
+    },
+    {
+      "category": "principal-narrowing",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-NARROW-03",
+      "title": "有效主体必须是「记录 ∩ 当前」，且只能收窄",
+      "verdict": "PASS"
+    },
+    {
+      "category": "principal-narrowing",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-NARROW-04",
+      "title": "崩溃恢复路径同样强制交集，并如实记录主体来源",
+      "verdict": "PASS"
+    },
+    {
+      "category": "principal-narrowing",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-NARROW-05",
+      "title": "无法确认授权时暂停，而不是收窄后继续",
+      "verdict": "PASS"
+    },
+    {
+      "category": "principal-narrowing",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-NARROW-06",
+      "title": "收窄必须让在更宽范围下取得的证据失效",
+      "verdict": "PASS"
+    },
+    {
+      "category": "principal-narrowing",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-NARROW-07",
+      "title": "收窄必须作废待执行动作，并作废到数据行上",
+      "verdict": "PASS"
+    },
+    {
+      "category": "principal-narrowing",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-NARROW-08",
+      "title": "收窄后该步骤所需角色不再具备时暂停",
+      "verdict": "PASS"
+    },
+    {
+      "category": "approval-binding",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-APPROVAL-01",
+      "title": "暂停不消耗决定、不翻状态、不写任何东西",
+      "verdict": "PASS"
+    },
+    {
+      "category": "approval-binding",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-APPROVAL-02",
+      "title": "被作废的动作必须重新派生，而不是被既有决定裁决",
+      "verdict": "PASS"
+    },
+    {
+      "category": "approval-binding",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-APPROVAL-03",
+      "title": "审批摘要冲突在身份核验之前就被拒绝，且什么都不发生",
+      "verdict": "PASS"
+    },
+    {
+      "category": "approval-binding",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-APPROVAL-04",
+      "title": "终态不是常备授权：引用未获批意图的调用被拒",
+      "verdict": "PASS"
+    },
+    {
+      "category": "approval-binding",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-APPROVAL-05",
+      "title": "拒绝不是执行：它能扛过身份服务停摆，也不能被借用去批准",
+      "verdict": "PASS"
+    },
+    {
+      "category": "approval-binding",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-APPROVAL-06",
+      "title": "发起人必须持有该步骤的角色，才谈得上批准它",
+      "verdict": "PASS"
+    },
+    {
+      "category": "write-path-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-WRITE-01",
+      "title": "execute_node 在写入前重新校验，而不是只信审批时的结论",
+      "verdict": "PASS"
+    },
+    {
+      "category": "write-path-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-WRITE-02",
+      "title": "写前校验绕过缓存，取当次的授权",
+      "verdict": "PASS"
+    },
+    {
+      "category": "write-path-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-WRITE-03",
+      "title": "网关不写审批未覆盖的正文，也不信调用方自选的标记",
+      "verdict": "PASS"
+    },
+    {
+      "category": "write-path-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-WRITE-04",
+      "title": "回读要重新问 GLPI，并逐字比对正文",
+      "verdict": "PASS"
+    },
+    {
+      "category": "write-path-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-WRITE-05",
+      "title": "原始 GLPI 写入只存在于一个模块，且必须经过网关",
+      "verdict": "PASS"
+    },
+    {
+      "category": "write-path-authorization",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-WRITE-06",
+      "title": "失败的调用不被留成「未尝试」，崩溃恢复出的重复被记为重复",
+      "verdict": "PASS"
+    },
+    {
+      "category": "rate-limit-and-degradation",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-LIMIT-01",
+      "title": "只有限流才等待，别的原因直接失败",
+      "verdict": "PASS"
+    },
+    {
+      "category": "rate-limit-and-degradation",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-LIMIT-02",
+      "title": "Retry-After: 0 是「立刻重试」，不是「这不是限流」",
+      "verdict": "PASS"
+    },
+    {
+      "category": "rate-limit-and-degradation",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-LIMIT-03",
+      "title": "提供方的提示优先，调度有上限，总等待有上限",
+      "verdict": "PASS"
+    },
+    {
+      "category": "rate-limit-and-degradation",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-LIMIT-04",
+      "title": "等待尊重运行截止时间，并给后续阶段留余量",
+      "verdict": "PASS"
+    },
+    {
+      "category": "rate-limit-and-degradation",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-LIMIT-05",
+      "title": "超过等待的限流按「限流」降级，且重试次数有界",
+      "verdict": "PASS"
+    },
+    {
+      "category": "rate-limit-and-degradation",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-LIMIT-06",
+      "title": "预算为 0 的降级是显式的，且不发明缺失的能力",
+      "verdict": "PASS"
+    },
+    {
+      "category": "prompt-injection",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-INJECT-01",
+      "title": "每个规范注入标记在写入时被隔离，且词表不可悄悄缩小",
+      "verdict": "PASS"
+    },
+    {
+      "category": "prompt-injection",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-INJECT-02",
+      "title": "已存的注入标记在读取侧仍被拦截",
+      "verdict": "PASS"
+    },
+    {
+      "category": "prompt-injection",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-INJECT-03",
+      "title": "注入行被标记、不得到达模型，并从语料中撤下",
+      "verdict": "PASS"
+    },
+    {
+      "category": "prompt-injection",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-INJECT-04",
+      "title": "模型读取的边界声明它来自哪条通道，且记忆带着作者身份",
+      "verdict": "PASS"
+    },
+    {
+      "category": "data-bounds",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-BOUNDS-01",
+      "title": "超大载荷被截断而不是崩溃，且截断被标记",
+      "verdict": "PASS"
+    },
+    {
+      "category": "data-bounds",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-BOUNDS-02",
+      "title": "行数上限成立，且平台自产的 followup 不计入证据",
+      "verdict": "PASS"
+    },
+    {
+      "category": "data-bounds",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-BOUNDS-03",
+      "title": "超长身份是 401 而不是 500",
+      "verdict": "PASS"
+    },
+    {
+      "category": "data-bounds",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-BOUNDS-04",
+      "title": "有界错误保留说明成因的那一端",
+      "verdict": "PASS"
+    },
+    {
+      "category": "self-authored-evidence",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-SELF-01",
+      "title": "平台自产的 followup 不得成为后续运行的证据",
+      "verdict": "PASS"
+    },
+    {
+      "category": "self-authored-evidence",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-SELF-02",
+      "title": "评审器按分析实际看到的证据集判定",
+      "verdict": "PASS"
+    },
+    {
+      "category": "self-authored-evidence",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-SELF-03",
+      "title": "检索查询不得回显进模型可见的证据",
+      "verdict": "PASS"
+    },
+    {
+      "category": "idempotency",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-IDEM-01",
+      "title": "同一个幂等键配不同参数必须被拒绝",
+      "verdict": "PASS"
+    },
+    {
+      "category": "idempotency",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-IDEM-02",
+      "title": "一次运行只撤下一篇文档，干净的运行什么都不撤",
+      "verdict": "PASS"
+    },
+    {
+      "category": "idempotency",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-IDEM-03",
+      "title": "TTL 之内的重试解析到同一个任务",
+      "verdict": "PASS"
+    },
+    {
+      "category": "outbox-retention",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-OUTBOX-01",
+      "title": "发布到出箱流时有界，且载荷只带引用不带正文",
+      "verdict": "PASS"
+    },
+    {
+      "category": "outbox-retention",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-OUTBOX-02",
+      "title": "清理只退休「已投递且已过龄」的行",
+      "verdict": "PASS"
+    },
+    {
+      "category": "outbox-retention",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-OUTBOX-03",
+      "title": "清理分页、有上限、有节奏，且可被取消",
+      "verdict": "PASS"
+    },
+    {
+      "category": "crash-recovery",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-CRASH-01",
+      "title": "暂停的运行既不被恢复也不被标记失败",
+      "verdict": "PASS"
+    },
+    {
+      "category": "crash-recovery",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-CRASH-02",
+      "title": "崩溃的修订不得发布它正在修复的草稿",
+      "verdict": "PASS"
+    },
+    {
+      "category": "crash-recovery",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-CRASH-03",
+      "title": "装配不了的上下文、被 schema 拒绝的决定、双重失败都走向 finalize",
+      "verdict": "PASS"
+    },
+    {
+      "category": "crash-recovery",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-CRASH-04",
+      "title": "每个终态路径发布同一种证据形状",
+      "verdict": "PASS"
+    },
+    {
+      "category": "crash-recovery",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-CRASH-05",
+      "title": "监督者的历次拒绝在重试后仍然有效",
+      "verdict": "PASS"
+    },
+    {
+      "category": "verifier-availability",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-VERIFIER-01",
+      "title": "默认不安装任何核验器",
+      "verdict": "PASS"
+    },
+    {
+      "category": "verifier-availability",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-VERIFIER-02",
+      "title": "不可达的身份服务是「不可用」，不是「空授权集」",
+      "verdict": "PASS"
+    },
+    {
+      "category": "verifier-availability",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-VERIFIER-03",
+      "title": "realm 读取把每个 HTTP 回答映射到它自己的结果",
+      "verdict": "PASS"
+    },
+    {
+      "category": "verifier-availability",
+      "findings": [],
+      "has_teeth": true,
+      "scenario_id": "SEC-VERIFIER-04",
+      "title": "决定所用的授权时间窗被记录，新回答不记",
+      "verdict": "PASS"
+    },
+    {
+      "category": "webhook-authenticity",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-WEBHOOK-01",
+      "title": "签名绑定正文、时间戳与密钥",
+      "verdict": "PASS"
+    },
+    {
+      "category": "webhook-authenticity",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-WEBHOOK-02",
+      "title": "畸形签名头是干净的拒绝，不是 500",
+      "verdict": "PASS"
+    },
+    {
+      "category": "webhook-authenticity",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-WEBHOOK-03",
+      "title": "过期投递与超长事件在进入运行之前被拒",
+      "verdict": "PASS"
+    },
+    {
+      "category": "credential-handling",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-CRED-01",
+      "title": "跨租户的调用在解析凭证之前被拒；动作代理不持有凭证",
+      "verdict": "PASS"
+    },
+    {
+      "category": "credential-handling",
+      "findings": [],
+      "has_teeth": false,
+      "scenario_id": "SEC-CRED-02",
+      "title": "密钥类内容被网关与记忆硬门禁拦下，不落进证据",
+      "verdict": "PASS"
+    }
+  ],
+  "deployed_revisions": [
+    "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)"
+  ],
+  "generated_at": "2026-09-24T00:20:31.298431Z",
+  "not_covered": [
+    "对抗性投喂的注入词表：本集只验证「已列入词表的标记」被处理，没有任何一条场景向平台投喂过词表之外的新注入变体。",
+    "长期或跨 checkpoint 重启的撤权：六类撤权（撤组/撤实体/撤角色/禁用用户/查询故障/写前撤权）已由 ACC-18…ACC-23 实跑覆盖，但「撤权发生在服务重启之后」与「撤权与限流叠加」未测。",
+    "凭证的静态保护：上面两条只证明「凭证不被交给不该拿它的代理」与「密钥类内容被拦下」， CredentialCipher 的 InvalidToken 失败路径没有测试，轮换密钥后旧密文的可读性也未评估。",
+    "跨租户令牌在 get_tenant_context 处被拒：目前只由 checkpoint 的租户校验间接背书，没有一条场景直接投递一个别的 realm 的有效令牌。",
+    "人工记忆审查界面的授权边界：memory_review 端点的角色与租户约束没有一条场景覆盖。",
+    "依赖组件的供应链与镜像漏洞：由 CI 的 trivy 扫描与 SBOM 承担，不在本场景集内。",
+    "拒绝服务与容量：并发压测、长稳与故障注入属于 P7.6.7，不在本集。",
+    "审计日志的篡改检测：本集只验证事件被写下及关联到运行，不验证已写下的审计行不可被有权限的操作者改写。"
+  ],
+  "observations_digest": "728c87cc91351e24c1a6c510186224d1b2065770dcedb177f219fb3c6c75eb4c",
+  "observed_from": "2026-09-23T21:01:14.344455Z",
+  "observed_to": "2026-09-23T21:01:14.344455Z",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f",
+  "schema_version": "phase7-security-v1",
+  "verdict": "PASS"
+}

@@ -1,15 +1,51 @@
 from __future__ import annotations
 
 from typing import Any, Protocol
+from uuid import UUID
 
+from servicemind.domain.evidence import self_authored_marker
 from servicemind.domain.knowledge import RetrievalPrincipal
 from servicemind.domain.models import ActionIntent
 from servicemind.graphrag.build import build_graph_store
 from servicemind.integrations.glpi.client import GlpiClient
+from servicemind.integrations.glpi.models import normalized_text
 from servicemind.integrations.glpi.resolver import resolve_glpi_config
+from servicemind.persistence.models import ActionStatus
 from servicemind.persistence.repository import ServiceMindRepository
 from servicemind.security.auth import TenantContext
+from servicemind.tool_platform.catalog import APPEND_FOLLOWUP_TOOL
 from servicemind.tool_platform.contracts import ProviderResult, ToolCall, ToolDefinition
+from servicemind.tool_platform.gateway import ToolVerificationFailed
+
+#: The intent statuses a write may be performed under. Both mean a human approval
+#: stands behind these exact bytes: ``APPROVED`` is an unclaimed approval, and
+#: ``EXECUTING`` is one the executor has claimed and is performing right now -- the
+#: claim and the write are a single act, so the executor marks the row executing before
+#: it calls the gateway. Reading only ``APPROVED`` therefore refused every write the
+#: platform can make, and the tests did not see it because their repository fake
+#: answered each read with the status it was constructed with, hiding the transition the
+#: executor had just made. Terminal statuses stay out: a failed attempt is not a
+#: standing approval, and a duplicate of a completed write is the executor's idempotency
+#: record to reconcile, not something a second call may re-perform.
+_APPROVAL_STANDS = frozenset({ActionStatus.APPROVED.value, ActionStatus.EXECUTING.value})
+
+
+def body_matches(stored: str, expected_text: str) -> bool:
+    """Is the stored followup, as text, what was approved?
+
+    The check used to be ``marker in html_to_text(followup.content)``, which answers a
+    different question: *this row exists*. A body truncated by a field limit, replaced by
+    an editor, or cut off at the marker all keep the marker and all passed -- so a run
+    whose write did not land reported ``verified=True``. The read-back is the only
+    evidence the platform has that the write reached GLPI as approved, and it has to
+    compare the content, not the label.
+
+    Compared through ``normalized_text`` rather than literally, because GLPI stores
+    newlines as markup and returns them that way; the normalization is the platform's
+    single definition of "the same text", shared with the acceptance grader so a write
+    cannot be verified by one and rejected by the other.
+    """
+    return normalized_text(stored) == expected_text
 
 
 class GlpiOperationBackend(Protocol):
@@ -48,7 +84,125 @@ class ProductionGlpiBackend:
             allowed_glpi_group_ids=set(call.group_ids),
         )
 
+    async def _approved_intent(self, call: ToolCall):
+        """Resolve the approval the call cites, or refuse to write.
+
+        The policy engine can only check that ``approval_ref`` is present and that
+        ``approval_binding`` equals the digest the caller itself computed; both are
+        supplied by the caller, so on their own they prove a caller filled two fields
+        consistently. The reference is only worth carrying if something durable answers
+        for it, and the durable thing is the ActionIntent: a row this tenant's run
+        persisted, holding the action hash the human approved. Without this check the
+        gateway would be a pass-through with an approval-shaped argument.
+        """
+        prefix = "action-intent://"
+        reference = call.approval_ref or ""
+        if not reference.startswith(prefix):
+            raise PermissionError("a side-effecting call must cite the ActionIntent it acts on")
+        try:
+            intent_id = UUID(reference[len(prefix) :])
+        except ValueError as exc:
+            raise PermissionError("the approval reference is not an ActionIntent id") from exc
+        stored = await ServiceMindRepository(call.tenant_id).get_action_intent(call.run_id)
+        if stored is None or stored.id != intent_id:
+            raise PermissionError("no ActionIntent matches the approval this call cites")
+        if stored.status not in _APPROVAL_STANDS:
+            raise PermissionError("the cited ActionIntent is not approved")
+        return stored
+
+    async def _append_followup(self, arguments: dict[str, Any], call: ToolCall) -> dict[str, Any]:
+        """Write one approved followup, or recognise the one a crash already wrote.
+
+        The bytes are pinned to the approved intent rather than trusted from the caller:
+        a tool call that carries an approval is a claim about *which* action is being
+        performed, and everything after it -- the body, the target, the visibility, the
+        idempotency marker -- has to agree with the row the approval names. Otherwise the
+        approval would authorise "some write by this run", which is not what a human
+        approved.
+        """
+        stored = await self._approved_intent(call)
+        content = str(arguments["content"])
+        marker = str(arguments["idempotency_marker"])
+        ticket_id = int(arguments["ticket_id"])
+        is_private = bool(arguments["is_private"])
+        approved = stored.arguments if isinstance(stored.arguments, dict) else {}
+        if content != str(approved.get("content", "")):
+            raise PermissionError("the content being written is not the content that was approved")
+        if ticket_id != stored.target_id:
+            raise PermissionError("the ticket being written to is not the approved target")
+        if is_private != bool(approved.get("is_private", True)):
+            raise PermissionError("the visibility being written is not the approved visibility")
+        if marker != self_authored_marker(call.run_id, stored.action_hash):
+            raise PermissionError("the idempotency marker does not name the approved action")
+
+        expected_text = normalized_text(f"{content}\n{marker}")
+        config = await resolve_glpi_config(self._context(call))
+        async with GlpiClient(config) as client:
+            # Reconcile before writing: this recovers a crash between GLPI committing and
+            # the harness's own idempotency row completing. The marker is the *identity*
+            # of the write -- run plus action hash -- so it is what finds the row. What
+            # it must not be is the only thing checked: a followup carrying our marker
+            # with a body that is not the approved one is a persisted effect nobody
+            # approved, and reporting it as a suppressed duplicate would report success
+            # for it.
+            existing = await client.list_ticket_followups(ticket_id)
+            duplicate = next(
+                (item for item in existing if marker in normalized_text(item.content)),
+                None,
+            )
+            if duplicate is not None:
+                if not body_matches(duplicate.content, expected_text):
+                    raise RuntimeError(
+                        "GLPI already holds this run's followup, and its body is not the "
+                        "approved content: the persisted effect differs from the intent, so "
+                        "it is neither this write nor a safe duplicate"
+                    )
+                return {
+                    "followup_id": duplicate.id,
+                    "ticket_id": ticket_id,
+                    "duplicate_suppressed": True,
+                    "approved_content": content,
+                }
+            followup = await client.append_ticket_followup(
+                ticket_id, f"{content}\n{marker}", is_private=is_private
+            )
+        return {
+            "followup_id": followup.id,
+            "ticket_id": ticket_id,
+            "duplicate_suppressed": False,
+            "approved_content": content,
+        }
+
+    async def _read_back_followup(
+        self, arguments: dict[str, Any], output: Any, call: ToolCall
+    ) -> bool:
+        """Ask GLPI what it stored, and compare that to what was approved.
+
+        Deliberately a fresh read rather than the write's own response: a provider that
+        truncates or rewrites the field can return the body it was given while storing
+        something else, and only a read that does not go through the write path can tell
+        the difference. A row that cannot be found at all is not a verified write either.
+        """
+        if not isinstance(output, dict):
+            return False
+        marker = str(arguments["idempotency_marker"])
+        expected_text = normalized_text(f"{arguments['content']}\n{marker}")
+        config = await resolve_glpi_config(self._context(call))
+        async with GlpiClient(config) as client:
+            rows = await client.list_ticket_followups(int(arguments["ticket_id"]))
+        stored = next((item for item in rows if item.id == output.get("followup_id")), None)
+        if stored is None:
+            return False
+        if not body_matches(stored.content, expected_text):
+            raise ToolVerificationFailed(
+                "GLPI read-after-write verification failed: the stored followup is not "
+                "the approved content"
+            )
+        return True
+
     async def invoke(self, name: str, arguments: dict[str, Any], call: ToolCall) -> Any:
+        if name == APPEND_FOLLOWUP_TOOL:
+            return await self._append_followup(arguments, call)
         if name == "glpi.submit_action_intent":
             intent = ActionIntent.model_validate(arguments)
             intent.verify_integrity()
@@ -181,6 +335,8 @@ class ProductionGlpiBackend:
     async def verify(
         self, name: str, arguments: dict[str, Any], output: Any, call: ToolCall
     ) -> bool:
+        if name == APPEND_FOLLOWUP_TOOL:
+            return await self._read_back_followup(arguments, output, call)
         if name == "glpi.submit_action_intent":
             stored = await ServiceMindRepository(call.tenant_id).get_action_intent(call.run_id)
             return bool(

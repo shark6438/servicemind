@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from uuid import UUID, uuid4
@@ -6,12 +7,19 @@ import pytest
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
+from core import settings
 from servicemind.agents.action import ActionAgent
-from servicemind.context.contracts import ContextAgent, ContextAssemblyError
+from servicemind.context.contracts import (
+    ContextAgent,
+    ContextAssemblyError,
+    ContextSource,
+)
+from servicemind.context.repository import NullContextArtifactSink
 from servicemind.domain.analysis import AnalysisResult, ProposedAction
-from servicemind.domain.evidence import Evidence, EvidenceSourceType
+from servicemind.domain.evidence import Evidence, EvidenceSourceType, evidence_items
 from servicemind.domain.models import ExecutionResult
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
+from servicemind.domain.routing import RouteDecision, RouteType
 from servicemind.domain.supervisor import SupervisorAction, SupervisorDecision
 from servicemind.domain.task import (
     TASK_OUTPUT_REF_MAX_LENGTH,
@@ -23,6 +31,7 @@ from servicemind.domain.task import (
     TaskStatus,
 )
 from servicemind.orchestration.dispatcher import TaskDispatcher
+from servicemind.orchestration.phase5_governance import Phase5Governance
 from servicemind.orchestration.registry import supervisor_contract
 from servicemind.orchestration.router import FastPathRouter
 from servicemind.orchestration.supervisor_policy import (
@@ -532,6 +541,112 @@ async def test_two_rejections_in_a_row_are_still_correctable() -> None:
     assert supervisor.feedback[1] and "illegal" in supervisor.feedback[1]
     assert supervisor.feedback[2] and "illegal" in supervisor.feedback[2]
     assert supervisor.feedback[0] is None
+
+
+class OscillatingSupervisor(StateDrivenSupervisor):
+    """A control plane that repairs the newest correction by breaking the previous one.
+
+    Deliberately reads its own feedback: a real model does. It repeats its first
+    rejected decision unless that rejection is still in front of it -- which is the
+    question under test, since the platform used to hand back one correction at a time.
+    """
+
+    async def decide(self, state_view, *, policy_feedback=None):
+        if self.calls >= 3:
+            # Past the first visit it is an ordinary control plane again; only the
+            # opening three proposals are the behaviour under test.
+            return await super().decide(state_view, policy_feedback=policy_feedback)
+        self.calls += 1
+        self.feedback.append(policy_feedback)
+        if self.calls == 1:
+            return SupervisorDecision(
+                action=SupervisorAction.HANDOFF_ACTION,
+                rationale_summary="First mistake.",
+                confidence=1,
+            )
+        if self.calls == 2:
+            return SupervisorDecision(
+                action=SupervisorAction.JOIN_EVIDENCE,
+                rationale_summary="A different mistake, with a different rule to fix.",
+                confidence=1,
+            )
+        if "handoff_action" in (policy_feedback or ""):
+            # Told about the first rejection as well, it stops making it.
+            return SupervisorDecision(
+                action=SupervisorAction.PLAN,
+                rationale_summary="Plan, now that both rules are visible.",
+                confidence=1,
+            )
+        # Only the latest correction survived, so the earlier rule looks forgotten and
+        # the model walks straight back into it.
+        return SupervisorDecision(
+            action=SupervisorAction.HANDOFF_ACTION,
+            rationale_summary="Regression to the first mistake.",
+            confidence=1,
+        )
+
+
+@pytest.mark.asyncio
+async def test_a_rejection_is_not_spent_by_the_rejection_after_it() -> None:
+    """Three attempts, three different things to say, and all of them said.
+
+    The live failure this pins: on ticket 26 the control plane proposed ``dispatch``
+    (refused), then ``join_evidence`` naming a task (refused for its argument), then
+    ``dispatch`` again -- the first rule had dropped out of the feedback, so fixing the
+    second one meant breaking the first. Three attempts, two distinct rules, and the
+    run ended in ``supervisor_policy_failure`` with its plan, evidence and analysis
+    discarded.
+    """
+    supervisor = OscillatingSupervisor()
+
+    result = await build_supervisor_graph(services(supervisor=supervisor)).ainvoke(
+        initial("Analyze VPN with the relevant runbook")
+    )
+
+    assert result["final_result"]["termination_code"] is None
+    assert result["final_result"]["review"]["decision"] == "passed"
+    # The third attempt can only choose correctly if the first rejection came with it.
+    assert "handoff_action" in supervisor.feedback[2]
+    assert "join_evidence" in supervisor.feedback[2]
+
+
+@pytest.mark.asyncio
+async def test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold(
+    monkeypatch,
+) -> None:
+    """Asserted on the text the model reads, where it is assembled.
+
+    The orchestration test above shows the history is *handed over*; this one shows what
+    the control plane is told to do with it. A prompt that lists the corrections but
+    calls them history invites the model to treat an old one as spent, which is the
+    behaviour the cumulative list exists to stop.
+    """
+    from servicemind.agents import supervisor as supervisor_module
+
+    captured: list[list[object]] = []
+
+    class _Runnable:
+        async def ainvoke(self, messages, **_):
+            captured.append(messages)
+            return {
+                "action": "finalize",
+                "selected_task_ids": [],
+                "rationale_summary": "prompt probe",
+                "confidence": 1,
+            }
+
+    monkeypatch.setattr(supervisor_module, "get_model", lambda *a, **k: object())
+    monkeypatch.setattr(supervisor_module, "structured_output", lambda *a, **k: _Runnable())
+
+    await supervisor_module.SupervisorAgent().decide(
+        {"goal": "g", "legal_actions": ["finalize"]},
+        policy_feedback="1. the first rule\n2. the second rule",
+    )
+
+    prompt = captured[0][0].content
+    assert "the first rule" in prompt
+    assert "the second rule" in prompt
+    assert "still applies" in prompt
 
 
 @pytest.mark.asyncio
@@ -1064,6 +1179,84 @@ async def test_an_agent_that_builds_no_context_still_runs_ungoverned() -> None:
     assert "context.assembly_failed" not in [event for event, _ in FakeRepository.events]
 
 
+class RecordingGovernance:
+    """The real governance layer, keeping what each role was handed and from what state.
+
+    ``build_context`` is the one place the Analyst's delivery decision exists, and the
+    Reviewer's scope is supposed to be a *copy* of it rather than a second, wider
+    reading of the same retrieval. Neither half of that is visible from the envelope
+    alone -- the Reviewer's state is built by the graph -- so the node inputs are kept
+    alongside the envelopes.
+    """
+
+    def __init__(self, delegate) -> None:
+        self.delegate = delegate
+        self.calls: list[tuple[ContextAgent, dict, object]] = []
+
+    async def build_context(self, *, state, task, invocation, agent):
+        envelope = await self.delegate.build_context(
+            state=state, task=task, invocation=invocation, agent=agent
+        )
+        self.calls.append((agent, dict(state), envelope))
+        return envelope
+
+    async def post_run(self, *, state, result, status) -> int:
+        return await self.delegate.post_run(state=state, result=result, status=status)
+
+
+@pytest.mark.asyncio
+async def test_the_analyst_delivery_is_what_the_reviewer_is_then_held_to(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D3 regression, wiring half: ``analysis_node`` records the envelope it just built.
+
+    The unit test in ``test_phase5_governance`` pins the filter; this one pins the other
+    end. ``analysis_evidence_ids`` is written by the analysis node *and* has to survive
+    the graph's state reducers to reach the Reviewer's node input -- if either half is
+    unwired the key never arrives, the filter falls back to the whole joined set, and the
+    Reviewer is back to judging the analysis against rows its envelope pruned.
+
+    The three fixture rows all fit here, so this test does not reproduce a pruning; it
+    asserts the recorded set is the delivered set, which is the fact the filter trusts.
+    """
+    monkeypatch.setattr(settings, "SERVICEMIND_CONTEXT_ENABLED", True)
+    monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_ENABLED", False)
+    monkeypatch.setattr(settings, "SERVICEMIND_SKILLS_ENABLED", False)
+    recorder = RecordingGovernance(
+        Phase5Governance(context_sink=NullContextArtifactSink())  # type: ignore[arg-type]
+    )
+    graph = build_supervisor_graph(services(phase5=recorder))  # type: ignore[arg-type]
+    await graph.ainvoke(initial("Analyze VPN incident with runbook"))
+
+    def evidence_ids(envelope) -> set[str]:
+        return {item.item_id for item in envelope.items if item.source is ContextSource.EVIDENCE}
+
+    _analysis_state, analysis_envelope = next(
+        (state, envelope)
+        for agent, state, envelope in recorder.calls
+        if agent is ContextAgent.ANALYSIS
+    )
+    reviewer_state, reviewer_envelope = next(
+        (state, envelope)
+        for agent, state, envelope in recorder.calls
+        if agent is ContextAgent.REVIEWER
+    )
+    delivered = evidence_ids(analysis_envelope)
+    assert delivered, "the fixture must deliver evidence or this test asserts nothing"
+    assert "analysis_evidence_ids" in reviewer_state, (
+        "the analysis node did not record its delivery, so the reviewer fell back to "
+        "the whole joined set -- the D3 fault"
+    )
+    assert reviewer_state["analysis_evidence_ids"] == sorted(delivered)
+    # And the Reviewer's own envelope honours it: bounded by what the Analyst was
+    # delivered plus what the analysis cites, which here is a subset of the same rows.
+    cited = set(reviewer_state["analysis_result"]["evidence_refs"])
+    assert evidence_ids(reviewer_envelope) <= delivered | cited
+    assert evidence_ids(reviewer_envelope) == delivered, (
+        "this fixture prunes nothing, so the two roles must see the same rows"
+    )
+
+
 def test_an_ordinary_data_task_does_not_overflow_its_output_ref() -> None:
     """66 evidence ids is a normal data task, and it must leave a plan the graph can re-read.
 
@@ -1186,3 +1379,97 @@ def test_policy_handoff_requires_a_ready_action_task() -> None:
     legal = policy.legal_actions(state)
     assert SupervisorAction.HANDOFF_ACTION not in legal
     assert legal == {SupervisorAction.REPLAN}
+
+
+# ------------------------------------------------------- D6: one shape for result.evidence
+#
+# ``result.evidence`` used to have three encodings: the ``{items, tenant_id}`` envelope
+# from a supervisor run, a bare list from ``fast_data``/``fast_knowledge``, and ``None``
+# from a supervisor run that finalized without joining. Three readers each worked around
+# it (the console, the acceptance driver, the workflow verifier), and a fourth that
+# understood only one shape would see *no evidence at all* for a whole class of runs --
+# which reads as "this run answered without evidence", a statement about the run rather
+# than about the encoding. These tests drive every terminal path and require one shape.
+
+
+class _ForcedRouter:
+    """A router that returns one route, so a terminal path can be reached on purpose."""
+
+    def __init__(self, route: RouteType) -> None:
+        self.route_type = route
+
+    def route(self, request: str, *, request_write: bool) -> RouteDecision:
+        return RouteDecision(
+            route=self.route_type,
+            required_capabilities=[],
+            reason_code="forced_for_test",
+            confidence=1,
+        )
+
+
+class _ExpiredPlanner(FakePlanner):
+    """Plans a real plan whose deadline is already gone.
+
+    The Supervisor checks the budget before it may dispatch anything else, so the very
+    next visit finalizes a run that never joined evidence -- which is the case that used
+    to persist ``None``, reached the way production reaches it rather than by writing the
+    state by hand.
+    """
+
+    async def create_plan(self, *, goal, ticket_id, request_write, correction=None):
+        plan = await super().create_plan(
+            goal=goal, ticket_id=ticket_id, request_write=request_write, correction=correction
+        )
+        expired = datetime.now(UTC) - timedelta(seconds=1)
+        return plan.model_copy(
+            update={
+                "deadline": expired,
+                "budget": plan.budget.model_copy(update={"deadline": expired}),
+            }
+        )
+
+
+def _is_envelope(payload: object) -> bool:
+    return (
+        isinstance(payload, dict)
+        and set(payload) == {"tenant_id", "items"}
+        and isinstance(payload["items"], list)
+    )
+
+
+@pytest.mark.asyncio
+async def test_every_terminal_path_publishes_one_evidence_shape() -> None:
+    """All three writers, one contract -- and the reader resolves the same rows from each."""
+    for route, label in (
+        (RouteType.SIMPLE_KNOWLEDGE_QUERY, "fast_knowledge"),
+        (RouteType.SIMPLE_DATA_QUERY, "fast_data"),
+    ):
+        graph = build_supervisor_graph(replace(services(), router=_ForcedRouter(route)))
+        result = await graph.ainvoke(initial("Where is the runbook?"))
+
+        payload = result["final_result"]["evidence"]
+        assert _is_envelope(payload), f"{label} wrote {type(payload).__name__} instead"
+        assert payload["tenant_id"] == str(TENANT)
+        assert payload["items"], f"{label} published no rows"
+        assert evidence_items(payload) == payload["items"]
+
+    full = await build_supervisor_graph(services()).ainvoke(
+        initial("Analyze VPN with the relevant runbook")
+    )
+    supervisor_payload = full["final_result"]["evidence"]
+    assert _is_envelope(supervisor_payload)
+    assert evidence_items(supervisor_payload) == supervisor_payload["items"]
+
+
+@pytest.mark.asyncio
+async def test_a_run_that_joined_nothing_still_publishes_the_envelope() -> None:
+    """``None`` was the third encoding, and it is the one that cannot be told apart
+    from "this run has no evidence" -- so a run that joined nothing says so in a shape
+    the reader can parse, with the empty list where the rows would be."""
+    graph = build_supervisor_graph(services(planner=_ExpiredPlanner()))
+    result = await graph.ainvoke(initial("Analyze VPN with the relevant runbook"))
+
+    payload = result["final_result"]["evidence"]
+    assert _is_envelope(payload), f"finalize wrote {type(payload).__name__} instead"
+    assert payload["items"] == []
+    assert result["final_result"]["termination_code"] == "deadline_exceeded"

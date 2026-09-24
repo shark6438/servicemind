@@ -144,9 +144,51 @@ async def test_the_analysis_prompt_states_the_entailment_contract(monkeypatch) -
     prompt = str(getattr(runnable.messages[0][0], "content", ""))
     assert "Every claim must be entailed by the evidence it cites" in prompt
     # The three live failure shapes, each named so a rewrite cannot quietly drop it.
-    assert "not that it owns this work" in prompt
+    # ``CLAIM_TYPE_BAR_TEXT`` also carries "not that it owns this work", so this half is
+    # pinned to the prompt's own sentence rather than to the quoted bar -- the bar is
+    # asserted separately below, and a rewrite that dropped the instruction while keeping
+    # the quote would otherwise read as a pass.
+    assert "not meet the assignment_reason bar" in prompt
     assert "Do not attribute a rule or threshold to this tenant" in prompt
     assert "Absence of evidence is never itself a claim" in prompt
+
+
+@pytest.mark.asyncio
+async def test_the_analysis_prompt_quotes_the_bar_its_claims_are_graded_against(
+    monkeypatch,
+) -> None:
+    """One vocabulary, two roles, and a live divergence between their readings of it.
+
+    Live regression, 2026-09-24, the quality batch. The Analyst was told to state an
+    assignment as a recommendation "and record the residual uncertainty in assumptions",
+    and it did exactly that: run ``761fc140`` claim C6 hedged in its statement, carried
+    two assumptions saying the directory does not record ownership, and put the same gap
+    in ``unresolved_questions``. The judge still listed it unsupported, because the bar's
+    own floor -- kept deliberately, see
+    ``test_the_assignment_bar_does_not_turn_the_disclosure_it_demands_into_the_deficit``
+    -- reads a directory-only basis as insufficient *however* it is hedged. The prompt
+    permitted what the bar refused, so the Analyst was asked for a claim it could not
+    make. 16 of the 18 runs parked at ``waiting_review`` were this, and it cost Q-043 and
+    Q-047 their answers: both cited the right article and stated the right fact, then
+    abstained over a routing hedge nobody had asked about.
+
+    The two roles are now quoted the same text, so they cannot disagree about what a
+    claim type requires without disagreeing about this string.
+    """
+    runnable = RecordingRunnable(analysis_citing_all())
+    monkeypatch.setattr(analysis_module, "structured_output", lambda model, schema: runnable)
+
+    await AnalysisAgent(model_factory=lambda: object()).run(
+        invocation=invocation(),
+        evidence=joined_evidence(),
+        goal="Assess the VPN gateway certificate expiry",
+        request_write=False,
+        ticket_id=17,
+    )
+
+    prompt = str(getattr(runnable.messages[0][0], "content", ""))
+    assert CLAIM_TYPE_BAR_TEXT in prompt, "the bar the judge applies must be the bar quoted"
+    assert CLAIM_TYPE_BAR["assignment_reason"] in prompt
 
 
 @pytest.mark.asyncio

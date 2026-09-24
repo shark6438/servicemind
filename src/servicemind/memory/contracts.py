@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
@@ -214,6 +215,38 @@ class MemoryRecord(BaseModel):
             and (self.expires_at is None or self.expires_at > when)
         )
 
+    def corroborable_at(self, when: datetime) -> bool:
+        """Whether this record may stand as *support* for a derived conclusion.
+
+        Deliberately wider than :meth:`visible_at`, and the difference is the whole
+        point. A post-run episode is written to quarantine and stays there until a
+        human reviews it, so requiring ACTIVE here meant the corroboration query could
+        only ever see episodes a human had already blessed one by one -- while the
+        proposal it exists to enable is precisely what a human is meant to review.
+        Measured on ACC-12b (2026-09-23): two structurally isomorphic tickets produced
+        episodes at confidence 0.85 against a 0.90 auto-activation threshold, so both
+        sat in quarantine, and the mechanism could not start on the first pattern it
+        was built to catch. Relaxing only the producer's gate changed nothing, because
+        the query agreed with it -- both sides had to move together.
+
+        Quarantine says a record is *unreviewed*, not that it is invalid, so it is
+        admitted here. What stays out is what a human has actively removed or what has
+        lapsed: a revoked, superseded or expired episode must never corroborate
+        anything, and the time bounds still apply, so an episode outside its validity
+        window supports nothing either.
+
+        This is a predicate about *derivation*, not about serving. Nothing unreviewed
+        becomes visible to a model by virtue of it: a procedure derived from these
+        episodes is itself written to quarantine and needs its own human activation,
+        which re-runs the same revalidation before it can turn active.
+        """
+        return (
+            self.status in {MemoryStatus.ACTIVE, MemoryStatus.QUARANTINE}
+            and self.valid_from <= when
+            and (self.valid_to is None or self.valid_to > when)
+            and (self.expires_at is None or self.expires_at > when)
+        )
+
     def model_payload(self) -> dict[str, Any]:
         """This record as a model may see it: what it says, and who wrote it.
 
@@ -390,7 +423,7 @@ class MemoryPatternQuery(BaseModel):
             record.tenant_id == self.tenant_id
             and record.memory_type is MemoryType.EPISODIC
             and record.scope.scope_type is MemoryScopeType.TENANT
-            and record.visible_at(self.at)
+            and record.corroborable_at(self.at)
             and not record.taint_labels
             and record.created_by == POST_RUN_MEMORY_WRITER
             and record.provenance.get("post_run_scope") == POST_RUN_TENANT_EPISODE_POLICY
@@ -446,6 +479,68 @@ class MemoryWriteDecision(BaseModel):
 
     action: MemoryWriteAction
     reason_codes: tuple[str, ...]
+
+
+class MemoryEvent(BaseModel):
+    """One append-only memory transition, in the shape both authorities record it.
+
+    The in-memory authority did not record transitions at all -- its ``transition`` and
+    ``revoke_by_evidence`` opened with ``del actor_id`` -- so a test that "verified"
+    memory governance was verifying a repository that kept no ledger, and the run
+    correlation below could not be asserted anywhere without a PostgreSQL fixture.
+
+    ``created_at`` is absent rather than optional on purpose: the database fills it with
+    a server default so the ledger's ordering is the database's clock, and a field here
+    would invite a caller to supply one.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    tenant_id: UUID
+    memory_id: UUID
+    actor_id: str
+    event_type: str
+    reason_codes: tuple[str, ...] = ()
+    payload: dict[str, Any] = Field(default_factory=dict)
+    #: The run that caused this transition, when a run caused it. ``None`` is a fact --
+    #: TTL expiry, procedure support revalidation and human review happen outside any
+    #: run, and naming one for them would be a fabrication rather than a correlation.
+    run_id: UUID | None = None
+    #: The run's trace, when it has one. ``phase5_governance`` sets a memory's
+    #: ``source_trace_id`` to the run's thread id when there is one and to the run id
+    #: otherwise, and this carries the same value for the same reason.
+    trace_id: str | None = None
+
+
+def memory_event(
+    *,
+    tenant_id: UUID,
+    memory_id: UUID,
+    actor_id: str,
+    event_type: str,
+    reason_codes: Sequence[str] = (),
+    payload: Mapping[str, Any] | None = None,
+    run_id: UUID | None = None,
+    trace_id: str | None = None,
+) -> dict[str, Any]:
+    """The one construction of a memory event, shared by both authorities.
+
+    Returns keywords rather than an object so the PostgreSQL authority can build its ORM
+    row and the in-memory authority its :class:`MemoryEvent` from the same field set. Two
+    independent constructions of "what a memory event contains" is how the ledger and the
+    thing the tests assert on drift apart -- and the drift is invisible, because both
+    sides keep working.
+    """
+    return {
+        "tenant_id": tenant_id,
+        "memory_id": memory_id,
+        "actor_id": actor_id,
+        "event_type": event_type,
+        "reason_codes": list(reason_codes),
+        "payload": dict(payload or {}),
+        "run_id": run_id,
+        "trace_id": trace_id,
+    }
 
 
 SECRET_PATTERN = re.compile(

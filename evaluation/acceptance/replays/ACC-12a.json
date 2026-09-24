@@ -1,11 +1,12 @@
 {
   "case_id": "ACC-12a",
+  "cases_digest": "63a3a71fd0a6caedb9041dffa0094cabe80a84afe91bdbf11f13c6334d67356c",
   "environment": {
     "entitlement_verifier_configured": true,
     "base_url": "http://127.0.0.1:18080",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
-    "recorded_at": "2026-09-23T12:07:27.120744Z",
-    "deployed_revision": "c0d878d0c6a2f61efc249716c2053b447812aacd+dirty(108 files)",
+    "recorded_at": "2026-09-23T20:16:53.147402Z",
+    "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(92 files)",
     "notes": [
       "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
       "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
@@ -15,8 +16,8 @@
     "username": "globex-analyst-g3",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
     "roles": [
-      "analyst",
-      "viewer"
+      "viewer",
+      "analyst"
     ],
     "entity_ids": [
       2
@@ -28,30 +29,31 @@
   "steps": [
     {
       "id": "produce-same",
-      "description": "对两条同根因（同一 canonical 载荷，仅大小写与空白不同）的固定输入求 pattern_key，两条必须相同",
+      "description": "对三条同根因的固定输入求 pattern_key（大小写/空白差异、换词重写、recurring_incident 取反），三条必须得到同一个 key",
       "action": "procedural memory pattern_key producer",
-      "started_at": "2026-09-23T12:14:35.754842Z",
-      "elapsed_seconds": 0.00015342887490987778,
+      "started_at": "2026-09-23T20:23:02.233047Z",
+      "elapsed_seconds": 0.00020514335483312607,
       "http_status": null,
       "action_hash": null,
       "action_status": null,
       "outcome": "passed",
-      "detail": "{\"step\": \"produce-same\", \"expectation\": \"one key for two spellings of the same root cause\", \"classification\": [\"mfa_device_binding\", \"  MFA_Device_Binding \"], \"pattern_keys\": [\"1817fe726d02b8e8843af3d4d34c234cd0565609a43df7381c6a342616198328\", \"1817fe726d02b8e8843af3d4d34c234cd0565609a43df7381c6a342616198328\"], \"inputs\": [{\"recurring_incident\": true, \"classification\": \"mfa_device_binding\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}, {\"recurring_incident\": true, \"classification\": \"  MFA_Device_Binding \", \"recommended_group\": \"identity   team\", \"problem_recommendation\": \"Rebind\\t the authentication\\n  device.\"}]}"
+      "detail": "{\"step\": \"produce-same\", \"expectation\": \"one key for one root cause, across spellings and rewrites\", \"classification\": [\"mfa_device_binding\", \"  MFA_Device_Binding \", \"MFA_Device_Binding\"], \"recommended_group\": [\"Identity Team\", \"identity   team\", \"Identity Team\"], \"pattern_keys\": [\"f692c5e0b878013f7f088d744ba5d91da691f4a7153a0d00bb3075e3d98e8a9f\", \"f692c5e0b878013f7f088d744ba5d91da691f4a7153a0d00bb3075e3d98e8a9f\", \"f692c5e0b878013f7f088d744ba5d91da691f4a7153a0d00bb3075e3d98e8a9f\"], \"inputs\": [{\"recurring_incident\": true, \"classification\": \"mfa_device_binding\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}, {\"recurring_incident\": true, \"classification\": \"  MFA_Device_Binding \", \"recommended_group\": \"identity   team\", \"problem_recommendation\": \"Rebind\\t the authentication\\n  device.\"}, {\"recurring_incident\": false, \"classification\": \"MFA_Device_Binding\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Re-register the second factor and confirm the binding holds before the ticket is closed.\"}]}"
     },
     {
       "id": "produce-different",
-      "description": "对一条不同根因的固定输入求 pattern_key，必须与上面那条不同",
+      "description": "对两条不同根因的固定输入各求一次 pattern_key（只改 classification / 只改 recommended_group），两条都必须与基准不同",
       "action": "procedural memory pattern_key producer",
-      "started_at": "2026-09-23T12:14:35.755047Z",
-      "elapsed_seconds": 0.00005829334259033203,
+      "started_at": "2026-09-23T20:23:02.233314Z",
+      "elapsed_seconds": 0.00008979346603155136,
       "http_status": null,
       "action_hash": null,
       "action_status": null,
       "outcome": "passed",
-      "detail": "{\"step\": \"produce-different\", \"expectation\": \"a different root cause produces a different key\", \"classification\": [\"mfa_device_binding\", \"gateway_connectivity\"], \"pattern_keys\": [\"1817fe726d02b8e8843af3d4d34c234cd0565609a43df7381c6a342616198328\", \"867c3facb9b30e80590d72b71085c5e1898c01cb10c8ca6ddcfcc59673e1ef1c\"], \"inputs\": [{\"recurring_incident\": true, \"classification\": \"mfa_device_binding\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}, {\"recurring_incident\": true, \"classification\": \"gateway_connectivity\", \"recommended_group\": \"Network Team\", \"problem_recommendation\": \"Replace the gateway.\"}]}"
+      "detail": "{\"step\": \"produce-different\", \"expectation\": \"a different root cause produces a different key\", \"classification\": [\"mfa_device_binding\", \"gateway_connectivity\", \"mfa_device_binding\"], \"recommended_group\": [\"Identity Team\", \"Identity Team\", \"Network Team\"], \"pattern_keys\": [\"f692c5e0b878013f7f088d744ba5d91da691f4a7153a0d00bb3075e3d98e8a9f\", \"50258579b06a1ae85ff684949c6cf27651b7b46c60efd82bbe2e6bb2e3bffa30\", \"fa71c4b056df6c7054c9a6cd666acda1d626c771de2f699adec553e7679922de\"], \"inputs\": [{\"recurring_incident\": true, \"classification\": \"mfa_device_binding\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}, {\"recurring_incident\": true, \"classification\": \"gateway_connectivity\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}, {\"recurring_incident\": true, \"classification\": \"mfa_device_binding\", \"recommended_group\": \"Network Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}]}"
     }
   ],
   "run_id": null,
+  "case_run_ids": [],
   "terminal_status": null,
   "total_seconds": null,
   "action_intent": null,

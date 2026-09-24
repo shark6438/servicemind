@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -106,6 +106,21 @@ class RequiredFact(BaseModel):
     #: about what the claim was built from, so what the claim cites is asserted here,
     #: resolved through the evidence rows to their source records.
     must_not_cite: list[str] = Field(default_factory=list)
+    #: Source record ids at least one claim stating this fact must cite, taken as a union
+    #: over those claims.
+    #:
+    #: The positive half, and it is not the same assertion as ``must_not_cite`` with the
+    #: sign flipped. "Grounds it in the wrong document" and "grounds it in no document"
+    #: are different faults, and a case holding only the negative one is satisfied by an
+    #: analysis that says nothing at all: every claim it never made cites nothing, so the
+    #: forbidden id is never cited. ACC-03 measured exactly that gap -- the run whose
+    #: root-cause claim named the right cause could pass while citing nothing, because
+    #: the only thing the case checked was which document it did not lean on.
+    #:
+    #: A union rather than a per-claim requirement: an analysis is free to split one
+    #: condition across two claims that each cite part of the material, and demanding
+    #: every id inside one sentence would fail a correct answer for being parsed into two.
+    must_cite: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _has_a_matcher(self) -> RequiredFact:
@@ -572,6 +587,18 @@ class AcceptanceCase(BaseModel):
     knowledge_version: str = Field(min_length=1, max_length=100)
     question: str = Field(min_length=1, max_length=2000)
     request_write: bool = False
+    #: True when this case is expected to append a followup to its ticket.
+    #:
+    #: Declared rather than inferred from ``request_write``, because that flag says what
+    #: the *run* asks for and most of the write-requesting cases are refusals that must
+    #: append nothing. What this flag drives is an isolation rule the case list is checked
+    #: against: a ticket a writer owns is used by that case and by no other, so no
+    #: read-only case's evidence can be changed by a case that ran before it. Without the
+    #: rule the suite is only re-runnable by luck -- the second run of a batch reads a
+    #: ticket the first run appended to, and "the same batch, twice" stops being the same
+    #: batch. The verifier's own report says which case wrote what, so the flag is also
+    #: what lets the coverage table name the writers instead of guessing them.
+    writes_followups: bool = False
     timeout_seconds: float = Field(gt=0)
     #: Module rows this case is declared to exercise. The coverage table is generated from
     #: these, so a case that names a module it does not touch is a claim a reader can
@@ -826,6 +853,24 @@ class ObservedEnvironment(BaseModel):
     notes: list[str] = Field(default_factory=list)
 
 
+def new_followups(
+    before: Sequence[ObservedFollowup], after: Sequence[ObservedFollowup]
+) -> list[ObservedFollowup]:
+    """Followups present after that were not present before, by id.
+
+    Computed by set difference on ids rather than by count: a count comparison reports
+    "one new followup" for a run that added one and had another deleted, and the case is
+    about what this run wrote.
+
+    A module-level function rather than a method, because the live driver needs the same
+    answer *during* a case -- to say that a case which does not declare itself a writer
+    has just written into a ticket it shares -- and a second implementation there would be
+    a second definition of "new" for the two to disagree about.
+    """
+    seen = {item.followup_id for item in before}
+    return [item for item in after if item.followup_id not in seen]
+
+
 class CaseExecution(BaseModel):
     """Everything observed for one case, in the form the grader judges.
 
@@ -837,10 +882,30 @@ class CaseExecution(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     case_id: str
+    #: The case list this observation was taken against, recorded at the moment it was
+    #: taken. It is what lets the gate say whether a replay still *describes* the
+    #: expectations beside it: without it the only artefact carrying the digest was the
+    #: report, which is derived from the replays -- so a case edited and then honestly
+    #: re-run still refused to render, and the one command that unblocked it also
+    #: silenced the check for the next edit. Empty means the replay predates this field,
+    #: which is not a match: it is an observation of unknown provenance.
+    cases_digest: str = ""
     environment: ObservedEnvironment
     subject: ObservedSubject | None = None
     steps: list[StepObservation] = Field(default_factory=list)
     run_id: UUID | None = None
+    #: Every run this case submitted, in the order it submitted them. ``run_id`` above is
+    #: the one the case is *about*; this is the one it *produced*, and the difference
+    #: matters for a platform fact that is attributed to whichever run reached it first.
+    #: A cross-ticket procedure is proposed by the post-run step of the run at which
+    #: corroboration becomes complete, and for a case that submits a pair of runs to
+    #: make a pattern corroborable, that is whichever of the two wrote last -- on a
+    #: tenant already holding an episode for the pattern, the first of the pair rather
+    #: than the second. Judging it against ``run_id`` alone encoded the order as a
+    #: requirement and turned a correct attribution into a blocked case (ACC-12b).
+    #: Empty means the replay predates this field, and the readers fall back to
+    #: ``run_id``, which is the stricter reading rather than the looser one.
+    case_run_ids: list[UUID] = Field(default_factory=list)
     terminal_status: RunStatus | None = None
     total_seconds: float | None = None
     action_intent: ObservedActionIntent | None = None
@@ -861,14 +926,8 @@ class CaseExecution(BaseModel):
 
     @property
     def new_followups(self) -> list[ObservedFollowup]:
-        """Followups this case's run added, by id, over what was there before.
-
-        Computed by set difference on ids rather than by count: a count comparison
-        reports "one new followup" for a run that added one and had another deleted, and
-        the case is about what this run wrote.
-        """
-        before = {item.followup_id for item in self.followups_before}
-        return [item for item in self.followups_after if item.followup_id not in before]
+        """Followups this case's run added, by id, over what was there before."""
+        return new_followups(self.followups_before, self.followups_after)
 
     def graph_reading(self, subject: str) -> ObservedGraphReading | None:
         for reading in self.graph_readings:

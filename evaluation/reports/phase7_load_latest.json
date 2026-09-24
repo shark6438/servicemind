@@ -1,0 +1,160 @@
+{
+  "baseline_tier": "tier-1",
+  "blockers": [
+    "tier-1: 20 of 20 declared run(s) were not observed, so this tier was not measured (first: Q-001#0)",
+    "tier-5: 40 of 40 declared run(s) were not observed, so this tier was not measured (first: Q-001#0)",
+    "tier-10: 60 of 60 declared run(s) were not observed, so this tier was not measured (first: Q-001#0)"
+  ],
+  "deployed_revisions": [],
+  "findings": [],
+  "generated_at": "2026-09-23T22:03:28.509113Z",
+  "observed_from": null,
+  "observed_to": null,
+  "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+  "schema_version": "phase7-load-v1",
+  "settle_budget_seconds": 240.0,
+  "tiers": [
+    {
+      "by_repeat": [
+        {
+          "p95_seconds": -1.0,
+          "repeat_index": 0,
+          "runs": 0
+        }
+      ],
+      "concurrency": 1,
+      "declared_runs": 20,
+      "failed": 0,
+      "latency": null,
+      "missing": [
+        "Q-001#0",
+        "Q-002#0",
+        "Q-003#0",
+        "Q-004#0",
+        "Q-005#0",
+        "Q-006#0",
+        "Q-007#0",
+        "Q-008#0",
+        "Q-009#0",
+        "Q-010#0",
+        "Q-011#0",
+        "Q-012#0",
+        "Q-013#0",
+        "Q-014#0",
+        "Q-015#0",
+        "Q-016#0",
+        "Q-017#0",
+        "Q-018#0",
+        "Q-019#0",
+        "Q-020#0"
+      ],
+      "name": "tier-1",
+      "observed_runs": 0,
+      "passed": 0,
+      "repeats": 1,
+      "runs_per_minute": null,
+      "wall_seconds": null
+    },
+    {
+      "by_repeat": [
+        {
+          "p95_seconds": -1.0,
+          "repeat_index": 0,
+          "runs": 0
+        },
+        {
+          "p95_seconds": -1.0,
+          "repeat_index": 1,
+          "runs": 0
+        }
+      ],
+      "concurrency": 5,
+      "declared_runs": 40,
+      "failed": 0,
+      "latency": null,
+      "missing": [
+        "Q-001#0",
+        "Q-001#1",
+        "Q-002#0",
+        "Q-002#1",
+        "Q-003#0",
+        "Q-003#1",
+        "Q-004#0",
+        "Q-004#1",
+        "Q-005#0",
+        "Q-005#1",
+        "Q-006#0",
+        "Q-006#1",
+        "Q-007#0",
+        "Q-007#1",
+        "Q-008#0",
+        "Q-008#1",
+        "Q-009#0",
+        "Q-009#1",
+        "Q-010#0",
+        "Q-010#1"
+      ],
+      "name": "tier-5",
+      "observed_runs": 0,
+      "passed": 0,
+      "repeats": 2,
+      "runs_per_minute": null,
+      "wall_seconds": null
+    },
+    {
+      "by_repeat": [
+        {
+          "p95_seconds": -1.0,
+          "repeat_index": 0,
+          "runs": 0
+        },
+        {
+          "p95_seconds": -1.0,
+          "repeat_index": 1,
+          "runs": 0
+        },
+        {
+          "p95_seconds": -1.0,
+          "repeat_index": 2,
+          "runs": 0
+        }
+      ],
+      "concurrency": 10,
+      "declared_runs": 60,
+      "failed": 0,
+      "latency": null,
+      "missing": [
+        "Q-001#0",
+        "Q-001#1",
+        "Q-001#2",
+        "Q-002#0",
+        "Q-002#1",
+        "Q-002#2",
+        "Q-003#0",
+        "Q-003#1",
+        "Q-003#2",
+        "Q-004#0",
+        "Q-004#1",
+        "Q-004#2",
+        "Q-005#0",
+        "Q-005#1",
+        "Q-005#2",
+        "Q-006#0",
+        "Q-006#1",
+        "Q-006#2",
+        "Q-007#0",
+        "Q-007#1"
+      ],
+      "name": "tier-10",
+      "observed_runs": 0,
+      "passed": 0,
+      "repeats": 3,
+      "runs_per_minute": null,
+      "wall_seconds": null
+    }
+  ],
+  "verdict": "BLOCKED",
+  "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+  "workload_size": 20,
+  "workload_source": "evaluation/quality/cases.v1.json"
+}

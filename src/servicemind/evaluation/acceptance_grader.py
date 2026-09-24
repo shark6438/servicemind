@@ -75,7 +75,7 @@ from servicemind.evaluation.acceptance import (
     case_set_digest,
     execution_digest,
 )
-from servicemind.integrations.glpi.models import html_to_text
+from servicemind.integrations.glpi.models import normalized_text
 
 
 class Verdict(StrEnum):
@@ -89,17 +89,10 @@ class Verdict(StrEnum):
 
 _WHITESPACE = re.compile(r"\s+")
 
-
-def normalize_text(value: str) -> str:
-    """The platform's own text extraction, then whitespace collapsed.
-
-    Both sides of a body comparison go through this. ``html_to_text`` is what the
-    executor itself uses to read a followup back, so using it here means the grader's
-    notion of "the text" is definitionally the platform's rather than a second opinion;
-    the collapse on top absorbs the difference between a newline GLPI stored as a tag and
-    one it stored as a character, which is a storage detail and not a content change.
-    """
-    return _WHITESPACE.sub(" ", html_to_text(value)).strip()
+#: The grader does not get its own opinion about when two followups say the same thing.
+#: This is the executor's own comparison, imported rather than restated, so the assertion
+#: that checks a write and the code that verifies it cannot drift apart.
+normalize_text = normalized_text
 
 
 def _one_line(value: str, limit: int = 240) -> str:
@@ -655,19 +648,28 @@ def _judge(
             for record in execution.memory_records
             if record.memory_type == expected.memory_type and record.status == expected.status
         ]
-        if expected.linked_to_run and execution.run_id is not None:
-            matches = [record for record in matches if record.source_run_id == execution.run_id]
+        if expected.linked_to_run:
+            # "This run" means a run this case produced, not only the one it is named
+            # after. The platform attributes a derived record to the run whose post-run
+            # step reached the conclusion, and for a case built out of a *pair* of runs
+            # that is a fact about which one wrote last -- not a requirement the case may
+            # impose without asserting the order along with it. See ``case_run_ids``.
+            produced = set(execution.case_run_ids) or (
+                {execution.run_id} if execution.run_id is not None else set()
+            )
+            matches = [record for record in matches if record.source_run_id in produced]
         if not matches:
             return (
                 Verdict.FAIL,
-                f"no {expected.memory_type}/{expected.status} record linked to this run; "
+                f"no {expected.memory_type}/{expected.status} record linked to a run of "
+                f"this case; "
                 f"saw {[(r.memory_type, r.status, str(r.source_run_id)) for r in execution.memory_records]}",
                 expectation,
             )
         return (
             Verdict.PASS,
             f"memory record(s) {[str(record.memory_id) for record in matches]} are "
-            f"{expected.memory_type}/{expected.status} and linked to this run",
+            f"{expected.memory_type}/{expected.status} and linked to a run of this case",
             expectation,
         )
 
@@ -781,6 +783,20 @@ def _judge_required_facts(
             if offending:
                 unresolved.append(
                     f"{fact.id}: stated, but grounded in a forbidden source ({'; '.join(offending)})"
+                )
+                continue
+        if fact.must_cite:
+            cited: set[str] = set()
+            for claim in matching:
+                for ref in claim.evidence_refs:
+                    evidence = by_id.get(ref)
+                    if evidence is not None and evidence.source_record_id:
+                        cited.add(evidence.source_record_id)
+            missing = sorted(set(fact.must_cite) - cited)
+            if missing:
+                unresolved.append(
+                    f"{fact.id}: stated, but no matching claim cites {missing} "
+                    f"(cited: {sorted(cited)})"
                 )
                 continue
         satisfied.append(f"{fact.id} via {[claim.claim_id for claim in matching]}")

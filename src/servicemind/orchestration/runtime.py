@@ -288,8 +288,6 @@ async def resolve_resume_scope(run: AgentRun, context: TenantContext) -> ResumeS
         # ``None``: that is what the graph's other invalidators write (``revise_node``,
         # ``dispatch_barrier_node``), every reader tests these for truth, and a null
         # reaches ``finalize_node`` as an object it then calls ``.get`` on.
-        for product in _DERIVED_PRODUCTS:
-            update[product] = {}
         # Finally the plan itself. Clearing the products without this leaves every task
         # marked SUCCESS, and the Supervisor -- which decides from task status, not from
         # the products -- sees "nothing ready, everything complete" and finalizes a run

@@ -625,15 +625,25 @@ class OpenSearchKnowledgeIndex:
 
     async def set_document_active(
         self, tenant_id: UUID, source_record_id: str, *, is_active: bool
-    ) -> None:
+    ) -> int:
         """Suspend/activate a document in every retained search generation.
 
         The document-level ``is_active`` flag is ACL, so PostgreSQL is updated by the
         repository first. Patching all blue-green generations prevents a suspended
         document from becoming visible again after an alias switch.
+
+        Returns the number of search rows the patch moved. The caller reports it because
+        it is the only evidence that the *pre-filter* -- which is what retrieval actually
+        runs on -- followed PostgreSQL: a retirement whose projection did not move is a
+        document the repository has withdrawn and retrieval still serves.
+
+        Written with ``refresh=False``, so the patch is not visible to search until the
+        next near-real-time refresh; a caller that treats the document as gone from
+        search must call :meth:`refresh`, and ``EnterpriseRAG`` does.
         """
+        patched = 0
         for child in await self._list_concrete(self._child_pattern(tenant_id)):
-            await self.client.update_by_query(
+            response = await self.client.update_by_query(
                 index=child,
                 conflicts="proceed",
                 refresh=False,
@@ -646,6 +656,8 @@ class OpenSearchKnowledgeIndex:
                     },
                 },
             )
+            patched += int(response.get("updated", 0))
+        return patched
 
     async def prune_to(self, tenant_id: UUID, active_source_record_ids: set[str]) -> int:
         """Drop index rows whose source record no longer exists in PostgreSQL.

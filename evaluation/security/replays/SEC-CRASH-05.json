@@ -1,0 +1,50 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_two_rejections_in_a_row_are_still_correctable"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M01 a rejection is spent by the rejection that follows it",
+      "outcome": "passed",
+      "ref": "scripts/mutate_supervisor_feedback.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M02 the prompt lists the rejections without saying they still hold",
+      "outcome": "passed",
+      "ref": "scripts/mutate_supervisor_feedback.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M03 the prompt keeps only the newest rejection",
+      "outcome": "passed",
+      "ref": "scripts/mutate_supervisor_feedback.py"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-CRASH-05",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

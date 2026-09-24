@@ -1,11 +1,12 @@
 {
   "case_id": "ACC-15",
+  "cases_digest": "63a3a71fd0a6caedb9041dffa0094cabe80a84afe91bdbf11f13c6334d67356c",
   "environment": {
     "entitlement_verifier_configured": true,
     "base_url": "http://127.0.0.1:18080",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
-    "recorded_at": "2026-09-23T12:07:27.120744Z",
-    "deployed_revision": "c0d878d0c6a2f61efc249716c2053b447812aacd+dirty(108 files)",
+    "recorded_at": "2026-09-23T20:16:53.147402Z",
+    "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(92 files)",
     "notes": [
       "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
       "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
@@ -15,8 +16,8 @@
     "username": "globex-analyst-g3",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
     "roles": [
-      "analyst",
-      "viewer"
+      "viewer",
+      "analyst"
     ],
     "entity_ids": [
       2
@@ -30,8 +31,8 @@
       "id": "mcp-list",
       "description": "调用 MCP tools/list，并同时用原生读路径列出同一主体的可见工具集",
       "action": "POST /v1/servicemind/mcp tools/list",
-      "started_at": "2026-09-23T12:16:33.570057Z",
-      "elapsed_seconds": 0.06999846640974283,
+      "started_at": "2026-09-23T20:24:59.902333Z",
+      "elapsed_seconds": 0.07630497682839632,
       "http_status": 200,
       "action_hash": null,
       "action_status": null,
@@ -42,8 +43,8 @@
       "id": "mcp-call",
       "description": "调用 MCP tools/call 走一次读路径，原始响应写入 detail",
       "action": "POST /v1/servicemind/mcp tools/call",
-      "started_at": "2026-09-23T12:16:33.640136Z",
-      "elapsed_seconds": 0.8821569113060832,
+      "started_at": "2026-09-23T20:24:59.978731Z",
+      "elapsed_seconds": 0.8605636572465301,
       "http_status": 200,
       "action_hash": null,
       "action_status": null,
@@ -52,6 +53,7 @@
     }
   ],
   "run_id": null,
+  "case_run_ids": [],
   "terminal_status": null,
   "total_seconds": null,
   "action_intent": null,

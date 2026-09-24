@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Seed the two Phase 7.6 acceptance tickets in the Globex entity.
+ * Seed the Phase 7.6 acceptance tickets in the Globex entity.
  *
  * The acceptance cases are ticket-driven: a run needs a real ticket whose timeline carries
  * three specific facts -- the password step was accepted, the challenge step failed, and
@@ -13,10 +13,24 @@ declare(strict_types=1);
  * tickets are bootstrapped here, next to the entities and groups that bootstrap_phase2.php
  * creates.
  *
- * Two tickets, not one: ACC-04b and ACC-09b run as a different subject, and two cases
- * appending followups to the same ticket would let one case's write satisfy another's
- * "exactly one new followup" assertion. The two are structurally isomorphic -- same
- * fields, same three facts -- so a difference between them can only come from the run.
+ * **One ticket per case that writes.** The six are structurally isomorphic -- same fields,
+ * same three facts, same two seeded followups -- so a difference between any two of them
+ * can only come from the run. What they are not is interchangeable, because a ticket
+ * accumulates: a case that appends a followup leaves the ticket permanently different from
+ * how the next run of the suite finds it.
+ *
+ * The reader set (``-a`` and ``-b``) is written to by nothing. The four writing cases own
+ * ``-acc10b``, ``-acc11``, ``-acc22`` and ``-acc23`` outright, one each. The split is what
+ * makes the suite re-runnable: no read-only case's evidence can be altered by a case that
+ * ran before it, so the same batch produces the same observations in any order and on any
+ * number of repetitions. Sharing was the earlier design and it showed up exactly here --
+ * two writing cases on one ticket is two cases whose *inputs* differ between run one and
+ * run two, and a read-only case sharing with a writer is a case whose verdict depends on
+ * what ran before it.
+ *
+ * The first pair is still two tickets rather than one for the same reason it always was:
+ * ACC-04b and ACC-09b run as a different subject, and a shared ticket would let one case's
+ * write satisfy another's "exactly one new followup" assertion.
  *
  * Idempotent in the same way bootstrap_phase2.php is: a ticket is looked up by its exact
  * name inside the entity and left alone if it already exists, and the timeline is only
@@ -36,50 +50,50 @@ $kernel->boot();
 const ENTITY_ID = 2;      // Globex China
 const TICKET_TYPE_REQUEST = 2;
 
-$tickets = [
-    [
-        'ref' => 'globex-vpn-mfa-a',
-        'name' => '[P7.6-ACCEPTANCE-A] VPN rejects the MFA challenge after a handset change',
-        'content' => <<<'TEXT'
-        Reported by the user to the service desk.
+//: The three facts every acceptance ticket has to carry. Declared once rather than per
+//: ticket: the whole point of the set is that no two of them differ, so a second copy of
+//: this prose would be a second place for them to drift apart.
+const TICKET_CONTENT = <<<'TEXT'
+Reported by the user to the service desk.
 
-        The VPN client accepts the password and then fails the multi-factor authentication
-        challenge. The failure repeats on every attempt, from every network, and with the
-        same password. The user replaced their handset nine days ago. No lockout is
-        recorded against the account.
+The VPN client accepts the password and then fails the multi-factor authentication
+challenge. The failure repeats on every attempt, from every network, and with the same
+password. The user replaced their handset nine days ago. No lockout is recorded against
+the account.
 
-        What is known so far: password authentication succeeded, multi-factor
-        authentication failed, and the user's phone was replaced recently.
+What is known so far: password authentication succeeded, multi-factor authentication
+failed, and the user's phone was replaced recently.
 
-        No action has been taken yet.
-        TEXT,
-        'followups' => [
-            'First line check: the account is not locked, and the password step is accepted on every attempt. The failure is at the second factor.',
-            'The user confirms the handset was replaced nine days ago and that the old device was factory wiped before it was handed on.',
-        ],
-    ],
-    [
-        'ref' => 'globex-vpn-mfa-b',
-        'name' => '[P7.6-ACCEPTANCE-B] VPN rejects the MFA challenge after a handset change',
-        'content' => <<<'TEXT'
-        Reported by the user to the service desk.
+No action has been taken yet.
+TEXT;
 
-        Authentication to the corporate VPN gets past the password and is then rejected at
-        the multi-factor authentication step. It fails on every attempt, from every
-        network, with the same password. The user's phone was replaced nine days ago.
-        There is no lockout on the account.
-
-        What is known so far: password authentication succeeded, multi-factor
-        authentication failed, and the user's phone was replaced recently.
-
-        No action has been taken yet.
-        TEXT,
-        'followups' => [
-            'First line check: the account is not locked, and the password step is accepted on every attempt. The failure is at the second factor.',
-            'The user confirms the handset was replaced nine days ago and that the old device was factory wiped before it was handed on.',
-        ],
-    ],
+//: The first-line followups that establish those facts, and that the ACC-02/ACC-03 style
+//: evidence assertions read.
+const TICKET_FOLLOWUPS = [
+    'First line check: the account is not locked, and the password step is accepted on every attempt. The failure is at the second factor.',
+    'The user confirms the handset was replaced nine days ago and that the old device was factory wiped before it was handed on.',
 ];
+
+//: One ticket per case, keyed by the ref the case list declares. ``-a`` and ``-b`` are
+//: read-only: no acceptance case appends to them. The four writing cases each own one.
+const TICKETS = [
+    'globex-vpn-mfa-a' => '[P7.6-ACCEPTANCE-A] VPN rejects the MFA challenge after a handset change',
+    'globex-vpn-mfa-b' => '[P7.6-ACCEPTANCE-B] VPN rejects the MFA challenge after a handset change',
+    'globex-vpn-mfa-acc10b' => '[P7.6-ACCEPTANCE-ACC-10B] VPN rejects the MFA challenge after a handset change',
+    'globex-vpn-mfa-acc11' => '[P7.6-ACCEPTANCE-ACC-11] VPN rejects the MFA challenge after a handset change',
+    'globex-vpn-mfa-acc22' => '[P7.6-ACCEPTANCE-ACC-22] VPN rejects the MFA challenge after a handset change',
+    'globex-vpn-mfa-acc23' => '[P7.6-ACCEPTANCE-ACC-23] VPN rejects the MFA challenge after a handset change',
+];
+
+$tickets = [];
+foreach (TICKETS as $ref => $name) {
+    $tickets[] = [
+        'ref' => $ref,
+        'name' => $name,
+        'content' => TICKET_CONTENT,
+        'followups' => TICKET_FOLLOWUPS,
+    ];
+}
 
 $resolved = [];
 foreach ($tickets as $spec) {

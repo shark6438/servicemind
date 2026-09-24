@@ -16,9 +16,20 @@ from servicemind.agents.data import DataAgent, data_agent
 from servicemind.agents.knowledge import KnowledgeAgent, knowledge_agent
 from servicemind.agents.reviewer import ReviewerAgent, reviewer_agent
 from servicemind.agents.supervisor import SupervisorAgent, supervisor_agent
-from servicemind.context.contracts import ContextAgent, ContextAssemblyError, ContextEnvelope
+from servicemind.context.contracts import (
+    ContextAgent,
+    ContextAssemblyError,
+    ContextEnvelope,
+    ContextSource,
+)
 from servicemind.domain.analysis import AnalysisResult
-from servicemind.domain.evidence import Evidence, JoinedEvidence, bounded_join
+from servicemind.domain.evidence import (
+    Evidence,
+    EvidenceSourceType,
+    JoinedEvidence,
+    bounded_join,
+    evidence_envelope,
+)
 from servicemind.domain.handoff import HandoffEnvelope
 from servicemind.domain.models import ACTION_REQUIRED_ROLES, ActionIntent, ApprovalDecision
 from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
@@ -182,6 +193,38 @@ def _bounded_output_ref(evidence_ids: list[str]) -> str:
         return "none"
     dropped = len(evidence_ids) - len(kept)
     return f"{','.join(kept)} …[{dropped} more]" if dropped else ",".join(kept)
+
+
+def _unsupported_lookup(evidence: list[Evidence]) -> dict[str, Any] | None:
+    """Why a retrieval-only lookup cannot be answered from what it retrieved, or None.
+
+    Reports the *best* row, because one relevant passage is enough to answer and the
+    question is only ever whether any exists. Only knowledge rows are scored: a GLPI row
+    carries the confidence of the fetch that produced it -- 1.0 for a ticket this run
+    explicitly asked for -- which says nothing about whether it answers the question.
+
+    Unscored evidence is treated as unsupported rather than as passing. That is the
+    fail-closed direction and it costs little: when the reranker did not run there is no
+    relevance signal at all, so "the nearest passages are the answer" is an assumption
+    rather than a measurement, and the reviewed pipeline is where the platform is set up
+    to handle not knowing.
+    """
+    scores = [
+        item.confidence
+        for item in evidence
+        if item.source_type is EvidenceSourceType.KNOWLEDGE and item.confidence is not None
+    ]
+    floor = settings.SERVICEMIND_RAG_ANSWER_FLOOR
+    best = max(scores) if scores else None
+    if best is not None and best >= floor:
+        return None
+    return {
+        "reason": "no_evidence_above_floor",
+        "best_score": best,
+        "floor": floor,
+        "scored_rows": len(scores),
+        "retrieved_rows": len(evidence),
+    }
 
 
 def _after_termination(state: Phase3State, onward: str) -> str:
@@ -356,7 +399,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             evidence = await svc.data.get_ticket_evidence(_context(state), state["ticket_id"])
         result = {
             "route": state["route"],
-            "evidence": [item.model_dump(mode="json") for item in evidence],
+            "evidence": evidence_envelope(evidence, UUID(state["tenant_id"])),
             "answer": evidence[0].metadata.get("ticket_facts", {}),
             "trajectory": ["router", "data"],
         }
@@ -397,9 +440,33 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             )
         ):
             evidence = await svc.knowledge.retrieve(**kwargs)
+        decline = _unsupported_lookup(evidence)
+        if decline is not None:
+            # Retrieval is top-k, so it answers every question with *something*, ranked.
+            # Answering from it anyway is how this path reported SUCCEEDED for questions
+            # the corpus does not cover: measured on the 2026-09-24 batch, "What is the
+            # procedure for returning a leased vehicle?" came back as eight unrelated
+            # passages scored 1e-5 to 1e-4, and the run was recorded as a success.
+            #
+            # Declining is not failing. The run keeps its routing decision and hands
+            # over to the Supervisor, which plans the full pipeline -- retrieval,
+            # analysis and review -- and the reviewer is the component allowed to say
+            # the corpus does not answer this. Everything downstream of here is the
+            # ordinary complex path; nothing special-cases the decline beyond the event
+            # below, which records the score that caused it.
+            await repository(state).append_event(
+                UUID(state["run_id"]), "lookup.declined", {**decline, "route": "simple_knowledge"}
+            )
+            # ``trajectory`` accumulates, so this names only the step just taken: the
+            # "router" entry is already on the channel from ``route_node``.
+            return {
+                "lookup_declined": decline,
+                "active_agent": "router",
+                "trajectory": ["knowledge:declined"],
+            }
         result = {
             "route": state["route"],
-            "evidence": [item.model_dump(mode="json") for item in evidence],
+            "evidence": evidence_envelope(evidence, UUID(state["tenant_id"])),
             "answer": [item.content for item in evidence],
             "trajectory": ["router", "knowledge"],
         }
@@ -414,6 +481,15 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             "final_result": result,
             "trajectory": ["knowledge"],
         }
+
+    def after_fast_knowledge(state: Phase3State) -> str:
+        """Where a lookup goes once it has run: the reviewed pipeline, or the end.
+
+        A static edge cannot express this. It used to be one -- ``fast_knowledge`` to
+        ``END`` -- which is what made an unreviewed retrieval dump indistinguishable from
+        an answer at the API, since both left the run at ``succeeded``.
+        """
+        return "supervisor" if state.get("lookup_declined") else END
 
     async def unsupported_node(state: Phase3State) -> dict[str, Any]:
         result = {
@@ -506,6 +582,14 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                     },
                     goto="finalize",
                 )
+        #: Every rejection so far, not only the last one. A retry that is handed one
+        #: correction at a time oscillates: the model fixes the rule it was just told
+        #: about and breaks the one it was told about before, which is what ended
+        #: ACC-06 on ticket 26 -- ``dispatch`` refused, ``join_evidence`` refused for
+        #: naming a task, then ``dispatch`` again, and the run was discarded with its
+        #: plan and analysis. The corrections are cumulative facts about one state, so
+        #: they are carried cumulatively; the list is bounded by the retry bound below.
+        rejections: list[str] = []
         feedback = None
         decision = None
         failure: BaseException | None = None
@@ -568,7 +652,10 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             try:
                 svc.policy.validate(candidate, cast(dict, state))
             except SupervisorPolicyError as exc:
-                feedback = str(exc)
+                rejections.append(str(exc))
+                feedback = "\n".join(
+                    f"{index}. {reason}" for index, reason in enumerate(rejections, 1)
+                )
                 await repository(state).append_event(
                     UUID(state["run_id"]),
                     "supervisor.policy_rejected",
@@ -1122,7 +1209,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         control = _control(state)
         control.model_call_count += envelope.metrics.model_calls if envelope else 1
         control.total_steps += 1
-        return {
+        update: dict[str, Any] = {
             "task_plan": plan.model_dump(mode="json", by_alias=True),
             "analysis_result": result.model_dump(mode="json"),
             "review_result": {},
@@ -1134,6 +1221,23 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             ),
             "trajectory": [f"analysis:{task.task_id}"],
         }
+        if context_envelope is not None:
+            # The delivery decision this node just made *is* the Reviewer's evidence
+            # scope. Record it here, where the envelope is in hand, rather than letting
+            # the Reviewer rebuild it from ``joined_evidence`` -- those two differ by
+            # exactly the rows this envelope's budget packer pruned, and a Reviewer
+            # holding them would judge the analysis against evidence the analysis was
+            # never shown. Measured on ACC-03 (2026-09-23, run 96435a80): the Analyst
+            # was delivered 9 evidence rows and had 2 pruned, while the Reviewer was
+            # handed all 11 -- including the runbook chunk the root-cause claim would
+            # have been checked against. Absent envelope (a stub analyst that reads the
+            # joined set directly) leaves this key unset on purpose; see ``Phase3State``.
+            update["analysis_evidence_ids"] = sorted(
+                item.item_id
+                for item in context_envelope.items
+                if item.source is ContextSource.EVIDENCE
+            )
+        return update
 
     async def reviewer_node(state: Phase3State) -> dict[str, Any]:
         plan = _plan(state)
@@ -1593,7 +1697,12 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         result = {
             "route": state.get("route"),
             "task_plan": plan.model_dump(mode="json", by_alias=True) if plan else None,
-            "evidence": state.get("joined_evidence"),
+            # Always the envelope, including when the run joined nothing. ``None`` here
+            # was a third shape on the same field, and it is the one a reader is least
+            # able to distinguish from "this run has no evidence" -- which is a statement
+            # about the run, made on the strength of a statement about the encoding.
+            "evidence": state.get("joined_evidence")
+            or evidence_envelope((), UUID(state["tenant_id"])),
             "analysis": state.get("analysis_result"),
             "review": state.get("review_result"),
             "supervisor_decision": state.get("supervisor_decision"),
@@ -1686,7 +1795,9 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
     graph.add_edge(START, "route")
     graph.add_conditional_edges("route", after_route)
     graph.add_edge("fast_data", END)
-    graph.add_edge("fast_knowledge", END)
+    # Not a static edge: a lookup that found nothing relevant hands the run to the
+    # reviewed pipeline rather than ending it. See ``after_fast_knowledge``.
+    graph.add_conditional_edges("fast_knowledge", after_fast_knowledge)
     graph.add_edge("unsupported", END)
     graph.add_conditional_edges("plan", lambda state: _after_termination(state, "supervisor"))
     graph.add_edge("data_task", "dispatch_barrier")

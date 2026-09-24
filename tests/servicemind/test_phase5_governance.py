@@ -37,6 +37,7 @@ from servicemind.domain.evidence import (
     KNOWLEDGE_AUTHORITY_CEILING,
     Evidence,
     EvidenceSourceType,
+    JoinedEvidence,
     join_evidence,
 )
 from servicemind.domain.integrity import INJECTION_MARKERS, contains_injection_marker
@@ -603,6 +604,140 @@ async def test_memory_retrieval_only_reaches_analysis_not_reviewer(
         "selected",
         "ranked_within_budget",
     )
+
+
+def _joined_rows(count: int) -> tuple[JoinedEvidence, list[Evidence]]:
+    rows = [
+        Evidence.create(
+            tenant_id=TENANT_A,
+            source_type=EvidenceSourceType.KNOWLEDGE,
+            source_ref=f"kb://globex/runbook-{index}",
+            resource_type="document",
+            resource_id=f"runbook-{index}",
+            content=f"Globex VPN MFA runbook {index}: rebind the registered device.",
+            provider="test",
+            retrieval_method="search",
+            confidence=1,
+        )
+        for index in range(count)
+    ]
+    return join_evidence(TENANT_A, rows), rows
+
+
+def _reviewer_state(joined: JoinedEvidence, cited: str) -> dict:
+    return {
+        "tenant_id": str(TENANT_A),
+        "run_id": str(uuid4()),
+        "thread_id": "thread-42",
+        "user_id": "alice",
+        "goal": "Analyze VPN MFA incident",
+        "ticket_id": 42,
+        "request_write": False,
+        "allowed_glpi_entity_ids": [1],
+        "group_ids": [],
+        "joined_evidence": joined.model_dump(mode="json"),
+        "analysis_result": {
+            "classification": "incident",
+            "priority": 2,
+            "recommended_group": "Network Team",
+            "reasoning_summary": "supported",
+            "confidence": 0.9,
+            "evidence_refs": [cited],
+        },
+    }
+
+
+async def _reviewer_evidence_ids(state: dict, governance: Phase5Governance) -> list[str]:
+    task = Task(
+        task_id="T1",
+        agent=AgentName.REVIEWER,
+        task_type="review_analysis",
+        input={"objective": state["goal"]},
+        deadline=datetime.now(UTC) + timedelta(minutes=5),
+    )
+    envelope = await governance.build_context(
+        state=state,
+        task=task,
+        invocation=AgentInvocationContext(
+            run_id=UUID(state["run_id"]),
+            tenant_id=TENANT_A,
+            user_id="alice",
+            task_id="T1",
+            trace_id="thread-42",
+            deadline=task.deadline,
+        ),
+        agent=ContextAgent.REVIEWER,
+    )
+    assert envelope is not None
+    return sorted(item.item_id for item in envelope.items if item.source is ContextSource.EVIDENCE)
+
+
+@pytest.mark.asyncio
+async def test_the_reviewer_is_judged_against_the_evidence_the_analyst_was_shown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D3 regression: the Reviewer's evidence set is the Analyst's *delivered* set.
+
+    Both roles read the same retrieval, but only the Analyst reads it through the budget
+    packer, and the packer prunes. This branch used to hand the Reviewer every row in
+    ``joined_evidence`` -- the pre-pruning set -- so the evidence under review was a
+    strict superset of the evidence the analysis was written from, and "unsupported"
+    stopped being a statement about the analysis. Measured on ACC-03 (2026-09-23, run
+    ``96435a80``): the Analyst selected 9 evidence ids and pruned 2 (including the
+    ``KB-GLOBEX-VPN-MFA-REBIND`` runbook chunk), the Reviewer selected all 11.
+
+    ``analysis_evidence_ids`` is what ``analysis_node`` writes from the envelope it just
+    built. The second half removes it and asserts the Reviewer sees *more*, so this test
+    fails if the filter is ever unwired, not merely if it is wrong.
+    """
+    monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_ENABLED", False)
+    monkeypatch.setattr(settings, "SERVICEMIND_CONTEXT_ENABLED", True)
+    monkeypatch.setattr(settings, "SERVICEMIND_SKILLS_ENABLED", False)
+    governance = Phase5Governance(context_sink=NullContextArtifactSink())
+    joined, rows = _joined_rows(3)
+    kept, pruned_a, pruned_b = rows
+    state = _reviewer_state(joined, kept.evidence_id)
+    # What ``analysis_node`` records: the envelope delivered ``kept`` and dropped the
+    # other two. The analysis cites ``kept``, so the union changes nothing here.
+    state["analysis_evidence_ids"] = [kept.evidence_id]
+
+    assert await _reviewer_evidence_ids(state, governance) == [kept.evidence_id]
+
+    del state["analysis_evidence_ids"]
+    fallback = await _reviewer_evidence_ids(state, governance)
+    assert set(fallback) == {row.evidence_id for row in (kept, pruned_a, pruned_b)}
+    assert pruned_a.evidence_id in fallback, (
+        "without the recorded delivery the reviewer must fall back to the whole joined "
+        "set -- that is the stub-analyst path, and it has to stay reachable"
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_cited_row_the_analyst_was_not_shown_still_reaches_the_reviewer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A delivered-set filter may not turn a resolvable citation into a missing one.
+
+    ``required`` is set from the cited ids, but it cannot rescue a row the filter drops
+    before the packer ever sees it: the row is simply not in ``items``. Verified by
+    mutation -- removing the union leaves this test's cited row absent with no error
+    raised, so the Reviewer is asked to check a claim against evidence it was not
+    handed, which is the D3 fault reappearing one row at a time. The run then replans
+    until its budget is gone rather than reporting a verdict.
+    """
+    monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_ENABLED", False)
+    monkeypatch.setattr(settings, "SERVICEMIND_CONTEXT_ENABLED", True)
+    monkeypatch.setattr(settings, "SERVICEMIND_SKILLS_ENABLED", False)
+    governance = Phase5Governance(context_sink=NullContextArtifactSink())
+    joined, rows = _joined_rows(3)
+    delivered, cited_only, other = rows
+    state = _reviewer_state(joined, cited_only.evidence_id)
+    state["analysis_evidence_ids"] = [delivered.evidence_id]
+
+    assert await _reviewer_evidence_ids(state, governance) == sorted(
+        [delivered.evidence_id, cited_only.evidence_id]
+    )
+    assert other.evidence_id not in await _reviewer_evidence_ids(state, governance)
 
 
 @pytest.mark.asyncio
@@ -2644,14 +2779,21 @@ async def test_one_ticket_cannot_supply_two_supporting_episodes(
     * the second run reaches the **same** conclusion -> the identical content under the
       same subject key and scope is an idempotent duplicate, so only one record exists;
     * the second run reaches a **different** conclusion -> the conflict is parked in
-      ``quarantine``, and a quarantined record is not ``visible_at`` anything, so it is
-      filtered out of the supporting set anyway.
+      ``quarantine``, and the two records carry the same ticket id, so the producer's
+      supporting set -- which takes at most one episode per ticket and per run --
+      keeps one of them.
 
     Neither rule is wrong. Together they mean the grouping key for procedural
     candidates has to span incidents (a pattern repeated across tickets), not
     repetitions of a single one. Asserted here rather than left implicit, because the
     previous deadlock in this area -- extractor scope vs activation guard -- was also
     two individually reasonable rules that met badly.
+
+    The second bullet used to read "a quarantined record is not ``visible_at``
+    anything, so it is filtered out of the supporting set". D15 changed that and the
+    conclusion had to be re-derived rather than left standing on a reason that no
+    longer holds: quarantine is now admitted to the supporting set, and what keeps the
+    single ticket from corroborating itself is the ticket-and-run identity above.
     """
     monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_ENABLED", True)
     repository = InMemoryMemoryRepository()
@@ -2677,6 +2819,44 @@ async def test_one_ticket_cannot_supply_two_supporting_episodes(
         assert [record.status for record in records].count(MemoryStatus.QUARANTINE) == 1
     assert len(usable) == 1
     assert len({record.source_run_id for record in usable}) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("same_conclusion", [True, False], ids=["same", "conflicting"])
+async def test_two_runs_of_one_ticket_never_propose_a_procedure(
+    monkeypatch: pytest.MonkeyPatch, same_conclusion: bool
+) -> None:
+    """The constraint above, exercised against the real producer instead of described.
+
+    ``test_one_ticket_cannot_supply_two_supporting_episodes`` states that a single
+    ticket cannot corroborate itself and then leaves the producer switched off, so the
+    statement was reasoning rather than observation -- and D15 invalidated half of that
+    reasoning. Both of the second run's outcomes are driven through the real gate here,
+    with a pattern key that forms and an episode that is corroborable, so what stops
+    the proposal is the rule the docstring names and nothing else.
+    """
+    monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_ENABLED", True)
+    monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_PROCEDURAL_PROPOSALS_ENABLED", True)
+    repository = InMemoryMemoryRepository()
+    governance = Phase5Governance(
+        context_sink=NullContextArtifactSink(),
+        memory_repository_factory=lambda tenant_id: repository,
+    )
+
+    for attempt in range(2):
+        state, result = _post_run_inputs(ticket_id=42, user_id="alice")
+        result["analysis"].update(
+            {
+                "recurring_incident": True,
+                "problem_recommendation": "Verify gateway clock drift before resetting MFA.",
+                "change_recommendation": "Resynchronise the VPN gateway clock.",
+            }
+        )
+        if attempt == 1 and not same_conclusion:
+            result["analysis"]["reasoning_summary"] = "Second run cleared it by clock resync."
+        await governance.post_run(state=state, result=result, status="succeeded")
+
+    assert MemoryType.PROCEDURAL not in {record.memory_type for record in repository.records}
 
 
 @pytest.mark.asyncio
@@ -2730,9 +2910,26 @@ async def test_two_distinct_tickets_produce_one_review_only_procedure(
 
 
 @pytest.mark.asyncio
-async def test_cross_ticket_producer_does_not_merge_different_recommendations(
+async def test_recommendation_wording_does_not_split_a_pattern(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """The identity may not move with the evidence one ticket happened to hold.
+
+    This test asserted the opposite until D15, and the assertion *was* the defect: it
+    drove two tickets whose only disagreement was the sentence recommended, and
+    required the producer to call them different root causes. The real model on
+    ACC-12b disagreed the same way, for a reason no normalisation can reach -- the
+    second ticket by construction saw one more sibling incident, and its
+    ``problem_recommendation`` changed polarity, from "no problem record is proposed"
+    to "consider opening one". The key exists so that second ticket can be recognised
+    as the same root cause, and it refused on exactly the pair it was built for.
+
+    What still separates two tickets is what would change the instruction: the
+    classification and the team that owns it (``test_a_different_root_cause_still_
+    splits_now_that_recurrence_is_not_a_gate``). The recommendation *shape* is checked
+    in the test below, since that is the one part of the recommendation that survives
+    into the identity.
+    """
     monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_ENABLED", True)
     monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_PROCEDURAL_PROPOSALS_ENABLED", True)
     repository = InMemoryMemoryRepository()
@@ -2741,6 +2938,7 @@ async def test_cross_ticket_producer_does_not_merge_different_recommendations(
         memory_repository_factory=lambda tenant_id: repository,
     )
 
+    counts: list[int] = []
     for ticket_id, change in (
         (42, "Resynchronise the VPN gateway clock."),
         (43, "Rotate the VPN gateway certificate."),
@@ -2753,9 +2951,64 @@ async def test_cross_ticket_producer_does_not_merge_different_recommendations(
                 "change_recommendation": change,
             }
         )
+        counts.append(await governance.post_run(state=state, result=result, status="succeeded"))
+
+    assert counts == [1, 2]
+    procedures = [
+        record for record in repository.records if record.memory_type is MemoryType.PROCEDURAL
+    ]
+    assert len(procedures) == 1
+    assert procedures[0].status is MemoryStatus.QUARANTINE
+    assert procedures[0].provenance["source_ticket_ids"] == ["42", "43"]
+    # The wording is not discarded, only kept out of the identity: the body is the
+    # actionable part, it is one ticket's phrasing rather than a consensus, and the
+    # review gate is where that is judged.
+    body = json.loads(procedures[0].content)
+    assert body == {
+        "classification": "vpn mfa incident",
+        "recommended_group": "network team",
+        "recommendation_fields": ["change_recommendation", "problem_recommendation"],
+        "problem_recommendation": "verify the gateway before changing it.",
+        "change_recommendation": "rotate the vpn gateway certificate.",
+    }
+
+
+@pytest.mark.asyncio
+async def test_the_recommendation_shape_is_part_of_the_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Dropping the prose must not drop the shape with it.
+
+    "This class of ticket warrants a problem record and a change" is a durable
+    statement about the condition; the sentence that says it is a statement about this
+    ticket's evidence, which is why only the first one stays in the identity. Removing
+    the prose entirely would have merged a ticket that escalated to a problem record
+    with one that only proposed a change, so the set of fields the analysis filled is
+    kept and pinned here.
+    """
+    monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_ENABLED", True)
+    monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_PROCEDURAL_PROPOSALS_ENABLED", True)
+    repository = InMemoryMemoryRepository()
+    governance = Phase5Governance(
+        context_sink=NullContextArtifactSink(),
+        memory_repository_factory=lambda tenant_id: repository,
+    )
+
+    for ticket_id, analysis_extra in (
+        (42, {"change_recommendation": "Resynchronise the VPN gateway clock."}),
+        (
+            43,
+            {
+                "problem_recommendation": "Open a problem record for the gateway.",
+                "change_recommendation": "Resynchronise the VPN gateway clock.",
+            },
+        ),
+    ):
+        state, result = _post_run_inputs(ticket_id=ticket_id, user_id="alice")
+        result["analysis"].update({"recurring_incident": True, **analysis_extra})
         assert await governance.post_run(state=state, result=result, status="succeeded") == 1
 
-    assert {record.memory_type for record in repository.records} == {MemoryType.EPISODIC}
+    assert MemoryType.PROCEDURAL not in {record.memory_type for record in repository.records}
 
 
 async def _two_matching_tickets(
@@ -2816,22 +3069,72 @@ async def test_the_first_ticket_of_a_pattern_can_still_form_its_key(
 
 
 @pytest.mark.asyncio
-async def test_a_quarantined_episode_cannot_corroborate_a_pattern(
+async def test_the_pattern_sql_prefilter_never_drops_a_corroborable_status() -> None:
+    """The pre-filter may be looser than the predicate. It may not be tighter.
+
+    ``pattern_episodes`` runs ``allows_record`` on every row the query returns, so the
+    SQL is a pre-filter and the predicate is the judge. Pinning the SQL to ACTIVE made
+    it tighter instead, and a row dropped there never reaches the judge that would have
+    admitted it -- which is exactly how D15 survived two fixes.
+
+    Both places the procedural tests exercise -- the producer's gate and
+    ``MemoryPatternQuery.allows_record`` -- are in ``InMemoryMemoryRepository``, which
+    has no SQL layer. So the whole suite agreed the fix worked while the deployed path
+    still returned nothing, and the live run is what found it. ``corroborable_at`` is
+    the authority; this reads the status set out of the built expression and requires it
+    to cover every status the predicate would admit.
+    """
+    repository = PostgresMemoryRepository(TENANT_A)
+    query = MemoryPatternQuery(tenant_id=TENANT_A, pattern_key="0" * 64)
+    prefiltered: set[str] = set()
+    for expression in repository._pattern_filters(query):
+        if getattr(getattr(expression, "left", None), "key", None) != "status":
+            continue
+        # ``in_`` binds a sequence, ``==`` binds a bare string; ``set.update`` on the
+        # latter would quietly take the string apart into its characters and report a
+        # set of letters.
+        bound = expression.right.value
+        prefiltered.update(bound if isinstance(bound, (list, tuple, set)) else [bound])
+    assert prefiltered, "the pattern pre-filter stopped constraining status at all"
+
+    stored = await MemoryWriter(InMemoryMemoryRepository()).write(fact_candidate())
+    assert stored is not None
+    record = stored.model_copy(update={"valid_to": None, "expires_at": None})
+    predicate_admits = {
+        status.value
+        for status in MemoryStatus
+        if record.model_copy(update={"status": status}).corroborable_at(stored.valid_from)
+    }
+    assert predicate_admits <= prefiltered, (
+        f"the SQL pre-filter drops {sorted(predicate_admits - prefiltered)}, which "
+        "corroborable_at admits; those episodes never reach the judge"
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_quarantined_episode_corroborates_but_a_revoked_one_does_not(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Confidence below the auto-activation threshold withholds corroboration too.
+    """Unreviewed is not invalid -- and this test asserted the opposite until D15.
 
-    Two tickets reach the same root cause, so the grouping key matches -- but both
-    episodes land in quarantine, and ``visible_at`` is True only for ACTIVE. So the
-    pair cannot support a procedure. Returning 1 on the second run is the correct
-    result, not a missed proposal.
+    Confidence 0.7 sits below the 0.90 auto-activation threshold, so both episodes are
+    written to quarantine. That is the normal resting state of a post-run episode: it
+    exists to be reviewed. Requiring ACTIVE here meant the mechanism could only ever
+    cite episodes a human had already blessed one by one, while the proposal it exists
+    to enable is precisely what a human is meant to review -- so on ACC-12b, where the
+    real model produced 0.85 against a 0.90 threshold, the feature could not start on
+    the first pattern it was built to catch.
 
-    Pinned because it is the fact that corrected a wrong fix: reasoning from
-    ``_validate_activation`` (which admits a supporting episode on verified evidence
-    refs, not status) it looked like the ACTIVE requirement in the proposal gate was
-    inconsistent with the rest of the subsystem, and dropping it was tried. It changed
-    nothing -- the corroboration still did not fire, because the episodes it went to
-    fetch were quarantined and therefore invisible. The gate and the query agree.
+    The fix is two-sided and this pins both sides: the producer's gate admits
+    QUARANTINE, and ``MemoryPatternQuery.allows_record`` -- through
+    ``corroborable_at`` -- admits it too. Relaxing only the gate was tried and changed
+    nothing, because the query it guards still refused to return the episodes.
+
+    Widening the admitted statuses is not a widening of what a model may see. The
+    episode is a *supporting* record here, and the procedure derived from it is itself
+    written to quarantine below. The control is the second half of this test: what a
+    human has actively removed is still excluded, so the same pair that corroborates
+    above supports nothing once its episodes are revoked.
     """
     monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_ENABLED", True)
     monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_PROCEDURAL_PROPOSALS_ENABLED", True)
@@ -2841,9 +3144,41 @@ async def test_a_quarantined_episode_cannot_corroborate_a_pattern(
     episodes = [
         record for record in repository.records if record.memory_type is MemoryType.EPISODIC
     ]
-    assert counts == [1, 1]
+    assert counts == [1, 2]
     assert [record.status for record in episodes] == [MemoryStatus.QUARANTINE] * 2
-    assert MemoryType.PROCEDURAL not in {record.memory_type for record in repository.records}
+    procedures = [
+        record for record in repository.records if record.memory_type is MemoryType.PROCEDURAL
+    ]
+    assert len(procedures) == 1
+    assert procedures[0].status is MemoryStatus.QUARANTINE
+    assert procedures[0].provenance["source_ticket_ids"] == ["42", "43"]
+
+    for episode in episodes:
+        await repository.transition(
+            episode.memory_id,
+            MemoryStatus.REVOKED,
+            actor_id="reviewer",
+            reason="not representative of the condition",
+        )
+    state, result = _post_run_inputs(ticket_id=44, user_id="alice")
+    result["analysis"].update(
+        {
+            "recurring_incident": True,
+            "confidence": 0.7,
+            "problem_recommendation": "Verify gateway clock drift before resetting MFA.",
+            "change_recommendation": "Resynchronise the VPN gateway clock.",
+        }
+    )
+    # Its own episode is written and is corroborable, but the pair it would need has
+    # been revoked: one supporting ticket is not a pattern, so no proposal is made.
+    governance = Phase5Governance(
+        context_sink=NullContextArtifactSink(),
+        memory_repository_factory=lambda tenant_id: repository,
+    )
+    assert await governance.post_run(state=state, result=result, status="succeeded") == 1
+    assert [
+        record for record in repository.records if record.memory_type is MemoryType.PROCEDURAL
+    ] == procedures
 
 
 @pytest.mark.asyncio
@@ -2854,13 +3189,15 @@ async def test_a_different_root_cause_still_splits_now_that_recurrence_is_not_a_
 
     Removing the recurrence precondition lets the producer form a key on far more
     analyses than before. The identity itself is untouched, so the control that keeps
-    the surface honest is the same as it always was and is exercised here from the
-    side the existing disagreement tests do not cover: two tickets that agree on both
-    recommendations and differ only in the group they were assigned to.
+    the surface honest is exercised here from the side the disagreement tests do not
+    cover: two tickets that agree on both recommendation texts and differ only in the
+    group they were assigned to.
 
-    ``recommended_group`` is one of the three canonical fields, so these are different
-    root causes by the producer's own definition, and grouping them would mean a
-    procedure telling the wrong team to run it.
+    ``recommended_group`` is in the identity, so these are different root causes by the
+    producer's own definition, and grouping them would mean a procedure telling the
+    wrong team to run it. This is the control that still has teeth after D15 removed
+    the recommendation prose from the identity: something has to keep two analyses from
+    merging, and the field that names the owner is it.
     """
     monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_ENABLED", True)
     monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_PROCEDURAL_PROPOSALS_ENABLED", True)

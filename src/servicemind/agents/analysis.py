@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import time
 from collections.abc import Callable
+from datetime import UTC, datetime
 from typing import Any, TypedDict
 
 from langchain_core.language_models import BaseChatModel
@@ -14,15 +16,25 @@ from core import get_model, settings
 from servicemind.context.builder import redact_for_model
 from servicemind.context.contracts import ContextEnvelope
 from servicemind.domain.analysis import (
+    CLAIM_TYPE_BAR_TEXT,
     AnalysisClaim,
     AnalysisResult,
     AnalysisStatus,
     ProposedAction,
 )
-from servicemind.domain.evidence import EvidenceSourceType, JoinedEvidence
+from servicemind.domain.evidence import (
+    EvidenceSourceType,
+    JoinedEvidence,
+    group_is_grounded,
+)
 from servicemind.domain.models import TicketAnalysis
 from servicemind.domain.review import RiskLevel
 from servicemind.foundation.errors import bounded_error_text
+from servicemind.model_gateway import (
+    model_error_code,
+    model_returned_nothing,
+    throttle_wait_seconds,
+)
 from servicemind.runtime.contracts import (
     AgentInvocationContext,
     AgentResultEnvelope,
@@ -52,6 +64,27 @@ class AnalysisAgentState(TypedDict, total=False):
     model_calls: int
     failure_code: str | None
     failure_detail: str | None
+
+
+#: How long this agent will wait out a provider throttle, in total, across the attempts
+#: below. A minute is chosen against the two clocks in play rather than against the
+#: provider: the run's deadline is measured in minutes, the model call's timeout in
+#: seconds, and a throttle window sits between them. Long enough that an ordinary
+#: "retry after 30" is honoured, short enough that a provider having a bad hour does not
+#: turn one run into a stall -- past this the analysis degrades as it always did, and the
+#: degradation now says what caused it.
+_ANALYSIS_THROTTLE_MAX_WAIT_SECONDS = 60.0
+
+#: Chances to get the answer, including the first. A throttle is not a defect in the
+#: question, so re-asking the identical request is correct here -- unlike the schema
+#: repair above, which has to change the request to become a new question.
+_ANALYSIS_THROTTLE_ATTEMPTS = 3
+
+#: How much of the run's deadline this agent must leave for the stages after it. An
+#: analysis that consumed the whole deadline to get its answer would hand the reviewer,
+#: the handoff and any approved write an already-expired run: waiting for a throttled
+#: answer is only worth it while something is still going to read the answer.
+_ANALYSIS_DEADLINE_HEADROOM_SECONDS = 15.0
 
 
 class AnalysisAgent:
@@ -124,11 +157,27 @@ class AnalysisAgent:
                         "evidence that carries it -- the reviewer holds that claim type to a "
                         "cause-or-mechanism bar. If no cited evidence states one, put the "
                         "question in unresolved_questions instead of asserting a cause the "
-                        "evidence does not carry. Every claim must be entailed by the "
-                        "evidence it cites, not merely consistent with it. A support-group "
-                        "directory shows that a group exists, not that it owns this work: state "
-                        "an assignment as a recommendation and record the residual uncertainty in "
-                        "assumptions. Do not attribute a rule or threshold to this tenant unless "
+                        "evidence does not carry. A document that rules a candidate out is "
+                        "not evidence for the cause you do name: a root_cause_hypothesis "
+                        "claim's evidence_refs must carry what entails that cause, and the "
+                        "document you ruled out must not appear among them. Record the "
+                        "exclusion in the claim's statement or in assumptions instead -- a "
+                        "reader must be able to tell, from the refs alone, what the cause "
+                        "rests on. Every claim must be entailed by the "
+                        "evidence it cites, not merely consistent with it. Every claim is "
+                        "judged against this bar, which is the reviewer's and yours alike -- "
+                        "the two roles are quoted the same text so they cannot disagree "
+                        f"about what a claim type requires: {CLAIM_TYPE_BAR_TEXT}. Do not "
+                        "emit a claim whose bar the cited evidence cannot meet. A routing "
+                        "recommendation whose only basis is that the group exists in the "
+                        "support-group directory does not meet the assignment_reason bar, "
+                        "and hedging it does not change that: leave the assignment_reason "
+                        "claim out, recommend the group because recommended_group is "
+                        "required, and record in unresolved_questions that no cited "
+                        "evidence establishes ownership. The recommended group must still "
+                        "be a group the evidence names -- a directory entry is enough for "
+                        "that, and a group named by no evidence at all is not. Do not "
+                        "attribute a rule or threshold to this tenant unless "
                         "the evidence states it for this tenant. Absence of evidence is never "
                         "itself a claim -- record 'no recurrence found' and similar gaps in "
                         "unresolved_questions instead. Do not propose an action the evidence "
@@ -154,6 +203,57 @@ class AnalysisAgent:
         )
         return AnalysisResult.model_validate(result)
 
+    async def _model_analysis_resilient(
+        self, state: AnalysisAgentState, *, feedback: list[str] | None = None
+    ) -> AnalysisResult:
+        """Ask the model, and wait out a provider throttle before giving up on the answer.
+
+        The gateway retries inside a single call, bounded by the call's own timeout. That
+        is the right shape for a call and the wrong shape for a throttle: the provider is
+        saying *when*, not *no*, and the window it names is routinely longer than the call
+        is allowed to live. Exhausting there has a consequence far from the cause -- the
+        analysis falls back to a deterministic draft, the reviewer escalates on
+        ``DEGRADED_ANALYSIS``, and the run parks in a human queue where the only answers
+        are "accept a degraded analysis" or "cancel". Measured over the 2026-09-23
+        baseline: nine throttled runs, all nine terminated ``waiting_review``, and the
+        acceptance suite's verdict on a case turned on whether the provider throttled that
+        run or not.
+
+        The run's deadline is the clock that can afford to wait, so the wait happens here,
+        bounded by three things: the provider's own hint when it gives one, a ceiling on
+        the total wait, and the deadline minus the room the later stages need. Only a
+        throttle is waited for; a schema violation is a property of the answer to *these*
+        messages and is re-asked by the repair path with the violation fed back, which is
+        a different question and not something a wait improves.
+
+        An empty completion is the exception to that last sentence and is retried here
+        without feedback. There was no answer for the request to be responsible for, so
+        re-asking the identical question is not asking twice for the same mistake -- see
+        ``model_returned_nothing``. It gets no wait: there is no window to outlast, only a
+        response that did not arrive.
+        """
+        invocation = state.get("invocation")
+        deadline = getattr(invocation, "deadline", None)
+        waited = 0.0
+        for attempt in range(_ANALYSIS_THROTTLE_ATTEMPTS):
+            try:
+                return await self._model_analysis(state, feedback=feedback)
+            except Exception as exc:
+                if model_returned_nothing(exc) and attempt + 1 < _ANALYSIS_THROTTLE_ATTEMPTS:
+                    continue
+                wait = throttle_wait_seconds(exc, attempt)
+                if wait is None or attempt + 1 >= _ANALYSIS_THROTTLE_ATTEMPTS:
+                    raise
+                wait = min(wait, _ANALYSIS_THROTTLE_MAX_WAIT_SECONDS - waited)
+                if deadline is not None:
+                    remaining = (deadline - datetime.now(UTC)).total_seconds()
+                    wait = min(wait, remaining - _ANALYSIS_DEADLINE_HEADROOM_SECONDS)
+                if wait <= 0.0:
+                    raise
+                await asyncio.sleep(wait)
+                waited += wait
+        raise AssertionError("unreachable")
+
     async def _draft_node(self, state: AnalysisAgentState) -> dict[str, Any]:
         invocation = state.get("invocation")
         if invocation is not None and invocation.max_model_calls == 0:
@@ -168,7 +268,7 @@ class AnalysisAgent:
                 "failure_code": "ANALYSIS_MODEL_BUDGET_EXHAUSTED",
             }
         try:
-            return {"result": await self._model_analysis(state), "model_calls": 1}
+            return {"result": await self._model_analysis_resilient(state), "model_calls": 1}
         except Exception as exc:
             return {
                 "result": self._fallback_evidence(
@@ -178,7 +278,16 @@ class AnalysisAgent:
                     validation_feedback=[type(exc).__name__],
                 ),
                 "model_calls": 1,
-                "failure_code": "ANALYSIS_MODEL_FAILURE",
+                # A throttle that survived the wait is not the same failure as a model
+                # path that broke, and the difference is the operator's next move: one is
+                # a capacity question answered by re-running, the other is a defect. Both
+                # degrade, because neither produced a validated analysis -- but only one
+                # of them is worth a person's attention, and the code is what says which.
+                "failure_code": (
+                    "ANALYSIS_RATE_LIMITED"
+                    if model_error_code(exc) == "MODEL_RATE_LIMITED"
+                    else "ANALYSIS_MODEL_FAILURE"
+                ),
                 # The exception name alone tells an operator nothing about *why* the
                 # model path failed; the message carries the schema violation. That
                 # violation is at the *end* of an ``OutputParserException``, which begins
@@ -218,13 +327,23 @@ class AnalysisAgent:
             issues.append("Read-only request contains a proposed write")
         if state["request_write"] and not result.proposed_actions:
             issues.append("Controlled-write request is missing a bounded action proposal")
-        group_text = " ".join(
-            item.content
-            for item in state["evidence"].items
-            if item.source_type is EvidenceSourceType.GLPI and item.resource_type == "support_group"
-        ).casefold()
-        if result.recommended_group.casefold() not in group_text:
-            issues.append("Recommended group is absent from tenant-scoped GLPI evidence")
+        # The analyst assigns the incident to an owning team, and that team has to be one
+        # its sources named. Every source counts, not only the GLPI directory: the runbook
+        # this agent's own knowledge path serves names Identity Team as the owner of token
+        # enrolment faults, and the corpus documents name Identity Team and Security Team
+        # too, so a recommendation drawn from documentation the run retrieved is grounded
+        # even when the tenant's GLPI holds no such group. See ``group_is_grounded``.
+        #
+        # What the analyst was *offered* is the envelope when there is one, and the joined
+        # evidence otherwise -- the same material ``_model_analysis`` puts in front of the
+        # model. Checking the joined set alone would fail an analyst for using an item the
+        # envelope delivered but the join had pruned.
+        envelope = state.get("context_envelope")
+        grounding: list[str] = [item.content for item in state["evidence"].items]
+        if envelope is not None:
+            grounding.extend(item.content for item in envelope.items)
+        if not group_is_grounded(result.recommended_group, grounding):
+            issues.append("Recommended group is absent from the evidence this run retrieved")
         return AnalysisQualityReport(passed=not issues, issues=issues)
 
     async def _check_node(self, state: AnalysisAgentState) -> dict[str, Any]:
@@ -264,7 +383,7 @@ class AnalysisAgent:
 
     async def _revise_node(self, state: AnalysisAgentState) -> dict[str, Any]:
         try:
-            result = await self._model_analysis(state, feedback=state["quality"].issues)
+            result = await self._model_analysis_resilient(state, feedback=state["quality"].issues)
             return {
                 "result": result,
                 "revision_count": state.get("revision_count", 0) + 1,

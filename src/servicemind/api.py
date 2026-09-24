@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from typing import Any, Literal
@@ -27,6 +28,7 @@ from servicemind.harness.webhooks import (
 )
 from servicemind.integrations.glpi.client import GlpiAPIError, GlpiClient
 from servicemind.integrations.glpi.resolver import resolve_glpi_config
+from servicemind.interfaces.http.knowledge import router as knowledge_router
 from servicemind.interfaces.http.memory_review import router as memory_review_router
 from servicemind.interfaces.http.operations import router as operations_router
 from servicemind.model_gateway.gateway import model_error_code
@@ -44,7 +46,10 @@ from servicemind.persistence.repository import ServiceMindRepository
 from servicemind.security.auth import TenantContext, TenantContextDependency
 from servicemind.security.crypto import CredentialCipher
 
+logger = logging.getLogger(__name__)
+
 phase2_router = APIRouter(prefix="/v1/servicemind", tags=["ServiceMind Phase 2"])
+phase2_router.include_router(knowledge_router)
 phase2_router.include_router(memory_review_router)
 phase2_router.include_router(operations_router)
 
@@ -399,6 +404,12 @@ async def approve_run(
             ),
         ) from exc
     except Exception as exc:
+        # Logged, because the run row can only hold the class name and the response holds
+        # nothing at all: a resume that fails for an unforeseen reason used to leave no
+        # trace anywhere, and the acceptance run that hit one could only report
+        # "PermissionError" -- the same word for half a dozen distinct refusals. The
+        # traceback carries no request body, so nothing secret is written.
+        logger.exception("resuming run %s after approval failed", run.id)
         await repository.update_run(run.id, RunStatus.FAILED, error=type(exc).__name__)
         raise HTTPException(status_code=502, detail="ServiceMind resume failed") from exc
 
@@ -493,6 +504,9 @@ async def resolve_review_escalation(
             ),
         ) from exc
     except Exception as exc:
+        # Same reason as the approval endpoint above: the class name alone is not enough
+        # to tell a policy refusal from a bug.
+        logger.exception("resuming run %s after a review decision failed", run.id)
         await repository.update_run(run.id, RunStatus.FAILED, error=type(exc).__name__)
         raise HTTPException(status_code=502, detail="ServiceMind review resume failed") from exc
     stored = await repository.get_run(run_id)

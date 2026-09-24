@@ -1,0 +1,43 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "5 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_write_proceeds_while_the_executor_holds_the_claim"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M13 only an unclaimed approval authorises the write the executor is performing",
+      "outcome": "passed",
+      "ref": "scripts/mutate_glpi_write_gateway.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M14 the status is never consulted, so any cited intent authorises a write",
+      "outcome": "passed",
+      "ref": "scripts/mutate_glpi_write_gateway.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M15 a terminal status is read as a standing approval",
+      "outcome": "passed",
+      "ref": "scripts/mutate_glpi_write_gateway.py"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-APPROVAL-04",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

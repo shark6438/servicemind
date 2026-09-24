@@ -99,6 +99,34 @@ def model_error_code(error: BaseException) -> str:
     return f"MODEL_{name[:80]}"
 
 
+def model_returned_nothing(error: BaseException) -> bool:
+    """Whether a structured call failed because the model sent no completion at all.
+
+    Distinct from a schema violation, which the gateway already answers by replaying the
+    request with the violation fed back. A schema violation is a property of the answer
+    to *these* messages, so re-asking the identical question spends a retry asking for the
+    same mistake twice -- that is why the repair instruction exists. An empty completion
+    is the opposite: there was no answer to be a property of. The provider returned
+    nothing, which is transient by nature -- measured on the 2026-09-24 quality batch,
+    case Q-194 raised ``OutputParserException: Failed to parse AnalysisResult from
+    completion null`` twice inside one call (the gateway's own retry, then the repair
+    retry) and parked the run at ``waiting_review``; the same case re-run twice
+    immediately after answered normally, 8.6 seconds, no code change.
+
+    The caller that can afford to wait is the same one ``throttle_wait_seconds`` serves,
+    and for the same reason: the run's clock is minutes, the call's is seconds, and a
+    failure with no cause in the request is worth one more identical ask.
+
+    Detected on the parser exception's own ``llm_output`` rather than on its message text,
+    because the message is langchain's to change and this decision is ours. Kept here
+    rather than in the caller for the same reason ``model_error_code`` is: what a failed
+    model call *was* is a fact about the model path.
+    """
+    if model_error_code(error) != "MODEL_SCHEMA_INVALID":
+        return False
+    return getattr(error, "llm_output", "") in (None, "")
+
+
 def _retryable(error: BaseException) -> bool:
     name = type(error).__name__.casefold()
     message = str(error).casefold()
@@ -180,6 +208,32 @@ def _backoff_seconds(
     if remaining_seconds is not None:
         wait = min(wait, max(0.0, remaining_seconds))
     return wait
+
+
+def throttle_wait_seconds(error: BaseException, attempt: int) -> float | None:
+    """How long a caller should wait before re-asking, or ``None`` if this is not a throttle.
+
+    Public because the wait has to be possible from outside the gateway's own retry loop.
+    The gateway's loop is bounded by the *call's* timeout -- seconds -- and gives up when
+    that budget is spent, which is the right thing for a call: a single request may not
+    hold a worker open indefinitely. But a throttle outlives it routinely. A provider that
+    answers ``Retry-After: 30`` and a call whose timeout is 20 seconds means the loop
+    cannot outlast the window it is being asked to wait for, so it exhausts, the model
+    path fails, and the failure lands somewhere far from the cause. A caller holding a
+    longer clock -- a run with a deadline measured in minutes -- can wait it out, and this
+    is what it needs in order to know how long.
+
+    ``None`` and ``0.0`` are different answers and both are reachable. ``0.0`` is what a
+    provider asks for when it sends ``Retry-After: 0`` (or a date already past, which
+    :func:`_retry_after_seconds` clamps to zero): re-ask immediately, because the window
+    it was refusing inside has ended. A caller that read ``0.0`` as "not a throttle" gave
+    up on a request the provider had just invited, so the nil hint is the one Retry-After
+    that would never be honoured. The distinction has to survive the return value, hence
+    an optional rather than a sentinel.
+    """
+    if model_error_code(error) != "MODEL_RATE_LIMITED":
+        return None
+    return _backoff_seconds(error, attempt)
 
 
 #: Appended to the request when a retry follows a schema violation. DeepSeek's

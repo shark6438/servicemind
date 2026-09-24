@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any, cast
 from uuid import UUID, uuid4
 
@@ -21,6 +22,38 @@ from servicemind.persistence.models import (
     KnowledgeIngestionJob,
     KnowledgeParentChunkRecord,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentActivation:
+    """What one activation request actually did, reported rather than assumed.
+
+    ``source_record_id`` is a caller-supplied key that nothing validates against the
+    corpus, so "retire this document" and "the id matched nothing, retire nothing" are
+    two outcomes a caller has to be able to tell apart. Both used to return ``None``,
+    which made a retirement aimed at a mistyped id read exactly like a completed one --
+    and retirement is the operation an operator reaches for when a document is wrong
+    and has to stop being cited, so "nothing happened" has to be sayable.
+
+    ``matched`` can exceed one: the uniqueness the schema enforces is
+    ``(tenant_id, source, source_record_id)``, so the same record id under two sources is
+    two documents and an operation addressed by record id alone reaches both. Reporting
+    the count is how the caller sees that instead of inferring it.
+
+    ``changed`` counts documents whose flag actually moved, so replaying the same
+    request is visibly a replay. ``index_rows`` is what the search projection moved --
+    it can be zero while ``changed`` is one, and that difference is the whole question
+    of whether retrieval can still serve a document PostgreSQL has already retired.
+    """
+
+    matched: int = 0
+    changed: int = 0
+    index_rows: int = 0
+
+    @property
+    def found(self) -> bool:
+        """Whether this tenant's corpus holds a document under that source record id."""
+        return self.matched > 0
 
 
 class KnowledgeRepository:
@@ -292,13 +325,19 @@ class KnowledgeRepository:
 
     async def set_document_active(
         self, tenant_id: UUID, source_record_id: str, *, is_active: bool
-    ) -> None:
+    ) -> DocumentActivation:
         """Flip ``is_active`` inside the document ACL (PostgreSQL authority).
 
         Search rows carry a redundant copy of the flag for pre-filtering; the caller
         (``EnterpriseRAG.set_document_active``) keeps the OpenSearch projection in
         sync, and every later re-ingest re-derives the flag from this ACL anyway.
+
+        Scoped to this tenant by ``tenant_session``'s row-level security, so a record id
+        belonging to another tenant matches nothing here and the caller cannot use the
+        answer to learn that the id exists somewhere else.
         """
+        matched = 0
+        changed = 0
         async with tenant_session(tenant_id) as session:
             rows = (
                 await session.execute(
@@ -308,9 +347,15 @@ class KnowledgeRepository:
                 )
             ).scalars()
             for row in rows:
+                matched += 1
                 acl = dict(row.acl)
+                # Absent means the default the ACL model declares, which is active: a
+                # row written before the flag existed is not silently a retired one.
+                if bool(acl.get("is_active", True)) != is_active:
+                    changed += 1
                 acl["is_active"] = is_active
                 row.acl = acl
+        return DocumentActivation(matched=matched, changed=changed)
 
     async def parents(self, tenant_id: UUID, ids: list[UUID]) -> dict[UUID, str]:
         if not ids:

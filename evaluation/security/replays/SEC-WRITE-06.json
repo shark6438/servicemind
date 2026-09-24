@@ -1,0 +1,50 @@
+{
+  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(102 files)",
+  "evidence": [
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_principal_without_the_action_role_cannot_write"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_the_approved_body_is_suppressed"
+    },
+    {
+      "detail": "1 passed",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_a_different_body_is_refused"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M05 a failed call leaves the action looking untried",
+      "outcome": "passed",
+      "ref": "scripts/mutate_glpi_write_gateway.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M06 a reconciled duplicate is audited as a second creation",
+      "outcome": "passed",
+      "ref": "scripts/mutate_glpi_write_gateway.py"
+    },
+    {
+      "detail": "RED (good)",
+      "kind": "mutation",
+      "mutation": "M09 the reconcile branch stops comparing the body it found",
+      "outcome": "passed",
+      "ref": "scripts/mutate_glpi_write_gateway.py"
+    }
+  ],
+  "observed_at": "2026-09-23T21:01:14.344455Z",
+  "scenario_id": "SEC-WRITE-06",
+  "scenarios_digest": "a8262b62a285db4a5bbfa073018713181998b86b51c930cde2736f7974ee0b5f"
+}

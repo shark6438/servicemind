@@ -1,0 +1,26 @@
+{
+  "schema_version": "phase7-load-v1",
+  "description": "P7.6.7 负载批。工作负载不是新语料，而是 P7.6.6 质量案例中按文件顺序的前 20 条可答问题——同一批问题、同一批声明引用、同一批主体身份。三个档位（并发 1 / 5 / 10）观测同一批问题，判定的是「并发是否改变了结果」，不是「答案对不对」（后者是 P7.6.6 的判定）。并发 1 档位必须存在且只跑一遍：它是基线，也是报告里每一个相对时延的分母。",
+  "tenant_id": "22222222-2222-4222-8222-222222222222",
+  "workload_source": "evaluation/quality/cases.v1.json",
+  "workload_kind": "answerable",
+  "workload_limit": 20,
+  "settle_budget_seconds": 240.0,
+  "tiers": [
+    {
+      "name": "tier-1",
+      "concurrency": 1,
+      "repeats": 1
+    },
+    {
+      "name": "tier-5",
+      "concurrency": 5,
+      "repeats": 2
+    },
+    {
+      "name": "tier-10",
+      "concurrency": 10,
+      "repeats": 3
+    }
+  ]
+}

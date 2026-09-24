@@ -1,0 +1,336 @@
+{
+  "schema_version": "phase7-quality-fixtures-v1",
+  "tenant_id": "22222222-2222-4222-8222-222222222222",
+  "glpi_entity_id": 2,
+  "note": "The P7.6.6 quality corpus. The ACL of each document is declared here rather than in the markdown for the same reason the acceptance fixtures do it: one machine-readable place has to state what is restricted and what is retired, or the access cases pass against a corpus where everything is public and nothing is superseded.",
+  "documents": [
+    {
+      "file": "vpn-client-connectivity.md",
+      "source_record_id": "KB-Q-VPN-CONN",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: VPN client recovery procedure"
+    },
+    {
+      "file": "mfa-enrolment-and-recovery.md",
+      "source_record_id": "KB-Q-MFA-ENROL",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: MFA enrolment, rebind and recovery codes"
+    },
+    {
+      "file": "password-reset-procedure.md",
+      "source_record_id": "KB-Q-PASSWORD",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: password reset and lockout"
+    },
+    {
+      "file": "service-account-lifecycle.md",
+      "source_record_id": "KB-Q-SVCACCT",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: service account ownership and rotation"
+    },
+    {
+      "file": "database-backup-verification.md",
+      "source_record_id": "KB-Q-DB-BACKUP",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: backup schedule, retention and verification"
+    },
+    {
+      "file": "database-failover-runbook.md",
+      "source_record_id": "KB-Q-DB-FAILOVER",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: failover trigger and procedure"
+    },
+    {
+      "file": "storage-capacity-thresholds.md",
+      "source_record_id": "KB-Q-STORAGE",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: capacity thresholds and response"
+    },
+    {
+      "file": "incident-severity-matrix.md",
+      "source_record_id": "KB-Q-SEVERITY",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: severity levels and response times"
+    },
+    {
+      "file": "major-incident-communication.md",
+      "source_record_id": "KB-Q-MIM-COMMS",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: major incident communication cadence"
+    },
+    {
+      "file": "change-approval-cab.md",
+      "source_record_id": "KB-Q-CAB",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: change categories and board"
+    },
+    {
+      "file": "release-rollback-criteria.md",
+      "source_record_id": "KB-Q-ROLLBACK",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: rollback triggers and data migrations"
+    },
+    {
+      "file": "endpoint-patching-windows.md",
+      "source_record_id": "KB-Q-PATCHING",
+      "group_ids": [],
+      "is_active": true,
+      "role": "answerable: patching windows and exceptions"
+    },
+    {
+      "file": "remote-access-portal-v2.md",
+      "source_record_id": "KB-Q-RAP-V2",
+      "group_ids": [],
+      "is_active": true,
+      "role": "version conflict: current"
+    },
+    {
+      "file": "remote-access-portal-v1.md",
+      "source_record_id": "KB-Q-RAP-V1",
+      "group_ids": [],
+      "is_active": false,
+      "role": "version conflict: superseded"
+    },
+    {
+      "file": "email-quarantine-policy-2026.md",
+      "source_record_id": "KB-Q-MAIL-2026",
+      "group_ids": [],
+      "is_active": true,
+      "role": "version conflict: current"
+    },
+    {
+      "file": "email-quarantine-policy-2024.md",
+      "source_record_id": "KB-Q-MAIL-2024",
+      "group_ids": [],
+      "is_active": false,
+      "role": "version conflict: superseded"
+    },
+    {
+      "file": "laptop-encryption-standard-v3.md",
+      "source_record_id": "KB-Q-ENC-V3",
+      "group_ids": [],
+      "is_active": true,
+      "role": "version conflict: current"
+    },
+    {
+      "file": "laptop-encryption-standard-v2.md",
+      "source_record_id": "KB-Q-ENC-V2",
+      "group_ids": [],
+      "is_active": false,
+      "role": "version conflict: superseded"
+    },
+    {
+      "file": "print-service-quota-v2.md",
+      "source_record_id": "KB-Q-PRINT-V2",
+      "group_ids": [],
+      "is_active": true,
+      "role": "version conflict: current"
+    },
+    {
+      "file": "print-service-quota-v1.md",
+      "source_record_id": "KB-Q-PRINT-V1",
+      "group_ids": [],
+      "is_active": false,
+      "role": "version conflict: superseded"
+    },
+    {
+      "file": "api-gateway-rate-limits-v2.md",
+      "source_record_id": "KB-Q-API-V2",
+      "group_ids": [],
+      "is_active": true,
+      "role": "version conflict: current"
+    },
+    {
+      "file": "api-gateway-rate-limits-v1.md",
+      "source_record_id": "KB-Q-API-V1",
+      "group_ids": [],
+      "is_active": false,
+      "role": "version conflict: superseded"
+    },
+    {
+      "file": "backup-retention-schedule-v4.md",
+      "source_record_id": "KB-Q-RET-V4",
+      "group_ids": [],
+      "is_active": true,
+      "role": "version conflict: current"
+    },
+    {
+      "file": "backup-retention-schedule-v3.md",
+      "source_record_id": "KB-Q-RET-V3",
+      "group_ids": [],
+      "is_active": false,
+      "role": "version conflict: superseded"
+    },
+    {
+      "file": "vulnerability-remediation-slas-v2.md",
+      "source_record_id": "KB-Q-VULN-V2",
+      "group_ids": [],
+      "is_active": true,
+      "role": "version conflict: current"
+    },
+    {
+      "file": "vulnerability-remediation-slas-v1.md",
+      "source_record_id": "KB-Q-VULN-V1",
+      "group_ids": [],
+      "is_active": false,
+      "role": "version conflict: superseded"
+    },
+    {
+      "file": "oncall-rotation-handbook-v2.md",
+      "source_record_id": "KB-Q-ONCALL-V2",
+      "group_ids": [],
+      "is_active": true,
+      "role": "version conflict: current"
+    },
+    {
+      "file": "oncall-rotation-handbook-v1.md",
+      "source_record_id": "KB-Q-ONCALL-V1",
+      "group_ids": [],
+      "is_active": false,
+      "role": "version conflict: superseded"
+    },
+    {
+      "file": "vpn-split-tunnel-policy-v2.md",
+      "source_record_id": "KB-Q-SPLIT-V2",
+      "group_ids": [],
+      "is_active": true,
+      "role": "version conflict: current"
+    },
+    {
+      "file": "vpn-split-tunnel-policy-v1.md",
+      "source_record_id": "KB-Q-SPLIT-V1",
+      "group_ids": [],
+      "is_active": false,
+      "role": "version conflict: superseded"
+    },
+    {
+      "file": "data-classification-standard-v2.md",
+      "source_record_id": "KB-Q-CLASS-V2",
+      "group_ids": [],
+      "is_active": true,
+      "role": "version conflict: current"
+    },
+    {
+      "file": "data-classification-standard-v1.md",
+      "source_record_id": "KB-Q-CLASS-V1",
+      "group_ids": [],
+      "is_active": false,
+      "role": "version conflict: superseded"
+    },
+    {
+      "file": "subscription-licence-review-v2.md",
+      "source_record_id": "KB-Q-LIC-V2",
+      "group_ids": [],
+      "is_active": true,
+      "role": "version conflict: current (untargeted; control corpus material)"
+    },
+    {
+      "file": "subscription-licence-review-v1.md",
+      "source_record_id": "KB-Q-LIC-V1",
+      "group_ids": [],
+      "is_active": false,
+      "role": "version conflict: superseded (untargeted)"
+    },
+    {
+      "file": "escalation-paths-network-team-g3.md",
+      "source_record_id": "KB-Q-G3-ESCALATE",
+      "group_ids": [
+        3
+      ],
+      "is_active": true,
+      "role": "restricted to group 3"
+    },
+    {
+      "file": "escalation-paths-network-team-g3-b.md",
+      "source_record_id": "KB-Q-G3-FREEZE",
+      "group_ids": [
+        3
+      ],
+      "is_active": true,
+      "role": "restricted to group 3"
+    },
+    {
+      "file": "network-hardware-stock-g3.md",
+      "source_record_id": "KB-Q-G3-STOCK",
+      "group_ids": [
+        3
+      ],
+      "is_active": true,
+      "role": "restricted to group 3"
+    },
+    {
+      "file": "satellite-office-access-g3.md",
+      "source_record_id": "KB-Q-G3-SATELLITE",
+      "group_ids": [
+        3
+      ],
+      "is_active": true,
+      "role": "restricted to group 3"
+    },
+    {
+      "file": "data-hall-power-maintenance-g3.md",
+      "source_record_id": "KB-Q-G3-POWER",
+      "group_ids": [
+        3
+      ],
+      "is_active": true,
+      "role": "restricted to group 3"
+    },
+    {
+      "file": "ip-address-management-g3.md",
+      "source_record_id": "KB-Q-G3-IPAM",
+      "group_ids": [
+        3
+      ],
+      "is_active": true,
+      "role": "restricted to group 3"
+    },
+    {
+      "file": "compliance-evidence-retention-g3.md",
+      "source_record_id": "KB-Q-G3-COMPLIANCE",
+      "group_ids": [
+        3
+      ],
+      "is_active": true,
+      "role": "restricted to group 3"
+    },
+    {
+      "file": "service-desk-script-library-g4.md",
+      "source_record_id": "KB-Q-G4-SCRIPT",
+      "group_ids": [
+        4
+      ],
+      "is_active": true,
+      "role": "restricted to group 4"
+    },
+    {
+      "file": "service-desk-script-library-g4-b.md",
+      "source_record_id": "KB-Q-G4-HANDOVER",
+      "group_ids": [
+        4
+      ],
+      "is_active": true,
+      "role": "restricted to group 4"
+    },
+    {
+      "file": "service-desk-refund-authority-g4.md",
+      "source_record_id": "KB-Q-G4-REFUND",
+      "group_ids": [
+        4
+      ],
+      "is_active": true,
+      "role": "restricted to group 4"
+    }
+  ]
+}

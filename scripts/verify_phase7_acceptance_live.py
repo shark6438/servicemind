@@ -40,17 +40,18 @@ import time
 import traceback
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import httpx
 from dotenv import dotenv_values
 from sqlalchemy import select
 
+from core import settings
 from servicemind.domain.analysis import AnalysisResult
-from servicemind.domain.evidence import CITATION_KEY, Evidence
+from servicemind.domain.evidence import CITATION_KEY, Evidence, evidence_items
 from servicemind.domain.knowledge import Citation
 from servicemind.domain.review import ReviewResult
 from servicemind.evaluation.acceptance import (
@@ -65,6 +66,8 @@ from servicemind.evaluation.acceptance import (
     ObservedMemoryRecord,
     ObservedSubject,
     StepObservation,
+    case_set_digest,
+    new_followups,
 )
 from servicemind.evaluation.graph_probe import graph_fixture_reading, principal_for
 from servicemind.graphrag.build import build_graph_store
@@ -77,6 +80,11 @@ from servicemind.persistence.models import (
     ContextArtifactRecord,
     MemoryRecordRow,
     ToolOutboxRecord,
+)
+from servicemind.reliability.outbox import (
+    PUBLISHED_RETENTION,
+    STREAM_MAXLEN,
+    RedisStreamPublisher,
 )
 from servicemind.security.auth import TenantContext
 from servicemind.security.entitlements import current_entitlement_verifier
@@ -1158,6 +1166,19 @@ class CaseRun:
             self.errors.append(f"{self.case.id}/{step.id}: GLPI read failed: {exc!r}")
             self.step(step, started=started, detail=repr(exc))
             return
+        new = new_followups(self.before, self.after)
+        if new and not self.case.writes_followups:
+            # The case list's isolation rule depends on this being impossible: a
+            # non-writing case's ticket is shared with other cases, so a followup it did
+            # not declare is a followup the *next* case will read as its own evidence.
+            # Reported here, at the moment it is observable, rather than as an unexpected
+            # difference in some later case's result.
+            self.errors.append(
+                f"{self.case.id}/{step.id}: the case is not declared as writing to its "
+                f"ticket but {len(new)} followup(s) appeared: "
+                f"{[item.followup_id for item in new]}. Its ticket is shared, so the "
+                f"fixture is now polluted for every other case using it."
+            )
         self.step(
             step,
             started=started,
@@ -1239,15 +1260,23 @@ class CaseRun:
         and compared would pass on a coincidence and fail on a paraphrase, which measures
         the sampler rather than the grouping rule.
 
-        What "the same root cause" means here is the rule the platform actually applies:
-        the canonical payload, compared after normalization. ``_procedure_pattern``
-        normalizes case and collapses whitespace and then requires the result to be equal
-        -- its docstring says so ("Exact normalized equality deliberately favours precision
-        over recall"). So the same-root-cause pair below differs only in case and
-        whitespace, which is exactly the class of variation the rule absorbs. Two
-        *rewritten* recommendations -- same meaning, different words -- would produce two
-        keys, and that recall boundary belongs in the report as a property of the
-        mechanism, not hidden behind a pair of inputs chosen to look like a paraphrase.
+        What "the same root cause" means is the rule the platform actually applies, and
+        D15 changed it. The identity is ``classification``, ``recommended_group`` and
+        *which* recommendation fields the analysis filled; the recommendation prose is
+        deliberately not part of it, because prose moves with the evidence a ticket
+        happened to hold rather than with the condition. ACC-12b is the measurement that
+        forced this: two structurally isomorphic tickets produced analyses that agreed
+        verbatim on classification and owner, and whose ``problem_recommendation``
+        differed in *polarity* -- the second ticket had seen one more sibling incident, so
+        it proposed a problem record where the first had declined to. Hashing the prose
+        asked two independent samples to agree on the one field that is supposed to
+        change.
+
+        So the same-root-cause inputs below are the variations the rule must now absorb --
+        case and whitespace, a rewritten recommendation, and the flag the model happens to
+        set -- and the different-root-cause inputs are the two fields that still carry the
+        identity. Weakening one without the other would let the surface collapse to
+        "everything groups", which is why both are asserted rather than only the first.
         """
         from servicemind.orchestration.phase5_governance import _procedure_pattern
 
@@ -1259,30 +1288,66 @@ class CaseRun:
             "problem_recommendation": "Rebind the authentication device.",
         }
         if step.id == "produce-same":
-            first = rebind
-            second = {
-                "recurring_incident": True,
-                # Same three canonical fields as ``rebind``; cased and spaced differently.
-                "classification": "  MFA_Device_Binding ",
-                "recommended_group": "identity   team",
-                "problem_recommendation": "Rebind\t the authentication\n  device.",
-            }
-            expectation = "one key for two spellings of the same root cause"
+            variants = [
+                rebind,
+                {
+                    "recurring_incident": True,
+                    # Cased and spaced differently: the class of variation normalization
+                    # was always meant to absorb.
+                    "classification": "  MFA_Device_Binding ",
+                    "recommended_group": "identity   team",
+                    "problem_recommendation": "Rebind\t the authentication\n  device.",
+                },
+                {
+                    # Same condition, same owner, same field shape. Only the sentence the
+                    # model chose is different -- which is the whole of D15. The recurrence
+                    # flag is flipped as well, because it is not an input either and a
+                    # reader of the record should see that stated rather than assumed.
+                    "recurring_incident": False,
+                    # Cased differently and nothing else: this input is here to isolate
+                    # the rewrite below, so it must not also move a field that is in the
+                    # identity. An earlier version of this input said "MFA Device
+                    # Binding", which normalizes to a different token than
+                    # "mfa_device_binding" and split the key for a reason that had
+                    # nothing to do with what the input was testing.
+                    "classification": "MFA_Device_Binding",
+                    "recommended_group": "Identity Team",
+                    "problem_recommendation": (
+                        "Re-register the second factor and confirm the binding holds "
+                        "before the ticket is closed."
+                    ),
+                },
+            ]
+            expectation = "one key for one root cause, across spellings and rewrites"
+            keys = [entry[0] if entry else None for entry in map(_procedure_pattern, variants)]
+            passed = None not in keys and len(set(keys)) == 1
         elif step.id == "produce-different":
-            first = rebind
-            second = {
-                "recurring_incident": True,
-                "classification": "gateway_connectivity",
-                "recommended_group": "Network Team",
-                "problem_recommendation": "Replace the gateway.",
-            }
+            variants = [
+                rebind,
+                {
+                    "recurring_incident": True,
+                    # Only the classification differs. It names the condition, so a
+                    # different one is a different condition however the recommendation
+                    # reads.
+                    "classification": "gateway_connectivity",
+                    "recommended_group": "Identity Team",
+                    "problem_recommendation": "Rebind the authentication device.",
+                },
+                {
+                    "recurring_incident": True,
+                    # Only the owner differs. It decides which team is told to run the
+                    # procedure, so merging these would send one team another's work.
+                    "classification": "mfa_device_binding",
+                    "recommended_group": "Network Team",
+                    "problem_recommendation": "Rebind the authentication device.",
+                },
+            ]
             expectation = "a different root cause produces a different key"
+            keys = [entry[0] if entry else None for entry in map(_procedure_pattern, variants)]
+            passed = None not in keys and len(set(keys)) == len(variants)
         else:
             raise RuntimeError(f"unknown pattern_key step: {step.id!r}")
 
-        left, right = _procedure_pattern(first), _procedure_pattern(second)
-        same = left is not None and right is not None and left[0] == right[0]
-        passed = same if step.id == "produce-same" else not same
         self.step(
             step,
             started=started,
@@ -1291,11 +1356,230 @@ class CaseRun:
                 {
                     "step": step.id,
                     "expectation": expectation,
-                    "classification": [first["classification"], second["classification"]],
-                    "pattern_keys": [left[0] if left else None, right[0] if right else None],
+                    "classification": [variant["classification"] for variant in variants],
+                    "recommended_group": [variant["recommended_group"] for variant in variants],
+                    "pattern_keys": keys,
                     # The inputs themselves, so the claim can be re-derived from the
                     # record instead of taken on trust.
-                    "inputs": [first, second],
+                    "inputs": variants,
+                },
+                ensure_ascii=False,
+            ),
+        )
+
+    async def context_pruning_producer(self, step: CaseStep, subject: str) -> None:
+        """Evaluate ``ContextBuilder.build`` directly on a payload built to exceed it.
+
+        The budget rule is deterministic and lives in one function, so it is judged by
+        calling that function rather than by reading the manifest of a live run. The live
+        reading was the wrong instrument: the run's payload is assembled from whatever the
+        retrieval returned, and on 2026-09-23 ACC-06 measured *not* over budget at every
+        round -- its manifest showed no pruning, so a case whose premise is "this payload
+        does not fit" was decided by whether some *other* agent's envelope happened to
+        bind that time. That is a property of the retrieval, not of the budget rule, and
+        it passed and failed for reasons the case does not name.
+
+        The inputs below are fixed and the numbers are derived from them, not from the
+        deployment's settings: the reader can re-run the arithmetic from the step's own
+        detail. What is asserted is the whole of the rule -- an over-budget payload loses
+        a row *and* states why -- because "something was dropped" and "the envelope got
+        smaller" are both true of a run that simply failed.
+        """
+        from servicemind.context.builder import ContextBuilder
+        from servicemind.context.contracts import (
+            ContextAgent,
+            ContextItem,
+            ContextSource,
+            TrustLabel,
+        )
+
+        started = now()
+        max_input_tokens = 2000
+        system_reserve = 0
+        output_reserve = 0
+        usable = max_input_tokens - system_reserve - output_reserve
+        control = ContextItem(
+            item_id="probe-control",
+            source=ContextSource.POLICY,
+            content="Envelope control row: the run's own task statement.",
+            allowed_agents=frozenset({ContextAgent.ANALYSIS}),
+            trust=TrustLabel.TRUSTED_CONTROL,
+            authority=1.0,
+            relevance=1.0,
+            required=True,
+            provenance_ref="probe://control",
+        )
+        # Six rows at roughly 800 tokens each against 2000 usable: two fit beside the
+        # control row and four cannot. Each row's content is distinct on purpose -- equal
+        # content is dropped as ``exact_duplicate``, which is the dedupe rule and not the
+        # budget rule, and a payload that trips both would not say which one the case
+        # tested. Measured on this payload: control 23, two rows 799 each (1621 used),
+        # four rows pruned at 799 each (3196 pruned).
+        evidence_rows = [
+            ContextItem(
+                item_id=f"probe-evidence-{index}",
+                source=ContextSource.EVIDENCE,
+                content=(
+                    f"Runbook {index}. Rebind the registered authenticator and confirm "
+                    "the binding holds before the ticket is closed. "
+                )
+                * 17,
+                allowed_agents=frozenset({ContextAgent.ANALYSIS}),
+                trust=TrustLabel.UNTRUSTED,
+                authority=0.7,
+                relevance=0.9 - index / 100,
+                provenance_ref=f"probe://runbook-{index}",
+            )
+            for index in range(6)
+        ]
+        envelope = ContextBuilder().build(
+            tenant_id=self.case.tenant_id,
+            run_id=uuid4(),
+            task_id="probe-context-pruning",
+            agent=ContextAgent.ANALYSIS,
+            items=[control, *evidence_rows],
+            max_input_tokens=max_input_tokens,
+            system_reserve=system_reserve,
+            output_reserve=output_reserve,
+        )
+        manifest = envelope.selection_manifest
+        selected = [
+            entry
+            for entry in manifest
+            if entry.decision == "selected" and entry.source is ContextSource.EVIDENCE
+        ]
+        dropped = [
+            entry
+            for entry in manifest
+            if entry.decision in {"pruned", "rejected"}
+            and entry.reason
+            and entry.source is ContextSource.EVIDENCE
+        ]
+        # Both halves are required, and both are about *evidence*: "something survived"
+        # alone is satisfied by the control row the packer may never drop, and "something
+        # was dropped" alone is satisfied by a run that dropped everything. The rule under
+        # test is that a payload too large to fit is still delivered in part, and says
+        # which part it lost.
+        passed = bool(selected) and bool(dropped)
+        self.step(
+            step,
+            started=started,
+            outcome="passed" if passed else "failed",
+            detail=json.dumps(
+                {
+                    "step": step.id,
+                    "expectation": (
+                        "an over-budget payload is delivered with at least one evidence "
+                        "row selected and at least one dropped with a stated reason"
+                    ),
+                    "budget": {
+                        "max_input_tokens": max_input_tokens,
+                        "system_reserve": system_reserve,
+                        "output_reserve": output_reserve,
+                        "usable_tokens": usable,
+                        "tokens_used": envelope.budget.tokens_used,
+                        "tokens_pruned": envelope.budget.tokens_pruned,
+                    },
+                    "items": [
+                        {
+                            "item_id": item.item_id,
+                            "source": item.source.value,
+                            "required": item.required,
+                            "content_chars": len(item.content),
+                        }
+                        for item in (control, *evidence_rows)
+                    ],
+                    # The manifest is the whole observation: the numbers in it are what
+                    # a reader checks the arithmetic against, and the reason strings are
+                    # what the assertion is about.
+                    "manifest": [
+                        {
+                            "item_id": entry.item_id,
+                            "source": entry.source.value,
+                            "tokens": entry.tokens,
+                            "decision": entry.decision,
+                            "reason": entry.reason,
+                        }
+                        for entry in manifest
+                    ],
+                    "selected": [entry.item_id for entry in selected],
+                    "dropped_with_reason": [entry.item_id for entry in dropped],
+                },
+                ensure_ascii=False,
+            ),
+        )
+
+    async def corpus_scope_producer(self, step: CaseStep, subject: str) -> None:
+        """Read the acceptance corpus twice, as a group member and as nobody.
+
+        The claim is the one the user stated on 2026-09-22: once the requester's group is
+        taken away the run must not be able to read that group's documents. Reading it off
+        the case's own run does not hold it -- measured across this acceptance, an analyst
+        holding group 3 cites the restricted runbook in about half of their runs even with
+        nothing revoked, so "the restricted document is absent" is satisfied half the time
+        by a platform where the narrowing does nothing. See
+        ``servicemind.evaluation.knowledge_probe`` for why the fixed query exists.
+
+        The readings are printed in full rather than reduced to a verdict, because the
+        interesting failure of this probe is not "the restricted document was returned" --
+        that one is unambiguous -- but "nothing was returned", which only the whole list
+        shows.
+        """
+        from servicemind.evaluation.knowledge_probe import (
+            CORPUS_RESTRICTED_BY_GROUP,
+            PUBLIC_CONTROL_DOCUMENT,
+            corpus_scope_problems,
+            corpus_scope_reading,
+            principal_for,
+        )
+        from servicemind.rag.service import build_enterprise_rag
+
+        started = now()
+        observed = await self.stack.observed_subject(subject)
+        # The entity is the subject's own, read from the identity provider rather than
+        # written into the case: the two readings must differ in the group axis and in
+        # nothing else, and a hardcoded entity would keep comparing two principals even
+        # if the subject's entity had moved.
+        entity_id = min(observed.entity_ids)
+        rag = build_enterprise_rag()
+        readings: dict[str, list[str]] = {}
+        for label, group_ids in (
+            ("holding_its_group", set(CORPUS_RESTRICTED_BY_GROUP.values())),
+            ("holding_no_group", set()),
+        ):
+            readings[label] = await corpus_scope_reading(
+                rag,
+                principal_for(
+                    self.stack.tenant_id,
+                    user_id=f"acceptance-corpus-probe-{label}",
+                    entity_ids={entity_id},
+                    group_ids=group_ids,
+                ),
+                query=self.case.question,
+            )
+        problems = await corpus_scope_problems(
+            rag,
+            self.stack.tenant_id,
+            entity_id=entity_id,
+            query=self.case.question,
+        )
+        self.step(
+            step,
+            started=started,
+            outcome="failed" if problems else "passed",
+            detail=json.dumps(
+                {
+                    "step": step.id,
+                    "expectation": (
+                        "the same query over the same corpus returns the group-restricted "
+                        "document to a principal holding that group and not to one holding "
+                        "none, with the unrestricted control document returned to both"
+                    ),
+                    "query": self.case.question,
+                    "restricted_documents": CORPUS_RESTRICTED_BY_GROUP,
+                    "control_document": PUBLIC_CONTROL_DOCUMENT,
+                    "readings": readings,
+                    "problems": problems,
                 },
                 ensure_ascii=False,
             ),
@@ -1420,14 +1704,24 @@ class CaseRun:
         review queue's payload: the queue item states ``provenance`` but not the run it
         came from, so a queue holding several quarantined procedures would be resolved by
         whichever one happened to be listed first.
+
+        Searched across every run *this case* submitted, not only the one it is named
+        after, and the producer is recorded in the step. A cross-ticket procedure is
+        proposed by the post-run step of the run at which corroboration completes, which
+        for a case that submits a pair means whichever of the two wrote last: on a tenant
+        already holding an episode for this pattern, the platform can legitimately
+        attribute it to the first submission -- ACC-12b, where a procedure proposed from
+        run A's post-run step is the same row run B would have proposed, and run B's write
+        is the duplicate the idempotency key exists to absorb.
         """
         started = now()
+        produced = list(self.runs.values()) or ([self.run_id] if self.run_id else [])
         async with tenant_session(self.stack.tenant_id) as session:
             rows = (
                 (
                     await session.execute(
                         select(MemoryRecordRow).where(
-                            MemoryRecordRow.source_run_id == self.run_id,
+                            MemoryRecordRow.source_run_id.in_(produced),
                             MemoryRecordRow.memory_type == "procedural",
                         )
                     )
@@ -1437,12 +1731,17 @@ class CaseRun:
             )
         if not rows:
             self.errors.append(
-                f"{self.case.id}/{step.id}: no procedural memory is attributed to run "
-                f"{self.run_id}, so there is nothing for a human to activate"
+                f"{self.case.id}/{step.id}: no procedural memory is attributed to any run "
+                f"of this case ({produced}), so there is nothing for a human to activate"
             )
             self.step(step, started=started)
             return
-        row = rows[0]
+        # The case's own run first when both are present, so the ordinary path is
+        # unchanged and only the pair case falls through to the earlier submission.
+        row = next(
+            (item for item in rows if item.source_run_id == self.run_id),
+            rows[0],
+        )
         response = await self.stack.request(
             subject,
             "POST",
@@ -1469,6 +1768,11 @@ class CaseRun:
                     "memory_id": str(row.id),
                     "status_before": str(row.status),
                     "version": row.version,
+                    # Which submission proposed it, stated rather than assumed: the
+                    # activation is about the row, and a reader checking the case against
+                    # its evidence needs to see when the producer was not the named run.
+                    "proposed_by_run": str(row.source_run_id),
+                    "proposed_by_the_cases_named_run": row.source_run_id == self.run_id,
                     "response": (
                         response.json() if response.status_code < 300 else response.text[:400]
                     ),
@@ -1478,12 +1782,22 @@ class CaseRun:
         )
 
     async def outbox_tally(self, step: CaseStep, subject: str) -> None:
+        """Count what is in the queue, and measure the two things that bound it.
+
+        The counts answer "are the approved events delivered", which the relay's own
+        ``published`` transitions are the evidence for. They do not answer "does this
+        table grow forever", and neither does any single reading of it: an unbounded
+        table and a bounded one look identical on the day it is measured. What separates
+        them is the age of the oldest row still held under the retention -- a table whose
+        oldest delivered row is older than the retention is a table no sweep has reached,
+        and it will keep growing whatever today's count says.
+        """
         started = now()
         try:
             async with tenant_session(self.stack.tenant_id) as session:
                 rows = (
                     await session.execute(
-                        select(ToolOutboxRecord.status).where(
+                        select(ToolOutboxRecord.status, ToolOutboxRecord.updated_at).where(
                             ToolOutboxRecord.event_type == "action.approved"
                         )
                     )
@@ -1493,30 +1807,82 @@ class CaseRun:
             self.step(step, started=started, detail=repr(exc))
             return
         counts: dict[str, int] = {}
-        for (status_value,) in rows:
+        for status_value, _ in rows:
             counts[str(status_value)] = counts.get(str(status_value), 0) + 1
         consumed = counts.get("published", 0)
-        # "passed" means the tally was taken, never "the queue drains". Whether the
-        # approved events are consumed is the question; a probe that reported success
-        # would be answering it with its own opinion.
+        delivered = [updated for status_value, updated in rows if str(status_value) == "published"]
+        # How many delivered rows are already older than a day. Nothing is deleted for
+        # this -- it is a read -- but it is the number that says what the table was doing
+        # before it had a retention: a deployment without one holds every one of these
+        # forever, and the count only ever moves one way.
+        day_ago = datetime.now(UTC) - timedelta(days=1)
+        oldest = min(delivered) if delivered else None
+        retention = PUBLISHED_RETENTION
+        # One day of slack past the retention: the sweep runs hourly, and a worker that
+        # was down for an afternoon must not read as an unbounded table. Anything older
+        # than retention plus that slack is a row the sweep has never reached.
+        ceiling = retention + timedelta(days=1)
+        oldest_age = None if oldest is None else datetime.now(UTC) - oldest
+        retained = oldest_age is None or oldest_age <= ceiling
+        detail = {
+            "event_type": "action.approved",
+            "total": len(rows),
+            "by_status": counts,
+            "unconsumed": len(rows) - consumed,
+            "retention_days": retention.days,
+            "oldest_delivered_row": None if oldest is None else oldest.isoformat(),
+            "oldest_delivered_age_seconds": (
+                None if oldest_age is None else round(oldest_age.total_seconds(), 1)
+            ),
+            "delivered_rows_within_retention": retained,
+            "delivered_rows_older_than_one_day": len(
+                [updated for updated in delivered if updated < day_ago]
+            ),
+            "redis": await self._stream_length(),
+            "note": (
+                "PASS here means the tally was taken and the retention read, not that a "
+                "consumer outside this repository drained the queue: no consumer exists "
+                "in the platform, which is recorded in the baseline document"
+            ),
+        }
         self.step(
             step,
             started=started,
-            outcome="passed",
-            detail=json.dumps(
-                {
-                    "event_type": "action.approved",
-                    "total": len(rows),
-                    "by_status": counts,
-                    "unconsumed": len(rows) - consumed,
-                    "note": (
-                        "PASS here means the tally was taken, not that the queue is drained; "
-                        "see the outbox defect in the baseline document"
-                    ),
-                },
-                ensure_ascii=False,
-            ),
+            outcome="passed" if retained else "failed",
+            detail=json.dumps(detail, ensure_ascii=False),
         )
+
+    async def _stream_length(self) -> dict[str, Any]:
+        """How long the delivery stream is, and against what bound.
+
+        Recorded rather than asserted: at the scale this acceptance run produces, an
+        unbounded stream and a bounded one are the same length, so a bound check here
+        would pass for the wrong reason. The bound is asserted where it is decidable --
+        the unit test that the publisher passes ``maxlen`` at all.
+        """
+        from redis.asyncio import Redis
+
+        url = settings.SERVICEMIND_REDIS_URL
+        if url is None:
+            return {"readable": False, "reason": "SERVICEMIND_REDIS_URL is not configured"}
+        client = Redis.from_url(
+            url.get_secret_value(),
+            decode_responses=False,
+            socket_connect_timeout=2,
+            socket_timeout=2,
+        )
+        stream = RedisStreamPublisher(client).stream
+        try:
+            return {
+                "readable": True,
+                "stream": stream,
+                "length": int(await client.xlen(stream)),
+                "bound": STREAM_MAXLEN,
+            }
+        except Exception as exc:  # noqa: BLE001 - an unreadable stream is recorded as such
+            return {"readable": False, "reason": type(exc).__name__}
+        finally:
+            await client.aclose()
 
     async def playwright(self, step: CaseStep, subject: str) -> None:
         started = now()
@@ -1686,21 +2052,16 @@ class CaseRun:
             )
 
     def _evidence_rows(self) -> list[Any]:
-        """The result's evidence, which this platform publishes in two shapes.
+        """The result's evidence rows, read through the platform's own accessor.
 
-        A run that goes through the supervisor persists ``joined_evidence``, the
-        ``{items: [...], tenant_id: ...}`` envelope the join produces; the ``fast_data``
-        and ``fast_knowledge`` nodes persist a bare list. The console already reads both
-        (``evidenceRoot?.items ?? result.evidence``), so this is the platform's actual
-        contract rather than a mistake to route around -- but a reader that understood
-        only one shape would silently see *no* evidence for every full run, and report
-        that the citations do not resolve when it was looking in the wrong place.
+        This used to branch on the shape itself, because the platform published two: the
+        ``{items: [...], tenant_id: ...}`` envelope from the supervisor and a bare list
+        from the fast paths. The fast paths now publish the envelope too, so the driver
+        asks ``evidence_items`` rather than carrying a second opinion about the encoding
+        -- which is the same tolerance, minus the part where every reader has to remember
+        it exists.
         """
-        raw = self.result.get("evidence")
-        if isinstance(raw, dict):
-            items = raw.get("items")
-            return list(items) if isinstance(items, list) else []
-        return list(raw) if isinstance(raw, list) else []
+        return evidence_items(self.result.get("evidence"))
 
     def evidence_view(self) -> EvidenceView:
         """The persisted result parsed once, with a note for each row that would not."""
@@ -1736,7 +2097,11 @@ class CaseRun:
         return view
 
     def execution(
-        self, environment: ObservedEnvironment, subject: ObservedSubject | None
+        self,
+        environment: ObservedEnvironment,
+        subject: ObservedSubject | None,
+        *,
+        cases_digest: str,
     ) -> CaseExecution:
         view = self.evidence_view()
         for note in view.notes:
@@ -1744,10 +2109,14 @@ class CaseRun:
                 self.notes.append(note)
         return CaseExecution(
             case_id=self.case.id,
+            cases_digest=cases_digest,
             environment=environment,
             subject=subject,
             steps=self.steps,
             run_id=self.run_id,
+            # Stamped, because the runs a case submitted are part of what was observed
+            # and not derivable from the steps afterwards -- see ``case_run_ids``.
+            case_run_ids=list(self.runs.values()),
             terminal_status=self.status,
             total_seconds=self.total_seconds,
             action_intent=self.intent,
@@ -1790,6 +2159,10 @@ async def perform(case_run: CaseRun, step: CaseStep, stack: Stack) -> None:
         await case_run.graph_read(step, subject)
     elif action == "procedural memory pattern_key producer":
         await case_run.pattern_key_producer(step, subject)
+    elif action == "context envelope pruning producer":
+        await case_run.context_pruning_producer(step, subject)
+    elif action == "corpus scope producer":
+        await case_run.corpus_scope_producer(step, subject)
     elif action == "memory review activation":
         await case_run.activate_memory(step, subject)
     elif action == "POST /v1/servicemind/mcp tools/list":
@@ -1843,6 +2216,7 @@ async def run_case(
     stack: Stack,
     tickets: dict[str, int],
     environment: ObservedEnvironment,
+    cases_digest: str,
 ) -> CaseExecution:
     case_run = CaseRun(case, stack, tickets)
     subject: ObservedSubject | None = None
@@ -1870,7 +2244,7 @@ async def run_case(
         # In a ``finally`` rather than after the loop: a failure while reading the
         # evidence would otherwise be the failure that leaves the realm revoked.
         await restore_realm(case_run, stack)
-    execution = case_run.execution(environment, subject)
+    execution = case_run.execution(environment, subject, cases_digest=cases_digest)
     REPLAYS.mkdir(parents=True, exist_ok=True)
     (REPLAYS / f"{case.id}.json").write_text(execution.model_dump_json(indent=2), encoding="utf-8")
     return execution
@@ -2045,6 +2419,9 @@ async def main() -> int:
         print(json.dumps({"stale_deployment": staleness}, ensure_ascii=False))
 
     case_set = AcceptanceCaseSet.model_validate(json.loads(CASES.read_text(encoding="utf-8")))
+    # Stamped onto every replay: the gate reads it back to decide whether the observation
+    # still describes the expectations it sits beside.
+    cases_digest = case_set_digest(case_set)
     recorded = json.loads(FIXTURE_TICKETS.read_text(encoding="utf-8"))
     tickets = _case_tickets(case_set, recorded)
     selected = {item.strip() for item in args.only.split(",") if item.strip()}
@@ -2079,7 +2456,7 @@ async def main() -> int:
         for case in cases:
             started = now()
             try:
-                execution = await run_case(case, stack, tickets, environment)
+                execution = await run_case(case, stack, tickets, environment, cases_digest)
             except Exception as exc:  # noqa: BLE001 - the next case is still worth running
                 failures.append(f"{case.id}: {exc!r}")
                 print(f"{case.id}: DRIVER FAILURE {exc!r}", flush=True)

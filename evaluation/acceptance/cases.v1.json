@@ -335,7 +335,7 @@
         },
         {
           "id": "acc03-root-cause-not-the-decoy",
-          "description": "根因假设成立，且其证据不指向相似症状文档——「说对了」与「据什么说的」是两件事",
+          "description": "根因假设成立，且其证据必须指向正确手册、不得指向相似症状文档——「说对了」「据什么说的」与「是否什么都没据」是三件事",
           "expect": {
             "kind": "required_facts",
             "facts": [
@@ -355,6 +355,9 @@
                 ],
                 "must_not_cite": [
                   "KB-GLOBEX-VPN-APP-REG"
+                ],
+                "must_cite": [
+                  "KB-GLOBEX-VPN-MFA-REBIND"
                 ]
               }
             ]
@@ -725,8 +728,8 @@
     },
     {
       "id": "ACC-06",
-      "title": "上下文裁剪：超预算载荷必须留下带理由的裁剪",
-      "goal": "预算生效的证据是「某条被丢弃且写明了理由」，不是「回答变短了」。本条使用专用超预算载荷，因此裁剪是设计要求而非偶然结果；普通案例不要求裁剪，只要求清单非空且选中项有理由——对一个小上下文要求裁剪，只会制造一个因为没超预算而失败的案例。",
+      "title": "上下文裁剪：预算必须丢掉某条并写明理由",
+      "goal": "预算生效的证据是「某条被丢弃且写明了理由」，不是「回答变短了」。这条规则确定性地位于上下文构建器里，所以直接对构建器求值一次超预算载荷——固定输入、固定预算，结果不随某次检索返回多少条而变。原先本条依赖实跑运行恰好超出预算，2026-09-23 实测该载荷每一轮都没有超预算，断言于是由别的角色是否恰好吃紧决定：它通过或失败都不是关于预算规则的陈述。实跑一侧保留为「清单非空」与「裁剪之后仍到达成功终态」：前者证明活链路上确实产出了选择清单，后者证明预算生效不等于任务失败。探针把预算、逐条 token 数与逐条判定原文都留在步骤里，读者可以据此复算。",
       "source": "P7.6 交付物 E ACC-06（上下文裁剪，专用超预算载荷）",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "subject": "globex-analyst-g3",
@@ -752,16 +755,31 @@
           "id": "observe-terminal",
           "description": "轮询运行直到终态",
           "action": "GET /v1/servicemind/runs/{run_id}"
+        },
+        {
+          "id": "build-over-budget-envelope",
+          "description": "直接对 ContextBuilder 求值一次固定超预算载荷：2000 可用 token 对 6 条各约 800 token 的证据行，必须出现「至少一条证据行选中、且至少一条被丢弃并写明理由」",
+          "action": "context envelope pruning producer"
         }
       ],
       "assertions": [
         {
-          "id": "acc06-pruned-with-reason",
-          "description": "出现被裁剪/拒绝的条目，且理由非空",
+          "id": "acc06-live-manifest-nonempty",
+          "description": "实跑运行的上下文选择清单非空：活链路上确实产出了选择清单",
           "expect": {
             "kind": "context_selection",
-            "require_pruning_with_reason": true,
+            "require_pruning_with_reason": false,
             "required_selected_item_ids": []
+          },
+          "verifies_module": "context"
+        },
+        {
+          "id": "acc06-pruned-with-reason",
+          "description": "固定超预算载荷下，构建器选中了条目且至少丢弃一条并写明非空理由（逐条判定原文在步骤里）",
+          "expect": {
+            "kind": "probe_outcome",
+            "step_id": "build-over-budget-envelope",
+            "outcome": "passed"
           },
           "verifies_module": "context"
         },
@@ -1213,10 +1231,11 @@
       "source": "P7.6 交付物 E ACC-10；用户 2026-09-22 裁定「ACC-10 必须配置核验身份」",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "subject": "globex-approver",
-      "ticket_ref": "globex-vpn-mfa-a",
+      "ticket_ref": "globex-vpn-mfa-acc10b",
       "knowledge_version": "phase7-acceptance-fixtures-v1",
       "question": "请在不修改工单的前提下，准备一条待审批的工单跟进说明。",
       "request_write": true,
+      "writes_followups": true,
       "timeout_seconds": 420.0,
       "modules": [
         "identity",
@@ -1328,10 +1347,11 @@
       "source": "P7.6 交付物 E ACC-11；用户 2026-09-22 裁定「按真实路径确定前置条件，不默认继承」",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "subject": "globex-approver",
-      "ticket_ref": "globex-vpn-mfa-b",
+      "ticket_ref": "globex-vpn-mfa-acc11",
       "knowledge_version": "phase7-acceptance-fixtures-v1",
       "question": "请在不修改工单的前提下，准备一条待审批的工单跟进说明。",
       "request_write": true,
+      "writes_followups": true,
       "timeout_seconds": 480.0,
       "modules": [
         "identity",
@@ -1423,7 +1443,7 @@
     {
       "id": "ACC-12a",
       "title": "程序记忆分组机制：固定输入下 pattern_key 由根因决定",
-      "goal": "直接对生产者求值，而不是反复跑运行挑两个相等的结果——后者在任何随机分组下也可能凑巧相等。两步各自陈述自己的结论并把求出的 key 原文与两份输入一起留在步骤里：两条同根因输入得到同一个 key；一条不同根因输入得到的 key 与它不同。本实现里「同根因」的定义是**归一化后逐字相等**：_procedure_pattern 只取 classification / recommended_group / 出现的 recommendation 三项，先做大小写归一与空白折叠，再要求相等（其 docstring 自述「Exact normalized equality deliberately favours precision over recall」）。因此同根因的一对输入只在大小写与空白上有差异；换词重写的同一建议会得到不同 key，这属于该机制的已知召回边界，写在报告里，不用一对看起来像改写的输入来掩盖。**recurring_incident 不是生产者的输入**：它是「跨工单佐证」要得出的结论，不是得出它的前提。本轮发现原先 `_procedure_pattern` 要求 analysis 的 recurring_incident 为 True 才产出 key，而本项目给分析智能体的技能明确要求「至少两条可比的、已核验的事件才能认定复发」——于是在任何模式的第一张工单上该标志的诚实取值是 False，恰恰是必须产出 key 的那张工单被拒绝产出，生产者永远无法起步。该前置已从根源移除并加锁定测试（回退即变红）。这条不依赖核验身份：它不经过审批与写入，也不产生记忆行（落库与隔离态由 ACC-12b 断言）。",
+      "goal": "直接对生产者求值，而不是反复跑运行挑两个相等的结果——后者在任何随机分组下也可能凑巧相等。两步各自陈述结论并把 key 原文与全部输入留在步骤里：三条同根因输入必须得到同一个 key；两条不同根因输入的 key 必须都与基准不同。本实现里「同根因」的定义是：_procedure_pattern 取 classification、recommended_group，以及**填写了哪几个建议字段**（problem_recommendation / change_recommendation），归一化后相等即同一 key——**建议正文不参与身份**，它只进程序正文。这是 D15 修复后的定义。改动依据是一次实测：ACC-12b 的两张结构同构工单给出了逐字相同的 classification 与 recommended_group，而 problem_recommendation 的**极性**不同——第二张按构造多看到一条同型事件，于是主张开问题记录，第一张不主张。要求两次独立采样在「本来就该随证据变化」的字段上相等，等于要求这条机制永不触发。因此 produce-same 的三条输入覆盖大小写/空白、换词重写、recurring_incident 取反，必须同 key；produce-different 的两条分别**只**改 classification 与**只**改 recommended_group，必须都与基准不同——否则「什么都能合并」同样会让第一步通过。**recurring_incident 不是生产者的输入**：它是跨工单佐证要得出的结论；产出 key 的那张工单恰是第二张到达的工单，把它当前置会让生产者永远无法起步（该前置已从根源移除并加锁定测试）。本条不依赖核验身份，也不产生记忆行（落库与隔离态由 ACC-12b 断言）。",
       "source": "P7.6 交付物 E ACC-12(a)（确定性分组机制）",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "subject": "globex-analyst-g3",
@@ -1438,12 +1458,12 @@
       "steps": [
         {
           "id": "produce-same",
-          "description": "对两条同根因（同一 canonical 载荷，仅大小写与空白不同）的固定输入求 pattern_key，两条必须相同",
+          "description": "对三条同根因的固定输入求 pattern_key（大小写/空白差异、换词重写、recurring_incident 取反），三条必须得到同一个 key",
           "action": "procedural memory pattern_key producer"
         },
         {
           "id": "produce-different",
-          "description": "对一条不同根因的固定输入求 pattern_key，必须与上面那条不同",
+          "description": "对两条不同根因的固定输入各求一次 pattern_key（只改 classification / 只改 recommended_group），两条都必须与基准不同",
           "action": "procedural memory pattern_key producer"
         }
       ],
@@ -1474,7 +1494,7 @@
     {
       "id": "ACC-12b",
       "title": "程序记忆端到端：真实模型产出 procedural 且默认隔离，人工激活后转正",
-      "goal": "真实模型端到端：跨工单程序记忆被提出、默认隔离为 quarantine，人工审核激活后才转为 active，且与产出它的运行可关联（source_run_id → agent_runs.id）。开两张工单不是冗余：平台只在两张**不同工单**各有一条同 pattern_key 的 episode 时才提出跨工单程序，单张工单走不到这条路径。本案例是只读成功运行，不经过写入前的核验门禁，因此不依赖核验身份。\n\n**实测结论：本案例在真实模型下不可达，记为 BLOCKED（阻断验收关闭）；确定性分组机制由 ACC-12a 举证。** 2026-09-23 全量扫描实际观测（两张结构同构工单、同一问法、同一主体）：运行 A 的 recurring_incident=false，classification 为「VPN multi-factor authentication failure after handset change」；运行 B 为 true，classification 为「VPN MFA failure after handset change (suspected MFA device rebind)」。两条阻塞互相独立：(1) **身份取自模型自由文本**——canonical 载荷含 classification 与整段 recommendation 正文，要求两次独立采样归一化后逐字相等，真实采样下产出率约为零；(2) **episode 必须为 ACTIVE**——而 ACTIVE 同时是 pattern_episodes 经 visible_at 取支持 episode 的条件，模型自评置信度（实测 0.72）低于本部署阈值 0.90 时 episode 落 quarantine，两侧同时不可见，提案不触发。已核实该耦合自洽（放宽提案侧 ACTIVE 不改变结果，见 test_a_quarantined_episode_cannot_corroborate_a_pattern），故不改代码，仅作为已知未关闭缺陷记录并附复现路径。",
+      "goal": "真实模型端到端：跨工单程序记忆被提出、默认隔离为 quarantine，人工审核激活后才转为 active，且与产出它的运行可关联（source_run_id → agent_runs.id）。开两张工单不是冗余：平台只在两张**不同工单**各有一条同 pattern_key 的 episode 时才提出跨工单程序。本案例是只读成功运行，不经过写入前的核验门禁，因此不依赖核验身份。\n\n2026-09-23 首次全量扫描实测：本案例当时不可达，两条阻塞互相独立，且都不是模型不稳定造成的。(1) **身份取自模型自由文本**——该次运行 A 与运行 B 的 classification 与 recommended_group 均逐字相同（原文见基线文档）；不同的是 problem_recommendation 的**极性**——第二张工单按构造多看到一条同型事件，因而主张开问题记录，第一张主张不开。这个字段随本条案例的证据变化，**不可能**靠任何归一化稳定。(2) **episode 必须为 ACTIVE**——而 visible_at 同时是 pattern_episodes 取支持 episode 的条件，模型自评置信度（实测 0.85）低于本部署阈值 0.90 时 episode 落 quarantine，两侧同时不可见。D15 一并修复：建议正文移出身份（保留「填写了哪几个建议字段」这一形状信号），佐证谓词改为 corroborable_at = ACTIVE ∪ QUARANTINE（REVOKED / SUPERSEDED / EXPIRED 与越界时间窗仍不得佐证；派生出的 procedural 仍写 quarantine，仍需人工激活）。只放宽提案侧门禁曾试过、结果毫无变化：查询侧与它一致地拒绝，两侧必须同时移动，已由锁定测试固定。**本条判定以重跑为准。**\n\n模型侧方差如实记录：同批次内 classification 出现过三种措辞、recommended_group 出现过两个取值，故本条能否成立取决于相邻两次采样是否一致；本对实测一致但不是保证。若重跑落在不一致的采样上，本条按 BLOCKED 记录并附两次采样原文，那是模型方差而非平台缺陷，不得改案例迁就。",
       "source": "P7.6 交付物 E ACC-12(b)（真实模型端到端 + 人工激活）",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "subject": "globex-analyst-g3",
@@ -1519,14 +1539,15 @@
         },
         {
           "id": "activate-memory",
-          "description": "人工审核通过后激活该条程序记忆",
-          "action": "memory review activation"
+          "description": "以 globex-approver 走人工审核端点激活该条程序记忆（该端点要求 approver 角色；发起该运行的仍是 globex-analyst-g3）",
+          "action": "memory review activation",
+          "as_subject": "globex-approver"
         }
       ],
       "assertions": [
         {
           "id": "acc12b-quarantined",
-          "description": "产出 procedural 记忆且默认为 quarantine，未经人工审核不得自动转正（在第 4 步读到的快照）",
+          "description": "产出 procedural 记忆且默认为 quarantine，未经人工审核不得自动转正（在第 4 步读到的快照）。2026-09-24 第三遍全量验收修正：本条此前把 linked_to_run 读作「必须归属本案例第 4 步的那一次运行」。该读法在租户上已存在同 pattern 的 episode 时，把一个正确归因判成了阻塞。跨工单程序由某次运行的运行后置步骤在佐证齐备时提出；本案例刻意提交一对运行来让 pattern 可佐证，先提交的那次先看到佐证即由它提出，后一次的写入被幂等吸收，平台据此把记录归属于先提交的 run，这正是应有行为。现 linked_to_run 的含义是「归属本案例提交过的任一次运行」（CaseExecution.case_run_ids），断言在隔离、人工激活、source_run_id 可关联三点上均未放宽；实测归因落在哪一次运行，由该步骤的 proposed_by_run 与 proposed_by_the_cases_named_run 如实记录。",
           "expect": {
             "kind": "memory_record",
             "memory_type": "procedural",
@@ -1751,14 +1772,14 @@
     },
     {
       "id": "ACC-16",
-      "title": "独立探针：outbox 消费与堆积",
-      "goal": "先行排查 action.approved 队列的职责，并如实记录：入队行是否被消费、是否无限累积。本案例的 PASS 只表示「观测已完成、计数已如实记录」，绝不表示「消费正常、恢复可用」——后者本轮根本不做判定。队列的实际堆积量作为证据原样进入报告，对应已知未关闭缺陷第 1 条。核心闭环走同步 resume，不依赖它，因此这条探针的结论无论正负都不阻断闭环；探针本身跑不起来（读不到表）才阻断，因为那是「未评估」而不是「已确认无缺陷」。",
+      "title": "独立探针：outbox 投递与留存边界",
+      "goal": "排查 action.approved 队列的职责，并如实记录：入队行是否被投递、留存是否有界。本案例的 PASS 表示「观测已完成、计数与留存读数已如实记录」，仍不表示「消费正常」——仓库内不存在消费者，消费是集成边界之外的事，本轮不做判定。D8 修复后探针多测两项可判定的事实：最老的已投递行是否仍在留存窗口内（超出即说明没有任何清扫到达过这张表，这与「今天恰好不多」是两回事），以及投递流的长度与其上限。堆积量作为证据原样进入报告。核心闭环走同步 resume，不依赖它，因此这条探针的结论无论正负都不阻断闭环；探针本身跑不起来（读不到表）才阻断，因为那是「未评估」而不是「已确认无缺陷」。",
       "source": "P7.6 交付物 F 独立探针三（outbox 与崩溃恢复）",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "subject": "globex-approver",
       "ticket_ref": "globex-vpn-mfa-a",
       "knowledge_version": "phase7-acceptance-fixtures-v1",
-      "question": "统计 action.approved 入队行的消费情况与堆积量。",
+      "question": "统计 action.approved 入队行的投递情况、留存年龄与投递流长度。",
       "request_write": false,
       "timeout_seconds": 120.0,
       "modules": [
@@ -1767,14 +1788,14 @@
       "steps": [
         {
           "id": "count-outbox",
-          "description": "统计 outbox 中 action.approved 行的总数与未消费数，原始输出写入 detail",
+          "description": "统计 outbox 中 action.approved 行的总数与未投递数，读出最老已投递行的年龄与投递流长度，原始输出写入 detail",
           "action": "outbox tally"
         }
       ],
       "assertions": [
         {
           "id": "acc16-outbox-observed",
-          "description": "入队行数量与消费状态被观测并记录。本断言的期望是「观测到」，不是「已消费」；detail 必须带上计数原文，否则判失败",
+          "description": "入队行数量、投递状态与留存读数被观测并记录，且已投递行仍在留存窗口内。本断言的期望是「观测到」，不是「已被消费」；detail 必须带上计数与年龄原文，否则判失败",
           "expect": {
             "kind": "probe_outcome",
             "step_id": "count-outbox",
@@ -2288,10 +2309,11 @@
       "source": "P7.6 §七′ 六类撤权验证之一（查询故障）；用户 2026-09-22 裁定第 1 条",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "subject": "globex-approver",
-      "ticket_ref": "globex-vpn-mfa-a",
+      "ticket_ref": "globex-vpn-mfa-acc22",
       "knowledge_version": "phase7-acceptance-fixtures-v1",
       "question": "请在不修改工单的前提下，准备一条待审批的工单跟进说明。",
       "request_write": true,
+      "writes_followups": true,
       "timeout_seconds": 900.0,
       "modules": [
         "identity",
@@ -2407,10 +2429,11 @@
       "source": "P7.6 §七′ 六类撤权验证之一（写前撤权）；用户 2026-09-22 裁定「旧的待执行动作必须被作废并重新派生」",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "subject": "globex-approver",
-      "ticket_ref": "globex-vpn-mfa-b",
+      "ticket_ref": "globex-vpn-mfa-acc23",
       "knowledge_version": "phase7-acceptance-fixtures-v1",
       "question": "请在不修改工单的前提下，准备一条待审批的工单跟进说明。",
       "request_write": true,
+      "writes_followups": true,
       "timeout_seconds": 900.0,
       "modules": [
         "identity",
@@ -2475,6 +2498,11 @@
           "id": "read-followups",
           "description": "回读工单 followup 列表",
           "action": "GLPI list_ticket_followups"
+        },
+        {
+          "id": "prove-narrowed-scope-excludes-group3",
+          "description": "确定性探针：同一条查询、同一个语料，分别以「持有组 3」与「不持有任何组」两个主体检索；前者必须读到组 3 受限手册，后者必须读不到，且两者都必须读到不受限的对照手册",
+          "action": "corpus scope producer"
         }
       ],
       "assertions": [
@@ -2527,6 +2555,16 @@
           },
           "verifies_module": "identity",
           "requires_entitlement_verifier": true
+        },
+        {
+          "id": "acc23-narrowed-scope-excludes-group3",
+          "description": "撤组之后，重新派生的检索范围里不得再有该组的受限手册。这一条用确定性探针判，而不是看实跑运行的引用列表——实测中持有组 3 的分析员在**未被撤权**时也只有约一半的运行会引用该手册，因此「引用列表里没有它」大约一半的情况下会在收窄完全失效的平台上照样成立，那是空满足，不是证据。探针固定查询与语料，只让 group_ids 这一个变量变化，并同时要求不受限的对照手册在两个主体下都能读到：否则「受限文档没读到」与「什么都没读到」在证据上无法区分。两侧读数原文记在步骤里。",
+          "expect": {
+            "kind": "probe_outcome",
+            "step_id": "prove-narrowed-scope-excludes-group3",
+            "outcome": "passed"
+          },
+          "verifies_module": "retrieval"
         }
       ],
       "blocks_acceptance_when_blocked": true

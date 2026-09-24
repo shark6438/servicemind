@@ -17,15 +17,15 @@ Exit codes, which are the interface:
     run, is neither a pass nor a failure.
 ``3``
     The gate itself is misconfigured: the case list does not validate, a replay names
-    a case that is not in it, or the report on disk was generated from a different case
-    list than the one it sits beside.
+    a case that is not in it, or a replay was taken against a different case list than
+    the one it sits beside.
 
 Why ``3`` exists as its own code rather than folding into ``1``: a report and a case
 list drift apart silently. Somebody edits a case's expectation, the replays still
 describe the old one, and a gate that only returned PASS/FAIL would keep printing the
-old verdict as though it were about the new text. Binding the report to
-``cases_digest`` and refusing to render when they disagree turns that into a loud
-failure at the one moment somebody can still see what changed.
+old verdict as though it were about the new text. Recording the ``cases_digest`` on
+each replay and refusing to grade when one disagrees turns that into a loud failure at
+the one moment somebody can still see what changed.
 
 What this file is *not*: it does not run the acceptance. ``--live`` is accepted only
 so the documented command line does not lie about what happened, and it is rejected
@@ -128,24 +128,47 @@ def load_replays(case_set: AcceptanceCaseSet) -> list[CaseExecution]:
     return executions
 
 
-def check_report_matches(
+def check_replays_match_cases(
     case_set: AcceptanceCaseSet, executions: list[CaseExecution]
 ) -> dict[str, str]:
-    """Refuse to replace a report whose *expectations* differ from the case list.
+    """Refuse to grade observations taken against *different expectations* than these.
 
     The failure this guards is specific and silent: somebody edits what a case expects,
-    the replays still record the old run, and the report on disk keeps printing a
-    verdict that was reached against text nobody can see any more. ``cases_digest``
-    catches exactly that, because it is computed from what the cases *say*.
+    the replays still record the old run, and the verdict printed is reached against text
+    nobody can see any more. ``cases_digest`` is computed from what the cases *say*, and
+    each replay now carries the digest it was taken under, so the comparison is between
+    the expectations and the observation rather than between two derived artefacts.
 
-    ``observation_digest`` is deliberately not a refusal. A mismatch there means the
-    replays are newer than the report, which is the ordinary consequence of running the
-    acceptance again -- and that is the moment the report most needs rewriting. Making
-    it fatal would mean every legitimate sweep required ``--force``, which would train
-    the operator to pass the one flag that also disables the check that matters.
+    Binding it to the report instead -- which is where it started -- enforced the same
+    rule on the honest path too: a case edited and then genuinely re-run still refused,
+    because the report on disk was written from the old case list, and the one flag that
+    unblocked it (``--force``) also silenced the check for the next edit. The check has to
+    be answerable from the observation itself, or the correct action becomes the same
+    action as the wrong one.
+
+    Unstamped and disagreeing are refused with different words, because they call for
+    different actions and the same sentence would misdescribe one of them: a replay that
+    records a *different* digest is evidence about expectations that have since changed,
+    whereas a replay that records *none* is evidence about expectations no one can name
+    -- it was written before the field existed. Both are refused; neither is a pass.
 
     Returns the drift note, if any, for the caller to print.
     """
+    expected = case_set_digest(case_set)
+    unstamped = [item.case_id for item in executions if not item.cases_digest]
+    if unstamped:
+        raise ConfigurationError(
+            f"the replays for {sorted(unstamped)} do not record the case list they were "
+            "taken against, so nothing here says which expectations they describe. Re-run "
+            "the acceptance for them, or pass --force to grade anyway"
+        )
+    stale = [item.case_id for item in executions if item.cases_digest != expected]
+    if stale:
+        raise ConfigurationError(
+            f"the replays for {sorted(stale)} were taken against a different case list "
+            f"(need {expected}); their observations describe expectations that have since "
+            "changed. Re-run the acceptance for them, or pass --force to grade anyway"
+        )
     if not REPORT_JSON.exists():
         return {}
     try:
@@ -153,15 +176,17 @@ def check_report_matches(
     except json.JSONDecodeError as exc:
         raise ConfigurationError(f"{REPORT_JSON} is not valid JSON: {exc}") from exc
 
-    expected = case_set_digest(case_set)
-    if recorded.get("cases_digest") != expected:
-        raise ConfigurationError(
-            f"{REPORT_JSON} was generated from a different case list "
-            f"(report {recorded.get('cases_digest')}, cases {expected}); "
-            "the recorded verdicts were reached against expectations that have since "
-            "changed. Re-run the acceptance, or pass --force to replace it anyway"
-        )
+    # A report that disagrees is a stale rendering and no more: the replays below it are
+    # current, which is what the check above established. Rewriting it is the point of
+    # running the gate, so this is reported rather than refused -- the same treatment
+    # ``observation_digest`` gets, and for the same reason.
     observed = execution_digest(executions)
+    if recorded.get("cases_digest") != expected:
+        return {
+            "rewriting": "the report on disk was rendered from an older case list",
+            "previous_cases_digest": str(recorded.get("cases_digest")),
+            "current_cases_digest": expected,
+        }
     if recorded.get("observation_digest") != observed:
         return {
             "rewriting": "the report on disk describes older observations",
@@ -259,6 +284,11 @@ def render_pipeline(executions: list[CaseExecution]) -> list[str]:
     return lines
 
 
+def _assertion_modules(outcome) -> list[str]:
+    """The modules this case's *assertions* name as the thing they pin down."""
+    return sorted({item.verifies_module for item in outcome.assertions if item.verifies_module})
+
+
 def render_case_detail(
     outcome,
     execution: CaseExecution | None,
@@ -268,12 +298,30 @@ def render_case_detail(
     Every section is emitted even when empty, and says so. A missing ``结果怎么样``
     section reads as a case that had no results, which is a different claim from a case
     whose results were not recorded -- and only one of those is true.
+
+    The two module lines are kept apart for the same reason the coverage table keeps its
+    two columns apart. A case *declares* the modules its scenario touches, but only an
+    assertion naming a module pins that module's behaviour down, and the two are not the
+    same list: ACC-02 and ACC-04a/b/c answer a knowledge question, which the router serves
+    over the ``simple_knowledge_query`` fast path -- retrieval runs, planning and analysis
+    and review do not, and no assertion of theirs names those modules. Printing the
+    declared list under the heading "covered modules" would have read as coverage of three
+    modules that the run never entered, so the declared list is labelled as involvement and
+    whatever it declares beyond the asserted set is stated outright.
     """
+    verified_modules = _assertion_modules(outcome)
+    declared_but_unverified = [name for name in outcome.modules if name not in verified_modules]
     lines: list[str] = [f"### {outcome.case_id} — {outcome.title}", ""]
     lines += [
         f"- **目标**：{outcome.goal}",
         f"- **来源**：{outcome.source}",
-        f"- **覆盖模块行**：{', '.join(outcome.modules) or '（未声明）'}",
+        f"- **涉及模块行**：{', '.join(outcome.modules) or '（未声明）'}",
+        f"- **断言验证的模块行**：{', '.join(verified_modules) or '（无：本案例的断言不指向任何模块）'}"
+        + (
+            f"；声明涉及但本案例无断言验证：{', '.join(declared_but_unverified)}"
+            if declared_but_unverified
+            else ""
+        ),
         f"- **判定**：{outcome.verdict.value}"
         + (
             "（阻断验收关闭）"
@@ -434,7 +482,7 @@ def main() -> int:
     try:
         case_set = load_case_set()
         executions = load_replays(case_set)
-        drift = {} if args.force else check_report_matches(case_set, executions)
+        drift = {} if args.force else check_replays_match_cases(case_set, executions)
     except ConfigurationError as exc:
         print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return EXIT_CONFIGURATION
