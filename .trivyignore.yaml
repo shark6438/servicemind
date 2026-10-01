@@ -1,0 +1,35 @@
+# 作用域限定的镜像扫描豁免，只覆盖两条 CVE，且自己会到期。
+#
+# 为什么是豁免，而不是升级掉它
+#   这两条命中的载体是运行时基础镜像自带的 libssl3t64（openssl 3.5.7-1~deb13u2）。
+#   漏洞库里标注的修复版本是 3.5.7-1~deb13u3，即 Debian 侧已经有修复。但运行时基础
+#   镜像 gcr.io/distroless/nodejs24-debian13:nonroot 由上流 Google distroless 项目
+#   构建，它今天（2026-10-01）重新拉取时仍然指向 frontend/Dockerfile 里锁定的同一个
+#   摘要 sha256:bb6b03d81066993293a10feda7250e8e1cc034035fe9b61cfceededa7c8bf04d，
+#   说明上游还没有用修复后的 Debian 包重建。没有更新的摘要可以换，Dockerfile 里没有
+#   "升级一下" 这个动作可做——所以这条门禁会在任何一次 push 上变红，与改了什么无关。
+#
+# 为什么本镜像不受这两条影响
+#   运行时镜像里唯一被执行的进程是 /nodejs/bin/node，而它自带 OpenSSL：
+#
+#     process.versions.openssl  ->  3.5.8        （实测，比系统那份 3.5.7 还新）
+#     二进制的 DT_NEEDED        ->  libdl.so.2, libm.so.6, libpthread.so.0
+#
+#   两条都实测过：node 不链接 libssl，镜像里也没有 openssl 可执行文件，系统那份
+#   libssl.so.3 只是被基础镜像带上，没有任何进程加载它。这两条 CVE 的触发面（QUIC
+#   连接流控、DTLS 握手重传）也就没有到达路径。
+#
+# 到期之后
+#   expired_at 过后 trivy 会重新报出这两条，CI 随之变红——这是有意的，用来强制复查
+#   上游是否已经重建；重建了就应该删掉本文件、把 Dockerfile 的基础镜像摘要换成新的。
+vulnerabilities:
+  - id: CVE-2026-75804
+    statement: >-
+      载体是基础镜像自带的 libssl3t64；镜像唯一进程 /nodejs/bin/node 静态链接自带
+      OpenSSL 3.5.8，不加载系统 libssl，无触发路径。上游 distroless 重建后应删除本条。
+    expired_at: 2026-10-31
+  - id: CVE-2026-84782
+    statement: >-
+      载体是基础镜像自带的 libssl3t64；镜像唯一进程 /nodejs/bin/node 静态链接自带
+      OpenSSL 3.5.8，不加载系统 libssl，无触发路径。上游 distroless 重建后应删除本条。
+    expired_at: 2026-10-31

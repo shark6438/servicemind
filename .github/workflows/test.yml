@@ -222,9 +222,16 @@ jobs:
           file: frontend/Dockerfile
 
       - name: Scan operator console image
+        # The ignore file is mounted rather than left in the repo: trivy runs as its own
+        # container and scans the host daemon, so this checkout is not otherwise visible
+        # to it. --show-suppressed prints what was suppressed and why, so an exception is
+        # visible in the log instead of silently turning the gate off.
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$PWD/.trivyignore.yaml:/.trivyignore.yaml:ro" \
             ghcr.io/aquasecurity/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 image \
+            --ignorefile /.trivyignore.yaml \
+            --show-suppressed \
             --db-repository ghcr.io/aquasecurity/trivy-db:2 \
             --db-repository public.ecr.aws/aquasecurity/trivy-db:2 \
             --db-repository mirror.gcr.io/aquasec/trivy-db:2 \
