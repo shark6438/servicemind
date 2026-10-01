@@ -17,7 +17,7 @@
 | **D4–D13** | **整张「已知未关闭缺陷」表的十条，自写下起就一直被抄写，从未被回读** | **顺着 D5 把剩下九条一并读完，才发现 D5 不是个例而是通例**：十条中 **8 条早已修复**（D4、D6、D9、D10、D11、D12、D13 各有代码落点与锁定测试，最久的自 2026-09-23 起即已修好）、**2 条的原始描述本身不成立**（D7 的「顺序耦合」被 14 条相对增量断言证伪；D8 的投递半已部署、`servicemind-outbox.service` 长期 active、实测 98 行全部 `published`、零 `pending`/`failed`）。**本轮为此一行源码都没有改。** 于是「缺陷清单 10 → 0」与「本轮修复 0 条」是同一件事的两面，必须一起写 | 「其他已知未关闭缺陷（v3.4 逐条回读后重写）」——逐条列出**代码落点、锁定测试、以及每条「不被证明的部分」** |
 
 > **G1 的后果必须与本文件的结论一起读**：它使**已提交的质量语料**（200 条观测横跨 4 个源码版本）从「PASS」变成「退出 3 拒判」。这是**修复生效**，不是回归——但它同时意味着**离线 CI 半（`phase7-offline-gates`）在四份语料各自按单一版本重录之前无法恢复**。该重录（业务质量 200 条 + 负载 120 次 + 安全 72 场 + 验收 28 例，实测总成本约 $5.54 ≈ ¥40）**不在本轮执行范围内**，列在「未评估」与「边界与下一阶段」中。
-
+>
 > **R5 的后果同样必须一起读，而且它改变了「重录一次就能恢复」这个判断。** R5 之前，那条恢复路径**根本不成立**：版本号数的是 `git status` 的行数，而每次重录都会把证据文件写回工作树，于是**重录出来的版本号必定与上一次不同**——四条 gate 的报错文案都在说「re-run the batch against a single deployment」，而**那句话在当时是做不到的**。R5 把版本号改成源码内容的指纹之后，这句话第一次成为一条**可执行**的指令：四份语料只要在同一次记录活动中产出、期间不改源码，就会得到同一个字符串。实测：四个驱动（acceptance / security / quality / load）现在对同一棵工作树返回**逐字相同**的 `cf08ac8a7b731054e492ed81ba5f3164dc381863+patch(0ce86f5d19bc)`。
 >
 > **本轮四门 gate 的退出码，与它们各自的成因（必须分开读，不能合并成「四门绿了没」）**：
@@ -235,7 +235,7 @@ globex entity 2 两张**结构同构**工单，事实固定为「密码认证成
 **六个阶段全部 exit 0**。回归实测：**980 passed, 10 skipped, 70 warnings**（**0 failed**，耗时 66.07s，采集于 `2026-09-30T15:30:20Z`），静态门禁 `ruff format --check` / `ruff check`（All checks passed）/ `pyrefly check`（**0 errors**，18 suppressed）与 `scripts/audit_project_structure.py --check`（输出 `PASS PASS`，exit 0）全部通过。
 
 > **静态门禁里有一处必须说明的改动**：`scripts/audit_project_structure.py --check` 本轮**先失败后通过**，而失败是**真信号**、通过是**真的修复**，不是把门禁放松。成因：R3 让 `src/servicemind/api.py` 新增了一处 `from servicemind.foundation.errors import bounded_error_text`，于是结构审计的包依赖图在 `_root` 一行多出 `foundation`，磁盘上的报告工件与重算结果不再逐字节一致（`artifacts_match` 为假，输出逐字为 `FAIL PASS`——**状态是 PASS，不一致的是工件**）。处置是**重新生成报告工件**（`uv run python scripts/audit_project_structure.py`，退出 0，随后 `--check` 输出 `PASS PASS`），而不是修改门禁。**依赖方向本身是合法的**：`foundation` 是最底层模块，`api.py` 早已依赖 `domain` 等层，审计的导入方向检查（状态 `PASS`）并未被违反。
-
+>
 > 计数沿革必须记明，且**不对差额做逐条归因**：v1.0 `688 passed, 5 skipped`；v2.0 `714 passed, 6 skipped`；v3.0 `729 passed, 6 skipped`；v3.1 `733 passed, 6 skipped`；v3.2 `738 passed, 6 skipped`；**v3.3 `980 passed, 10 skipped`**。**六次都是 0 failed，六次都无 `-k` 过滤**。v3.2 → v3.3 的 **+242 / +4 skipped** 幅度远大于以往各轮，**原因必须写清而不能含糊**：它主要来自 `cf08ac8` 与 `688dd90` 两个**已提交**的仓库变更（v3.2 与 v3.3 之间仓库作者提交过内容），**不是**本轮改动造成的。本轮新增的测试只有 **20 条**（`tests/servicemind/test_phase7_gate_revisions.py`：9 条共享规则单测 + 8 条逐门检查 + 1 条逐门 `main` 端到端，其中两条为参数化展开）+ **2 处断言**（`test_supervisor_runtime.py`：失败运行必须把原因持久化到 run 行；成功运行必须**不**留下原因）+ **1 条**（`test_phase3_router_planner.py`：`incident` 诊断路径的边界）。**本文件不声称该差额恰好由这些构成**——除非做过逐测试名对照。
 
 ## 本阶段实际改动清单
@@ -417,6 +417,7 @@ ALL DETECTED
 完整记录见 [`evaluation/reports/phase7_acceptance_latest.md`](../evaluation/reports/phase7_acceptance_latest.md)，含每案例的完整命令、轨迹、原始证据与逐条断言判定。以下为该报告的**逐字摘录**，摘录时点由上方 `generated_at` 与两个摘要标识。
 
 > **本节各段的批次归属必须分清，否则会把两轮的计数读成一轮的**：
+>
 > - **一 / 二 / 三 / 四 / 五 / 六** 段写于 **v3.2 批次**（被测版本 `7a6e675` + 46 个未提交改动，`cases_digest c6dfec09…` 的一部分段落另有注明；其中「四」已在 v3.3 下**重跑并追加**了新记录）。因此这些段落里出现的 `PASS 28 / 106 条断言` 是 **v3.2 的读数**。
 > - **七 / 八** 段写于 **v3.3 批次**（被测版本 `cf08ac8` + 批次运行时刻的 **55** 个未提交改动，`cases_digest 63a3a71f…`、`observation_digest ba2829a4…`）。**本轮的最新读数以「七」为准：PASS 28 / FAIL 0 / BLOCKED 0，107 条断言全部 PASS。**
 > - 两轮的计数不同（106 → 107）**不是**因为本轮加了断言，而是因为**案例清单在 v3.2 之后被改过并已提交**（`688dd90`，见「被测版本绑定」）。
