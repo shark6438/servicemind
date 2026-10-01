@@ -23,9 +23,11 @@ import json
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from pydantic import ValidationError
 
+from servicemind.evaluation.revisions import recorded_revisions, revision_problems
 from servicemind.evaluation.security import (
     SecurityScenarioSet,
     load_security_scenarios,
@@ -97,17 +99,53 @@ def load_replays(scenario_set: SecurityScenarioSet) -> list[ScenarioObservation]
     return observations
 
 
+def check_replays_are_one_revision(
+    observations: list[ScenarioObservation], *, expect: str | None
+) -> dict[str, Any]:
+    """Refuse to grade replays that do not all describe the same platform revision.
+
+    ``scenarios_digest`` binds an observation to the scenario it was taken against and says
+    nothing about which code answered. The grader already collects the distinct revisions
+    for its report -- it renders them as ``被测版本`` -- and this is the same set, made a
+    precondition instead of a caption. See ``evaluation/revisions.py``.
+
+    Returns the revision the batch describes, for the caller to print alongside the verdict.
+    """
+    problems = revision_problems([item.deployed_revision for item in observations], expect=expect)
+    if problems:
+        raise ConfigurationError(
+            "; ".join(problems) + ". Re-run scripts/verify_phase7_security.py on the "
+            "deployment you mean to describe"
+        )
+    return {
+        "deployed_revisions": list(
+            recorded_revisions([item.deployed_revision for item in observations])
+        )
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="judge the observations on disk")
     parser.add_argument("--replay-only", action="store_true", help="grade recorded observations")
     parser.add_argument("--format", default="markdown", choices=("markdown", "json"))
     parser.add_argument("--report", type=Path, default=None, help="where to write the report")
+    parser.add_argument(
+        "--expect-revision",
+        default=None,
+        help=(
+            "the source revision these replays must have been taken against, as the driver "
+            "records it (``<sha>`` or ``<sha>+patch(<hex>)``). Without it the gate still "
+            "refuses replays spanning more than one revision, but cannot tell a single "
+            "stale revision from the current one"
+        ),
+    )
     args = parser.parse_args()
 
     try:
         scenario_set = load_scenario_set()
         observations = load_replays(scenario_set)
+        provenance = check_replays_are_one_revision(observations, expect=args.expect_revision)
     except ConfigurationError as exc:
         print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return EXIT_CONFIGURATION
@@ -128,6 +166,7 @@ def main() -> int:
         **outcome_summary(outcome),
         "report_json": str(report_json),
         "report_md": str(report_md),
+        **provenance,
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 

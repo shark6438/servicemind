@@ -50,6 +50,9 @@ from servicemind.evaluation.security_grader import (
     ObservedEvidence,
     ScenarioObservation,
 )
+from servicemind.evaluation.source_revision import (
+    source_revision as evaluate_source_revision,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCENARIOS = REPO_ROOT / "evaluation" / "security" / "scenarios.v1.json"
@@ -90,21 +93,14 @@ _PYTEST_OUTCOMES = {
 
 
 def source_revision() -> str:
-    """The working tree this run graded, as ``<sha>`` or ``<sha>+dirty(N files)``.
+    """The source revision this run graded, as ``<sha>`` or ``<sha>+patch(<hex>)``.
 
     The scenario list is checked against the tree, not against a commit: the pinned
     behaviours live in the source, so a report naming only the commit would describe code
-    the tests may never have imported.
+    the tests may never have imported. ``"unknown"`` rather than ``None`` here because this
+    driver has always recorded a string, and the security grader reads it as one.
     """
-    head = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, capture_output=True, text=True, check=False
-    ).stdout.strip()
-    if not head:
-        return "unknown"
-    dirty = subprocess.run(
-        ["git", "status", "--porcelain"], cwd=REPO_ROOT, capture_output=True, text=True, check=False
-    ).stdout.strip()
-    return f"{head}+dirty({len(dirty.splitlines())} files)" if dirty else head
+    return evaluate_source_revision(REPO_ROOT) or "unknown"
 
 
 def _tail(text: str) -> str:

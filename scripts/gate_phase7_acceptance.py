@@ -40,6 +40,7 @@ import json
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -56,6 +57,7 @@ from servicemind.evaluation.acceptance_grader import (
     grade,
     render_coverage_markdown,
 )
+from servicemind.evaluation.revisions import recorded_revisions, revision_problems
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -194,6 +196,33 @@ def check_replays_match_cases(
             "current_observation_digest": observed,
         }
     return {}
+
+
+def check_replays_are_one_revision(
+    executions: list[CaseExecution], *, expect: str | None
+) -> dict[str, Any]:
+    """Refuse to grade replays that do not all describe the same platform revision.
+
+    ``cases_digest`` binds a replay to the expectations it was recorded against and says
+    nothing about which code answered. The driver refuses to *start* when the serving unit
+    predates the tree -- but that check belongs to the run, and it is not a property of the
+    files that survive it: replays recorded over several days, or across a restart, sit
+    side by side in ``replays/`` with nothing on the face of the corpus saying so. See
+    ``evaluation/revisions.py`` for the measurement that motivated this.
+    """
+    problems = revision_problems(
+        [item.environment.deployed_revision for item in executions], expect=expect
+    )
+    if problems:
+        raise ConfigurationError(
+            "; ".join(problems) + ". Re-run scripts/verify_phase7_acceptance_live.py on the "
+            "deployment you mean to describe"
+        )
+    return {
+        "deployed_revisions": list(
+            recorded_revisions([item.environment.deployed_revision for item in executions])
+        )
+    }
 
 
 def render_pipeline(executions: list[CaseExecution]) -> list[str]:
@@ -461,6 +490,16 @@ def main() -> int:
         action="store_true",
         help="replace a report whose digests disagree with the inputs, instead of refusing",
     )
+    parser.add_argument(
+        "--expect-revision",
+        default=None,
+        help=(
+            "the source revision these replays must have been taken against, as the driver "
+            "records it (``<sha>`` or ``<sha>+patch(<hex>)``). Without it the gate still "
+            "refuses replays spanning more than one revision, but cannot tell a single "
+            "stale revision from the current one"
+        ),
+    )
     args = parser.parse_args()
 
     if args.live:
@@ -482,6 +521,9 @@ def main() -> int:
     try:
         case_set = load_case_set()
         executions = load_replays(case_set)
+        # As in the quality gate: ``--force`` is about the report, so it does not reach
+        # past the provenance of the observations the report is rendered from.
+        provenance = check_replays_are_one_revision(executions, expect=args.expect_revision)
         drift = {} if args.force else check_replays_match_cases(case_set, executions)
     except ConfigurationError as exc:
         print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)
@@ -511,6 +553,7 @@ def main() -> int:
         "observation_digest": outcome.observation_digest,
         "report_json": str(report_json),
         "report_md": str(report_md),
+        **provenance,
         **drift,
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))

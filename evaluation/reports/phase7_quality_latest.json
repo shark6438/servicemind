@@ -1,11 +1,7 @@
 {
   "answerable_rate_target": 0.85,
   "answerable_rate_target_source": "租户参考阈值 0.85（docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md 的 Recall@5 租户门槛），在本批次运行之前登记。这不是从结果倒推的数字：若实测低于它，正确的反应是查明原因并报告，而不是下调它。",
-  "blockers": [
-    "Q-182: the reviewer recorded 1 claim(s) its citations do not support, on a question the corpus does not cover (cited ['KB-GLOBEX-VPN-APP-REG', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-MAIL-2026', 'KB-Q-PASSWORD', 'KB-Q-PATCHING', 'KB-Q-PRINT-V2'])",
-    "Q-200: the run did not reach a terminal status (saw 'waiting_review')",
-    "1 case(s) in an absolute class failed, and those classes have no rate at which a violation becomes acceptable"
-  ],
+  "blockers": [],
   "cases": [
     {
       "case_id": "Q-001",
@@ -1457,13 +1453,11 @@
     },
     {
       "case_id": "Q-182",
-      "findings": [
-        "Q-182: the reviewer recorded 1 claim(s) its citations do not support, on a question the corpus does not cover (cited ['KB-GLOBEX-VPN-APP-REG', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-MAIL-2026', 'KB-Q-PASSWORD', 'KB-Q-PATCHING', 'KB-Q-PRINT-V2'])"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "What is the company's policy on charitable giving matching?",
       "subject": "globex-analyst-g3",
-      "verdict": "FAIL"
+      "verdict": "PASS"
     },
     {
       "case_id": "Q-183",
@@ -1603,18 +1597,16 @@
     },
     {
       "case_id": "Q-200",
-      "findings": [
-        "Q-200: the run did not reach a terminal status (saw 'waiting_review')"
-      ],
+      "findings": [],
       "kind": "insufficient-evidence",
       "question": "What is the company policy on accepting gifts from suppliers?",
       "subject": "globex-analyst-g3",
-      "verdict": "BLOCKED"
+      "verdict": "PASS"
     }
   ],
   "cases_digest": "d02040916da13337891e1c31d16ae51adb60744d5b056a653b514eacd3a931ee",
-  "generated_at": "2026-09-24T08:46:04.191877Z",
-  "observations_digest": "b4bf1edd0de26ae3087e0f22f37badb618c27137755f8160ef24d2d58d404c52",
+  "generated_at": "2026-09-30T14:44:07.014266Z",
+  "observations_digest": "9f4752c78c810c03586a5060f802afcaa7b33d2b17bea9d62cefee4ec56f6893",
   "schema_version": "phase7-quality-v1",
-  "verdict": "FAIL"
+  "verdict": "PASS"
 }

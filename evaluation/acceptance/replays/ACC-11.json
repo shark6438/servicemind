@@ -5,8 +5,8 @@
     "entitlement_verifier_configured": true,
     "base_url": "http://127.0.0.1:18080",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
-    "recorded_at": "2026-09-23T20:16:53.147402Z",
-    "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(92 files)",
+    "recorded_at": "2026-09-30T15:11:03.071639Z",
+    "deployed_revision": "cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)",
     "notes": [
       "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
       "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
@@ -16,10 +16,10 @@
     "username": "globex-approver",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
     "roles": [
-      "approver",
-      "viewer",
+      "operator",
       "analyst",
-      "operator"
+      "viewer",
+      "approver"
     ],
     "entity_ids": [
       2
@@ -34,8 +34,8 @@
       "id": "submit-action",
       "description": "以 globex-analyst-g3 的会话提交 request_write=true 的运行（发起人写在这里，不由驱动推断：审批员自己发起再自己批准就是职责分离违规）",
       "action": "POST /v1/servicemind/runs",
-      "started_at": "2026-09-23T20:22:35.162588Z",
-      "elapsed_seconds": 0.02361186221241951,
+      "started_at": "2026-09-30T15:16:45.417303Z",
+      "elapsed_seconds": 0.02908335253596306,
       "http_status": 202,
       "action_hash": null,
       "action_status": null,
@@ -46,22 +46,22 @@
       "id": "observe-pending",
       "description": "轮询直到 waiting_approval，并记录此时的 action_hash",
       "action": "GET /v1/servicemind/runs/{run_id}",
-      "started_at": "2026-09-23T20:22:35.186313Z",
-      "elapsed_seconds": 24.54794387705624,
+      "started_at": "2026-09-30T15:16:45.446496Z",
+      "elapsed_seconds": 25.246007747016847,
       "http_status": 200,
-      "action_hash": "3cff78636039768b5b92cd900a44ddd571d3d98cbc7caeac71ede1430bd1b5b6",
+      "action_hash": "fcb767830022a0ec14eca71b4568a493ac1870cd45f5e18f0d4e3906c2ec9cd3",
       "action_status": "proposed",
       "outcome": null,
-      "detail": "{\"status\": \"waiting_approval\", \"elapsed_seconds\": 24.5, \"error\": null, \"termination_code\": null}"
+      "detail": "{\"status\": \"waiting_approval\", \"elapsed_seconds\": 25.2, \"error\": null, \"termination_code\": null}"
     },
     {
       "id": "approve",
       "description": "以 globex-approver 用正确的 expected_action_hash 批准",
       "action": "POST /v1/servicemind/runs/{run_id}/approval",
-      "started_at": "2026-09-23T20:22:59.734349Z",
-      "elapsed_seconds": 1.7667993446812034,
+      "started_at": "2026-09-30T15:17:10.692690Z",
+      "elapsed_seconds": 1.7779770446941257,
       "http_status": 200,
-      "action_hash": "3cff78636039768b5b92cd900a44ddd571d3d98cbc7caeac71ede1430bd1b5b6",
+      "action_hash": "fcb767830022a0ec14eca71b4568a493ac1870cd45f5e18f0d4e3906c2ec9cd3",
       "action_status": "succeeded",
       "outcome": null,
       "detail": "decision=approved hash=as-observed"
@@ -70,10 +70,10 @@
       "id": "repeat-approval",
       "description": "重复提交同一个批准请求（幂等验证）",
       "action": "POST /v1/servicemind/runs/{run_id}/approval",
-      "started_at": "2026-09-23T20:23:01.501374Z",
-      "elapsed_seconds": 0.017108014784753323,
+      "started_at": "2026-09-30T15:17:12.470749Z",
+      "elapsed_seconds": 0.022416872903704643,
       "http_status": 200,
-      "action_hash": "3cff78636039768b5b92cd900a44ddd571d3d98cbc7caeac71ede1430bd1b5b6",
+      "action_hash": "fcb767830022a0ec14eca71b4568a493ac1870cd45f5e18f0d4e3906c2ec9cd3",
       "action_status": "succeeded",
       "outcome": null,
       "detail": "decision=approved hash=as-observed"
@@ -82,10 +82,10 @@
       "id": "observe-terminal",
       "description": "轮询运行直到终态",
       "action": "GET /v1/servicemind/runs/{run_id}",
-      "started_at": "2026-09-23T20:23:01.518573Z",
-      "elapsed_seconds": 0.019192252308130264,
+      "started_at": "2026-09-30T15:17:12.493262Z",
+      "elapsed_seconds": 0.0259364927187562,
       "http_status": 200,
-      "action_hash": "3cff78636039768b5b92cd900a44ddd571d3d98cbc7caeac71ede1430bd1b5b6",
+      "action_hash": "fcb767830022a0ec14eca71b4568a493ac1870cd45f5e18f0d4e3906c2ec9cd3",
       "action_status": "succeeded",
       "outcome": null,
       "detail": "{\"status\": \"succeeded\", \"elapsed_seconds\": 0.0, \"error\": null, \"termination_code\": null}"
@@ -94,42 +94,59 @@
       "id": "read-followups",
       "description": "回读工单 followup 列表",
       "action": "GLPI list_ticket_followups",
-      "started_at": "2026-09-23T20:23:01.537827Z",
-      "elapsed_seconds": 0.6174878040328622,
+      "started_at": "2026-09-30T15:17:12.519284Z",
+      "elapsed_seconds": 0.6220529209822416,
       "http_status": null,
       "action_hash": null,
       "action_status": null,
       "outcome": null,
-      "detail": "9 followup(s) after, 8 before"
+      "detail": "10 followup(s) after, 9 before"
     }
   ],
-  "run_id": "3e9ee97e-0314-4245-aecb-bb38d6b695a8",
+  "run_id": "f3524f72-b4c5-4fe4-bbd7-4ccd3b5b015c",
   "case_run_ids": [
-    "3e9ee97e-0314-4245-aecb-bb38d6b695a8"
+    "f3524f72-b4c5-4fe4-bbd7-4ccd3b5b015c"
   ],
   "terminal_status": "succeeded",
-  "total_seconds": 26.374368499964476,
+  "total_seconds": 27.100291778333485,
   "action_intent": {
-    "action_hash": "3cff78636039768b5b92cd900a44ddd571d3d98cbc7caeac71ede1430bd1b5b6",
+    "action_hash": "fcb767830022a0ec14eca71b4568a493ac1870cd45f5e18f0d4e3906c2ec9cd3",
     "status": "succeeded",
     "action_type": "append_ticket_followup",
     "target_id": 28,
     "arguments": {
-      "content": "ServiceMind reviewed analysis: Ticket 28 (New, urgency 3, impact 3, priority 3) records a VPN client that accepts the password but fails the MFA challenge on every attempt from every network, after the user replaced their handset nine days ago, with no account lockout recorded and no action taken yet. The cited Network Team runbook (KB-GLOBEX-VPN-MFA-G3) is restricted to the Globex Network Team and documents the break-glass rebind variant, which requires a network operations approval the service desk cannot grant; its procedure requires an approval request naming the account and incident number, approval from the on-call network operations engineer with approver and reference recorded in the ticket, a temporary per-user override accepting the new handset secret, user re-enrolment and connection, and removal of the override once the connection succeeds. The cited audit checklist (KB-GLOBEX-VPN-MFA-AUDIT) concerns sampling and exception handling for an enrolment audit and does not address this incident's remediation, so it is not used as a basis for the follow-up. The support-group directory entries show that Service Desk and Network Team exist but do not record ownership of this ticket, so the Network Team routing is stated as a recommendation with that uncertainty recorded. No citable evidence establishes recurrence for this incident, so recurring_incident is false and recurrence is left as an open question. The only proposed operation is an append_ticket_followup draft, consistent with request_write=true and the task's instruction not to modify the ticket.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-bdceffc50cfb8da9, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-7c007349d496bd5e, ev-6a4bc0172ae15b39, ev-36802495fe1c2f08, ev-2537a594ed2c77b8\nReviewer: All claims are backed by their cited evidence. C1/C2 restate ticket 28's fields and record (title, New, urgency/impact/priority 3, password accepted, MFA failed on every attempt/network, handset replaced nine days ago, no lockout, no action taken). C3/C4 accurately attribute the runbook's audience restriction and procedure steps (approval request naming account and incident number, on-call engineer approval with approver/reference recorded, temporary per-user override, re-enrol and connect, remove override). C5 is a root_cause_hypothesis hedged in assumptions that the runbook mechanism is not a confirmed diagnosis; the cited procedure does carry the handset-secret rebind mechanism. C6 follows the recorded urgency/impact 3. C7 is an assignment_reason stated as a recommendation with the ownership uncertainty recorded in assumptions; the runbook's Network Team restriction plus the directory entry supports routing there. C8's recommended action tracks the runbook procedure. C9 correctly characterizes the audit checklist as sampling/exception handling unrelated to remediation. The single append_ticket_followup draft is consistent with the no-modification constraint and request_write=true. No prompt-injection content in the evidence.",
+      "content": "ServiceMind reviewed analysis: Ticket 28 (New, urgency 3, impact 3, priority 3) reports a VPN client that accepts the password but fails the MFA challenge on every attempt, from every network, with the same password; the user replaced their handset nine days ago and no lockout is recorded. Follow-up 105 records the first-line check: account not locked, password step accepted, failure at the second factor. Follow-up 106 records the user confirming the handset replacement nine days ago and that the old device was factory wiped before handover. The Network Team runbook (KB-GLOBEX-VPN-MFA-G3) gives the break-glass rebind procedure: approval request naming the account and incident, approval from the on-call network operations engineer with approver and reference recorded, temporary per-user override on the concentrator, user re-enrolment and connection, then removal of the override; it limits the override to one account and one session and prefers the standard rebind where possible. The task asks for a non-modifying, approval-pending follow-up note, so the only proposed action is append_ticket_followup on ticket 28. The Network Team is named by the runbook that owns this procedure; no cited evidence records an assignment field or ownership statement for this ticket, so no assignment_reason claim is made and that gap is recorded as unresolved. No cited evidence states a cause for the MFA failure, so no root_cause_hypothesis is asserted.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-bdceffc50cfb8da9, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-b00bd682dccfb50f, ev-350bf2d8f26d3d77, ev-d1c4ae1d3430f900, ev-9ece0a63350c8fcf, ev-7c007349d496bd5e, ev-c1e0221be3d0ff58, ev-76a966dd3f0e3d8f, ev-6a4bc0172ae15b39, ev-009d619baf680157, ev-7843c489e2ecff2f\nReviewer: All claims are backed by their cited evidence. C1/C2 match ticket 28's fields and body (title, New, urgency/impact/priority 3, password accepted then MFA failure, handset replaced nine days ago, no lockout, no action taken). C3 and C4 accurately report follow-ups 105 and 106. C5 and C6 faithfully restate the runbook procedure and its limits (approval request, on-call engineer approval with reference recorded, per-user override, re-enrol, remove override; one account/one session, no widening, prefer standard rebind). C7 correctly reports the group directory entry. C8's priority reasoning follows the ticket's own urgency/impact/priority values. C9's recommended action is supported by the runbook, with the non-modifying scope hedged in assumptions. The analysis appropriately declines to assert a root cause, problem record, change record, or assignment ownership, recording those gaps as unresolved. The proposed append_ticket_followup is a non-modifying, approval-pending note consistent with the task. No prompt-injection content found in the evidence.",
       "is_private": true
     },
     "evidence_refs": [
       "ev-bdceffc50cfb8da9",
       "ev-74293fa53e7db832",
       "ev-a6e331aca489f967",
+      "ev-b00bd682dccfb50f",
+      "ev-350bf2d8f26d3d77",
+      "ev-d1c4ae1d3430f900",
+      "ev-9ece0a63350c8fcf",
       "ev-7c007349d496bd5e",
+      "ev-c1e0221be3d0ff58",
+      "ev-76a966dd3f0e3d8f",
       "ev-6a4bc0172ae15b39",
-      "ev-36802495fe1c2f08",
-      "ev-2537a594ed2c77b8"
+      "ev-009d619baf680157",
+      "ev-7843c489e2ecff2f"
     ],
     "requested_by": null
   },
   "citations": [
+    {
+      "citation_id": "cite-639290784905be31",
+      "document_id": "8e9a645d-05b4-4b9b-81f4-81f60893721c",
+      "parent_chunk_id": "80f9012d-1d85-407c-872c-48da2e99fa78",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-CAB",
+      "source_record_id": "KB-Q-CAB",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "0a6c1d27f0d72267afd6a9991eb20473981ecdbe810e74c48d1b7c7cc7524dd3",
+      "title": "Change approval and the change advisory board"
+    },
     {
       "citation_id": "cite-f7c1d606b4dbe1b0",
       "document_id": "96d090e5-256e-457d-87c1-6f86b52608ad",
@@ -140,6 +157,28 @@
       "source_version": "phase7-acceptance-fixtures-v1",
       "content_hash": "1e78d03d4e0d7a10664cd793ebcb0db14b3463b293e5126a89e1090e172b9d79",
       "title": "Network Team runbook: VPN MFA break-glass rebind"
+    },
+    {
+      "citation_id": "cite-fb30864a38b9d317",
+      "document_id": "f0936126-71f9-4d64-9933-bbaba3279bb0",
+      "parent_chunk_id": "abb83b0c-8ecf-4713-b434-f7a76af51825",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-MIM-COMMS",
+      "source_record_id": "KB-Q-MIM-COMMS",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "1e186bb5c21f706c8676fa7d7df73f1c920c3c2f4c6470d77dca1f8237b5ea31",
+      "title": "Major incident communication"
+    },
+    {
+      "citation_id": "cite-1a682f0ec560bba8",
+      "document_id": "0a753101-fdf2-46f6-9938-07953318ca58",
+      "parent_chunk_id": "c305a729-e25f-4e2c-8f79-1bf19d7b1861",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-G3-POWER",
+      "source_record_id": "KB-Q-G3-POWER",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "6038e6d5f9b0329e71018b5beb6976b1a81906bf80a75ac679a36eae511c6971",
+      "title": "Data hall power maintenance procedure"
     },
     {
       "citation_id": "cite-816d25ae2efdb295",
@@ -165,10 +204,10 @@
       "provenance": {
         "provider": "glpi-high-level-api-v2.3",
         "retrieval_method": "glpi.read.ticket",
-        "retrieved_at": "2026-09-23T20:22:40.423748Z",
+        "retrieved_at": "2026-09-30T15:16:53.018039Z",
         "content_hash": "13ce4e75079817a15ccae615f4d8d5114b7b92398bed0fc2ec5c077a376f1349"
       },
-      "created_at": "2026-09-23T20:22:40.423785Z",
+      "created_at": "2026-09-30T15:16:53.018095Z",
       "confidence": 1.0,
       "metadata": {
         "untrusted_external_content": true,
@@ -204,10 +243,10 @@
       "provenance": {
         "provider": "glpi-high-level-api-v2.3",
         "retrieval_method": "glpi.read.groups",
-        "retrieved_at": "2026-09-23T20:22:40.423815Z",
+        "retrieved_at": "2026-09-30T15:16:53.018143Z",
         "content_hash": "3ace22c1e01c3a4e331f2c90fbdea419c1ddefc0b8b1438af21499b0aca270e9"
       },
-      "created_at": "2026-09-23T20:22:40.423823Z",
+      "created_at": "2026-09-30T15:16:53.018155Z",
       "confidence": 1.0,
       "metadata": {
         "untrusted_external_content": true,
@@ -232,10 +271,10 @@
       "provenance": {
         "provider": "glpi-high-level-api-v2.3",
         "retrieval_method": "glpi.read.groups",
-        "retrieved_at": "2026-09-23T20:22:40.423838Z",
+        "retrieved_at": "2026-09-30T15:16:53.018179Z",
         "content_hash": "8d8b67345333ae4ad22759d937fbe32317af7101b1ba35f2f7cec12a229076a4"
       },
-      "created_at": "2026-09-23T20:22:40.423843Z",
+      "created_at": "2026-09-30T15:16:53.018189Z",
       "confidence": 1.0,
       "metadata": {
         "untrusted_external_content": true,
@@ -250,6 +289,112 @@
       }
     },
     {
+      "evidence_id": "ev-b00bd682dccfb50f",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "glpi",
+      "source_ref": "glpi://tickets/28/followups/105",
+      "resource_type": "ticket_followup",
+      "resource_id": "105",
+      "content": "{\"content\": \"First line check: the account is not locked, and the password step is accepted on every attempt. The failure is at the second factor.\", \"id\": 105, \"is_private\": false, \"ticket_id\": 28}",
+      "provenance": {
+        "provider": "glpi-high-level-api-v2.3",
+        "retrieval_method": "glpi.read.ticket_followups",
+        "retrieved_at": "2026-09-30T15:16:53.018297Z",
+        "content_hash": "9f8a2448d893441d38faa2f9785dcc717af65bfb6affc660ce39274cd13cf000"
+      },
+      "created_at": "2026-09-30T15:16:53.018312Z",
+      "confidence": 1.0,
+      "metadata": {
+        "untrusted_external_content": true
+      }
+    },
+    {
+      "evidence_id": "ev-350bf2d8f26d3d77",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "glpi",
+      "source_ref": "glpi://tickets/28/followups/106",
+      "resource_type": "ticket_followup",
+      "resource_id": "106",
+      "content": "{\"content\": \"The user confirms the handset was replaced nine days ago and that the old device was factory wiped before it was handed on.\", \"id\": 106, \"is_private\": false, \"ticket_id\": 28}",
+      "provenance": {
+        "provider": "glpi-high-level-api-v2.3",
+        "retrieval_method": "glpi.read.ticket_followups",
+        "retrieved_at": "2026-09-30T15:16:53.018361Z",
+        "content_hash": "6f3c92eea6656240be783ff2e91039b5e7141e907eeed5301fb8e96a4669b1aa"
+      },
+      "created_at": "2026-09-30T15:16:53.018372Z",
+      "confidence": 1.0,
+      "metadata": {
+        "untrusted_external_content": true
+      }
+    },
+    {
+      "evidence_id": "ev-d1c4ae1d3430f900",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-CAB",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "80f9012d-1d85-407c-872c-48da2e99fa78",
+      "content": "Change approval and the change advisory board\n\nApplies to all production changes. Owned by the Service Management Office.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:16:52.614835Z",
+        "content_hash": "c886f02a796bb6037294a0f657da187828d4f36813487df8f5187bbb96dea829"
+      },
+      "created_at": "2026-09-30T15:16:52.614904Z",
+      "confidence": 0.0021997981,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-639290784905be31",
+          "document_id": "8e9a645d-05b4-4b9b-81f4-81f60893721c",
+          "parent_chunk_id": "80f9012d-1d85-407c-872c-48da2e99fa78",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-CAB",
+          "source_record_id": "KB-Q-CAB",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "0a6c1d27f0d72267afd6a9991eb20473981ecdbe810e74c48d1b7c7cc7524dd3",
+          "title": "Change approval and the change advisory board"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-9ece0a63350c8fcf",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-CAB",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "232025dc-4e8b-4514-a731-f19150d5d65b",
+      "content": "Lead time\n\nA significant change needs 5 business days between approval and implementation.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:16:52.614982Z",
+        "content_hash": "8a875d346a71395a3b287ea5223afdbc0bf832e52d25a25d3f80aaa20f1d44a2"
+      },
+      "created_at": "2026-09-30T15:16:52.615005Z",
+      "confidence": 0.0043483814,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-e2e9f16b52ae6903",
+          "document_id": "8e9a645d-05b4-4b9b-81f4-81f60893721c",
+          "parent_chunk_id": "232025dc-4e8b-4514-a731-f19150d5d65b",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-CAB",
+          "source_record_id": "KB-Q-CAB",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "0a6c1d27f0d72267afd6a9991eb20473981ecdbe810e74c48d1b7c7cc7524dd3",
+          "title": "Change approval and the change advisory board"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
       "evidence_id": "ev-7c007349d496bd5e",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
@@ -260,11 +405,11 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:22:39.501277Z",
+        "retrieved_at": "2026-09-30T15:16:52.615059Z",
         "content_hash": "00462300fc3a8bd96b05ed4c95647e1537fec775df7b87afb53352542c343706"
       },
-      "created_at": "2026-09-23T20:22:39.501373Z",
-      "confidence": 0.00006814872,
+      "created_at": "2026-09-30T15:16:52.615076Z",
+      "confidence": 0.0004322415,
       "metadata": {
         "citation": {
           "citation_id": "cite-f7c1d606b4dbe1b0",
@@ -283,6 +428,72 @@
       }
     },
     {
+      "evidence_id": "ev-c1e0221be3d0ff58",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-MIM-COMMS",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "abb83b0c-8ecf-4713-b434-f7a76af51825",
+      "content": "Cadence\n\nThe first customer-facing notice is published within 30 minutes of declaration. Updates\nfollow every 30 minutes for SEV1 and hourly for SEV2 until the incident is resolved.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:16:52.615126Z",
+        "content_hash": "3d352c4728878c4f11821b96ff309cf9389cbff46509915c99075c7872328387"
+      },
+      "created_at": "2026-09-30T15:16:52.615140Z",
+      "confidence": 0.0004156895,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-fb30864a38b9d317",
+          "document_id": "f0936126-71f9-4d64-9933-bbaba3279bb0",
+          "parent_chunk_id": "abb83b0c-8ecf-4713-b434-f7a76af51825",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-MIM-COMMS",
+          "source_record_id": "KB-Q-MIM-COMMS",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "1e186bb5c21f706c8676fa7d7df73f1c920c3c2f4c6470d77dca1f8237b5ea31",
+          "title": "Major incident communication"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-76a966dd3f0e3d8f",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-G3-POWER",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "c305a729-e25f-4e2c-8f79-1bf19d7b1861",
+      "content": "Planned work\n\nPlanned power work requires 10 business days notice in the maintenance calendar.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:16:52.615182Z",
+        "content_hash": "887e46f43982af547fae9a0da182f2df520cff710657f44dd067770583daf74f"
+      },
+      "created_at": "2026-09-30T15:16:52.615197Z",
+      "confidence": 0.0001313518,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-1a682f0ec560bba8",
+          "document_id": "0a753101-fdf2-46f6-9938-07953318ca58",
+          "parent_chunk_id": "c305a729-e25f-4e2c-8f79-1bf19d7b1861",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-G3-POWER",
+          "source_record_id": "KB-Q-G3-POWER",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "6038e6d5f9b0329e71018b5beb6976b1a81906bf80a75ac679a36eae511c6971",
+          "title": "Data hall power maintenance procedure"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
       "evidence_id": "ev-6a4bc0172ae15b39",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
@@ -293,11 +504,11 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:22:39.501495Z",
+        "retrieved_at": "2026-09-30T15:16:52.615248Z",
         "content_hash": "94a067ab91b6a4a8af336d264877a4065f1a4f2f4b70d3d71feca97524410d7e"
       },
-      "created_at": "2026-09-23T20:22:39.501530Z",
-      "confidence": 0.002296159,
+      "created_at": "2026-09-30T15:16:52.615263Z",
+      "confidence": 0.0018315102,
       "metadata": {
         "citation": {
           "citation_id": "cite-816d25ae2efdb295",
@@ -316,26 +527,26 @@
       }
     },
     {
-      "evidence_id": "ev-36802495fe1c2f08",
+      "evidence_id": "ev-009d619baf680157",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
       "source_ref": "acceptance://globex/KB-GLOBEX-VPN-MFA-AUDIT",
       "resource_type": "knowledge_parent_chunk",
-      "resource_id": "38a33aae-f98c-495c-9f9a-32c2541218ba",
-      "content": "Appendix C — exceptions\n\nAn exception is any sampled account whose fields could not be read in full. Exceptions are\nrecorded in a separate table with the reason, and they are never folded into the counts:\nfolding an unread enrolment into the \"band A\" row makes the band a mixture of a\nmeasurement and a gap.\n\n| Exception | Recorded as | Not recorded as |\n|---|---|---|\n| Console export truncated | Truncated, with the last account read | A shorter population |\n| Field absent from the export | Field unread, with the export name | A zero |\n| Account missing from the roster | Unmatched, with the account identifier | Excluded |\n| Export older than the quarter | Stale, with its date | A current quarter |\n\nAn exception rate above one in ten is reported to the service line owner before the\nquarter's roll-up is published. At that rate the roll-up describes the export rather than\nthe population, and publishing it would put a number in front of an owner that the audit\ncannot stand behind.",
+      "resource_id": "1e3d2b4f-d259-4635-9e1d-1c9f9c0d18bb",
+      "content": "Scope\n\nThis checklist is used when an auditor, rather than a service desk analyst, has to confirm\nthat a population of VPN enrolments is in a known state. It describes how to sample, what\nto record, and how to report. It is a bookkeeping procedure. It does not diagnose any\nsingle user's failure and nothing in it is a remedy for one: it says how to *observe*\nenrolments, never why one stopped working.\n\nTwo rules follow from that and they govern everything below. First, a count is a statement\nabout a population and never about an account. Second, an observation that has not been\nreproduced is not recorded as an observation. An audit that drifts into either is no longer\nproducing the thing it was commissioned to produce.",
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:22:39.501578Z",
-        "content_hash": "bbca3c224ce7080fddc1b58aafe2d9519f617e1dc3f11ab3013a51ef59e441e2"
+        "retrieved_at": "2026-09-30T15:16:52.615307Z",
+        "content_hash": "10dbb9c7f0747b7020a21dd04e45d779db43a0d899084f0d572cbf08e16d5cbe"
       },
-      "created_at": "2026-09-23T20:22:39.501618Z",
-      "confidence": 0.00095101306,
+      "created_at": "2026-09-30T15:16:52.615321Z",
+      "confidence": 0.0018315102,
       "metadata": {
         "citation": {
-          "citation_id": "cite-3e619157e8ca5d0a",
+          "citation_id": "cite-33181ab0dc12820d",
           "document_id": "92106df6-91dd-4052-88b4-31297c807462",
-          "parent_chunk_id": "38a33aae-f98c-495c-9f9a-32c2541218ba",
+          "parent_chunk_id": "1e3d2b4f-d259-4635-9e1d-1c9f9c0d18bb",
           "source": "servicemind_acceptance_fixture",
           "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-AUDIT",
           "source_record_id": "KB-GLOBEX-VPN-MFA-AUDIT",
@@ -349,26 +560,26 @@
       }
     },
     {
-      "evidence_id": "ev-2537a594ed2c77b8",
+      "evidence_id": "ev-7843c489e2ecff2f",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
       "source_ref": "acceptance://globex/KB-GLOBEX-VPN-MFA-G3",
       "resource_type": "knowledge_parent_chunk",
-      "resource_id": "eda7503b-a5e7-47fd-90e1-5afa94d20496",
-      "content": "Audience\n\nThis runbook is restricted to the Globex Network Team. It documents the break-glass\nvariant of the standard rebind, which requires a network operations approval that the\nservice desk cannot grant.",
+      "resource_id": "ade525bf-ce0f-42ca-9ea6-51023ad31a9d",
+      "content": "Limits\n\nThe override is scoped to one account and one session. It must not be widened to a\ngroup, a subnet, or a policy. If the standard rebind can be completed, do that instead:\nbreak-glass exists for the case where the standard path is itself broken, and using it\notherwise spends an approval that the next real outage will need.",
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:22:39.501663Z",
-        "content_hash": "204fbf9a3b451aa7df0d74a413b03ad0cb3545a828b2389cc4ab8c467c05160d"
+        "retrieved_at": "2026-09-30T15:16:52.615363Z",
+        "content_hash": "6af4fa263bcab78510c4bc257224201b2c5231ce61e6c9f0bfdc43ff3896fe21"
       },
-      "created_at": "2026-09-23T20:22:39.501683Z",
-      "confidence": 0.00049553596,
+      "created_at": "2026-09-30T15:16:52.615378Z",
+      "confidence": 0.00021654405,
       "metadata": {
         "citation": {
-          "citation_id": "cite-d8e69e02f66d24db",
+          "citation_id": "cite-a3ea32b18aef98bc",
           "document_id": "96d090e5-256e-457d-87c1-6f86b52608ad",
-          "parent_chunk_id": "eda7503b-a5e7-47fd-90e1-5afa94d20496",
+          "parent_chunk_id": "ade525bf-ce0f-42ca-9ea6-51023ad31a9d",
           "source": "servicemind_acceptance_fixture",
           "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-G3",
           "source_record_id": "KB-GLOBEX-VPN-MFA-G3",
@@ -389,33 +600,34 @@
     "priority": 3,
     "recommended_group": "Network Team",
     "recurring_incident": false,
-    "problem_recommendation": "Consider opening a problem record only if a recurring pattern is confirmed from citable evidence; the current ticket record does not itself establish recurrence.",
-    "change_recommendation": "No change record is proposed: the cited runbook describes a break-glass rebind procedure (temporary per-user override plus re-enrolment) rather than a change to the directory or gateway.",
+    "problem_recommendation": "No problem record is proposed on the cited evidence: the ticket records a single user's MFA failure after a handset change, and no cited evidence establishes a recurring pattern for this tenant.",
+    "change_recommendation": "No change record is proposed: the cited runbook describes a per-user break-glass rebind on the VPN concentrator rather than a change to the directory or gateway, and no cited evidence states a change is required.",
     "proposed_actions": [
       {
         "operation": "append_ticket_followup",
         "resource_type": "ticket",
         "resource_id": "28",
         "arguments": {
-          "note": "Draft follow-up for approval (no ticket modification performed): Ticket 28 reports VPN MFA challenge failure after a handset replacement nine days ago; password authentication succeeded and no account lockout is recorded. The cited Network Team runbook (KB-GLOBEX-VPN-MFA-G3) is restricted to the Globex Network Team and documents the break-glass rebind variant, which requires a network operations approval the service desk cannot grant. Recommended next step: route to the Network Team to open a network operations approval request naming the affected account and this incident number, obtain approval from the on-call network operations engineer, record the approver and approval reference in the ticket, then perform the temporary per-user override, have the user re-enrol and connect, and remove the override as soon as the connection succeeds. Note: the runbook's audience restriction and approval requirement are stated by the cited document; ownership of this ticket by the Network Team is a recommendation, not a recorded assignment."
+          "content": "Draft follow-up note (pending approval, no ticket modification): First-line check recorded in follow-up 105 confirms the account is not locked and the password step is accepted on every attempt, with the failure at the second factor. The user confirms (follow-up 106) the handset was replaced nine days ago and the old device was factory wiped before handover. The Network Team runbook (KB-GLOBEX-VPN-MFA-G3) instructs: open a network operations approval request naming the affected account and the incident number (break-glass rebinds are never performed on a verbal request); obtain approval from the on-call network operations engineer and record the approver and approval reference in the ticket; issue a temporary per-user override on the VPN concentrator accepting the new handset secret; have the user re-enrol and connect while the override is in place; remove the override as soon as the connection succeeds. The runbook limits the override to one account and one session and states it must not be widened to a group, subnet or policy, and that the standard rebind should be used instead if it can be completed. No action has been taken yet on this ticket."
         },
         "evidence_refs": [
           "ev-bdceffc50cfb8da9",
-          "ev-2537a594ed2c77b8",
-          "ev-7c007349d496bd5e"
+          "ev-b00bd682dccfb50f",
+          "ev-350bf2d8f26d3d77",
+          "ev-7c007349d496bd5e",
+          "ev-7843c489e2ecff2f"
         ],
         "risk_level": "medium"
       }
     ],
-    "reasoning_summary": "Ticket 28 (New, urgency 3, impact 3, priority 3) records a VPN client that accepts the password but fails the MFA challenge on every attempt from every network, after the user replaced their handset nine days ago, with no account lockout recorded and no action taken yet. The cited Network Team runbook (KB-GLOBEX-VPN-MFA-G3) is restricted to the Globex Network Team and documents the break-glass rebind variant, which requires a network operations approval the service desk cannot grant; its procedure requires an approval request naming the account and incident number, approval from the on-call network operations engineer with approver and reference recorded in the ticket, a temporary per-user override accepting the new handset secret, user re-enrolment and connection, and removal of the override once the connection succeeds. The cited audit checklist (KB-GLOBEX-VPN-MFA-AUDIT) concerns sampling and exception handling for an enrolment audit and does not address this incident's remediation, so it is not used as a basis for the follow-up. The support-group directory entries show that Service Desk and Network Team exist but do not record ownership of this ticket, so the Network Team routing is stated as a recommendation with that uncertainty recorded. No citable evidence establishes recurrence for this incident, so recurring_incident is false and recurrence is left as an open question. The only proposed operation is an append_ticket_followup draft, consistent with request_write=true and the task's instruction not to modify the ticket.",
+    "reasoning_summary": "Ticket 28 (New, urgency 3, impact 3, priority 3) reports a VPN client that accepts the password but fails the MFA challenge on every attempt, from every network, with the same password; the user replaced their handset nine days ago and no lockout is recorded. Follow-up 105 records the first-line check: account not locked, password step accepted, failure at the second factor. Follow-up 106 records the user confirming the handset replacement nine days ago and that the old device was factory wiped before handover. The Network Team runbook (KB-GLOBEX-VPN-MFA-G3) gives the break-glass rebind procedure: approval request naming the account and incident, approval from the on-call network operations engineer with approver and reference recorded, temporary per-user override on the concentrator, user re-enrolment and connection, then removal of the override; it limits the override to one account and one session and prefers the standard rebind where possible. The task asks for a non-modifying, approval-pending follow-up note, so the only proposed action is append_ticket_followup on ticket 28. The Network Team is named by the runbook that owns this procedure; no cited evidence records an assignment field or ownership statement for this ticket, so no assignment_reason claim is made and that gap is recorded as unresolved. No cited evidence states a cause for the MFA failure, so no root_cause_hypothesis is asserted.",
     "evidence_refs": [
       "ev-bdceffc50cfb8da9",
-      "ev-2537a594ed2c77b8",
+      "ev-b00bd682dccfb50f",
+      "ev-350bf2d8f26d3d77",
       "ev-7c007349d496bd5e",
-      "ev-a6e331aca489f967",
-      "ev-74293fa53e7db832",
-      "ev-6a4bc0172ae15b39",
-      "ev-36802495fe1c2f08"
+      "ev-7843c489e2ecff2f",
+      "ev-74293fa53e7db832"
     ],
     "confidence": 0.7,
     "source": "servicemind-agent/model",
@@ -434,7 +646,7 @@
       {
         "claim_id": "C2",
         "claim_type": "incident_fact",
-        "statement": "The ticket record states that the VPN client accepts the password and then fails the multi-factor authentication challenge, that the failure repeats on every attempt, from every network, and with the same password, that the user replaced their handset nine days ago, that no lockout is recorded against the account, and that no action has been taken yet.",
+        "statement": "The ticket record states the VPN client accepts the password and then fails the multi-factor authentication challenge, that the failure repeats on every attempt, from every network, and with the same password, that the user replaced their handset nine days ago, that no lockout is recorded against the account, and that no action has been taken yet.",
         "evidence_refs": [
           "ev-bdceffc50cfb8da9"
         ],
@@ -444,17 +656,27 @@
       {
         "claim_id": "C3",
         "claim_type": "incident_fact",
-        "statement": "The cited runbook states that it is restricted to the Globex Network Team and documents the break-glass variant of the standard rebind, which requires a network operations approval that the service desk cannot grant.",
+        "statement": "Follow-up 105 records the first-line check: the account is not locked, the password step is accepted on every attempt, and the failure is at the second factor.",
         "evidence_refs": [
-          "ev-2537a594ed2c77b8"
+          "ev-b00bd682dccfb50f"
         ],
-        "confidence": 0.9,
+        "confidence": 0.95,
         "assumptions": []
       },
       {
         "claim_id": "C4",
         "claim_type": "incident_fact",
-        "statement": "The cited runbook's procedure instructs: open a network operations approval request naming the affected account and the incident number (break-glass rebinds are never performed on a verbal request); obtain approval from the on-call network operations engineer and record the approver and approval reference in the ticket; issue a temporary per-user override on the VPN concentrator that accepts the new handset secret; have the user re-enrol and connect while the override is in place; and remove the override as soon as the connection succeeds, since the ticket is not closed until it is removed.",
+        "statement": "Follow-up 106 records the user confirming the handset was replaced nine days ago and that the old device was factory wiped before it was handed on.",
+        "evidence_refs": [
+          "ev-350bf2d8f26d3d77"
+        ],
+        "confidence": 0.95,
+        "assumptions": []
+      },
+      {
+        "claim_id": "C5",
+        "claim_type": "incident_fact",
+        "statement": "The Network Team runbook (KB-GLOBEX-VPN-MFA-G3) instructs: open a network operations approval request naming the affected account and the incident number, with break-glass rebinds never performed on a verbal request; obtain approval from the on-call network operations engineer and record the approver and approval reference in the ticket; issue a temporary per-user override on the VPN concentrator accepting the new handset secret; have the user re-enrol and connect while the override is in place; and remove the override as soon as the connection succeeds.",
         "evidence_refs": [
           "ev-7c007349d496bd5e"
         ],
@@ -462,73 +684,58 @@
         "assumptions": []
       },
       {
-        "claim_id": "C5",
-        "claim_type": "root_cause_hypothesis",
-        "statement": "The cited runbook's mechanism for this failure mode is a device-side rebind: the break-glass procedure works by issuing a temporary per-user override on the VPN concentrator that accepts the new handset secret and having the user re-enrol, i.e. the remediation targets the handset secret binding rather than the account. The ticket record itself does not state a cause; the handset replacement nine days prior is recorded as a known fact, not as a stated cause.",
-        "evidence_refs": [
-          "ev-7c007349d496bd5e",
-          "ev-bdceffc50cfb8da9"
-        ],
-        "confidence": 0.6,
-        "assumptions": [
-          "The runbook's procedure is treated as evidence of the mechanism it addresses (a handset-secret rebind), not as a confirmed diagnosis of ticket 28; no cited record states the cause of this specific incident."
-        ]
-      },
-      {
         "claim_id": "C6",
-        "claim_type": "priority_reason",
-        "statement": "The ticket's own recorded urgency and impact are both 3, giving priority 3, so the follow-up is prepared at that recorded priority rather than escalated.",
+        "claim_type": "incident_fact",
+        "statement": "The same runbook states the override is scoped to one account and one session, must not be widened to a group, a subnet or a policy, and that the standard rebind should be used instead if it can be completed.",
         "evidence_refs": [
-          "ev-bdceffc50cfb8da9"
+          "ev-7843c489e2ecff2f"
         ],
         "confidence": 0.9,
         "assumptions": []
       },
       {
         "claim_id": "C7",
-        "claim_type": "assignment_reason",
-        "statement": "Recommendation: route the work to the Network Team, because the cited runbook that covers this failure mode is restricted to the Globex Network Team and requires a network operations approval the service desk cannot grant, and the directory confirms a group named Network Team exists. The evidence does not record that the Network Team owns ticket 28; the ticket's team field is empty.",
+        "claim_type": "incident_fact",
+        "statement": "The support-group directory lists a group named 'Network Team' (group id 3).",
         "evidence_refs": [
-          "ev-2537a594ed2c77b8",
-          "ev-74293fa53e7db832",
-          "ev-bdceffc50cfb8da9"
+          "ev-74293fa53e7db832"
         ],
-        "confidence": 0.6,
-        "assumptions": [
-          "The support-group directory shows the Network Team group exists but does not establish ownership of this ticket; the ticket's team field is empty and no assignment is recorded."
-        ]
+        "confidence": 0.9,
+        "assumptions": []
       },
       {
         "claim_id": "C8",
-        "claim_type": "recommended_action",
-        "statement": "Recommended follow-up content: have the Network Team open a network operations approval request naming the affected account and this incident number, obtain approval from the on-call network operations engineer, record the approver and approval reference in the ticket, then perform the temporary per-user override, have the user re-enrol and connect, and remove the override as soon as the connection succeeds.",
+        "claim_type": "priority_reason",
+        "statement": "The ticket's own recorded urgency and impact are both 3, matching the priority 3 set on the ticket, so the incident is handled at a moderate priority rather than as a major incident.",
         "evidence_refs": [
-          "ev-7c007349d496bd5e",
-          "ev-2537a594ed2c77b8"
+          "ev-bdceffc50cfb8da9"
         ],
-        "confidence": 0.75,
+        "confidence": 0.8,
         "assumptions": []
       },
       {
         "claim_id": "C9",
-        "claim_type": "incident_fact",
-        "statement": "The cited audit checklist document addresses sampling and exception handling for a VPN MFA enrolment audit (drawing samples from the identity console, per-region sampling, quarterly re-draws, and recording exceptions separately) and does not address the remediation of an individual MFA challenge failure.",
+        "claim_type": "recommended_action",
+        "statement": "The Network Team runbook supports preparing the break-glass rebind follow-up: an approval request naming the account and incident, approval from the on-call network operations engineer with approver and reference recorded in the ticket, a temporary per-user override on the concentrator, user re-enrolment and connection, and removal of the override once the connection succeeds.",
         "evidence_refs": [
-          "ev-6a4bc0172ae15b39",
-          "ev-36802495fe1c2f08"
+          "ev-7c007349d496bd5e",
+          "ev-7843c489e2ecff2f"
         ],
         "confidence": 0.85,
-        "assumptions": []
+        "assumptions": [
+          "The follow-up note is prepared for approval only; no ticket field is modified and no override is applied by this analysis."
+        ]
       }
     ],
     "alternatives": [
-      "Route to the Service Desk as first-line owner, since the ticket was reported by the user to the service desk; however the cited runbook states the break-glass rebind requires a network operations approval the service desk cannot grant, so this is not preferred."
+      "Treat the failure as an account or directory issue and reset credentials, which the recorded first-line check (password accepted, no lockout) does not support.",
+      "Apply the break-glass override without the network operations approval the runbook requires, which the runbook explicitly forbids for verbal requests."
     ],
     "unresolved_questions": [
-      "No citable evidence establishes whether this incident is a recurrence of the same failure type; recurrence is therefore not asserted.",
-      "No cited record states the root cause of this specific incident; the ticket lists the handset replacement as a known fact, not as a diagnosed cause.",
-      "No cited evidence records which group currently owns or is assigned ticket 28; the ticket's team field is empty.",
-      "No cited evidence records whether a network operations approval request has been opened for this incident."
+      "No cited evidence states a cause or mechanism for why the MFA challenge fails after the handset change; the cause is not asserted.",
+      "No cited evidence records an assignment field, owner or disposition statement for ticket 28, so ownership by the Network Team is not established by the evidence; the group is named only by the runbook and the support-group directory.",
+      "No cited evidence establishes that this incident is part of a recurring pattern for this tenant, so no problem record is proposed.",
+      "No cited evidence states whether the standard rebind path is available for this account, which the runbook says should be used instead of break-glass if it can be completed."
     ],
     "validation_feedback": []
   },
@@ -539,17 +746,23 @@
     "conflicts": [],
     "policy_issues": [],
     "risk_level": "medium",
-    "feedback": "All claims are backed by their cited evidence. C1/C2 restate ticket 28's fields and record (title, New, urgency/impact/priority 3, password accepted, MFA failed on every attempt/network, handset replaced nine days ago, no lockout, no action taken). C3/C4 accurately attribute the runbook's audience restriction and procedure steps (approval request naming account and incident number, on-call engineer approval with approver/reference recorded, temporary per-user override, re-enrol and connect, remove override). C5 is a root_cause_hypothesis hedged in assumptions that the runbook mechanism is not a confirmed diagnosis; the cited procedure does carry the handset-secret rebind mechanism. C6 follows the recorded urgency/impact 3. C7 is an assignment_reason stated as a recommendation with the ownership uncertainty recorded in assumptions; the runbook's Network Team restriction plus the directory entry supports routing there. C8's recommended action tracks the runbook procedure. C9 correctly characterizes the audit checklist as sampling/exception handling unrelated to remediation. The single append_ticket_followup draft is consistent with the no-modification constraint and request_write=true. No prompt-injection content in the evidence.",
+    "feedback": "All claims are backed by their cited evidence. C1/C2 match ticket 28's fields and body (title, New, urgency/impact/priority 3, password accepted then MFA failure, handset replaced nine days ago, no lockout, no action taken). C3 and C4 accurately report follow-ups 105 and 106. C5 and C6 faithfully restate the runbook procedure and its limits (approval request, on-call engineer approval with reference recorded, per-user override, re-enrol, remove override; one account/one session, no widening, prefer standard rebind). C7 correctly reports the group directory entry. C8's priority reasoning follows the ticket's own urgency/impact/priority values. C9's recommended action is supported by the runbook, with the non-modifying scope hedged in assumptions. The analysis appropriately declines to assert a root cause, problem record, change record, or assignment ownership, recording those gaps as unresolved. The proposed append_ticket_followup is a non-modifying, approval-pending note consistent with the task. No prompt-injection content found in the evidence.",
     "reviewed_evidence_refs": [
       "ev-bdceffc50cfb8da9",
       "ev-74293fa53e7db832",
       "ev-a6e331aca489f967",
+      "ev-b00bd682dccfb50f",
+      "ev-350bf2d8f26d3d77",
+      "ev-d1c4ae1d3430f900",
+      "ev-9ece0a63350c8fcf",
       "ev-7c007349d496bd5e",
+      "ev-c1e0221be3d0ff58",
+      "ev-76a966dd3f0e3d8f",
       "ev-6a4bc0172ae15b39",
-      "ev-36802495fe1c2f08",
-      "ev-2537a594ed2c77b8"
+      "ev-009d619baf680157",
+      "ev-7843c489e2ecff2f"
     ],
-    "review_id": "491bfa04-743e-4943-8524-56f936d46a2a",
+    "review_id": "f6f7467d-f08b-47e0-ba65-a1becb58e74d",
     "findings": [],
     "reviewed_claim_ids": [
       "C1",
@@ -587,7 +800,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "011db6c4a5431f01495a541ab6c2a83673b2dfadb6586e1050e8d89fe8573319",
+      "content_hash": "1ad223adc045db1712837efe847726fab8a63d7c4e5768bdb1528bb07e2fe3ec",
       "tokens": 120,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -595,8 +808,8 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "9345da77e4e7c4ed07719f0023b553421ae118a66df3599aa37ebd1e5cf12c1a",
-      "tokens": 121,
+      "content_hash": "7fcb020f6be93e3512253b80bc2348222c991294095c956d34c1ea8f635cde34",
+      "tokens": 156,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -611,7 +824,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "f7f085ec72aeabd39b1960e766b583b78a9c9bb9e31aaa3591e9ca736fc2ff78",
+      "content_hash": "92fa2e7ef9724ea72abd0bff445cab3eee9398a17c685e07aa008422fe5f5b05",
       "tokens": 112,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -619,15 +832,15 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "3feee4ae8757d74ca248c2cb5e283237d7cfeb9f671c60f6803bf55c1b196d51",
-      "tokens": 136,
+      "content_hash": "577633821661ed4712afc9b6274aeed0dd63dc9abc8713554495bb69e22368b2",
+      "tokens": 148,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "06ff38d14d84b193a19fc680b065325ab11b2de456791737262e64181bfe1a82",
+      "content_hash": "a14f61b6274d4ee5477f1f394bafff5394a5a1c291ed702abd749143a55f7faf",
       "tokens": 88,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -635,15 +848,31 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "6a6a2ac62c97c924cbfa863c0dc8c2b77f277c1c3158ecee1606b275dae5be6d",
-      "tokens": 136,
+      "content_hash": "7315b205a09f650dd84c6d16260712d58519fd472f824ea48b6884c0b06b094f",
+      "tokens": 170,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-350bf2d8f26d3d77",
+      "source": "evidence",
+      "content_hash": "d70f71f92123adba42c884e516ab264d3949f36b7134a4c95c80a2397211bf39",
+      "tokens": 396,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-b00bd682dccfb50f",
+      "source": "evidence",
+      "content_hash": "a68dd0257a3e571f534b5fe23e0390ec49034171483a182839cb4a9bde3f254c",
+      "tokens": 404,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "ev-a6e331aca489f967",
       "source": "evidence",
-      "content_hash": "38fe6028449df2bcca0dd33126bbfc8ca662d0ba1129613fe083645dcbf4af98",
+      "content_hash": "ec7947dc0516746a4706232f609389e270625fed03e98117f154aaa92b752126",
       "tokens": 347,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -651,7 +880,7 @@
     {
       "item_id": "ev-74293fa53e7db832",
       "source": "evidence",
-      "content_hash": "150bf1caf09a845e66b27f8d587ee637b899d4a2d6e777e1d028a39d7dbae756",
+      "content_hash": "d21022ecbb119d3e182add48305e82c52db400448e473b6eb5f6e4b3869d1792",
       "tokens": 347,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -659,40 +888,72 @@
     {
       "item_id": "ev-bdceffc50cfb8da9",
       "source": "evidence",
-      "content_hash": "a75ddbd895f93f4fcd3149d3bbb71d04691b3eb66814bae3b00dbe787fce9679",
+      "content_hash": "31a68a3f1974197f10eff31cf496218f82a4318b0f409908645e910980098056",
       "tokens": 1109,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-9ece0a63350c8fcf",
+      "source": "evidence",
+      "content_hash": "328ce556c33008e2cd9eabc43f08e5b9953e5db2d0e588a0a75f842e9cdf57c7",
+      "tokens": 594,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-d1c4ae1d3430f900",
+      "source": "evidence",
+      "content_hash": "e823ce8df42e866985036c7a73b9f7fc6904baec967103d11188b343e37300b7",
+      "tokens": 609,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-009d619baf680157",
+      "source": "evidence",
+      "content_hash": "eec61f6351c3607c3b5c6d75929e45b167216471201d4fd4895e074caa9bfb48",
+      "tokens": 924,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "ev-6a4bc0172ae15b39",
       "source": "evidence",
-      "content_hash": "a1b66aa2926ec2449d61dc8ab30c3f2c1eb64eb076c01967ac5595a9b94ca095",
+      "content_hash": "6f7d11d9f1a67e3c5abf7e1f6b80d43b2d32772e5cfbc225c6d4c3146bdd022d",
       "tokens": 1287,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "ev-36802495fe1c2f08",
-      "source": "evidence",
-      "content_hash": "5f40d2386066f9229b694a48eb3131bd844d55ca3ea1a36242c38e5034534d07",
-      "tokens": 1070,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "ev-2537a594ed2c77b8",
-      "source": "evidence",
-      "content_hash": "6a8775a6fe531aa342a65f076800c0dc11ce9cac720a152a47253aa3d8b23e55",
-      "tokens": 670,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
     },
     {
       "item_id": "ev-7c007349d496bd5e",
       "source": "evidence",
-      "content_hash": "9760fe75fbf5fee2f8a05d004490501ef52978c9fc9e02af38a9106b73cba0e3",
-      "tokens": 889,
+      "content_hash": "2a7584439eeb13f8ce426ce1c9b2750e5fca53ddae2b530dd79c658051e5d512",
+      "tokens": 888,
+      "decision": "selected",
+      "reason": "reclaimed_from_source_cap"
+    },
+    {
+      "item_id": "ev-c1e0221be3d0ff58",
+      "source": "evidence",
+      "content_hash": "846405d05e57e917fbcda8a22cc9e1554cc9f43b18bbe63424f073d4ca1e14d3",
+      "tokens": 637,
+      "decision": "selected",
+      "reason": "reclaimed_from_source_cap"
+    },
+    {
+      "item_id": "ev-7843c489e2ecff2f",
+      "source": "evidence",
+      "content_hash": "18da1a1338c993f201fa100b40f961ee778d5ea10bc5ea8dc99e06f14dd73c27",
+      "tokens": 737,
+      "decision": "selected",
+      "reason": "reclaimed_from_source_cap"
+    },
+    {
+      "item_id": "ev-76a966dd3f0e3d8f",
+      "source": "evidence",
+      "content_hash": "e2f352bea03aa9053db22957ba17cd1911c20305734cf7e0b60bf3ed23897033",
+      "tokens": 600,
       "decision": "selected",
       "reason": "reclaimed_from_source_cap"
     },
@@ -705,9 +966,9 @@
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "memory:ff1ee26c-eecd-40a8-80cc-ad7ac34aae64",
+      "item_id": "memory:9f380262-17b9-4216-9157-21341c6f51b4",
       "source": "memory",
-      "content_hash": "eb9d420532a23bc85a3027ee567b5527ea34347e1c79bf7e293658063fb24366",
+      "content_hash": "a1346de64bc457783fcd07f4486b075c4096898a66ce05e73c9bf27aa04f9214",
       "tokens": 760,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -763,15 +1024,15 @@
     {
       "item_id": "state",
       "source": "state",
-      "content_hash": "cb2acd9e2639d08c37c3a54c2d89847a390041d1fba1064bf461b7d04143d544",
-      "tokens": 4443,
+      "content_hash": "98422802d6a920eef4c8efcbb317d6e45bd725999f08098c4ae8efc031fdd703",
+      "tokens": 4090,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "06ff38d14d84b193a19fc680b065325ab11b2de456791737262e64181bfe1a82",
+      "content_hash": "a14f61b6274d4ee5477f1f394bafff5394a5a1c291ed702abd749143a55f7faf",
       "tokens": 88,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -779,16 +1040,24 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "40e4657d2a77d8668d3fbf4ecb09c09231c926b6bb91a0197781f7f5d2c4150d",
-      "tokens": 135,
+      "content_hash": "e7d3d43eb1e1033ef6d4c91520d8eb0ce06c7535b70ba2c258edcffbf78e304d",
+      "tokens": 155,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "ev-a6e331aca489f967",
+      "item_id": "ev-350bf2d8f26d3d77",
       "source": "evidence",
-      "content_hash": "c91d3ed7969e759e588bd3e2058575070a1b1ac15cb83d8ecb7eab820e9d2761",
-      "tokens": 111,
+      "content_hash": "9b392d9e8c4d6b680eb9a8a42631062e33d795f961cf794148323e93b8aaa69e",
+      "tokens": 209,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-b00bd682dccfb50f",
+      "source": "evidence",
+      "content_hash": "02d1188a8140a8660b4f4e56048ae98e43cdb6ec136d00132c5b0d07be8739c1",
+      "tokens": 217,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -809,30 +1078,6 @@
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "ev-6a4bc0172ae15b39",
-      "source": "evidence",
-      "content_hash": "5729cb32e3ceb4cf85f04286b98954cfadd49029522ba7dfb36995c27867dce9",
-      "tokens": 1046,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "ev-36802495fe1c2f08",
-      "source": "evidence",
-      "content_hash": "9ad159960672d7fd3813f03662573da731b9b79a27217bb46cabb72276f17a2e",
-      "tokens": 829,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "ev-2537a594ed2c77b8",
-      "source": "evidence",
-      "content_hash": "2615546a3d3743b1e5c22dc39db63184b9ebb017c5b4fcc6c39e1c96d872d5cf",
-      "tokens": 429,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
       "item_id": "ev-7c007349d496bd5e",
       "source": "evidence",
       "content_hash": "edac9610402777cbc045a65704d5c9f3d19c18c82def8ef0f34b0aa6d42c271c",
@@ -841,10 +1086,66 @@
       "reason": "ranked_within_budget"
     },
     {
+      "item_id": "ev-7843c489e2ecff2f",
+      "source": "evidence",
+      "content_hash": "97f1f7fbcfa9b5fb12cc8670acc635755ded7fe95c29aa066b1fe71940f92636",
+      "tokens": 496,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-a6e331aca489f967",
+      "source": "evidence",
+      "content_hash": "c91d3ed7969e759e588bd3e2058575070a1b1ac15cb83d8ecb7eab820e9d2761",
+      "tokens": 111,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-9ece0a63350c8fcf",
+      "source": "evidence",
+      "content_hash": "6b01dc3e9c6c5a3865febe414ad8e98f4d8de29b9c65720a5a58b733fd05746d",
+      "tokens": 354,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-d1c4ae1d3430f900",
+      "source": "evidence",
+      "content_hash": "19586762630e175e2b5b9aa919c7def293339b0ebe5589213234e68e26fc8b15",
+      "tokens": 369,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-009d619baf680157",
+      "source": "evidence",
+      "content_hash": "af82cb7b174e4eddf781049494b1b7bb0c78257182dc51b0f3632e62530b7aeb",
+      "tokens": 683,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-c1e0221be3d0ff58",
+      "source": "evidence",
+      "content_hash": "c08e642c297aaf5aa0b2175b172d15c6b75c9e7bbde910a7f53e0c0d17483727",
+      "tokens": 397,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-76a966dd3f0e3d8f",
+      "source": "evidence",
+      "content_hash": "94ec3a24004b0f599493851e5e0e3a0a76f08461b1d1d01dde33bb0275543667",
+      "tokens": 360,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
       "item_id": "state",
       "source": "state",
-      "content_hash": "1065bbbcf67c23f9a03d34910625d3722762c3fccec2a0c80b8e0487ea7ffe93",
-      "tokens": 2408,
+      "content_hash": "60a75a1d516e3d06dc7b4f47496e9f4ba0c7077d5ae5d912dc7f240ee2703677",
+      "tokens": 2407,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -859,7 +1160,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "06ff38d14d84b193a19fc680b065325ab11b2de456791737262e64181bfe1a82",
+      "content_hash": "a14f61b6274d4ee5477f1f394bafff5394a5a1c291ed702abd749143a55f7faf",
       "tokens": 88,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -867,8 +1168,8 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "7ea63e4321067899a7ea40b3798f08f502e51e051215de1f4d6a5427128deac7",
-      "tokens": 135,
+      "content_hash": "1fff8ce066e0a56864e2b9e4b59949eef6e2f29ac095cd2ed6d9de1d2032bb86",
+      "tokens": 149,
       "decision": "selected",
       "reason": "ranked_within_budget"
     }
@@ -913,6 +1214,11 @@
       "followup_id": 133,
       "content_raw": "ServiceMind reviewed analysis: Ticket 28 records a VPN client that accepts the password but fails the MFA challenge on every attempt from every network, with no account lockout, and a handset replaced nine days ago; first-line follow-up 105 confirms the failure is at the second factor and follow-up 106 confirms the handset replacement and factory wipe of the old device. The graph states runbook KB-GLOBEX-VPN-MFA-G3 is the operating procedure for the Globex VPN gateway CI and instructs following it for the current incident; the runbook chunk prescribes an approval-gated temporary per-user override on the concentrator, user re-enrolment, and removal of the override once the connection succeeds. The graph also reports sibling incidents 25 and 26 on the same CI, so the incident is treated as recurring and a problem record is suggested. The runbook is owned by the Network Team per its title, so the Network Team is recommended as the handling group, with the caveat that no evidence records an ownership assignment for this ticket. The proposed write is a single append_ticket_followup on ticket 28, which the task authorizes; no action recorded as completed is proposed. The audit checklist and application/policy-update knowledge were reviewed but do not bear on this incident's remediation.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-bdceffc50cfb8da9, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-b00bd682dccfb50f, ev-350bf2d8f26d3d77, ev-7c007349d496bd5e, ev-6a4bc0172ae15b39, ev-118fc9a165ecf039, ev-d7dd5c94583c38ba, ev-1fb1dc7e8d503d90\nReviewer: All ten claims are backed by their cited evidence. C1-C3 restate ticket 28 and follow-ups 105/106 verbatim in substance (password accepted, MFA fails on every attempt/network, no lockout, handset replaced nine days ago, no action taken, New/urgency 3/impact 3/priority 3). C4 and C10 accurately attribute the graph's statements about runbook KB-GLOBEX-VPN-MFA-G3, the Globex VPN gateway CI, and sibling tickets 25/26. C5 and C9 track the runbook procedure (approval request, on-call approval recorded, temporary per-user override, re-enrolment, override removal) and correctly note no step is completed. C6 is a properly hedged root-cause hypothesis with the mechanism recorded in assumptions. C7 follows the recorded urgency/impact. C8 is a recommendation with the residual uncertainty (no recorded ownership, empty team field) stated in assumptions; the runbook title and network-operations approval step point at the Network Team, and the group directory confirms it exists. The proposed append_ticket_followup on ticket 28 matches the task's pending-approval write and proposes no completed action. No prompt-injection content found in the untrusted evidence.\n[ServiceMind run=d930db26-1de1-485e-beac-b678c05450c8 action=3c1bd753b7e2f008]",
       "content_text": "ServiceMind reviewed analysis: Ticket 28 records a VPN client that accepts the password but fails the MFA challenge on every attempt from every network, with no account lockout, and a handset replaced nine days ago; first-line follow-up 105 confirms the failure is at the second factor and follow-up 106 confirms the handset replacement and factory wipe of the old device. The graph states runbook KB-GLOBEX-VPN-MFA-G3 is the operating procedure for the Globex VPN gateway CI and instructs following it for the current incident; the runbook chunk prescribes an approval-gated temporary per-user override on the concentrator, user re-enrolment, and removal of the override once the connection succeeds. The graph also reports sibling incidents 25 and 26 on the same CI, so the incident is treated as recurring and a problem record is suggested. The runbook is owned by the Network Team per its title, so the Network Team is recommended as the handling group, with the caveat that no evidence records an ownership assignment for this ticket. The proposed write is a single append_ticket_followup on ticket 28, which the task authorizes; no action recorded as completed is proposed. The audit checklist and application/policy-update knowledge were reviewed but do not bear on this incident's remediation.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-bdceffc50cfb8da9, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-b00bd682dccfb50f, ev-350bf2d8f26d3d77, ev-7c007349d496bd5e, ev-6a4bc0172ae15b39, ev-118fc9a165ecf039, ev-d7dd5c94583c38ba, ev-1fb1dc7e8d503d90\nReviewer: All ten claims are backed by their cited evidence. C1-C3 restate ticket 28 and follow-ups 105/106 verbatim in substance (password accepted, MFA fails on every attempt/network, no lockout, handset replaced nine days ago, no action taken, New/urgency 3/impact 3/priority 3). C4 and C10 accurately attribute the graph's statements about runbook KB-GLOBEX-VPN-MFA-G3, the Globex VPN gateway CI, and sibling tickets 25/26. C5 and C9 track the runbook procedure (approval request, on-call approval recorded, temporary per-user override, re-enrolment, override removal) and correctly note no step is completed. C6 is a properly hedged root-cause hypothesis with the mechanism recorded in assumptions. C7 follows the recorded urgency/impact. C8 is a recommendation with the residual uncertainty (no recorded ownership, empty team field) stated in assumptions; the runbook title and network-operations approval step point at the Network Team, and the group directory confirms it exists. The proposed append_ticket_followup on ticket 28 matches the task's pending-approval write and proposes no completed action. No prompt-injection content found in the untrusted evidence.\n[ServiceMind run=d930db26-1de1-485e-beac-b678c05450c8 action=3c1bd753b7e2f008]"
+    },
+    {
+      "followup_id": 137,
+      "content_raw": "ServiceMind reviewed analysis: Ticket 28 (New, urgency 3, impact 3, priority 3) records a VPN client that accepts the password but fails the MFA challenge on every attempt from every network, after the user replaced their handset nine days ago, with no account lockout recorded and no action taken yet. The cited Network Team runbook (KB-GLOBEX-VPN-MFA-G3) is restricted to the Globex Network Team and documents the break-glass rebind variant, which requires a network operations approval the service desk cannot grant; its procedure requires an approval request naming the account and incident number, approval from the on-call network operations engineer with approver and reference recorded in the ticket, a temporary per-user override accepting the new handset secret, user re-enrolment and connection, and removal of the override once the connection succeeds. The cited audit checklist (KB-GLOBEX-VPN-MFA-AUDIT) concerns sampling and exception handling for an enrolment audit and does not address this incident's remediation, so it is not used as a basis for the follow-up. The support-group directory entries show that Service Desk and Network Team exist but do not record ownership of this ticket, so the Network Team routing is stated as a recommendation with that uncertainty recorded. No citable evidence establishes recurrence for this incident, so recurring_incident is false and recurrence is left as an open question. The only proposed operation is an append_ticket_followup draft, consistent with request_write=true and the task's instruction not to modify the ticket.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-bdceffc50cfb8da9, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-7c007349d496bd5e, ev-6a4bc0172ae15b39, ev-36802495fe1c2f08, ev-2537a594ed2c77b8\nReviewer: All claims are backed by their cited evidence. C1/C2 restate ticket 28's fields and record (title, New, urgency/impact/priority 3, password accepted, MFA failed on every attempt/network, handset replaced nine days ago, no lockout, no action taken). C3/C4 accurately attribute the runbook's audience restriction and procedure steps (approval request naming account and incident number, on-call engineer approval with approver/reference recorded, temporary per-user override, re-enrol and connect, remove override). C5 is a root_cause_hypothesis hedged in assumptions that the runbook mechanism is not a confirmed diagnosis; the cited procedure does carry the handset-secret rebind mechanism. C6 follows the recorded urgency/impact 3. C7 is an assignment_reason stated as a recommendation with the ownership uncertainty recorded in assumptions; the runbook's Network Team restriction plus the directory entry supports routing there. C8's recommended action tracks the runbook procedure. C9 correctly characterizes the audit checklist as sampling/exception handling unrelated to remediation. The single append_ticket_followup draft is consistent with the no-modification constraint and request_write=true. No prompt-injection content in the evidence.\n[ServiceMind run=3e9ee97e-0314-4245-aecb-bb38d6b695a8 action=3cff78636039768b]",
+      "content_text": "ServiceMind reviewed analysis: Ticket 28 (New, urgency 3, impact 3, priority 3) records a VPN client that accepts the password but fails the MFA challenge on every attempt from every network, after the user replaced their handset nine days ago, with no account lockout recorded and no action taken yet. The cited Network Team runbook (KB-GLOBEX-VPN-MFA-G3) is restricted to the Globex Network Team and documents the break-glass rebind variant, which requires a network operations approval the service desk cannot grant; its procedure requires an approval request naming the account and incident number, approval from the on-call network operations engineer with approver and reference recorded in the ticket, a temporary per-user override accepting the new handset secret, user re-enrolment and connection, and removal of the override once the connection succeeds. The cited audit checklist (KB-GLOBEX-VPN-MFA-AUDIT) concerns sampling and exception handling for an enrolment audit and does not address this incident's remediation, so it is not used as a basis for the follow-up. The support-group directory entries show that Service Desk and Network Team exist but do not record ownership of this ticket, so the Network Team routing is stated as a recommendation with that uncertainty recorded. No citable evidence establishes recurrence for this incident, so recurring_incident is false and recurrence is left as an open question. The only proposed operation is an append_ticket_followup draft, consistent with request_write=true and the task's instruction not to modify the ticket.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-bdceffc50cfb8da9, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-7c007349d496bd5e, ev-6a4bc0172ae15b39, ev-36802495fe1c2f08, ev-2537a594ed2c77b8\nReviewer: All claims are backed by their cited evidence. C1/C2 restate ticket 28's fields and record (title, New, urgency/impact/priority 3, password accepted, MFA failed on every attempt/network, handset replaced nine days ago, no lockout, no action taken). C3/C4 accurately attribute the runbook's audience restriction and procedure steps (approval request naming account and incident number, on-call engineer approval with approver/reference recorded, temporary per-user override, re-enrol and connect, remove override). C5 is a root_cause_hypothesis hedged in assumptions that the runbook mechanism is not a confirmed diagnosis; the cited procedure does carry the handset-secret rebind mechanism. C6 follows the recorded urgency/impact 3. C7 is an assignment_reason stated as a recommendation with the ownership uncertainty recorded in assumptions; the runbook's Network Team restriction plus the directory entry supports routing there. C8's recommended action tracks the runbook procedure. C9 correctly characterizes the audit checklist as sampling/exception handling unrelated to remediation. The single append_ticket_followup draft is consistent with the no-modification constraint and request_write=true. No prompt-injection content in the evidence.\n[ServiceMind run=3e9ee97e-0314-4245-aecb-bb38d6b695a8 action=3cff78636039768b]"
     }
   ],
   "followups_after": [
@@ -960,6 +1266,11 @@
       "followup_id": 137,
       "content_raw": "ServiceMind reviewed analysis: Ticket 28 (New, urgency 3, impact 3, priority 3) records a VPN client that accepts the password but fails the MFA challenge on every attempt from every network, after the user replaced their handset nine days ago, with no account lockout recorded and no action taken yet. The cited Network Team runbook (KB-GLOBEX-VPN-MFA-G3) is restricted to the Globex Network Team and documents the break-glass rebind variant, which requires a network operations approval the service desk cannot grant; its procedure requires an approval request naming the account and incident number, approval from the on-call network operations engineer with approver and reference recorded in the ticket, a temporary per-user override accepting the new handset secret, user re-enrolment and connection, and removal of the override once the connection succeeds. The cited audit checklist (KB-GLOBEX-VPN-MFA-AUDIT) concerns sampling and exception handling for an enrolment audit and does not address this incident's remediation, so it is not used as a basis for the follow-up. The support-group directory entries show that Service Desk and Network Team exist but do not record ownership of this ticket, so the Network Team routing is stated as a recommendation with that uncertainty recorded. No citable evidence establishes recurrence for this incident, so recurring_incident is false and recurrence is left as an open question. The only proposed operation is an append_ticket_followup draft, consistent with request_write=true and the task's instruction not to modify the ticket.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-bdceffc50cfb8da9, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-7c007349d496bd5e, ev-6a4bc0172ae15b39, ev-36802495fe1c2f08, ev-2537a594ed2c77b8\nReviewer: All claims are backed by their cited evidence. C1/C2 restate ticket 28's fields and record (title, New, urgency/impact/priority 3, password accepted, MFA failed on every attempt/network, handset replaced nine days ago, no lockout, no action taken). C3/C4 accurately attribute the runbook's audience restriction and procedure steps (approval request naming account and incident number, on-call engineer approval with approver/reference recorded, temporary per-user override, re-enrol and connect, remove override). C5 is a root_cause_hypothesis hedged in assumptions that the runbook mechanism is not a confirmed diagnosis; the cited procedure does carry the handset-secret rebind mechanism. C6 follows the recorded urgency/impact 3. C7 is an assignment_reason stated as a recommendation with the ownership uncertainty recorded in assumptions; the runbook's Network Team restriction plus the directory entry supports routing there. C8's recommended action tracks the runbook procedure. C9 correctly characterizes the audit checklist as sampling/exception handling unrelated to remediation. The single append_ticket_followup draft is consistent with the no-modification constraint and request_write=true. No prompt-injection content in the evidence.\n[ServiceMind run=3e9ee97e-0314-4245-aecb-bb38d6b695a8 action=3cff78636039768b]",
       "content_text": "ServiceMind reviewed analysis: Ticket 28 (New, urgency 3, impact 3, priority 3) records a VPN client that accepts the password but fails the MFA challenge on every attempt from every network, after the user replaced their handset nine days ago, with no account lockout recorded and no action taken yet. The cited Network Team runbook (KB-GLOBEX-VPN-MFA-G3) is restricted to the Globex Network Team and documents the break-glass rebind variant, which requires a network operations approval the service desk cannot grant; its procedure requires an approval request naming the account and incident number, approval from the on-call network operations engineer with approver and reference recorded in the ticket, a temporary per-user override accepting the new handset secret, user re-enrolment and connection, and removal of the override once the connection succeeds. The cited audit checklist (KB-GLOBEX-VPN-MFA-AUDIT) concerns sampling and exception handling for an enrolment audit and does not address this incident's remediation, so it is not used as a basis for the follow-up. The support-group directory entries show that Service Desk and Network Team exist but do not record ownership of this ticket, so the Network Team routing is stated as a recommendation with that uncertainty recorded. No citable evidence establishes recurrence for this incident, so recurring_incident is false and recurrence is left as an open question. The only proposed operation is an append_ticket_followup draft, consistent with request_write=true and the task's instruction not to modify the ticket.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-bdceffc50cfb8da9, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-7c007349d496bd5e, ev-6a4bc0172ae15b39, ev-36802495fe1c2f08, ev-2537a594ed2c77b8\nReviewer: All claims are backed by their cited evidence. C1/C2 restate ticket 28's fields and record (title, New, urgency/impact/priority 3, password accepted, MFA failed on every attempt/network, handset replaced nine days ago, no lockout, no action taken). C3/C4 accurately attribute the runbook's audience restriction and procedure steps (approval request naming account and incident number, on-call engineer approval with approver/reference recorded, temporary per-user override, re-enrol and connect, remove override). C5 is a root_cause_hypothesis hedged in assumptions that the runbook mechanism is not a confirmed diagnosis; the cited procedure does carry the handset-secret rebind mechanism. C6 follows the recorded urgency/impact 3. C7 is an assignment_reason stated as a recommendation with the ownership uncertainty recorded in assumptions; the runbook's Network Team restriction plus the directory entry supports routing there. C8's recommended action tracks the runbook procedure. C9 correctly characterizes the audit checklist as sampling/exception handling unrelated to remediation. The single append_ticket_followup draft is consistent with the no-modification constraint and request_write=true. No prompt-injection content in the evidence.\n[ServiceMind run=3e9ee97e-0314-4245-aecb-bb38d6b695a8 action=3cff78636039768b]"
+    },
+    {
+      "followup_id": 141,
+      "content_raw": "ServiceMind reviewed analysis: Ticket 28 (New, urgency 3, impact 3, priority 3) reports a VPN client that accepts the password but fails the MFA challenge on every attempt, from every network, with the same password; the user replaced their handset nine days ago and no lockout is recorded. Follow-up 105 records the first-line check: account not locked, password step accepted, failure at the second factor. Follow-up 106 records the user confirming the handset replacement nine days ago and that the old device was factory wiped before handover. The Network Team runbook (KB-GLOBEX-VPN-MFA-G3) gives the break-glass rebind procedure: approval request naming the account and incident, approval from the on-call network operations engineer with approver and reference recorded, temporary per-user override on the concentrator, user re-enrolment and connection, then removal of the override; it limits the override to one account and one session and prefers the standard rebind where possible. The task asks for a non-modifying, approval-pending follow-up note, so the only proposed action is append_ticket_followup on ticket 28. The Network Team is named by the runbook that owns this procedure; no cited evidence records an assignment field or ownership statement for this ticket, so no assignment_reason claim is made and that gap is recorded as unresolved. No cited evidence states a cause for the MFA failure, so no root_cause_hypothesis is asserted.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-bdceffc50cfb8da9, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-b00bd682dccfb50f, ev-350bf2d8f26d3d77, ev-d1c4ae1d3430f900, ev-9ece0a63350c8fcf, ev-7c007349d496bd5e, ev-c1e0221be3d0ff58, ev-76a966dd3f0e3d8f, ev-6a4bc0172ae15b39, ev-009d619baf680157, ev-7843c489e2ecff2f\nReviewer: All claims are backed by their cited evidence. C1/C2 match ticket 28's fields and body (title, New, urgency/impact/priority 3, password accepted then MFA failure, handset replaced nine days ago, no lockout, no action taken). C3 and C4 accurately report follow-ups 105 and 106. C5 and C6 faithfully restate the runbook procedure and its limits (approval request, on-call engineer approval with reference recorded, per-user override, re-enrol, remove override; one account/one session, no widening, prefer standard rebind). C7 correctly reports the group directory entry. C8's priority reasoning follows the ticket's own urgency/impact/priority values. C9's recommended action is supported by the runbook, with the non-modifying scope hedged in assumptions. The analysis appropriately declines to assert a root cause, problem record, change record, or assignment ownership, recording those gaps as unresolved. The proposed append_ticket_followup is a non-modifying, approval-pending note consistent with the task. No prompt-injection content found in the evidence.\n[ServiceMind run=f3524f72-b4c5-4fe4-bbd7-4ccd3b5b015c action=fcb767830022a0ec]",
+      "content_text": "ServiceMind reviewed analysis: Ticket 28 (New, urgency 3, impact 3, priority 3) reports a VPN client that accepts the password but fails the MFA challenge on every attempt, from every network, with the same password; the user replaced their handset nine days ago and no lockout is recorded. Follow-up 105 records the first-line check: account not locked, password step accepted, failure at the second factor. Follow-up 106 records the user confirming the handset replacement nine days ago and that the old device was factory wiped before handover. The Network Team runbook (KB-GLOBEX-VPN-MFA-G3) gives the break-glass rebind procedure: approval request naming the account and incident, approval from the on-call network operations engineer with approver and reference recorded, temporary per-user override on the concentrator, user re-enrolment and connection, then removal of the override; it limits the override to one account and one session and prefers the standard rebind where possible. The task asks for a non-modifying, approval-pending follow-up note, so the only proposed action is append_ticket_followup on ticket 28. The Network Team is named by the runbook that owns this procedure; no cited evidence records an assignment field or ownership statement for this ticket, so no assignment_reason claim is made and that gap is recorded as unresolved. No cited evidence states a cause for the MFA failure, so no root_cause_hypothesis is asserted.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-bdceffc50cfb8da9, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-b00bd682dccfb50f, ev-350bf2d8f26d3d77, ev-d1c4ae1d3430f900, ev-9ece0a63350c8fcf, ev-7c007349d496bd5e, ev-c1e0221be3d0ff58, ev-76a966dd3f0e3d8f, ev-6a4bc0172ae15b39, ev-009d619baf680157, ev-7843c489e2ecff2f\nReviewer: All claims are backed by their cited evidence. C1/C2 match ticket 28's fields and body (title, New, urgency/impact/priority 3, password accepted then MFA failure, handset replaced nine days ago, no lockout, no action taken). C3 and C4 accurately report follow-ups 105 and 106. C5 and C6 faithfully restate the runbook procedure and its limits (approval request, on-call engineer approval with reference recorded, per-user override, re-enrol, remove override; one account/one session, no widening, prefer standard rebind). C7 correctly reports the group directory entry. C8's priority reasoning follows the ticket's own urgency/impact/priority values. C9's recommended action is supported by the runbook, with the non-modifying scope hedged in assumptions. The analysis appropriately declines to assert a root cause, problem record, change record, or assignment ownership, recording those gaps as unresolved. The proposed append_ticket_followup is a non-modifying, approval-pending note consistent with the task. No prompt-injection content found in the evidence.\n[ServiceMind run=f3524f72-b4c5-4fe4-bbd7-4ccd3b5b015c action=fcb767830022a0ec]"
     }
   ],
   "timeline_events": [

@@ -5,8 +5,8 @@
     "entitlement_verifier_configured": true,
     "base_url": "http://127.0.0.1:18080",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
-    "recorded_at": "2026-09-23T20:16:53.147402Z",
-    "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(92 files)",
+    "recorded_at": "2026-09-30T15:11:03.071639Z",
+    "deployed_revision": "cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)",
     "notes": [
       "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
       "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
@@ -16,8 +16,8 @@
     "username": "globex-analyst-g3",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
     "roles": [
-      "viewer",
-      "analyst"
+      "analyst",
+      "viewer"
     ],
     "entity_ids": [
       2
@@ -31,8 +31,8 @@
       "id": "submit",
       "description": "以 globex-analyst-g3 提交只读运行",
       "action": "POST /v1/servicemind/runs",
-      "started_at": "2026-09-23T20:17:49.801736Z",
-      "elapsed_seconds": 0.026134793646633625,
+      "started_at": "2026-09-30T15:12:05.938081Z",
+      "elapsed_seconds": 0.024667564779520035,
       "http_status": 202,
       "action_hash": null,
       "action_status": null,
@@ -43,21 +43,21 @@
       "id": "observe-terminal",
       "description": "轮询运行直到终态",
       "action": "GET /v1/servicemind/runs/{run_id}",
-      "started_at": "2026-09-23T20:17:49.827970Z",
-      "elapsed_seconds": 1.0340629238635302,
+      "started_at": "2026-09-30T15:12:05.962862Z",
+      "elapsed_seconds": 2.0677425004541874,
       "http_status": 200,
       "action_hash": null,
       "action_status": null,
       "outcome": null,
-      "detail": "{\"status\": \"succeeded\", \"elapsed_seconds\": 1.0, \"error\": null, \"termination_code\": null}"
+      "detail": "{\"status\": \"succeeded\", \"elapsed_seconds\": 2.1, \"error\": null, \"termination_code\": null}"
     }
   ],
-  "run_id": "cb7f6f35-68bd-48cf-b792-f1a48dc50559",
+  "run_id": "8f01afba-1aff-4e25-aa6b-c0586756b97e",
   "case_run_ids": [
-    "cb7f6f35-68bd-48cf-b792-f1a48dc50559"
+    "8f01afba-1aff-4e25-aa6b-c0586756b97e"
   ],
   "terminal_status": "succeeded",
-  "total_seconds": 1.0596620701253414,
+  "total_seconds": 2.091904392465949,
   "action_intent": null,
   "citations": [
     {
@@ -72,6 +72,28 @@
       "title": "Network Team runbook: VPN MFA break-glass rebind"
     },
     {
+      "citation_id": "cite-9d7748093d3b7d03",
+      "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+      "parent_chunk_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-VPN-CONN",
+      "source_record_id": "KB-Q-VPN-CONN",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+      "title": "VPN client connectivity recovery"
+    },
+    {
+      "citation_id": "cite-fa12aec71813ae18",
+      "document_id": "92106df6-91dd-4052-88b4-31297c807462",
+      "parent_chunk_id": "d9ed65f3-1c3b-44b0-ac77-f14c4b04e7dc",
+      "source": "servicemind_acceptance_fixture",
+      "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-AUDIT",
+      "source_record_id": "KB-GLOBEX-VPN-MFA-AUDIT",
+      "source_version": "phase7-acceptance-fixtures-v1",
+      "content_hash": "3630d2ae4236a5920eef4ea9c067dc840bbfe01a49e1bd61d68bb6981bcf9b36",
+      "title": "VPN MFA enrolment audit checklist"
+    },
+    {
       "citation_id": "cite-e96f8dd64222b24e",
       "document_id": "8d9151dc-faa2-47c5-8b20-e0383b625c97",
       "parent_chunk_id": "1d3e4397-3254-4313-a48a-0d1d976fab03",
@@ -83,15 +105,15 @@
       "title": "VPN MFA device rebind after a handset change"
     },
     {
-      "citation_id": "cite-abc8b95921190c8d",
-      "document_id": "a6b275dc-08dc-49f6-9cec-5efd414e3aa4",
-      "parent_chunk_id": "db5bf262-afbb-44a2-862c-863e5c921529",
-      "source": "servicemind_acceptance_fixture",
-      "source_uri": "acceptance://globex/KB-GLOBEX-VPN-APP-REG",
-      "source_record_id": "KB-GLOBEX-VPN-APP-REG",
-      "source_version": "phase7-acceptance-fixtures-v1",
-      "content_hash": "ef59f9cf568a9e5d6ef12dca73c0264913082282bd21766014d9e0f9bc7788fe",
-      "title": "VPN connection fails after an application or policy update"
+      "citation_id": "cite-ed18ee4f29b77371",
+      "document_id": "84e08280-91ae-4098-83ac-175ba1ae6905",
+      "parent_chunk_id": "4714a235-6246-42f8-9a3c-cccae3b41d75",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-G3-ESCALATE",
+      "source_record_id": "KB-Q-G3-ESCALATE",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "285b5d6247e5ce155487e12a8326cfd8323794152be8ef074ef5454aad8ac53e",
+      "title": "Network Team internal escalation paths"
     }
   ],
   "evidence": [
@@ -106,11 +128,11 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:50.796227Z",
+        "retrieved_at": "2026-09-30T15:12:07.266704Z",
         "content_hash": "00462300fc3a8bd96b05ed4c95647e1537fec775df7b87afb53352542c343706"
       },
-      "created_at": "2026-09-23T20:17:50.796289Z",
-      "confidence": 0.3634209,
+      "created_at": "2026-09-30T15:12:07.266798Z",
+      "confidence": 0.3624049,
       "metadata": {
         "citation": {
           "citation_id": "cite-f7c1d606b4dbe1b0",
@@ -139,10 +161,10 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:50.796331Z",
+        "retrieved_at": "2026-09-30T15:12:07.266882Z",
         "content_hash": "aa9fb5a6c8efdded724f077db10f2ba320c86175a7e79c173190dbe461e32129"
       },
-      "created_at": "2026-09-23T20:17:50.796340Z",
+      "created_at": "2026-09-30T15:12:07.266900Z",
       "confidence": 0.11357959,
       "metadata": {
         "citation": {
@@ -162,6 +184,105 @@
       }
     },
     {
+      "evidence_id": "ev-b1f70757dbcc4022",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-VPN-CONN",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+      "content": "Procedure\n\n1. Confirm the client version is 7.4 or later. Versions below 7.4 cannot negotiate the\n\ncurrent TLS profile and fail with a handshake timeout that looks like a network fault.\n\n2. Confirm the laptop holds a valid device certificate issued within the last 400 days.\n3. Clear the client state directory `/var/lib/vpn-client/state` and restart the service.\n4. Reconnect once. A second failure within five minutes is not retried automatically.\n5. If the handshake still fails, capture the client log and open a Network Team ticket.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:07.266955Z",
+        "content_hash": "0000abefefc109a5d7c23a0e1bedba5a7ac5ac20d3ba8613d90059c0daa67d93"
+      },
+      "created_at": "2026-09-30T15:12:07.266971Z",
+      "confidence": 0.13398075,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-9d7748093d3b7d03",
+          "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+          "parent_chunk_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-VPN-CONN",
+          "source_record_id": "KB-Q-VPN-CONN",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+          "title": "VPN client connectivity recovery"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-d8baa94488f1ba1d",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-VPN-CONN",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "07761ee4-ac10-44c7-b4f3-36fcb30ad1c6",
+      "content": "VPN client connectivity recovery\n\nApplies to the managed VPN client on corporate laptops. Owned by the Network Team.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:07.267016Z",
+        "content_hash": "713aa145ae314ffaff6135361e8670c4b8660711465a9ee2c01dae8bfb3bb71a"
+      },
+      "created_at": "2026-09-30T15:12:07.267031Z",
+      "confidence": 0.016914913,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-eaa265ed5acf58bb",
+          "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+          "parent_chunk_id": "07761ee4-ac10-44c7-b4f3-36fcb30ad1c6",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-VPN-CONN",
+          "source_record_id": "KB-Q-VPN-CONN",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+          "title": "VPN client connectivity recovery"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-a97bd028597b362e",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "acceptance://globex/KB-GLOBEX-VPN-MFA-AUDIT",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "d9ed65f3-1c3b-44b0-ac77-f14c4b04e7dc",
+      "content": "VPN MFA enrolment audit checklist",
+      "provenance": {
+        "provider": "servicemind_acceptance_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:07.267074Z",
+        "content_hash": "5cbdab5cb036cddb62023c982772eb91b191c9bdc90ff5e93a3fa1480551f598"
+      },
+      "created_at": "2026-09-30T15:12:07.267088Z",
+      "confidence": 0.0021997981,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-fa12aec71813ae18",
+          "document_id": "92106df6-91dd-4052-88b4-31297c807462",
+          "parent_chunk_id": "d9ed65f3-1c3b-44b0-ac77-f14c4b04e7dc",
+          "source": "servicemind_acceptance_fixture",
+          "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-AUDIT",
+          "source_record_id": "KB-GLOBEX-VPN-MFA-AUDIT",
+          "source_version": "phase7-acceptance-fixtures-v1",
+          "content_hash": "3630d2ae4236a5920eef4ea9c067dc840bbfe01a49e1bd61d68bb6981bcf9b36",
+          "title": "VPN MFA enrolment audit checklist"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
       "evidence_id": "ev-e69e00bd35011ed1",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
@@ -172,10 +293,10 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:50.796362Z",
+        "retrieved_at": "2026-09-30T15:12:07.267143Z",
         "content_hash": "84f2fe4439667198a1c9456d75cb526e24cdb10f736cc51729ce80c8e607e2ad"
       },
-      "created_at": "2026-09-23T20:17:50.796380Z",
+      "created_at": "2026-09-30T15:12:07.267187Z",
       "confidence": 0.017242778,
       "metadata": {
         "citation": {
@@ -195,32 +316,65 @@
       }
     },
     {
-      "evidence_id": "ev-2781a9129c6d257f",
+      "evidence_id": "ev-436b361d607e6c84",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
-      "source_ref": "acceptance://globex/KB-GLOBEX-VPN-APP-REG",
+      "source_ref": "quality://globex/KB-Q-G3-ESCALATE",
       "resource_type": "knowledge_parent_chunk",
-      "resource_id": "db5bf262-afbb-44a2-862c-863e5c921529",
-      "content": "Symptoms\n\n- The VPN client rejects the connection before any authentication prompt appears.\n- Earlier in the same session the client reported a policy, profile, or client-version\n\nmismatch, or the user was asked to update the client and did so.\n\n- The user's handset has not changed.\n- Other users on the same network report the same failure, or the user fails from every\n\nnetwork including a hotspot.",
+      "resource_id": "4714a235-6246-42f8-9a3c-cccae3b41d75",
+      "content": "Network Team internal escalation paths\n\nRestricted to the Network Team. Not for general distribution.",
       "provenance": {
-        "provider": "servicemind_acceptance_fixture",
+        "provider": "servicemind_quality_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:50.796402Z",
-        "content_hash": "4a1c532e3254cace196cb2eda4de7aa68d6ce3cb6dbb84aec85935e5f7bd506b"
+        "retrieved_at": "2026-09-30T15:12:07.267231Z",
+        "content_hash": "72397698e3f7f0c05959ef7c4f7e7928ab1349b836bb9c60e45ebe273620f7d0"
       },
-      "created_at": "2026-09-23T20:17:50.796409Z",
-      "confidence": 0.00009387641,
+      "created_at": "2026-09-30T15:12:07.267245Z",
+      "confidence": 0.0048674173,
       "metadata": {
         "citation": {
-          "citation_id": "cite-abc8b95921190c8d",
-          "document_id": "a6b275dc-08dc-49f6-9cec-5efd414e3aa4",
-          "parent_chunk_id": "db5bf262-afbb-44a2-862c-863e5c921529",
-          "source": "servicemind_acceptance_fixture",
-          "source_uri": "acceptance://globex/KB-GLOBEX-VPN-APP-REG",
-          "source_record_id": "KB-GLOBEX-VPN-APP-REG",
-          "source_version": "phase7-acceptance-fixtures-v1",
-          "content_hash": "ef59f9cf568a9e5d6ef12dca73c0264913082282bd21766014d9e0f9bc7788fe",
-          "title": "VPN connection fails after an application or policy update"
+          "citation_id": "cite-ed18ee4f29b77371",
+          "document_id": "84e08280-91ae-4098-83ac-175ba1ae6905",
+          "parent_chunk_id": "4714a235-6246-42f8-9a3c-cccae3b41d75",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-G3-ESCALATE",
+          "source_record_id": "KB-Q-G3-ESCALATE",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "285b5d6247e5ce155487e12a8326cfd8323794152be8ef074ef5454aad8ac53e",
+          "title": "Network Team internal escalation paths"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-0a81ae240022b5af",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-G3-ESCALATE",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "0a75c27a-4e09-445f-b6df-d80aefb23c75",
+      "content": "Tier 3\n\nTier 3 network escalation is reached through the Network Team queue marked `net-tier3`. The\nresponse commitment is 2 hours.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:07.267285Z",
+        "content_hash": "6bd3a5bfcb79f9c3bbe5fff1eea7ca25f02aaa4b473a511b30f42ccec0ff6efb"
+      },
+      "created_at": "2026-09-30T15:12:07.267298Z",
+      "confidence": 0.0044857943,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-f384aa8f612abe67",
+          "document_id": "84e08280-91ae-4098-83ac-175ba1ae6905",
+          "parent_chunk_id": "0a75c27a-4e09-445f-b6df-d80aefb23c75",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-G3-ESCALATE",
+          "source_record_id": "KB-Q-G3-ESCALATE",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "285b5d6247e5ce155487e12a8326cfd8323794152be8ef074ef5454aad8ac53e",
+          "title": "Network Team internal escalation paths"
         },
         "authority_level": 80,
         "license": "project-owned",
@@ -238,10 +392,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_same_ci_incidents",
-        "retrieved_at": "2026-09-23T20:17:50.807897Z",
+        "retrieved_at": "2026-09-30T15:12:07.285097Z",
         "content_hash": "e1953e952d2fab5453a78b5ed0b50453018836abc69b7e56bce0863632a6d936"
       },
-      "created_at": "2026-09-23T20:17:50.807923Z",
+      "created_at": "2026-09-30T15:12:07.285128Z",
       "confidence": null,
       "metadata": {
         "relation": "same_ci_incidents",
@@ -298,10 +452,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_same_ci_incidents",
-        "retrieved_at": "2026-09-23T20:17:50.807948Z",
+        "retrieved_at": "2026-09-30T15:12:07.285167Z",
         "content_hash": "739e6b298b3a6014ebd9ee898069f688e28740e4cea20eaa758018ee022377b3"
       },
-      "created_at": "2026-09-23T20:17:50.807954Z",
+      "created_at": "2026-09-30T15:12:07.285177Z",
       "confidence": null,
       "metadata": {
         "relation": "same_ci_incidents",
@@ -358,10 +512,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_ci_runbook",
-        "retrieved_at": "2026-09-23T20:17:50.807975Z",
+        "retrieved_at": "2026-09-30T15:12:07.285215Z",
         "content_hash": "3c451ca810e7a2ca04fb413032d15db637c65a78ea51b5f2f62058dc57a46511"
       },
-      "created_at": "2026-09-23T20:17:50.807980Z",
+      "created_at": "2026-09-30T15:12:07.285224Z",
       "confidence": null,
       "metadata": {
         "relation": "ci_runbook",
@@ -412,10 +566,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_ci_runbook",
-        "retrieved_at": "2026-09-23T20:17:50.807996Z",
+        "retrieved_at": "2026-09-30T15:12:07.285250Z",
         "content_hash": "c8499cad52b73ded52199e7e528fad8e4a8af2833d37034fc8d84a9d7c2c6e69"
       },
-      "created_at": "2026-09-23T20:17:50.808001Z",
+      "created_at": "2026-09-30T15:12:07.285259Z",
       "confidence": null,
       "metadata": {
         "relation": "ci_runbook",

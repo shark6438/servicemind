@@ -70,6 +70,9 @@ from servicemind.evaluation.acceptance import (
     new_followups,
 )
 from servicemind.evaluation.graph_probe import graph_fixture_reading, principal_for
+from servicemind.evaluation.source_revision import (
+    source_revision as evaluate_source_revision,
+)
 from servicemind.graphrag.build import build_graph_store
 from servicemind.integrations.glpi.client import GlpiClient
 from servicemind.integrations.glpi.models import html_to_text
@@ -2291,29 +2294,13 @@ def environment_of(stack: Stack, revision: str | None) -> ObservedEnvironment:
 
 
 def source_revision() -> str | None:
-    """The working tree the running unit was started from, and whether it was clean.
+    """The source revision this run graded.
 
-    Recorded as ``<sha>`` or ``<sha>+dirty(N files)`` because the deployed code is the
-    tree as it stood when the unit started, and a report naming only the commit would
-    describe a revision the process may never have loaded.
+    Kept as a no-argument function over this module's own ``REPO_ROOT`` rather than replaced
+    by a direct call: the quality and load drivers load this file and reach the revision
+    through it, which is what keeps one implementation behind all of the live corpora.
     """
-    head = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    ).stdout.strip()
-    if not head:
-        return None
-    dirty = subprocess.run(
-        ["git", "status", "--porcelain"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    ).stdout.strip()
-    return f"{head}+dirty({len(dirty.splitlines())} files)" if dirty else head
+    return evaluate_source_revision(REPO_ROOT)
 
 
 def unit_started_at() -> str | None:

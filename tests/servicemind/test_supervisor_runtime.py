@@ -70,6 +70,11 @@ class _ConfirmingVerifier:
 class FakeRepository:
     events: list[tuple[str, dict]] = []
     results: dict[UUID, dict] = {}
+    #: ``error`` is assigned on every write, not only when one is passed, because that is
+    #: what the real repository does -- a later write that omits it *clears* the column.
+    #: A fake that kept the last non-null value would accept a workflow that records the
+    #: cause once and then silently drops it on the way to the terminal state.
+    errors: dict[UUID, str | None] = {}
 
     def __init__(self, tenant_id: UUID) -> None:
         assert tenant_id == TENANT
@@ -78,10 +83,12 @@ class FakeRepository:
     def reset(cls) -> None:
         cls.events = []
         cls.results = {}
+        cls.errors = {}
 
     async def update_run(self, run_id, status, *, result=None, error=None):
         if result is not None:
             self.results[run_id] = result
+        self.errors[run_id] = error
         return SimpleNamespace(id=run_id, status=status.value, result=result, error=error)
 
     async def append_event(self, run_id, event_type, payload):
@@ -1027,6 +1034,11 @@ async def test_a_second_shape_rejection_still_reaches_the_replanner() -> None:
     )
     assert result["plan_revision"] >= 1
     assert result["final_result"]["termination_code"] is None
+    # The same column from the other side. ``update_run`` assigns unconditionally, so a
+    # finalize that passed a stale cause would leave a run that answered its question
+    # carrying a failure message -- and a run list is exactly where that would be read.
+    run_id = next(iter(FakeRepository.results))
+    assert FakeRepository.errors[run_id] is None
 
 
 @pytest.mark.asyncio
@@ -1324,6 +1336,31 @@ async def test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_g
     assert rejection["error_type"] == "ValidationError"
     assert rejection["error_code"] == "MODEL_SCHEMA_INVALID"
     assert rejection["attempt"] == 1
+
+
+@pytest.mark.asyncio
+async def test_a_failed_run_persists_its_cause_on_the_run_row() -> None:
+    """``agent_runs.error`` used to be NULL for every workflow failure.
+
+    The cause was written to ``control.errors`` inside ``result`` and to the event
+    stream, so the run was diagnosable -- but both of those are read by opening the run,
+    and ``update_run`` writes the column unconditionally, which makes an omitted
+    ``error=`` a positive statement that there was no cause. Measured on the 2026-09-24
+    load batch: forty-one runs rested at ``failed`` with an ``error`` that said nothing,
+    and the account exhaustion behind them was legible only in the service journal.
+    """
+    graph = build_supervisor_graph(
+        services(phase5=UnassemblableContext(ContextAgent.REVIEWER))  # type: ignore[arg-type]
+    )
+    await graph.ainvoke(initial("Analyze VPN incident"))
+
+    run_id = next(iter(FakeRepository.results))
+    error = FakeRepository.errors[run_id]
+    assert error is not None
+    # The code says *which* terminal, the node's own message says *why*. Both, because
+    # either alone leaves the operator with a run they cannot triage from the list view.
+    assert error.startswith("context_assembly_failure: ")
+    assert "required context item exceeds token budget" in error
 
 
 def write_plan(*, action_done: bool = False) -> TaskPlan:

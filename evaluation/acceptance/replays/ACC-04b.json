@@ -5,8 +5,8 @@
     "entitlement_verifier_configured": true,
     "base_url": "http://127.0.0.1:18080",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
-    "recorded_at": "2026-09-23T20:16:53.147402Z",
-    "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(92 files)",
+    "recorded_at": "2026-09-30T15:11:03.071639Z",
+    "deployed_revision": "cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)",
     "notes": [
       "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
       "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
@@ -16,8 +16,8 @@
     "username": "globex-analyst-g4",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
     "roles": [
-      "viewer",
-      "analyst"
+      "analyst",
+      "viewer"
     ],
     "entity_ids": [
       2
@@ -31,8 +31,8 @@
       "id": "submit",
       "description": "以 globex-analyst-g4 提交只读运行",
       "action": "POST /v1/servicemind/runs",
-      "started_at": "2026-09-23T20:17:51.563831Z",
-      "elapsed_seconds": 0.02379517536610365,
+      "started_at": "2026-09-30T15:12:08.751876Z",
+      "elapsed_seconds": 0.020854588598012924,
       "http_status": 202,
       "action_hash": null,
       "action_status": null,
@@ -43,8 +43,8 @@
       "id": "observe-terminal",
       "description": "轮询运行直到终态",
       "action": "GET /v1/servicemind/runs/{run_id}",
-      "started_at": "2026-09-23T20:17:51.587717Z",
-      "elapsed_seconds": 2.0581627413630486,
+      "started_at": "2026-09-30T15:12:08.772819Z",
+      "elapsed_seconds": 2.0740389935672283,
       "http_status": 200,
       "action_hash": null,
       "action_status": null,
@@ -52,12 +52,12 @@
       "detail": "{\"status\": \"succeeded\", \"elapsed_seconds\": 2.1, \"error\": null, \"termination_code\": null}"
     }
   ],
-  "run_id": "cb739eb0-61cf-4354-8a31-61fc29452cc8",
+  "run_id": "7c3936ad-8ecc-49b1-9533-86d132e93063",
   "case_run_ids": [
-    "cb739eb0-61cf-4354-8a31-61fc29452cc8"
+    "7c3936ad-8ecc-49b1-9533-86d132e93063"
   ],
   "terminal_status": "succeeded",
-  "total_seconds": 2.0816794456914067,
+  "total_seconds": 2.0943051716312766,
   "action_intent": null,
   "citations": [
     {
@@ -72,6 +72,17 @@
       "title": "Service Desk runbook: VPN MFA rebind on behalf of a user"
     },
     {
+      "citation_id": "cite-94811d5b9e89d1be",
+      "document_id": "81b243bd-3d48-4fc9-95ee-8543e5a5713e",
+      "parent_chunk_id": "e1d4bc13-ea8a-48de-975d-a6c06e645c09",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-PASSWORD",
+      "source_record_id": "KB-Q-PASSWORD",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "2f830fc3faa1a57fd7ea72c2dcb49828a607b871ba38756be869b70dcc4288dc",
+      "title": "Password reset procedure"
+    },
+    {
       "citation_id": "cite-7b1301de460c6b75",
       "document_id": "8d9151dc-faa2-47c5-8b20-e0383b625c97",
       "parent_chunk_id": "69ecdb4e-9fb5-4635-bff6-ed0bb95d8e91",
@@ -81,6 +92,28 @@
       "source_version": "phase7-acceptance-fixtures-v1",
       "content_hash": "7335460b9c4174c5ca25730bcb2aeaa906963e9053d3d977a4796acd7b9dfaa1",
       "title": "VPN MFA device rebind after a handset change"
+    },
+    {
+      "citation_id": "cite-22184fb6d85ad001",
+      "document_id": "d28cdf2c-a638-4ced-8841-c21332e1b1fa",
+      "parent_chunk_id": "f82dbb16-be50-4a21-b3c3-c609dfbf9c09",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-MFA-ENROL",
+      "source_record_id": "KB-Q-MFA-ENROL",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "5c23c365d620a277968816b7716c599acbed669d745556175a9a9fa00036b03b",
+      "title": "Multi-factor authentication enrolment and recovery"
+    },
+    {
+      "citation_id": "cite-9d7748093d3b7d03",
+      "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+      "parent_chunk_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-VPN-CONN",
+      "source_record_id": "KB-Q-VPN-CONN",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+      "title": "VPN client connectivity recovery"
     }
   ],
   "evidence": [
@@ -95,10 +128,10 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:52.941051Z",
+        "retrieved_at": "2026-09-30T15:12:10.078993Z",
         "content_hash": "a8be75f6e7325f2c2aee2612f563af2cbbc5c78c29e7904c0111761e6db2e296"
       },
-      "created_at": "2026-09-23T20:17:52.941100Z",
+      "created_at": "2026-09-30T15:12:10.079037Z",
       "confidence": 0.9956006,
       "metadata": {
         "citation": {
@@ -118,32 +151,65 @@
       }
     },
     {
-      "evidence_id": "ev-b7f46b76e4d3d900",
+      "evidence_id": "ev-89d751bb3245b2c4",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
       "source_ref": "acceptance://globex/KB-GLOBEX-VPN-MFA-G4",
       "resource_type": "knowledge_parent_chunk",
-      "resource_id": "73beabe0-76a3-4310-af45-8a09f633601d",
-      "content": "Audience\n\nThis runbook is restricted to the Globex Service Desk. It documents the assisted rebind,\nin which a desk agent performs the registration steps for a user who cannot do them\nunaided.",
+      "resource_id": "6ba1aa21-1dfa-4801-b8cf-0d95f3d75351",
+      "content": "Service Desk runbook: VPN MFA rebind on behalf of a user",
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:52.941148Z",
-        "content_hash": "d0aed75a4fbda3243273960e04bebaac3b791b8862d401a7237851b7ce90d2b4"
+        "retrieved_at": "2026-09-30T15:12:10.079088Z",
+        "content_hash": "32c7841ac726d18c43e3d76db6288c5d8176c818f9f7108e48b8468ce0082f57"
       },
-      "created_at": "2026-09-23T20:17:52.941163Z",
-      "confidence": 0.93195957,
+      "created_at": "2026-09-30T15:12:10.079099Z",
+      "confidence": 0.92482364,
       "metadata": {
         "citation": {
-          "citation_id": "cite-e721e9a450f396b5",
+          "citation_id": "cite-7cf1d63c1fc78f58",
           "document_id": "5dd5c3cd-6d55-40b0-9bd3-ed6e59d1189b",
-          "parent_chunk_id": "73beabe0-76a3-4310-af45-8a09f633601d",
+          "parent_chunk_id": "6ba1aa21-1dfa-4801-b8cf-0d95f3d75351",
           "source": "servicemind_acceptance_fixture",
           "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-G4",
           "source_record_id": "KB-GLOBEX-VPN-MFA-G4",
           "source_version": "phase7-acceptance-fixtures-v1",
           "content_hash": "27c6b39a8ce5bae2483fc64a36f68dc2a4ad14f09e543d3b6da636c1e38e00c8",
           "title": "Service Desk runbook: VPN MFA rebind on behalf of a user"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-ad0b55f3319dfeda",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-PASSWORD",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "e1d4bc13-ea8a-48de-975d-a6c06e645c09",
+      "content": "Assisted reset\n\nAn assisted reset is performed by the Service Desk on the identity of the caller. The\noperator must verify the caller against the employee directory record, not against\ninformation supplied by the caller. The new password is delivered out of band.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:10.079133Z",
+        "content_hash": "44c41cc49d21fd17152d1b18b63051667f0a1c725cbdff14cfcb76337660d5a6"
+      },
+      "created_at": "2026-09-30T15:12:10.079144Z",
+      "confidence": 0.7629543,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-94811d5b9e89d1be",
+          "document_id": "81b243bd-3d48-4fc9-95ee-8543e5a5713e",
+          "parent_chunk_id": "e1d4bc13-ea8a-48de-975d-a6c06e645c09",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-PASSWORD",
+          "source_record_id": "KB-Q-PASSWORD",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "2f830fc3faa1a57fd7ea72c2dcb49828a607b871ba38756be869b70dcc4288dc",
+          "title": "Password reset procedure"
         },
         "authority_level": 80,
         "license": "project-owned",
@@ -161,10 +227,10 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:52.941196Z",
+        "retrieved_at": "2026-09-30T15:12:10.079173Z",
         "content_hash": "b7c448f866d8ee0506bc65bb8b8368b7d3432ea99965bdeb96360e86f6672957"
       },
-      "created_at": "2026-09-23T20:17:52.941206Z",
+      "created_at": "2026-09-30T15:12:10.079183Z",
       "confidence": 0.71671456,
       "metadata": {
         "citation": {
@@ -184,32 +250,131 @@
       }
     },
     {
-      "evidence_id": "ev-e69e00bd35011ed1",
+      "evidence_id": "ev-ce7d991b3adca922",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
       "source_ref": "acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND",
       "resource_type": "knowledge_parent_chunk",
-      "resource_id": "1d3e4397-3254-4313-a48a-0d1d976fab03",
-      "content": "Scope\n\nApplies to any Globex employee who authenticates to the corporate VPN with multi-factor\nauthentication. It covers the case where the password is accepted and the *second* factor\nis rejected, which is the signature of a factor that is bound to a device the user no\nlonger carries.",
+      "resource_id": "af0d243b-80c4-4537-b03b-327de095162c",
+      "content": "Remedy\n\n1. Ask the user to have the new handset with them and to be signed in to the corporate\n\naccount on it.\n\n2. Verify the user's identity out of band before touching the factor; a factor rebind is\n\nan authentication change and is treated as one.\n\n3. In the identity console, remove the stale device registration for the user.\n4. Have the user re-enrol the new handset and confirm the challenge succeeds once.\n5. Ask the user to connect to the VPN and confirm the connection completes end to end.\n\nThe rebind is complete when a full connection succeeds, not when the registration is\nrecorded. A registration that has been recorded but never exercised has not been shown\nto work.",
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:52.941235Z",
-        "content_hash": "84f2fe4439667198a1c9456d75cb526e24cdb10f736cc51729ce80c8e607e2ad"
+        "retrieved_at": "2026-09-30T15:12:10.079211Z",
+        "content_hash": "f871b08b9d8aadbff989312f8f1f3ae5a900986728724893177a658b27dc5db5"
       },
-      "created_at": "2026-09-23T20:17:52.941245Z",
-      "confidence": 0.49848267,
+      "created_at": "2026-09-30T15:12:10.079220Z",
+      "confidence": 0.51845473,
       "metadata": {
         "citation": {
-          "citation_id": "cite-e96f8dd64222b24e",
+          "citation_id": "cite-87ae6faee33b6e06",
           "document_id": "8d9151dc-faa2-47c5-8b20-e0383b625c97",
-          "parent_chunk_id": "1d3e4397-3254-4313-a48a-0d1d976fab03",
+          "parent_chunk_id": "af0d243b-80c4-4537-b03b-327de095162c",
           "source": "servicemind_acceptance_fixture",
           "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND",
           "source_record_id": "KB-GLOBEX-VPN-MFA-REBIND",
           "source_version": "phase7-acceptance-fixtures-v1",
           "content_hash": "7335460b9c4174c5ca25730bcb2aeaa906963e9053d3d977a4796acd7b9dfaa1",
           "title": "VPN MFA device rebind after a handset change"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-2ca309dd9e7106e4",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-MFA-ENROL",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "f82dbb16-be50-4a21-b3c3-c609dfbf9c09",
+      "content": "Device rebind\n\nA rebind requires a successful password check followed by an identity verification. A\nrebind never disables multi-factor authentication; it replaces the bound device.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:10.079250Z",
+        "content_hash": "cd5c966e1b39e415c38367b12162dc2fbcd22a3a1b5c36582a1de0cbe35336dd"
+      },
+      "created_at": "2026-09-30T15:12:10.079259Z",
+      "confidence": 0.3340461,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-22184fb6d85ad001",
+          "document_id": "d28cdf2c-a638-4ced-8841-c21332e1b1fa",
+          "parent_chunk_id": "f82dbb16-be50-4a21-b3c3-c609dfbf9c09",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-MFA-ENROL",
+          "source_record_id": "KB-Q-MFA-ENROL",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "5c23c365d620a277968816b7716c599acbed669d745556175a9a9fa00036b03b",
+          "title": "Multi-factor authentication enrolment and recovery"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-cf3ad0ce8abe91dd",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-MFA-ENROL",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "13493ce6-11fc-40a7-9354-e9786907e3e8",
+      "content": "What is never done\n\nMulti-factor authentication is never turned off to work around a lost device. A lost\ndevice is resolved by rebinding, or by an Identity Team reset that issues a new binding.\nDisabling the factor is not a remediation and is not authorised for any account class.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:10.079288Z",
+        "content_hash": "e6ec997c14d3ddfc672bbcc21f0346ec50291d4f7684d823155b379257f37bf6"
+      },
+      "created_at": "2026-09-30T15:12:10.079298Z",
+      "confidence": 0.21733753,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-25eedce1fac5fe16",
+          "document_id": "d28cdf2c-a638-4ced-8841-c21332e1b1fa",
+          "parent_chunk_id": "13493ce6-11fc-40a7-9354-e9786907e3e8",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-MFA-ENROL",
+          "source_record_id": "KB-Q-MFA-ENROL",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "5c23c365d620a277968816b7716c599acbed669d745556175a9a9fa00036b03b",
+          "title": "Multi-factor authentication enrolment and recovery"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-b1f70757dbcc4022",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-VPN-CONN",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+      "content": "Procedure\n\n1. Confirm the client version is 7.4 or later. Versions below 7.4 cannot negotiate the\n\ncurrent TLS profile and fail with a handshake timeout that looks like a network fault.\n\n2. Confirm the laptop holds a valid device certificate issued within the last 400 days.\n3. Clear the client state directory `/var/lib/vpn-client/state` and restart the service.\n4. Reconnect once. A second failure within five minutes is not retried automatically.\n5. If the handshake still fails, capture the client log and open a Network Team ticket.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:10.079326Z",
+        "content_hash": "0000abefefc109a5d7c23a0e1bedba5a7ac5ac20d3ba8613d90059c0daa67d93"
+      },
+      "created_at": "2026-09-30T15:12:10.079335Z",
+      "confidence": 0.09585608,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-9d7748093d3b7d03",
+          "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+          "parent_chunk_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-VPN-CONN",
+          "source_record_id": "KB-Q-VPN-CONN",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+          "title": "VPN client connectivity recovery"
         },
         "authority_level": 80,
         "license": "project-owned",
@@ -227,10 +392,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_same_ci_incidents",
-        "retrieved_at": "2026-09-23T20:17:52.950728Z",
+        "retrieved_at": "2026-09-30T15:12:10.094379Z",
         "content_hash": "e1953e952d2fab5453a78b5ed0b50453018836abc69b7e56bce0863632a6d936"
       },
-      "created_at": "2026-09-23T20:17:52.950752Z",
+      "created_at": "2026-09-30T15:12:10.094429Z",
       "confidence": null,
       "metadata": {
         "relation": "same_ci_incidents",
@@ -287,10 +452,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_same_ci_incidents",
-        "retrieved_at": "2026-09-23T20:17:52.950778Z",
+        "retrieved_at": "2026-09-30T15:12:10.094471Z",
         "content_hash": "739e6b298b3a6014ebd9ee898069f688e28740e4cea20eaa758018ee022377b3"
       },
-      "created_at": "2026-09-23T20:17:52.950784Z",
+      "created_at": "2026-09-30T15:12:10.094482Z",
       "confidence": null,
       "metadata": {
         "relation": "same_ci_incidents",
@@ -347,10 +512,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_ci_runbook",
-        "retrieved_at": "2026-09-23T20:17:52.950805Z",
+        "retrieved_at": "2026-09-30T15:12:10.094517Z",
         "content_hash": "c65216126de54258b988e08ca80cf29a87300610d696732b1c9a37ec7fc94859"
       },
-      "created_at": "2026-09-23T20:17:52.950810Z",
+      "created_at": "2026-09-30T15:12:10.094526Z",
       "confidence": null,
       "metadata": {
         "relation": "ci_runbook",
@@ -401,10 +566,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_ci_runbook",
-        "retrieved_at": "2026-09-23T20:17:52.950827Z",
+        "retrieved_at": "2026-09-30T15:12:10.094557Z",
         "content_hash": "0c341aa3b54a3bc4e1bd24cc431e571e9f1d605a8f06324f51a3f95242966ec4"
       },
-      "created_at": "2026-09-23T20:17:52.950833Z",
+      "created_at": "2026-09-30T15:12:10.094565Z",
       "confidence": null,
       "metadata": {
         "relation": "ci_runbook",

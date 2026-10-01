@@ -299,7 +299,19 @@ async def _assembled_context(
         )
     except ContextAssemblyError as exc:
         control = _control(state)
-        control.errors.append({"node": task.agent.value, "error_type": type(exc).__name__})
+        control.errors.append(
+            {
+                "node": task.agent.value,
+                "error_type": type(exc).__name__,
+                # The type alone names the class of failure and nothing about this one.
+                # Measured on the 2026-09-24 load batch: forty-one runs rested at
+                # ``failed`` with ``control.errors`` saying ``RuntimeError`` and
+                # ``agent_runs.error`` NULL, so the account's exhaustion was legible only
+                # in the service journal -- the run record said a run had failed and
+                # nothing else, which is not something an operator can act on.
+                "reason": bounded_error_text(exc),
+            }
+        )
         await svc.repository_factory(UUID(state["tenant_id"])).append_event(
             UUID(state["run_id"]),
             "context.assembly_failed",
@@ -669,8 +681,28 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             decision = candidate
             break
         if decision is None:
-            rejected = failure if failure is not None else "SupervisorPolicyError"
-            control.errors.append({"node": "supervisor", "error_type": type(rejected).__name__})
+            # ``type()`` of a *string* is ``str``, so the branch that has no exception to
+            # name used to record ``error_type: "str"`` -- a type that says nothing and
+            # reads as a bug in the ledger rather than a policy refusal. Named here
+            # instead, and paired with the reasons the policy actually gave, which are
+            # what an operator needs and were until now only in the event log.
+            control.errors.append(
+                {
+                    "node": "supervisor",
+                    "error_type": (
+                        type(failure).__name__ if failure is not None else "SupervisorPolicyError"
+                    ),
+                    # Whichever of the two actually ended the loop is the cause; the other
+                    # is context. A model failure is named first because it stops the loop
+                    # on the spot, and any policy rejection recorded before it is what the
+                    # model was being corrected toward when it broke.
+                    "reason": (
+                        bounded_error_text(failure)
+                        if failure is not None
+                        else bounded_error_text(feedback)
+                    ),
+                }
+            )
             return Command(
                 update={
                     "control": control.model_dump(mode="json"),
@@ -1406,6 +1438,18 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             # above returns ``termination_code`` alone, which is the pattern: state the
             # failure, do not erase the work. Finalize reads both keys, so omitting them
             # carries the analysis and the review through to the terminal record.
+            #
+            # The rejection reasons were already in ``replanner.proposal_rejected``
+            # events, but that stream is not what a list of failed runs shows, and the
+            # termination code alone says only that the planner gave up -- not on which
+            # rule. Recorded here so the ledger and the event log agree.
+            control.errors.append(
+                {
+                    "node": "planner",
+                    "error_type": "PlanRevisionRejected",
+                    "reason": bounded_error_text(correction or "plan revision rejected"),
+                }
+            )
             return {
                 "termination_code": "critical_error",
                 "control": control.model_dump(mode="json"),
@@ -1656,13 +1700,17 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
         return "supervisor" if state["human_review"].get("decision") == "continue" else "finalize"
 
     async def finalize_node(state: Phase3State) -> dict[str, Any]:
-        failed = state.get("termination_code") in {
+        #: Terminals that mean the platform could not carry the run to an answer. They
+        #: are the ones whose cause has to be recoverable from the run record alone.
+        failure_terminations = {
             "critical_error",
             "supervisor_policy_failure",
             "supervisor_decision_failure",
             "context_assembly_failure",
             "evidence_unavailable",
         }
+        termination_code = state.get("termination_code")
+        failed = termination_code in failure_terminations
         # ``or {}`` rather than the ``{}`` default of ``get``: an invalidated product is
         # a key that is *present* and empty, and a default only covers a key that is
         # missing. Either way the meaning here is the same -- no decision was recorded --
@@ -1691,6 +1739,28 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             if cancelled
             else RunStatus.SUCCEEDED
         )
+        # ``agent_runs.error`` stayed NULL for every one of these terminals. The cause was
+        # in ``control.errors`` inside ``result.result`` and in the event stream, so the
+        # run was diagnosable -- but only by reading two places a run list does not show,
+        # and ``update_run`` writes the column unconditionally, so *not* passing it here
+        # is a positive statement that there was no cause. Measured on the load batch:
+        # forty-one runs at ``failed`` whose ``error`` column said nothing at all.
+        #
+        # ``control.errors`` is the ledger the nodes already write their causes to; the
+        # last entry naming a reason is the one closest to the terminal, which is the one
+        # that ended it. ``evidence_unavailable`` writes no entry -- it is decided by the
+        # absence of evidence rather than by an exception -- so the code stands alone
+        # there, which is all there is to say.
+        error: str | None = None
+        if failed:
+            recorded = (state.get("control") or {}).get("errors") or []
+            reason = next(
+                (item.get("reason") for item in reversed(recorded) if item.get("reason")),
+                None,
+            )
+            error = bounded_error_text(
+                f"{termination_code}: {reason}" if reason else str(termination_code)
+            )
         plan = _plan(state) if state.get("task_plan") else None
         if (cancelled or abstained or escalation_accepted) and plan:
             plan = svc.dispatcher.cancel_remaining(plan)
@@ -1714,13 +1784,15 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             "human_review": state.get("human_review"),
             "execution": state.get("execution_result"),
             "control": state.get("control"),
-            "termination_code": state.get("termination_code"),
+            "termination_code": termination_code,
             "branch_timings": state.get("branch_timings", []),
             "agent_invocations": state.get("agent_invocations", []),
             "final_state_verified": status is RunStatus.SUCCEEDED,
             "trajectory": state.get("trajectory", []) + ["finalize"],
         }
-        await repository(state).update_run(UUID(state["run_id"]), status, result=result)
+        await repository(state).update_run(
+            UUID(state["run_id"]), status, result=result, error=error
+        )
         await repository(state).append_event(
             UUID(state["run_id"]),
             "run.abstained"

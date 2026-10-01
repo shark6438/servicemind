@@ -5,8 +5,8 @@
     "entitlement_verifier_configured": true,
     "base_url": "http://127.0.0.1:18080",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
-    "recorded_at": "2026-09-23T20:16:53.147402Z",
-    "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(92 files)",
+    "recorded_at": "2026-09-30T15:11:03.071639Z",
+    "deployed_revision": "cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)",
     "notes": [
       "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
       "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
@@ -16,10 +16,10 @@
     "username": "globex-approver",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
     "roles": [
-      "approver",
-      "viewer",
+      "operator",
       "analyst",
-      "operator"
+      "viewer",
+      "approver"
     ],
     "entity_ids": [
       2
@@ -34,8 +34,8 @@
       "id": "submit-action",
       "description": "以 globex-analyst-g3 的会话提交 request_write=true 的运行（发起人写在这里，不由驱动推断：审批员自己发起再自己批准就是职责分离违规）",
       "action": "POST /v1/servicemind/runs",
-      "started_at": "2026-09-23T20:20:15.768760Z",
-      "elapsed_seconds": 0.0204006414860487,
+      "started_at": "2026-09-30T15:14:56.615507Z",
+      "elapsed_seconds": 0.022062620148062706,
       "http_status": 202,
       "action_hash": null,
       "action_status": null,
@@ -46,20 +46,20 @@
       "id": "observe-pending",
       "description": "轮询直到 waiting_approval，并记录此时的 action_hash",
       "action": "GET /v1/servicemind/runs/{run_id}",
-      "started_at": "2026-09-23T20:20:15.789259Z",
-      "elapsed_seconds": 33.747523286379874,
+      "started_at": "2026-09-30T15:14:56.637857Z",
+      "elapsed_seconds": 23.523317527025938,
       "http_status": 200,
-      "action_hash": "61a1f7fedb1567d98a0c3efcfdaa699656acc1b94d4f703bb4231b91f1ffe862",
+      "action_hash": "d3b162e945b8ec02ca9a89e66ae211540c8db1a51ce5c91db01115b5822056c0",
       "action_status": "proposed",
       "outcome": null,
-      "detail": "{\"status\": \"waiting_approval\", \"elapsed_seconds\": 33.7, \"error\": null, \"termination_code\": null}"
+      "detail": "{\"status\": \"waiting_approval\", \"elapsed_seconds\": 23.5, \"error\": null, \"termination_code\": null}"
     },
     {
       "id": "verifier-outage-on",
       "description": "把服务的核验器指向一个没有监听的端口并重启 unit。改的是 systemd 用户管理器上的环境变量，它优先于进程读的 .env，因此不需要改文件；JWT 校验用的是另一个设置，所以平台仍然能认证调用方，只是答不出续跑边界要问的那个问题",
       "action": "KEYCLOAK verifier outage",
-      "started_at": "2026-09-23T20:20:49.537098Z",
-      "elapsed_seconds": 16.351577781140804,
+      "started_at": "2026-09-30T15:15:20.161251Z",
+      "elapsed_seconds": 15.332884505391121,
       "http_status": null,
       "action_hash": null,
       "action_status": null,
@@ -70,8 +70,8 @@
       "id": "attempt-approval",
       "description": "以 globex-approver 用一个正确的 expected_action_hash 批准",
       "action": "POST /v1/servicemind/runs/{run_id}/approval",
-      "started_at": "2026-09-23T20:21:05.888799Z",
-      "elapsed_seconds": 0.10115835070610046,
+      "started_at": "2026-09-30T15:15:35.494288Z",
+      "elapsed_seconds": 0.13443735148757696,
       "http_status": 409,
       "action_hash": null,
       "action_status": null,
@@ -82,10 +82,10 @@
       "id": "observe-during-outage",
       "description": "停摆期间复读运行与动作状态：这是四个「没发生」被观察到的时刻",
       "action": "GET /v1/servicemind/runs/{run_id}",
-      "started_at": "2026-09-23T20:21:05.990048Z",
-      "elapsed_seconds": 0.01182012539356947,
+      "started_at": "2026-09-30T15:15:35.628817Z",
+      "elapsed_seconds": 0.01780800335109234,
       "http_status": 200,
-      "action_hash": "61a1f7fedb1567d98a0c3efcfdaa699656acc1b94d4f703bb4231b91f1ffe862",
+      "action_hash": "d3b162e945b8ec02ca9a89e66ae211540c8db1a51ce5c91db01115b5822056c0",
       "action_status": "proposed",
       "outcome": null,
       "detail": "{\"status\": \"waiting_approval\", \"elapsed_seconds\": 0.0, \"error\": null, \"termination_code\": null}"
@@ -94,8 +94,8 @@
       "id": "verifier-outage-off",
       "description": "解除覆盖并重启，部署回到其它案例运行的同一份配置",
       "action": "KEYCLOAK verifier outage",
-      "started_at": "2026-09-23T20:21:06.001952Z",
-      "elapsed_seconds": 14.322053201496601,
+      "started_at": "2026-09-30T15:15:35.646701Z",
+      "elapsed_seconds": 15.370950187556446,
       "http_status": null,
       "action_hash": null,
       "action_status": null,
@@ -106,10 +106,10 @@
       "id": "observe-still-pending",
       "description": "恢复可达后复读运行与动作状态：暂停没有留下任何痕迹，决定仍属于人类",
       "action": "GET /v1/servicemind/runs/{run_id}",
-      "started_at": "2026-09-23T20:21:20.324522Z",
-      "elapsed_seconds": 20.112672791816294,
+      "started_at": "2026-09-30T15:15:51.017754Z",
+      "elapsed_seconds": 20.119621135294437,
       "http_status": 200,
-      "action_hash": "61a1f7fedb1567d98a0c3efcfdaa699656acc1b94d4f703bb4231b91f1ffe862",
+      "action_hash": "d3b162e945b8ec02ca9a89e66ae211540c8db1a51ce5c91db01115b5822056c0",
       "action_status": "proposed",
       "outcome": null,
       "detail": "{\"status\": \"waiting_approval\", \"elapsed_seconds\": 20.1, \"error\": null, \"termination_code\": null}"
@@ -118,8 +118,8 @@
       "id": "read-followups",
       "description": "回读工单 followup 列表",
       "action": "GLPI list_ticket_followups",
-      "started_at": "2026-09-23T20:21:40.437291Z",
-      "elapsed_seconds": 0.635483406484127,
+      "started_at": "2026-09-30T15:16:11.137461Z",
+      "elapsed_seconds": 0.6158951623365283,
       "http_status": null,
       "action_hash": null,
       "action_status": null,
@@ -127,31 +127,33 @@
       "detail": "34 followup(s) after, 34 before"
     }
   ],
-  "run_id": "316d683d-5532-43c5-8760-58567acea33b",
+  "run_id": "2ebc4ade-3855-45e1-880a-96b89ef32c2b",
   "case_run_ids": [
-    "316d683d-5532-43c5-8760-58567acea33b"
+    "2ebc4ade-3855-45e1-880a-96b89ef32c2b"
   ],
   "terminal_status": "waiting_approval",
-  "total_seconds": 84.66806861478835,
+  "total_seconds": 74.52149540185928,
   "action_intent": {
-    "action_hash": "61a1f7fedb1567d98a0c3efcfdaa699656acc1b94d4f703bb4231b91f1ffe862",
+    "action_hash": "d3b162e945b8ec02ca9a89e66ae211540c8db1a51ce5c91db01115b5822056c0",
     "status": "proposed",
     "action_type": "append_ticket_followup",
     "target_id": 25,
     "arguments": {
-      "content": "ServiceMind reviewed analysis: Ticket 25 (New, urgency 3, impact 3, priority 3) records a VPN client that accepts the password but fails the MFA challenge on every attempt and network, after the user replaced their handset nine days ago, with no account lockout recorded and no action taken yet. The graph ties ticket 25 to CI Globex VPN gateway and names its operating runbook KB-GLOBEX-VPN-MFA-G3, whose procedure is an approval-gated temporary per-user override on the concentrator, user re-enrolment, then removal of the override. The graph also reports a sibling incident (ticket 26) on the same CI, which supports treating this as recurring and considering a problem record. The runbook is titled a Network Team runbook and the directory lists a Network Team group, so Network Team is recommended as the owning group, stated as a recommendation because no assignment is recorded on the ticket. The audit-checklist and application/policy-update knowledge items were reviewed but do not carry this incident's cause or remediation, so they are not cited. No ticket modification was performed; the only proposed operation is a follow-up note for approval.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-1608ee49246cc7ef, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-7c007349d496bd5e, ev-6a4bc0172ae15b39, ev-118fc9a165ecf039, ev-d7dd5c94583c38ba, ev-ff24bc453152bf9d, ev-9e81999bf41ad8a6\nReviewer: All nine claims are backed by their cited evidence. C1 matches the ticket 25 record (New, urgency/impact/priority 3, title, password-OK/MFA-fail on every attempt and network, handset replaced nine days ago, no lockout, no action taken). C2 and C3 accurately attribute the CI link, runbook pointer, and the single sibling incident (ticket 26) with the same-CI shared-root-cause statement to the graph. C4 restates the KB-GLOBEX-VPN-MFA-G3 procedure faithfully. C5 correctly records that no cause is stated and hedges the handset replacement as a candidate factor. C6 rests on the ticket's own recorded priority plus the graph correlation. C7 is a recommendation whose residual uncertainty (no recorded assignment; runbook title and directory only point at Network Team) is disclosed in its assumptions, which is the required hedge. C8 and C9 follow the runbook and the graph's correlation statement. The proposed action is a draft follow-up note only, consistent with the no-modification constraint. No prompt-injection content found in the evidence.",
+      "content": "ServiceMind reviewed analysis: Ticket 25 records a VPN MFA failure after a handset change: password auth succeeds, MFA fails on every attempt, no lockout, handset replaced nine days ago, no action taken yet. The Network Team runbook KB-GLOBEX-VPN-MFA-G3 prescribes a break-glass rebind procedure requiring a network operations approval request and on-call engineer approval, which supports the pending-approval follow-up note. The recommended group is Network Team, which the runbook names as its owner and which appears in the support-group directory; however, no cited evidence records that Network Team owns this ticket (the ticket's team field is empty), so no assignment_reason claim is made and that gap is recorded as unresolved. The audit checklist and CAB/on-call/comms documents are not applicable to this single-account MFA failure. No cited evidence states a root cause mechanism, so no root_cause_hypothesis is asserted.\nClassification: VPN MFA failure after handset change (MFA device rebind)\nRecommended priority: 3\nRecommended group: Network Team\nEvidence: ev-1608ee49246cc7ef, ev-74293fa53e7db832, ev-a6e331aca489f967, ev-d1c4ae1d3430f900, ev-9ece0a63350c8fcf, ev-7c007349d496bd5e, ev-c1e0221be3d0ff58, ev-94406db8d59a8484, ev-6a4bc0172ae15b39, ev-36802495fe1c2f08, ev-118fc9a165ecf039\nReviewer: All five claims are backed by their cited evidence. C1 and C2 restate ticket 25's recorded symptoms, fields (urgency/impact/priority 3, status New, empty team), and 'no action taken yet'. C3 accurately reports the KB-GLOBEX-VPN-MFA-G3 procedure steps, including the verbal-request prohibition and override removal. C4 is a recommended_action grounded in that runbook rule, with the pending-approval-only hedge in assumptions. C5 correctly reads the two group-directory records (id 3 Network Team, id 4 Service Desk). The analysis is appropriately conservative: it declines to assert a root cause, a recurring pattern, or a recorded ownership of ticket 25, and the recommended group is framed as resting on the runbook title plus directory rather than a recorded assignment. The proposed append_ticket_followup is a pending-approval note that does not modify the ticket, consistent with the task objective. No prompt-injection content found in the untrusted evidence.",
       "is_private": true
     },
     "evidence_refs": [
       "ev-1608ee49246cc7ef",
       "ev-74293fa53e7db832",
       "ev-a6e331aca489f967",
+      "ev-d1c4ae1d3430f900",
+      "ev-9ece0a63350c8fcf",
       "ev-7c007349d496bd5e",
+      "ev-c1e0221be3d0ff58",
+      "ev-94406db8d59a8484",
       "ev-6a4bc0172ae15b39",
-      "ev-118fc9a165ecf039",
-      "ev-d7dd5c94583c38ba",
-      "ev-ff24bc453152bf9d",
-      "ev-9e81999bf41ad8a6"
+      "ev-36802495fe1c2f08",
+      "ev-118fc9a165ecf039"
     ],
     "requested_by": null
   },
@@ -179,7 +181,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "d05e964ac13e47d6cf14a7888bef9ed7543a3a59c2afb9e3f9bcfa0288a9be05",
+      "content_hash": "4ea7d114af65574c2d307bb03b14a3cd7ff6954817f2deb7dfb7c7cbdb8569ca",
       "tokens": 120,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -187,8 +189,8 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "8de17cee8999cc2098c75f952515ba6e304e357aa331526e1d7d838b14026dfa",
-      "tokens": 141,
+      "content_hash": "93b8cb022ff54c92468c8a885e426d1d3a0c2dd4feb56b9177a205095d45d123",
+      "tokens": 163,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -203,7 +205,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "58c602cd12313ee14171bb6ed94f2cf3bf5ae27aaaf347a80bb4094e6b971290",
+      "content_hash": "7aeb3256258982281ed8420c2901ee37313a9e74f1513c98b27b27dbe24034f9",
       "tokens": 112,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -211,15 +213,15 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "d7e060d12ea192102a30ff9194449672d8b36420d9ac47fcfe925a38516e225d",
-      "tokens": 140,
+      "content_hash": "84aa2c3b55a9420d94c5e494433f63b6b08a8ace4eeeecb4a872227b5c92f47f",
+      "tokens": 148,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "caad11092fdcc44a9ab6fb116a06656e66c3dc916e7c94182412c62e5ece4fd7",
+      "content_hash": "163345addc126eb789bf7d81f941a314cb348c64db82a16c36e3b04b5e013539",
       "tokens": 88,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -227,15 +229,15 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "260d6973debb2e779ccb213123c6a3cc09b018dd44e56ee3404a81f356e7e087",
-      "tokens": 145,
+      "content_hash": "67090281c9317e7b6b94deda52e10531aa5a81c00fe4d8d3720cf7cf2dedb9a0",
+      "tokens": 174,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "ev-a6e331aca489f967",
       "source": "evidence",
-      "content_hash": "aaf2a62ae1664593bb6bd64378741ed59f410aae7cb8be4806b0ee3b4b6fcfa3",
+      "content_hash": "7df275359cf1afee4f7bdfe150e479efe48e9832c90ab4fb6b4b236aaa5a6e4a",
       "tokens": 347,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -243,7 +245,7 @@
     {
       "item_id": "ev-74293fa53e7db832",
       "source": "evidence",
-      "content_hash": "076208cd0723492c9d91ae6dc71c75f2b0e4eb315ce699caff0ced30610aa4d4",
+      "content_hash": "07704293c6970c6ec2bcd6585d159b24e4f9da3a4afc099cb4a869f622e23b83",
       "tokens": 347,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -251,56 +253,72 @@
     {
       "item_id": "ev-1608ee49246cc7ef",
       "source": "evidence",
-      "content_hash": "e71ca7da0fd73c42dbc42f5c1ab4dc487570528efd6c2ee76d13a6b7e6b1309f",
+      "content_hash": "ce4dfbebdd059ba4678aedcfc7e52d3505b236055bedb96c16560c786b60a79c",
       "tokens": 1107,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "ev-9e81999bf41ad8a6",
+      "item_id": "ev-6a4bc0172ae15b39",
       "source": "evidence",
-      "content_hash": "8375855bc24dc705657c531f9d73412cb4778ffc8cad50ab30bbf88b211186e5",
-      "tokens": 871,
+      "content_hash": "a139b335c91421fa2925abe1d5d1406635ccd22f71af88a135bb7c24aa5e2021",
+      "tokens": 1287,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "ev-ff24bc453152bf9d",
+      "item_id": "ev-9ece0a63350c8fcf",
       "source": "evidence",
-      "content_hash": "ae9ba1f011a92ba86d8178d89e36a822ced293655ee399695efa08f83fbe721f",
-      "tokens": 919,
+      "content_hash": "01516a71cfdefd0ffdca9464078901de2d65fe3f4f4ef01d4a12eb48db63760c",
+      "tokens": 594,
       "decision": "selected",
       "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-36802495fe1c2f08",
+      "source": "evidence",
+      "content_hash": "3d74f7bac813c125ec24340030ea28402d63ee71bb46cdc2cd0c3f36d0de6bf7",
+      "tokens": 1070,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-d1c4ae1d3430f900",
+      "source": "evidence",
+      "content_hash": "45ed9064000a78e8d246c5201a8d6ec9f2fd7c42afd8d0fb803eec1de20f07cc",
+      "tokens": 609,
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
+    },
+    {
+      "item_id": "ev-94406db8d59a8484",
+      "source": "evidence",
+      "content_hash": "d18693169bae6497819d6dcfd7e8a5bd069a46239cc75f799753ae338c1df2e8",
+      "tokens": 623,
+      "decision": "selected",
+      "reason": "reclaimed_from_source_cap"
+    },
+    {
+      "item_id": "ev-c1e0221be3d0ff58",
+      "source": "evidence",
+      "content_hash": "96ce6cbd1015b646999915b5ce7fa9f65ac1f8214a2c89d126b6c6fd03ec213a",
+      "tokens": 637,
+      "decision": "selected",
+      "reason": "reclaimed_from_source_cap"
     },
     {
       "item_id": "ev-7c007349d496bd5e",
       "source": "evidence",
-      "content_hash": "7b76271f991d23006c2c240432b71f21884b958c12f7f5ad0d631d1330152601",
-      "tokens": 888,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "ev-d7dd5c94583c38ba",
-      "source": "evidence",
-      "content_hash": "b379089154f512c68b460d42956bb73cd30a79ba9be6f36c53bfbe33efbe2cda",
-      "tokens": 882,
+      "content_hash": "4355b1a17a6413c33f77c6486880e16c5e08e3ac683754626d7e8497ac5d8a93",
+      "tokens": 889,
       "decision": "selected",
       "reason": "reclaimed_from_source_cap"
     },
     {
       "item_id": "ev-118fc9a165ecf039",
       "source": "evidence",
-      "content_hash": "9ed92d986f0ce774f9c94110646153b81623edbe5d10641ce81173829862d12c",
-      "tokens": 691,
-      "decision": "selected",
-      "reason": "reclaimed_from_source_cap"
-    },
-    {
-      "item_id": "ev-6a4bc0172ae15b39",
-      "source": "evidence",
-      "content_hash": "e55d12852776cdf6e983f20af41b3835fc5492910a3c1e6828e549b6317fe0ab",
-      "tokens": 1287,
+      "content_hash": "abc4b439669de5d39edf6e48e7dad21807ae915dd174dd8e0fb9858ef898b5fe",
+      "tokens": 692,
       "decision": "selected",
       "reason": "reclaimed_from_source_cap"
     },
@@ -313,9 +331,9 @@
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "memory:ff1ee26c-eecd-40a8-80cc-ad7ac34aae64",
+      "item_id": "memory:9f380262-17b9-4216-9157-21341c6f51b4",
       "source": "memory",
-      "content_hash": "eb9d420532a23bc85a3027ee567b5527ea34347e1c79bf7e293658063fb24366",
+      "content_hash": "a1346de64bc457783fcd07f4486b075c4096898a66ce05e73c9bf27aa04f9214",
       "tokens": 760,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -371,15 +389,15 @@
     {
       "item_id": "state",
       "source": "state",
-      "content_hash": "a2527b63a9d1a971cfc9ecccf69c9fd5fb85c417d28abdeb3660dddd36f538e4",
-      "tokens": 4419,
+      "content_hash": "4348a8f10af070b87d6372b8073eff721d499514ed1504135ca00c61cd74149b",
+      "tokens": 3024,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "caad11092fdcc44a9ab6fb116a06656e66c3dc916e7c94182412c62e5ece4fd7",
+      "content_hash": "163345addc126eb789bf7d81f941a314cb348c64db82a16c36e3b04b5e013539",
       "tokens": 88,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -387,8 +405,8 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "5e19d122dd29e10926d6efe87d0a39092236e80eb368dc7940726ff1aa0361f8",
-      "tokens": 145,
+      "content_hash": "5547c9568db349a44f47a8c2c358daed63df4a09e36b6f1d556ea30509b738a6",
+      "tokens": 155,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -417,42 +435,10 @@
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "ev-9e81999bf41ad8a6",
-      "source": "evidence",
-      "content_hash": "d2b380b0b37229e951c889b1102cf04f15dfb3ecd75373636a9addaff8fd5c48",
-      "tokens": 248,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "ev-ff24bc453152bf9d",
-      "source": "evidence",
-      "content_hash": "e2a53b3708489487ec8dc92ea78b106955a1e7dd76a6e07031508ada31f603f9",
-      "tokens": 267,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
       "item_id": "ev-7c007349d496bd5e",
       "source": "evidence",
       "content_hash": "edac9610402777cbc045a65704d5c9f3d19c18c82def8ef0f34b0aa6d42c271c",
       "tokens": 647,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "ev-d7dd5c94583c38ba",
-      "source": "evidence",
-      "content_hash": "a2985785a20a39ea07fd15aa09ff8ee9315d553b5c8ff968d260bd44e00c8c87",
-      "tokens": 641,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "ev-118fc9a165ecf039",
-      "source": "evidence",
-      "content_hash": "07afbf88308ca1899081f20f54ee48429a83946263e4dbbea29685f272ff4fd7",
-      "tokens": 450,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -465,10 +451,50 @@
       "reason": "ranked_within_budget"
     },
     {
+      "item_id": "ev-9ece0a63350c8fcf",
+      "source": "evidence",
+      "content_hash": "6b01dc3e9c6c5a3865febe414ad8e98f4d8de29b9c65720a5a58b733fd05746d",
+      "tokens": 354,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-36802495fe1c2f08",
+      "source": "evidence",
+      "content_hash": "9ad159960672d7fd3813f03662573da731b9b79a27217bb46cabb72276f17a2e",
+      "tokens": 829,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-94406db8d59a8484",
+      "source": "evidence",
+      "content_hash": "2534a105f5ca514d0accb0669e71211e01864cbf43a18e1543c282f86428ef9a",
+      "tokens": 383,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-c1e0221be3d0ff58",
+      "source": "evidence",
+      "content_hash": "c08e642c297aaf5aa0b2175b172d15c6b75c9e7bbde910a7f53e0c0d17483727",
+      "tokens": 397,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-118fc9a165ecf039",
+      "source": "evidence",
+      "content_hash": "07afbf88308ca1899081f20f54ee48429a83946263e4dbbea29685f272ff4fd7",
+      "tokens": 450,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
       "item_id": "state",
       "source": "state",
-      "content_hash": "f5bd8c62044ba9c570f16536218cad909ee9be2726c57b750373fa32154cba2e",
-      "tokens": 2347,
+      "content_hash": "fe4600ea220ef0c366ce3e756facabd156d421ef8d6ff118c28e2fc371e5201c",
+      "tokens": 2283,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -483,7 +509,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "caad11092fdcc44a9ab6fb116a06656e66c3dc916e7c94182412c62e5ece4fd7",
+      "content_hash": "163345addc126eb789bf7d81f941a314cb348c64db82a16c36e3b04b5e013539",
       "tokens": 88,
       "decision": "selected",
       "reason": "ranked_within_budget"

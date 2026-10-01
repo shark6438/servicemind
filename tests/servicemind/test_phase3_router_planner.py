@@ -68,6 +68,48 @@ def test_mentioning_a_document_is_not_the_same_as_asking_for_one(query: str) -> 
 @pytest.mark.parametrize(
     "query",
     [
+        # Reporting a failure and asking to be told what to do with it is a diagnosis
+        # request wearing the clothes of a lookup: the question names a symptom and an
+        # interrogative, and the troubleshooting rows used to read those two as a
+        # document request. They are not -- what the caller wants is a decision about a
+        # situation, and the retrieval-only fast path has no analysis and no reviewer to
+        # make one. The row above is the boundary: the same symptom word inside a
+        # request *for a document* stays a lookup, which is why both halves are required.
+        "VPN 连接失败，提示多因素认证未通过，我最近换了手机，该怎么处理？",
+        "How do I fix a VPN MFA failure after changing phones?",
+        "打印机报错，无法打印，怎么办？",
+        "The deployment failed and I cannot roll back. What should I do?",
+        "邮箱登录异常，一直提示密码错误，如何解决？",
+        "Our VPN gateway is rejecting connections and users cannot work. How should we handle this?",
+    ],
+)
+def test_a_reported_failure_asking_to_be_handled_is_a_diagnosis(query: str) -> None:
+    decision = FastPathRouter().route(query, request_write=False)
+    assert decision.route is RouteType.COMPLEX_WORKFLOW
+    # Named, so that a later widening of the troubleshooting rows cannot absorb this
+    # shape back into the lookup without a test saying so.
+    assert decision.reason_code == "incident_symptom_requires_diagnosis"
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        # A symptom word is not by itself a diagnosis request. This one names the same
+        # fault the row above names and asks for the document that covers it, so it is
+        # the lookup the fast path exists for.
+        "Find the runbook for the MFA failure scenario",
+        "更换手机后 VPN 的多因素认证持续失败。当前有效的处置手册是什么？",
+    ],
+)
+def test_a_symptom_inside_a_request_for_a_document_is_still_a_lookup(query: str) -> None:
+    assert (
+        FastPathRouter().route(query, request_write=False).route is RouteType.SIMPLE_KNOWLEDGE_QUERY
+    )
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
         # The data fast path answers with the ticket's own fields, so it may only be
         # selected when the question is about one of those fields. A bare interrogative
         # is not a field: "…是什么" ends questions of every kind, and matching on it sent

@@ -54,7 +54,7 @@ file fails the gate rather than passing silently.
 
 | package | depends on |
 | --- | --- |
-| `_root` | `domain`, `harness`, `integrations`, `interfaces`, `model_gateway`, `orchestration`, `persistence`, `security` |
+| `_root` | `domain`, `foundation`, `harness`, `integrations`, `interfaces`, `model_gateway`, `orchestration`, `persistence`, `security` |
 | `agents` | `context`, `domain`, `foundation`, `integrations`, `model_gateway`, `rag`, `runtime`, `security` |
 | `context` | `foundation`, `persistence` |
 | `domain` | — |

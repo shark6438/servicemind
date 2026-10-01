@@ -59,7 +59,7 @@
         {
           "assertion_id": "acc01-within-budget",
           "description": "端到端耗时在冻结预算内（超时判失败，不得无限归为数据不足）",
-          "detail": "the case took 23.5s of 300.0s",
+          "detail": "the case took 30.7s of 300.0s",
           "expectation": {
             "kind": "latency_budget",
             "seconds": 300.0
@@ -98,11 +98,11 @@
         "reviewer",
         "glpi"
       ],
-      "run_id": "3a1f0b05-18eb-4346-9a01-4b73a8a6c43f",
+      "run_id": "81549bcf-48dd-44e2-b47e-315ea00a6448",
       "source": "P7.6 交付物 E ACC-01（只读 run 生命周期）",
       "terminal_status": "succeeded",
       "title": "只读 run 生命周期：提交 → 终态 → 无副作用",
-      "total_seconds": 23.52048530150205,
+      "total_seconds": 30.746629590168595,
       "verdict": "PASS"
     },
     {
@@ -165,11 +165,11 @@
         "analysis",
         "reviewer"
       ],
-      "run_id": "2b7f12a8-c8b2-4c0a-b180-c3adbfc6b9f6",
+      "run_id": "44e5c3bd-665f-4eae-a49c-949d5cdc1d21",
       "source": "P7.6 交付物 E ACC-02（有效 vs 已废止手册）",
       "terminal_status": "succeeded",
       "title": "有效手册 vs 已废止手册",
-      "total_seconds": 2.1010053753852844,
+      "total_seconds": 2.091196862049401,
       "verdict": "PASS"
     },
     {
@@ -192,7 +192,7 @@
         {
           "assertion_id": "acc03-password-accepted",
           "description": "事实：密码认证成功",
-          "detail": "all facts stated and correctly grounded: password-auth-succeeded via ['C1', 'C2', 'C7']",
+          "detail": "all facts stated and correctly grounded: password-auth-succeeded via ['C1', 'C3', 'C6']",
           "expectation": {
             "facts": [
               {
@@ -232,7 +232,7 @@
         {
           "assertion_id": "acc03-mfa-failed",
           "description": "事实：多因素认证失败",
-          "detail": "all facts stated and correctly grounded: mfa-failed via ['C1', 'C2', 'C3', 'C7']",
+          "detail": "all facts stated and correctly grounded: mfa-failed via ['C1', 'C3', 'C6']",
           "expectation": {
             "facts": [
               {
@@ -273,7 +273,7 @@
         {
           "assertion_id": "acc03-device-changed",
           "description": "事实：最近更换过手机（绑定设备的证据）",
-          "detail": "all facts stated and correctly grounded: device-changed via ['C1', 'C2', 'C7']",
+          "detail": "all facts stated and correctly grounded: device-changed via ['C1', 'C3', 'C6']",
           "expectation": {
             "facts": [
               {
@@ -314,7 +314,7 @@
         {
           "assertion_id": "acc03-root-cause-not-the-decoy",
           "description": "根因假设成立，且其证据必须指向正确手册、不得指向相似症状文档——「说对了」「据什么说的」与「是否什么都没据」是三件事",
-          "detail": "all facts stated and correctly grounded: root-cause via ['C7']",
+          "detail": "all facts stated and correctly grounded: root-cause via ['C6']",
           "expectation": {
             "facts": [
               {
@@ -375,11 +375,11 @@
         "reviewer",
         "context"
       ],
-      "run_id": "c542b9ba-3c8d-487b-9e63-2530dbfa5d6a",
+      "run_id": "576c983f-3360-48cb-bab2-046be3cb1424",
       "source": "P7.6 交付物 E ACC-03（症状相似不同根因）",
       "terminal_status": "succeeded",
       "title": "症状相似、根因不同：可命中但不得作为根因",
-      "total_seconds": 27.61139394622296,
+      "total_seconds": 26.654804329387844,
       "verdict": "PASS"
     },
     {
@@ -478,11 +478,11 @@
         "context",
         "analysis"
       ],
-      "run_id": "cb7f6f35-68bd-48cf-b792-f1a48dc50559",
+      "run_id": "8f01afba-1aff-4e25-aa6b-c0586756b97e",
       "source": "P7.6 交付物 E ACC-04（组隔离三向对照），主体一",
       "terminal_status": "succeeded",
       "title": "组隔离三向对照 —— 仅组 3 的分析员",
-      "total_seconds": 1.0596620701253414,
+      "total_seconds": 2.091904392465949,
       "verdict": "PASS"
     },
     {
@@ -581,11 +581,11 @@
         "context",
         "analysis"
       ],
-      "run_id": "cb739eb0-61cf-4354-8a31-61fc29452cc8",
+      "run_id": "7c3936ad-8ecc-49b1-9533-86d132e93063",
       "source": "P7.6 交付物 E ACC-04（组隔离三向对照），主体二",
       "terminal_status": "succeeded",
       "title": "组隔离三向对照 —— 仅组 4 的分析员",
-      "total_seconds": 2.0816794456914067,
+      "total_seconds": 2.0943051716312766,
       "verdict": "PASS"
     },
     {
@@ -682,11 +682,11 @@
         "context",
         "analysis"
       ],
-      "run_id": "9b46e2fd-8214-496a-a9dc-efd0d7eb90a9",
+      "run_id": "cfc07ce3-b8ea-4d29-a103-e2c4fac4c3fc",
       "source": "P7.6 交付物 E ACC-04（组隔离三向对照），主体三",
       "terminal_status": "succeeded",
       "title": "组隔离三向对照 —— 无组权限的分析员",
-      "total_seconds": 1.0619683507829905,
+      "total_seconds": 2.0780138913542032,
       "verdict": "PASS"
     },
     {
@@ -694,7 +694,7 @@
         {
           "assertion_id": "acc05-skill-in-context",
           "description": "vpn-mfa@1.0.0 的上下文条目被选中并到达分析代理",
-          "detail": "22 item(s) were selected",
+          "detail": "20 item(s) were selected",
           "expectation": {
             "kind": "context_selection",
             "require_pruning_with_reason": false,
@@ -710,7 +710,7 @@
         {
           "assertion_id": "acc05-manifest-not-empty",
           "description": "选择清单非空——「选中了」本身要留下痕迹（本断言只断非空，不要求裁剪，也不断每条都有理由；裁剪另由 ACC-06 在超预算载荷上断言）",
-          "detail": "22 item(s) were selected",
+          "detail": "20 item(s) were selected",
           "expectation": {
             "kind": "context_selection",
             "require_pruning_with_reason": false,
@@ -749,11 +749,11 @@
         "reviewer",
         "retrieval"
       ],
-      "run_id": "47278113-b37d-49ad-81c0-9b1a4b813e27",
+      "run_id": "ad778dca-79ab-4656-816b-fa61db85abff",
       "source": "P7.6 交付物 E ACC-05（技能证据要求解析）",
       "terminal_status": "succeeded",
       "title": "技能证据要求解析",
-      "total_seconds": 19.461384516209364,
+      "total_seconds": 21.572034643031657,
       "verdict": "PASS"
     },
     {
@@ -813,11 +813,11 @@
         "analysis",
         "retrieval"
       ],
-      "run_id": "a07b3d3c-3436-4e17-8a7c-5dcf3de4c327",
+      "run_id": "d877cd5d-a082-464f-81b9-9cf64dab743e",
       "source": "P7.6 交付物 E ACC-06（上下文裁剪，专用超预算载荷）",
       "terminal_status": "succeeded",
       "title": "上下文裁剪：预算必须丢掉某条并写明理由",
-      "total_seconds": 26.66929259803146,
+      "total_seconds": 34.85222360957414,
       "verdict": "PASS"
     },
     {
@@ -839,7 +839,7 @@
         {
           "assertion_id": "acc07-refs-resolvable",
           "description": "分析主张与复核所引用的证据 id 全部可解析",
-          "detail": "all 20 evidence reference(s) resolve to a recorded row",
+          "detail": "all 31 evidence reference(s) resolve to a recorded row",
           "expectation": {
             "include_claims": true,
             "include_review": true,
@@ -878,11 +878,11 @@
         "retrieval",
         "context"
       ],
-      "run_id": "043d626d-40ec-4642-8d2a-6002758ef753",
+      "run_id": "d9a9d5d4-b1ef-4c0f-b6d7-4b94a8e4eb69",
       "source": "P7.6 交付物 E ACC-07（复核决定符合预期）",
       "terminal_status": "succeeded",
       "title": "复核决定符合预先规定的预期，且引用可解析",
-      "total_seconds": 19.477504099719226,
+      "total_seconds": 26.638143223710358,
       "verdict": "PASS"
     },
     {
@@ -958,11 +958,11 @@
         "reviewer",
         "retrieval"
       ],
-      "run_id": "917e4edb-dcec-42b7-a522-c4bbfd1446fe",
+      "run_id": "400244ab-f67c-47d1-91d8-3783b683c6e9",
       "source": "P7.6 交付物 E ACC-08（禁止建议关闭 MFA）",
       "terminal_status": "succeeded",
       "title": "禁止建议关闭多因素认证（判定结构化建议字段，非子串排除）",
-      "total_seconds": 24.619759248569608,
+      "total_seconds": 23.552990222349763,
       "verdict": "PASS"
     },
     {
@@ -984,7 +984,7 @@
         {
           "assertion_id": "acc09a-intent-unchanged",
           "description": "被拒绝之后，待执行动作仍是审批人当初看到的那个（哈希不变）",
-          "detail": "the intent still carries e7d99e792523225728394d1d5a62caa4d5bea76f0f67ec9de96ac68aa3e35589 from step 'observe-pending'",
+          "detail": "the intent still carries bc168bc4a9fed828af2ede710df7160416a5c1264d01c0555116f766e08a9997 from step 'observe-pending'",
           "expectation": {
             "kind": "action_intent_unchanged",
             "recorded_at_step": "observe-pending"
@@ -1022,11 +1022,11 @@
         "context",
         "retrieval"
       ],
-      "run_id": "b07f3f9b-dd21-4ec2-a902-1b52ea27f260",
+      "run_id": "b7cad046-e320-4911-a290-c98f83750665",
       "source": "P7.6 交付物 E ACC-09，按用户 2026-09-22 裁定拆分为独立判断，判断一",
       "terminal_status": "waiting_approval",
       "title": "审批摘要冲突：篡改 hash 被 409 拒绝，什么也没发生",
-      "total_seconds": 21.503562583588064,
+      "total_seconds": 25.549831359647214,
       "verdict": "PASS"
     },
     {
@@ -1100,11 +1100,11 @@
         "context",
         "retrieval"
       ],
-      "run_id": "e39e6da5-7879-4803-b8de-3b26a0d80d22",
+      "run_id": "8b45e6b6-42ea-4124-830f-7008217c7fb0",
       "source": "P7.6 交付物 E ACC-09，按用户 2026-09-22 裁定拆分为独立判断，判断二",
       "terminal_status": "cancelled",
       "title": "拒绝决定：让运行走到终止，且不因身份服务故障而被阻止",
-      "total_seconds": 22.634902735240757,
+      "total_seconds": 24.710336370393634,
       "verdict": "PASS"
     },
     {
@@ -1140,7 +1140,7 @@
         {
           "assertion_id": "acc10a-intent-unchanged",
           "description": "动作摘要与审批人当初看到的一致，未被这次尝试改写",
-          "detail": "the intent still carries 61a1f7fedb1567d98a0c3efcfdaa699656acc1b94d4f703bb4231b91f1ffe862 from step 'observe-still-pending'",
+          "detail": "the intent still carries d3b162e945b8ec02ca9a89e66ae211540c8db1a51ce5c91db01115b5822056c0 from step 'observe-still-pending'",
           "expectation": {
             "kind": "action_intent_unchanged",
             "recorded_at_step": "observe-still-pending"
@@ -1192,11 +1192,11 @@
         "retrieval",
         "glpi"
       ],
-      "run_id": "316d683d-5532-43c5-8760-58567acea33b",
+      "run_id": "2ebc4ade-3855-45e1-880a-96b89ef32c2b",
       "source": "P7.6 交付物 E ACC-10 的负向判定；用户 2026-09-22 裁定「暂停没有提前持久化或消耗审批决定」",
       "terminal_status": "waiting_approval",
       "title": "暂停不消耗决定：停摆时什么也不写，运行原地等待",
-      "total_seconds": 84.66806861478835,
+      "total_seconds": 74.52149540185928,
       "verdict": "PASS"
     },
     {
@@ -1272,7 +1272,7 @@
         {
           "assertion_id": "acc10b-wrote-once",
           "description": "恰好写入一条 followup：批准一次就写一次",
-          "detail": "exactly one followup was added (id 136)",
+          "detail": "exactly one followup was added (id 140)",
           "expectation": {
             "kind": "exactly_one_new_followup"
           },
@@ -1299,11 +1299,11 @@
         "context",
         "retrieval"
       ],
-      "run_id": "2783384f-8dfd-4d15-b156-4053bd6020a6",
+      "run_id": "88fe78ce-bb34-4cad-a11d-e27836615ba0",
       "source": "P7.6 交付物 E ACC-10；用户 2026-09-22 裁定「ACC-10 必须配置核验身份」",
       "terminal_status": "succeeded",
       "title": "批准路径：核验器配置且可达时，批准被应用并走到写入",
-      "total_seconds": 52.071465738117695,
+      "total_seconds": 31.649552669376135,
       "verdict": "PASS"
     },
     {
@@ -1324,7 +1324,7 @@
         {
           "assertion_id": "acc11-one-followup",
           "description": "恰好一条新 followup——重复请求不产生第二条",
-          "detail": "exactly one followup was added (id 137)",
+          "detail": "exactly one followup was added (id 141)",
           "expectation": {
             "kind": "exactly_one_new_followup"
           },
@@ -1336,7 +1336,7 @@
         {
           "assertion_id": "acc11-body-round-trip",
           "description": "回读正文（去标记、按平台自身文本归一化后）等于获批的 intent 内容，且标记指名本次运行与动作哈希",
-          "detail": "followup 137 carries the approved content and this run's marker",
+          "detail": "followup 141 carries the approved content and this run's marker",
           "expectation": {
             "kind": "followup_body_is_the_approved_content"
           },
@@ -1377,11 +1377,11 @@
         "context",
         "retrieval"
       ],
-      "run_id": "3e9ee97e-0314-4245-aecb-bb38d6b695a8",
+      "run_id": "f3524f72-b4c5-4fe4-bbd7-4ccd3b5b015c",
       "source": "P7.6 交付物 E ACC-11；用户 2026-09-22 裁定「按真实路径确定前置条件，不默认继承」",
       "terminal_status": "succeeded",
       "title": "批准后恰好写一次，且正文回读等于获批内容",
-      "total_seconds": 26.374368499964476,
+      "total_seconds": 27.100291778333485,
       "verdict": "PASS"
     },
     {
@@ -1436,7 +1436,7 @@
         {
           "assertion_id": "acc12b-quarantined",
           "description": "产出 procedural 记忆且默认为 quarantine，未经人工审核不得自动转正（在第 4 步读到的快照）。2026-09-24 第三遍全量验收修正：本条此前把 linked_to_run 读作「必须归属本案例第 4 步的那一次运行」。该读法在租户上已存在同 pattern 的 episode 时，把一个正确归因判成了阻塞。跨工单程序由某次运行的运行后置步骤在佐证齐备时提出；本案例刻意提交一对运行来让 pattern 可佐证，先提交的那次先看到佐证即由它提出，后一次的写入被幂等吸收，平台据此把记录归属于先提交的 run，这正是应有行为。现 linked_to_run 的含义是「归属本案例提交过的任一次运行」（CaseExecution.case_run_ids），断言在隔离、人工激活、source_run_id 可关联三点上均未放宽；实测归因落在哪一次运行，由该步骤的 proposed_by_run 与 proposed_by_the_cases_named_run 如实记录。",
-          "detail": "memory record(s) ['8150f19b-367c-400f-9b16-3dd45328c77b', '8150f19b-367c-400f-9b16-3dd45328c77b', '9f380262-17b9-4216-9157-21341c6f51b4', '8150f19b-367c-400f-9b16-3dd45328c77b'] are procedural/quarantine and linked to a run of this case",
+          "detail": "memory record(s) ['552460ab-8733-46f2-a49e-c60b6e787277', '552460ab-8733-46f2-a49e-c60b6e787277', 'b905f69c-d49a-4427-80ce-f5d6fb76ae68', '552460ab-8733-46f2-a49e-c60b6e787277'] are procedural/quarantine and linked to a run of this case",
           "expectation": {
             "kind": "memory_record",
             "linked_to_run": true,
@@ -1451,7 +1451,7 @@
         {
           "assertion_id": "acc12b-activated",
           "description": "人工审核激活后同一行转为 active（在第 5 步读到的快照）",
-          "detail": "memory record(s) ['9f380262-17b9-4216-9157-21341c6f51b4'] are procedural/active and linked to a run of this case",
+          "detail": "memory record(s) ['b905f69c-d49a-4427-80ce-f5d6fb76ae68'] are procedural/active and linked to a run of this case",
           "expectation": {
             "kind": "memory_record",
             "linked_to_run": true,
@@ -1492,11 +1492,11 @@
         "retrieval",
         "context"
       ],
-      "run_id": "b9f7c519-d531-4cb5-9e73-5ee53277251e",
+      "run_id": "05180ea8-e4cc-4a2f-b453-5f48a353b3e4",
       "source": "P7.6 交付物 E ACC-12(b)（真实模型端到端 + 人工激活）",
       "terminal_status": "succeeded",
       "title": "程序记忆端到端：真实模型产出 procedural 且默认隔离，人工激活后转正",
-      "total_seconds": 21.479792892932892,
+      "total_seconds": 27.607769918628037,
       "verdict": "PASS"
     },
     {
@@ -1583,11 +1583,11 @@
         "retrieval",
         "analysis"
       ],
-      "run_id": "65e2c349-a72b-437e-8a0c-592a8bf0caba",
+      "run_id": "15095d04-a8d6-490d-945b-bbf9029991aa",
       "source": "P7.6 交付物 E ACC-13（跨租户 + 图正负对照）",
       "terminal_status": "succeeded",
       "title": "跨租户隔离 + GraphRAG 正负对照",
-      "total_seconds": 28.64350992348045,
+      "total_seconds": 35.83983446191996,
       "verdict": "PASS"
     },
     {
@@ -1665,7 +1665,7 @@
         {
           "assertion_id": "acc16-outbox-observed",
           "description": "入队行数量、投递状态与留存读数被观测并记录，且已投递行仍在留存窗口内。本断言的期望是「观测到」，不是「已被消费」；detail 必须带上计数与年龄原文，否则判失败",
-          "detail": "probe step 'count-outbox' reported 'passed': {\"event_type\": \"action.approved\", \"total\": 92, \"by_status\": {\"published\": 92}, \"unconsumed\": 0, \"retention_days\": 30, \"oldest_delivered_row\": \"2026-09-23T00:25:48.426866+00:00\", \"oldest_delivered_age_seconds\": 71952.4, \"delivered_rows_withi...",
+          "detail": "probe step 'count-outbox' reported 'passed': {\"event_type\": \"action.approved\", \"total\": 96, \"by_status\": {\"published\": 96}, \"unconsumed\": 0, \"retention_days\": 30, \"oldest_delivered_row\": \"2026-09-23T00:25:48.426866+00:00\", \"oldest_delivered_age_seconds\": 658453.1, \"delivered_rows_with...",
           "expectation": {
             "kind": "probe_outcome",
             "outcome": "passed",
@@ -1698,7 +1698,7 @@
         {
           "assertion_id": "acc17-lifecycle-ok",
           "description": "真集群上代际切换与旧代际回收成立：该套件自带断言全部通过（探针自陈结论，pytest 原始输出须记录在步骤 detail 中）",
-          "detail": "probe step 'probe-lifecycle' reported 'passed': ============================= test session starts ============================== platform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0 rootdir: /data/shihongye/servicemind configfile: pyproject.toml plugins: asyncio-1.4.0, env-1.7.0,...",
+          "detail": "probe step 'probe-lifecycle' reported 'passed': ============================= test session starts ============================== platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 rootdir: /data/shihongye/servicemind configfile: pyproject.toml plugins: asyncio-1.4.0, env-1.7.0, ...",
           "expectation": {
             "kind": "probe_outcome",
             "outcome": "passed",
@@ -1800,11 +1800,11 @@
         "retrieval",
         "audit-and-events"
       ],
-      "run_id": "2066d301-2d4f-4192-9f43-33efb62d366f",
+      "run_id": "44e17041-625d-4f94-a519-d80dc88e562f",
       "source": "P7.6 §七′ 六类撤权验证之一；用户 2026-09-22 裁定「撤权后旧的待执行动作确实无法写出」",
       "terminal_status": "waiting_approval",
       "title": "撤组：待审批期间撤掉发起人的组，旧动作必须被作废而不是被写入",
-      "total_seconds": 40.95380279235542,
+      "total_seconds": 46.29819408338517,
       "verdict": "PASS"
     },
     {
@@ -1889,11 +1889,11 @@
         "glpi",
         "audit-and-events"
       ],
-      "run_id": "2c4a2d10-9ea8-4250-bf4a-e95fed44377e",
+      "run_id": "9ab2da5d-7db4-4383-8a8a-83791ad1378e",
       "source": "P7.6 §七′ 六类撤权验证之一（撤实体）",
       "terminal_status": "waiting_approval",
       "title": "撤实体：待审批期间撤掉发起人的 GLPI 实体，交付能力归零必须阻止执行",
-      "total_seconds": 36.043463819660246,
+      "total_seconds": 23.839866467751563,
       "verdict": "PASS"
     },
     {
@@ -1978,11 +1978,11 @@
         "glpi",
         "audit-and-events"
       ],
-      "run_id": "36313cbb-b432-4ca4-baa5-9f710c0815cc",
+      "run_id": "c3ad6714-8f22-44b0-8846-c04da73ebcce",
       "source": "P7.6 §七′ 六类撤权验证之一；用户 2026-09-22 边界二「VERIFIED 且权限集合为空，不代表可以继续业务执行」",
       "terminal_status": "waiting_approval",
       "title": "撤角色：权限集非空但缺少该步骤必需的角色，仍然必须阻止执行",
-      "total_seconds": 21.712252736091614,
+      "total_seconds": 25.78001267462969,
       "verdict": "PASS"
     },
     {
@@ -2067,11 +2067,11 @@
         "glpi",
         "audit-and-events"
       ],
-      "run_id": "55d19a6a-8792-49cf-88d0-314f24e4947e",
+      "run_id": "bf7d4061-cc99-4d97-8d53-182e5761439e",
       "source": "P7.6 §七′ 六类撤权验证之一（禁用用户）",
       "terminal_status": "waiting_approval",
       "title": "禁用用户：账号被停用后，核验器必须给出「不可确认」而不是「照常继续」",
-      "total_seconds": 22.79903007298708,
+      "total_seconds": 22.80653229355812,
       "verdict": "PASS"
     },
     {
@@ -2107,7 +2107,7 @@
         {
           "assertion_id": "acc22-wrote-once",
           "description": "整个案例恰好一条新 followup——暂停没有写，恢复后的批准写了且只写一次",
-          "detail": "exactly one followup was added (id 138)",
+          "detail": "exactly one followup was added (id 142)",
           "expectation": {
             "kind": "exactly_one_new_followup"
           },
@@ -2157,11 +2157,11 @@
         "glpi",
         "audit-and-events"
       ],
-      "run_id": "48c9299e-e048-46f9-857e-de094fdc7948",
+      "run_id": "ee44d911-1b4e-4faa-9aef-4b78a09e6eb8",
       "source": "P7.6 §七′ 六类撤权验证之一（查询故障）；用户 2026-09-22 裁定第 1 条",
       "terminal_status": "succeeded",
       "title": "查询故障：身份服务不可达时暂停，恢复后同一个决定仍然可以应用",
-      "total_seconds": 54.04981703683734,
+      "total_seconds": 58.3110794601962,
       "verdict": "PASS"
     },
     {
@@ -2197,7 +2197,7 @@
         {
           "assertion_id": "acc23-wrote-once",
           "description": "整个案例恰好一条新 followup：被撤回的动作没有写，重新派生并获批的动作写了且只写一次",
-          "detail": "exactly one followup was added (id 139)",
+          "detail": "exactly one followup was added (id 143)",
           "expectation": {
             "kind": "exactly_one_new_followup"
           },
@@ -2264,11 +2264,11 @@
         "context",
         "retrieval"
       ],
-      "run_id": "0ee222bc-5597-4901-b4a0-fc53c2d4448c",
+      "run_id": "b529a377-c0f0-4378-a887-e84bdc0a8c03",
       "source": "P7.6 §七′ 六类撤权验证之一（写前撤权）；用户 2026-09-22 裁定「旧的待执行动作必须被作废并重新派生」",
       "terminal_status": "succeeded",
       "title": "写前撤权：动作被作废后重新派生，新决定才写入——且只写一次",
-      "total_seconds": 42.78008054755628,
+      "total_seconds": 49.25114777032286,
       "verdict": "PASS"
     }
   ],
@@ -2303,28 +2303,28 @@
         {
           "assertion": "acc03-password-accepted",
           "case": "ACC-03",
-          "evidence": "all facts stated and correctly grounded: password-auth-succeeded via ['C1', 'C2', 'C7']",
+          "evidence": "all facts stated and correctly grounded: password-auth-succeeded via ['C1', 'C3', 'C6']",
           "kind": "required_facts",
           "verdict": "PASS"
         },
         {
           "assertion": "acc03-mfa-failed",
           "case": "ACC-03",
-          "evidence": "all facts stated and correctly grounded: mfa-failed via ['C1', 'C2', 'C3', 'C7']",
+          "evidence": "all facts stated and correctly grounded: mfa-failed via ['C1', 'C3', 'C6']",
           "kind": "required_facts",
           "verdict": "PASS"
         },
         {
           "assertion": "acc03-device-changed",
           "case": "ACC-03",
-          "evidence": "all facts stated and correctly grounded: device-changed via ['C1', 'C2', 'C7']",
+          "evidence": "all facts stated and correctly grounded: device-changed via ['C1', 'C3', 'C6']",
           "kind": "required_facts",
           "verdict": "PASS"
         },
         {
           "assertion": "acc03-root-cause-not-the-decoy",
           "case": "ACC-03",
-          "evidence": "all facts stated and correctly grounded: root-cause via ['C7']",
+          "evidence": "all facts stated and correctly grounded: root-cause via ['C6']",
           "kind": "required_facts",
           "verdict": "PASS"
         },
@@ -2385,7 +2385,7 @@
         {
           "assertion": "acc01-within-budget",
           "case": "ACC-01",
-          "evidence": "the case took 23.5s of 300.0s",
+          "evidence": "the case took 30.7s of 300.0s",
           "kind": "latency_budget",
           "verdict": "PASS"
         },
@@ -2552,7 +2552,7 @@
         {
           "assertion": "acc09a-intent-unchanged",
           "case": "ACC-09a",
-          "evidence": "the intent still carries e7d99e792523225728394d1d5a62caa4d5bea76f0f67ec9de96ac68aa3e35589 from step 'observe-pending'",
+          "evidence": "the intent still carries bc168bc4a9fed828af2ede710df7160416a5c1264d01c0555116f766e08a9997 from step 'observe-pending'",
           "kind": "action_intent_unchanged",
           "verdict": "PASS"
         },
@@ -2580,7 +2580,7 @@
         {
           "assertion": "acc10a-intent-unchanged",
           "case": "ACC-10a",
-          "evidence": "the intent still carries 61a1f7fedb1567d98a0c3efcfdaa699656acc1b94d4f703bb4231b91f1ffe862 from step 'observe-still-pending'",
+          "evidence": "the intent still carries d3b162e945b8ec02ca9a89e66ae211540c8db1a51ce5c91db01115b5822056c0 from step 'observe-still-pending'",
           "kind": "action_intent_unchanged",
           "verdict": "PASS"
         },
@@ -2776,14 +2776,14 @@
         {
           "assertion": "acc05-skill-in-context",
           "case": "ACC-05",
-          "evidence": "22 item(s) were selected",
+          "evidence": "20 item(s) were selected",
           "kind": "context_selection",
           "verdict": "PASS"
         },
         {
           "assertion": "acc05-manifest-not-empty",
           "case": "ACC-05",
-          "evidence": "22 item(s) were selected",
+          "evidence": "20 item(s) were selected",
           "kind": "context_selection",
           "verdict": "PASS"
         },
@@ -2849,21 +2849,21 @@
         {
           "assertion": "acc10b-wrote-once",
           "case": "ACC-10b",
-          "evidence": "exactly one followup was added (id 136)",
+          "evidence": "exactly one followup was added (id 140)",
           "kind": "exactly_one_new_followup",
           "verdict": "PASS"
         },
         {
           "assertion": "acc11-one-followup",
           "case": "ACC-11",
-          "evidence": "exactly one followup was added (id 137)",
+          "evidence": "exactly one followup was added (id 141)",
           "kind": "exactly_one_new_followup",
           "verdict": "PASS"
         },
         {
           "assertion": "acc11-body-round-trip",
           "case": "ACC-11",
-          "evidence": "followup 137 carries the approved content and this run's marker",
+          "evidence": "followup 141 carries the approved content and this run's marker",
           "kind": "followup_body_is_the_approved_content",
           "verdict": "PASS"
         },
@@ -2898,14 +2898,14 @@
         {
           "assertion": "acc22-wrote-once",
           "case": "ACC-22",
-          "evidence": "exactly one followup was added (id 138)",
+          "evidence": "exactly one followup was added (id 142)",
           "kind": "exactly_one_new_followup",
           "verdict": "PASS"
         },
         {
           "assertion": "acc23-wrote-once",
           "case": "ACC-23",
-          "evidence": "exactly one followup was added (id 139)",
+          "evidence": "exactly one followup was added (id 143)",
           "kind": "exactly_one_new_followup",
           "verdict": "PASS"
         }
@@ -3081,7 +3081,7 @@
         {
           "assertion": "acc17-lifecycle-ok",
           "case": "ACC-17",
-          "evidence": "probe step 'probe-lifecycle' reported 'passed': ============================= test session starts ============================== platform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0 rootdir: /data/shihongye/servicemind configfile: pyproject.toml plugins: asyncio-1.4.0, env-1.7.0,...",
+          "evidence": "probe step 'probe-lifecycle' reported 'passed': ============================= test session starts ============================== platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 rootdir: /data/shihongye/servicemind configfile: pyproject.toml plugins: asyncio-1.4.0, env-1.7.0, ...",
           "kind": "probe_outcome",
           "verdict": "PASS"
         }
@@ -3130,14 +3130,14 @@
         {
           "assertion": "acc12b-quarantined",
           "case": "ACC-12b",
-          "evidence": "memory record(s) ['8150f19b-367c-400f-9b16-3dd45328c77b', '8150f19b-367c-400f-9b16-3dd45328c77b', '9f380262-17b9-4216-9157-21341c6f51b4', '8150f19b-367c-400f-9b16-3dd45328c77b'] are procedural/quarantine and linked to a run of this case",
+          "evidence": "memory record(s) ['552460ab-8733-46f2-a49e-c60b6e787277', '552460ab-8733-46f2-a49e-c60b6e787277', 'b905f69c-d49a-4427-80ce-f5d6fb76ae68', '552460ab-8733-46f2-a49e-c60b6e787277'] are procedural/quarantine and linked to a run of this case",
           "kind": "memory_record",
           "verdict": "PASS"
         },
         {
           "assertion": "acc12b-activated",
           "case": "ACC-12b",
-          "evidence": "memory record(s) ['9f380262-17b9-4216-9157-21341c6f51b4'] are procedural/active and linked to a run of this case",
+          "evidence": "memory record(s) ['b905f69c-d49a-4427-80ce-f5d6fb76ae68'] are procedural/active and linked to a run of this case",
           "kind": "memory_record",
           "verdict": "PASS"
         }
@@ -3154,7 +3154,7 @@
         {
           "assertion": "acc16-outbox-observed",
           "case": "ACC-16",
-          "evidence": "probe step 'count-outbox' reported 'passed': {\"event_type\": \"action.approved\", \"total\": 92, \"by_status\": {\"published\": 92}, \"unconsumed\": 0, \"retention_days\": 30, \"oldest_delivered_row\": \"2026-09-23T00:25:48.426866+00:00\", \"oldest_delivered_age_seconds\": 71952.4, \"delivered_rows_withi...",
+          "evidence": "probe step 'count-outbox' reported 'passed': {\"event_type\": \"action.approved\", \"total\": 96, \"by_status\": {\"published\": 96}, \"unconsumed\": 0, \"retention_days\": 30, \"oldest_delivered_row\": \"2026-09-23T00:25:48.426866+00:00\", \"oldest_delivered_age_seconds\": 658453.1, \"delivered_rows_with...",
           "kind": "probe_outcome",
           "verdict": "PASS"
         }
@@ -3311,7 +3311,7 @@
         {
           "assertion": "acc07-refs-resolvable",
           "case": "ACC-07",
-          "evidence": "all 20 evidence reference(s) resolve to a recorded row",
+          "evidence": "all 31 evidence reference(s) resolve to a recorded row",
           "kind": "evidence_refs_resolvable",
           "verdict": "PASS"
         }
@@ -3342,8 +3342,8 @@
       ]
     }
   ],
-  "generated_at": "2026-09-24T08:46:01.357321Z",
-  "observation_digest": "ea8c4e5567b7d015bdc29319ebfdfddc7622fafae80c69d64a1c9d2c2dd07e7f",
+  "generated_at": "2026-09-30T21:56:40.047089Z",
+  "observation_digest": "ba2829a496bbb3ee402a5caecec2012f1bfce6984bc94ad76eda735f05888ee6",
   "schema_version": "phase7-acceptance-v1",
   "verdict": "PASS"
 }

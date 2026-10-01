@@ -5,8 +5,8 @@
     "entitlement_verifier_configured": true,
     "base_url": "http://127.0.0.1:18080",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
-    "recorded_at": "2026-09-23T20:16:53.147402Z",
-    "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(92 files)",
+    "recorded_at": "2026-09-30T15:11:03.071639Z",
+    "deployed_revision": "cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)",
     "notes": [
       "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
       "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
@@ -16,8 +16,8 @@
     "username": "globex-analyst-g3",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
     "roles": [
-      "viewer",
-      "analyst"
+      "analyst",
+      "viewer"
     ],
     "entity_ids": [
       2
@@ -31,8 +31,8 @@
       "id": "submit",
       "description": "以 globex-analyst-g3 提交只读运行",
       "action": "POST /v1/servicemind/runs",
-      "started_at": "2026-09-23T20:17:18.743492Z",
-      "elapsed_seconds": 0.026313076727092266,
+      "started_at": "2026-09-30T15:11:35.843130Z",
+      "elapsed_seconds": 0.025161019526422024,
       "http_status": 202,
       "action_hash": null,
       "action_status": null,
@@ -43,8 +43,8 @@
       "id": "observe-terminal",
       "description": "轮询运行直到终态",
       "action": "GET /v1/servicemind/runs/{run_id}",
-      "started_at": "2026-09-23T20:17:18.769918Z",
-      "elapsed_seconds": 2.075022098608315,
+      "started_at": "2026-09-30T15:11:35.868398Z",
+      "elapsed_seconds": 2.066841513849795,
       "http_status": 200,
       "action_hash": null,
       "action_status": null,
@@ -52,12 +52,12 @@
       "detail": "{\"status\": \"succeeded\", \"elapsed_seconds\": 2.1, \"error\": null, \"termination_code\": null}"
     }
   ],
-  "run_id": "2b7f12a8-c8b2-4c0a-b180-c3adbfc6b9f6",
+  "run_id": "44e5c3bd-665f-4eae-a49c-949d5cdc1d21",
   "case_run_ids": [
-    "2b7f12a8-c8b2-4c0a-b180-c3adbfc6b9f6"
+    "44e5c3bd-665f-4eae-a49c-949d5cdc1d21"
   ],
   "terminal_status": "succeeded",
-  "total_seconds": 2.1010053753852844,
+  "total_seconds": 2.091196862049401,
   "action_intent": null,
   "citations": [
     {
@@ -81,6 +81,28 @@
       "source_version": "phase7-acceptance-fixtures-v1",
       "content_hash": "ef59f9cf568a9e5d6ef12dca73c0264913082282bd21766014d9e0f9bc7788fe",
       "title": "VPN connection fails after an application or policy update"
+    },
+    {
+      "citation_id": "cite-9d7748093d3b7d03",
+      "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+      "parent_chunk_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-VPN-CONN",
+      "source_record_id": "KB-Q-VPN-CONN",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+      "title": "VPN client connectivity recovery"
+    },
+    {
+      "citation_id": "cite-c727e8d30a41f5fb",
+      "document_id": "56f8cd12-e115-495f-a656-eff553587f69",
+      "parent_chunk_id": "b6309b57-b7a2-4c90-8987-6405e7adf085",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-SPLIT-V2",
+      "source_record_id": "KB-Q-SPLIT-V2",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "be3e5312b941c062a23ae79a66c329d7a4fc889abb8e679f080d9806c5d110c5",
+      "title": "VPN split tunnel policy (revision 2)"
     }
   ],
   "evidence": [
@@ -95,11 +117,11 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:20.009965Z",
+        "retrieved_at": "2026-09-30T15:11:37.461730Z",
         "content_hash": "29ecf5f8121e09a4972297ba80d6b32a18a34d1e870022eed86befffad11250d"
       },
-      "created_at": "2026-09-23T20:17:20.010005Z",
-      "confidence": 0.88582915,
+      "created_at": "2026-09-30T15:11:37.461782Z",
+      "confidence": 0.88563144,
       "metadata": {
         "citation": {
           "citation_id": "cite-f6d619e7b1b7feb8",
@@ -118,26 +140,26 @@
       }
     },
     {
-      "evidence_id": "ev-ce7d991b3adca922",
+      "evidence_id": "ev-f380cb32f4a5b880",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
       "source_ref": "acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND",
       "resource_type": "knowledge_parent_chunk",
-      "resource_id": "af0d243b-80c4-4537-b03b-327de095162c",
-      "content": "Remedy\n\n1. Ask the user to have the new handset with them and to be signed in to the corporate\n\naccount on it.\n\n2. Verify the user's identity out of band before touching the factor; a factor rebind is\n\nan authentication change and is treated as one.\n\n3. In the identity console, remove the stale device registration for the user.\n4. Have the user re-enrol the new handset and confirm the challenge succeeds once.\n5. Ask the user to connect to the VPN and confirm the connection completes end to end.\n\nThe rebind is complete when a full connection succeeds, not when the registration is\nrecorded. A registration that has been recorded but never exercised has not been shown\nto work.",
+      "resource_id": "69ecdb4e-9fb5-4635-bff6-ed0bb95d8e91",
+      "content": "Diagnosis\n\nMulti-factor authentication is bound to a registered device secret. The secret lives on\nthe device, not in the directory, so replacing the phone does not migrate it: the\ndirectory still believes the old handset will answer. Nothing in the account needs to\nchange, and no directory attribute is wrong.\n\nConfirm the three facts in the ticket before acting: the password step succeeded, the\nchallenge step failed, and the user's handset changed recently. If the password step is\nalso failing, this is not the fault described here and the account-recovery procedure\napplies instead.",
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:20.010040Z",
-        "content_hash": "f871b08b9d8aadbff989312f8f1f3ae5a900986728724893177a658b27dc5db5"
+        "retrieved_at": "2026-09-30T15:11:37.461818Z",
+        "content_hash": "b7c448f866d8ee0506bc65bb8b8368b7d3432ea99965bdeb96360e86f6672957"
       },
-      "created_at": "2026-09-23T20:17:20.010048Z",
-      "confidence": 0.8529355,
+      "created_at": "2026-09-30T15:11:37.461827Z",
+      "confidence": 0.8794577,
       "metadata": {
         "citation": {
-          "citation_id": "cite-87ae6faee33b6e06",
+          "citation_id": "cite-7b1301de460c6b75",
           "document_id": "8d9151dc-faa2-47c5-8b20-e0383b625c97",
-          "parent_chunk_id": "af0d243b-80c4-4537-b03b-327de095162c",
+          "parent_chunk_id": "69ecdb4e-9fb5-4635-bff6-ed0bb95d8e91",
           "source": "servicemind_acceptance_fixture",
           "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND",
           "source_record_id": "KB-GLOBEX-VPN-MFA-REBIND",
@@ -161,11 +183,11 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:20.010071Z",
+        "retrieved_at": "2026-09-30T15:11:37.461851Z",
         "content_hash": "4a1c532e3254cace196cb2eda4de7aa68d6ce3cb6dbb84aec85935e5f7bd506b"
       },
-      "created_at": "2026-09-23T20:17:20.010078Z",
-      "confidence": 0.36795136,
+      "created_at": "2026-09-30T15:11:37.461858Z",
+      "confidence": 0.36749724,
       "metadata": {
         "citation": {
           "citation_id": "cite-abc8b95921190c8d",
@@ -194,11 +216,11 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:17:20.010098Z",
+        "retrieved_at": "2026-09-30T15:11:37.461876Z",
         "content_hash": "ce4e879dca740c395f1ddafccf3f2f23a380564da763389dbeacfca073c32a8d"
       },
-      "created_at": "2026-09-23T20:17:20.010104Z",
-      "confidence": 0.34598863,
+      "created_at": "2026-09-30T15:11:37.461881Z",
+      "confidence": 0.34620965,
       "metadata": {
         "citation": {
           "citation_id": "cite-f952b35d19c28ca7",
@@ -217,6 +239,138 @@
       }
     },
     {
+      "evidence_id": "ev-b1f70757dbcc4022",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-VPN-CONN",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+      "content": "Procedure\n\n1. Confirm the client version is 7.4 or later. Versions below 7.4 cannot negotiate the\n\ncurrent TLS profile and fail with a handshake timeout that looks like a network fault.\n\n2. Confirm the laptop holds a valid device certificate issued within the last 400 days.\n3. Clear the client state directory `/var/lib/vpn-client/state` and restart the service.\n4. Reconnect once. A second failure within five minutes is not retried automatically.\n5. If the handshake still fails, capture the client log and open a Network Team ticket.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:11:37.461901Z",
+        "content_hash": "0000abefefc109a5d7c23a0e1bedba5a7ac5ac20d3ba8613d90059c0daa67d93"
+      },
+      "created_at": "2026-09-30T15:11:37.461906Z",
+      "confidence": 0.12033541,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-9d7748093d3b7d03",
+          "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+          "parent_chunk_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-VPN-CONN",
+          "source_record_id": "KB-Q-VPN-CONN",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+          "title": "VPN client connectivity recovery"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-d8baa94488f1ba1d",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-VPN-CONN",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "07761ee4-ac10-44c7-b4f3-36fcb30ad1c6",
+      "content": "VPN client connectivity recovery\n\nApplies to the managed VPN client on corporate laptops. Owned by the Network Team.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:11:37.461924Z",
+        "content_hash": "713aa145ae314ffaff6135361e8670c4b8660711465a9ee2c01dae8bfb3bb71a"
+      },
+      "created_at": "2026-09-30T15:11:37.461929Z",
+      "confidence": 0.0005571117,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-eaa265ed5acf58bb",
+          "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+          "parent_chunk_id": "07761ee4-ac10-44c7-b4f3-36fcb30ad1c6",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-VPN-CONN",
+          "source_record_id": "KB-Q-VPN-CONN",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+          "title": "VPN client connectivity recovery"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-c4e8bbc154b5bd3e",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-SPLIT-V2",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "b6309b57-b7a2-4c90-8987-6405e7adf085",
+      "content": "VPN split tunnel policy (revision 2)\n\nSupersedes revision 1. This is the policy in force.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:11:37.461947Z",
+        "content_hash": "342007fb72cc0a9cd2be6c65b0071a833779e26ebb129c8dbdae123a09fe4c3d"
+      },
+      "created_at": "2026-09-30T15:11:37.461953Z",
+      "confidence": 0.00025714198,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-c727e8d30a41f5fb",
+          "document_id": "56f8cd12-e115-495f-a656-eff553587f69",
+          "parent_chunk_id": "b6309b57-b7a2-4c90-8987-6405e7adf085",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-SPLIT-V2",
+          "source_record_id": "KB-Q-SPLIT-V2",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "be3e5312b941c062a23ae79a66c329d7a4fc889abb8e679f080d9806c5d110c5",
+          "title": "VPN split tunnel policy (revision 2)"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-24e102736ad3c87f",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-SPLIT-V2",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "6c80b66a-207d-489d-96bb-66983c9960e9",
+      "content": "Exceptions\n\nA full-tunnel profile is available on request for staff handling regulated data. It needs\nthe Security Team's agreement and is reviewed every 6 months.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:11:37.461969Z",
+        "content_hash": "e2214aea2b734de6f5f16f07c559d6b13ffb60bf576f30aa4b6d34f97311253f"
+      },
+      "created_at": "2026-09-30T15:11:37.461975Z",
+      "confidence": 0.00019563535,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-e2a97c56135d4e43",
+          "document_id": "56f8cd12-e115-495f-a656-eff553587f69",
+          "parent_chunk_id": "6c80b66a-207d-489d-96bb-66983c9960e9",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-SPLIT-V2",
+          "source_record_id": "KB-Q-SPLIT-V2",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "be3e5312b941c062a23ae79a66c329d7a4fc889abb8e679f080d9806c5d110c5",
+          "title": "VPN split tunnel policy (revision 2)"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
       "evidence_id": "ev-ff24bc453152bf9d",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "graph",
@@ -227,10 +381,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_same_ci_incidents",
-        "retrieved_at": "2026-09-23T20:17:20.020899Z",
+        "retrieved_at": "2026-09-30T15:11:37.476924Z",
         "content_hash": "e1953e952d2fab5453a78b5ed0b50453018836abc69b7e56bce0863632a6d936"
       },
-      "created_at": "2026-09-23T20:17:20.020926Z",
+      "created_at": "2026-09-30T15:11:37.476982Z",
       "confidence": null,
       "metadata": {
         "relation": "same_ci_incidents",
@@ -287,10 +441,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_same_ci_incidents",
-        "retrieved_at": "2026-09-23T20:17:20.020955Z",
+        "retrieved_at": "2026-09-30T15:11:37.477051Z",
         "content_hash": "739e6b298b3a6014ebd9ee898069f688e28740e4cea20eaa758018ee022377b3"
       },
-      "created_at": "2026-09-23T20:17:20.020963Z",
+      "created_at": "2026-09-30T15:11:37.477069Z",
       "confidence": null,
       "metadata": {
         "relation": "same_ci_incidents",
@@ -347,10 +501,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_ci_runbook",
-        "retrieved_at": "2026-09-23T20:17:20.020988Z",
+        "retrieved_at": "2026-09-30T15:11:37.477119Z",
         "content_hash": "3c451ca810e7a2ca04fb413032d15db637c65a78ea51b5f2f62058dc57a46511"
       },
-      "created_at": "2026-09-23T20:17:20.020995Z",
+      "created_at": "2026-09-30T15:11:37.477135Z",
       "confidence": null,
       "metadata": {
         "relation": "ci_runbook",
@@ -401,10 +555,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_ci_runbook",
-        "retrieved_at": "2026-09-23T20:17:20.021016Z",
+        "retrieved_at": "2026-09-30T15:11:37.477181Z",
         "content_hash": "c8499cad52b73ded52199e7e528fad8e4a8af2833d37034fc8d84a9d7c2c6e69"
       },
-      "created_at": "2026-09-23T20:17:20.021022Z",
+      "created_at": "2026-09-30T15:11:37.477195Z",
       "confidence": null,
       "metadata": {
         "relation": "ci_runbook",

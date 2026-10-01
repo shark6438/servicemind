@@ -6,7 +6,8 @@ codes, because a reader who has learned one should not have to learn the other:
    0  PASS             every case came out the way the case list said it would
    1  FAIL             at least one case did not, or the answerable rate fell short
    2  INSUFFICIENT     cases were not observed; nothing was learned about them
-   3  CONFIGURATION    the observations and the case list have drifted apart
+   3  CONFIGURATION    the observations and the case list have drifted apart, or the
+                       observations do not describe one platform revision
 
 **This gate never runs the platform.** There is no ``--live``: the observations have to come
 from whatever version of the platform is deployed, and a gate that graded older observations
@@ -23,6 +24,13 @@ cases said and what they say now -- not between two timestamps.
 A report on disk whose digests disagree with its inputs is refused for the same reason, and
 ``--force`` is the only way past it. Using ``--force`` to make an acceptance run pass is
 exactly the thing the digests exist to make visible, so it is named in the report when used.
+
+**The batch has to be one platform.** The second half of the same rule, and the one that was
+missing: ``cases_digest`` says the observations were taken against *these expectations*, and
+says nothing about *which code* answered them. Each observation records
+``deployed_revision``; see ``servicemind.evaluation.revisions`` for what happens when they
+do not agree and what was measured on 2026-09-30 when they did not. ``--expect-revision``
+adds the currency half, which an offline checkout cannot work out for itself.
 """
 
 from __future__ import annotations
@@ -48,6 +56,7 @@ from servicemind.evaluation.quality_grader import (
     outcome_summary,
     render_report,
 )
+from servicemind.evaluation.revisions import recorded_revisions, revision_problems
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 QUALITY = REPO_ROOT / "evaluation" / "quality"
@@ -167,6 +176,33 @@ def check_observations_match_cases(
     return notes
 
 
+def check_batch_is_one_revision(
+    observations: list[CaseObservation], *, expect: str | None
+) -> dict[str, Any]:
+    """Refuse to grade a batch that does not describe exactly one platform revision.
+
+    ``cases_digest`` answers "against which expectations were these taken"; this answers
+    "of which code are they the measurement". A verdict reached over a corpus recorded
+    under four revisions is a verdict about none of them, and the gate could previously not
+    tell that apart from a platform that passes -- see ``evaluation/revisions.py``.
+
+    The batch file is included rather than trusted: it names one revision for the whole
+    sweep, and on 2026-09-30 it named a different one than its own members carried, which is
+    a statement about the corpus that the corpus contradicts.
+    """
+    revisions: list[str | None] = [item.deployed_revision for item in observations]
+    if BATCH.exists():
+        recorded = json.loads(BATCH.read_text(encoding="utf-8"))
+        revisions.append(recorded.get("deployed_revision"))
+    problems = revision_problems(revisions, expect=expect)
+    if problems:
+        raise ConfigurationError(
+            "; ".join(problems) + ". Re-run scripts/verify_phase7_quality_live.py on the "
+            "deployment you mean to describe"
+        )
+    return {"deployed_revisions": list(recorded_revisions(revisions))}
+
+
 def check_report_is_current(outcome: QualityOutcome, report_json: Path) -> dict[str, Any]:
     """The drift between the report on disk and the inputs it was generated from."""
     if not report_json.exists():
@@ -202,6 +238,16 @@ def main() -> int:
         action="store_true",
         help="replace a report whose digests disagree with the inputs, instead of refusing",
     )
+    parser.add_argument(
+        "--expect-revision",
+        default=None,
+        help=(
+            "the source revision these observations must have been taken against, as the "
+            "drivers record it (``<sha>`` or ``<sha>+patch(<hex>)``). Without it the gate "
+            "still refuses a batch that spans more than one revision, but cannot tell a "
+            "single stale revision from the current one"
+        ),
+    )
     args = parser.parse_args()
 
     if args.live:
@@ -223,6 +269,11 @@ def main() -> int:
     try:
         case_set = load_case_set()
         observations = load_observations(case_set)
+        # Provenance is not a report concern, so ``--force`` -- which exists to replace a
+        # report whose digests are stale -- does not reach past it. A corpus recorded under
+        # several revisions is not a statement about a platform, and re-rendering the report
+        # over it does not turn it into one.
+        provenance = check_batch_is_one_revision(observations, expect=args.expect_revision)
         drift = {} if args.force else check_observations_match_cases(case_set, observations)
     except ConfigurationError as exc:
         print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)
@@ -254,6 +305,7 @@ def main() -> int:
         "report_json": str(report_json),
         "report_md": str(report_md),
         "forced": bool(args.force),
+        **provenance,
         **drift,
     }
     if args.format == "markdown":

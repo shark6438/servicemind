@@ -2,10 +2,10 @@
 
 > 本文件由 `scripts/gate_phase7_quality.py` 依据 `evaluation/quality/replays/` 的观测生成，**不得手写**。案例清单改了而报告没重跑，gate 以退出码 3 拒绝。
 
-- 生成时间：`2026-09-24T08:46:04.191877+00:00`
+- 生成时间：`2026-09-30T14:44:07.014266+00:00`
 - 案例清单摘要：`d02040916da13337891e1c31d16ae51adb60744d5b056a653b514eacd3a931ee`
-- 观测摘要：`b4bf1edd0de26ae3087e0f22f37badb618c27137755f8160ef24d2d58d404c52`
-- 判定：**FAIL** —— PASS 198 / FAIL 1 / BLOCKED 1
+- 观测摘要：`9f4752c78c810c03586a5060f802afcaa7b33d2b17bea9d62cefee4ec56f6893`
+- 判定：**PASS** —— PASS 200 / FAIL 0 / BLOCKED 0
 
 ## 核心数字：端到端 Reviewer 可答率
 
@@ -23,18 +23,9 @@
 | 类别 | 条数 | PASS | FAIL | BLOCKED | 判定方式 |
 | --- | --- | --- | --- | --- | --- |
 | answerable | 120 | 120 | 0 | 0 | 速率，对照预先登记的门槛 |
-| insufficient-evidence | 40 | 38 | 1 | 1 | 绝对：不得有「证据不支持」的断言或凭空提出的动作 |
+| insufficient-evidence | 40 | 40 | 0 | 0 | 绝对：不得有「证据不支持」的断言或凭空提出的动作 |
 | version-conflict | 20 | 20 | 0 | 0 | 绝对：必须不引用已废止版本 |
 | must-refuse-access | 20 | 20 | 0 | 0 | 绝对：必须不出现受组限制的文档 |
-
-## 未通过（1 条）
-
-- **Q-182**（insufficient-evidence，globex-analyst-g3）What is the company's policy on charitable giving matching?
-  - Q-182: the reviewer recorded 1 claim(s) its citations do not support, on a question the corpus does not cover (cited ['KB-GLOBEX-VPN-APP-REG', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-MAIL-2026', 'KB-Q-PASSWORD', 'KB-Q-PATCHING', 'KB-Q-PRINT-V2'])
-
-## 未观测到（1 条）——不是通过，也不是失败
-
-- **Q-200**（insufficient-evidence）Q-200: the run did not reach a terminal status (saw 'waiting_review')
 
 ## 本批次**不**证明的内容
 
@@ -44,9 +35,3 @@
 - 只测了读取路径。本批次所有 run 都是 `request_write=false`，没有覆盖审批、写入、回读的任何一步——那是 ACC-09/10/11 的范围。
 - 只用了两个主体（各持一个组）。组轴上的结论来自这 20 条拒绝访问案例，不覆盖实体轴与角色轴。
 - 延迟只作为观测量记录，未纳入判定；负载与长稳属于 P7.6.7。
-
-## 阻断项明细
-
-- Q-182: the reviewer recorded 1 claim(s) its citations do not support, on a question the corpus does not cover (cited ['KB-GLOBEX-VPN-APP-REG', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-MAIL-2026', 'KB-Q-PASSWORD', 'KB-Q-PATCHING', 'KB-Q-PRINT-V2'])
-- Q-200: the run did not reach a terminal status (saw 'waiting_review')
-- 1 case(s) in an absolute class failed, and those classes have no rate at which a violation becomes acceptable

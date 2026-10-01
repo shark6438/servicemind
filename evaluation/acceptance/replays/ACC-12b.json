@@ -5,8 +5,8 @@
     "entitlement_verifier_configured": true,
     "base_url": "http://127.0.0.1:18080",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
-    "recorded_at": "2026-09-23T20:16:53.147402Z",
-    "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(92 files)",
+    "recorded_at": "2026-09-30T15:11:03.071639Z",
+    "deployed_revision": "cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)",
     "notes": [
       "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
       "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
@@ -16,8 +16,8 @@
     "username": "globex-analyst-g3",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
     "roles": [
-      "viewer",
-      "analyst"
+      "analyst",
+      "viewer"
     ],
     "entity_ids": [
       2
@@ -31,8 +31,8 @@
       "id": "submit-a",
       "description": "在工单 A 上提交只读运行，产出第一条同根因 episode",
       "action": "POST /v1/servicemind/runs",
-      "started_at": "2026-09-23T20:23:03.464781Z",
-      "elapsed_seconds": 0.02903358917683363,
+      "started_at": "2026-09-30T15:17:14.461701Z",
+      "elapsed_seconds": 0.024395589716732502,
       "http_status": 202,
       "action_hash": null,
       "action_status": null,
@@ -43,20 +43,20 @@
       "id": "observe-a",
       "description": "轮询工单 A 的运行直到终态，再开第二张——两条 episode 都落库后提案才可能发生",
       "action": "GET /v1/servicemind/runs/{run_id}",
-      "started_at": "2026-09-23T20:23:03.493962Z",
-      "elapsed_seconds": 24.550280815921724,
+      "started_at": "2026-09-30T15:17:14.486283Z",
+      "elapsed_seconds": 29.70459039323032,
       "http_status": 200,
       "action_hash": null,
       "action_status": null,
       "outcome": null,
-      "detail": "{\"status\": \"succeeded\", \"elapsed_seconds\": 24.6, \"error\": null, \"termination_code\": null}"
+      "detail": "{\"status\": \"succeeded\", \"elapsed_seconds\": 29.7, \"error\": null, \"termination_code\": null}"
     },
     {
       "id": "submit-b",
       "description": "在工单 B 上提交同一根因、同一问法的只读运行",
       "action": "POST /v1/servicemind/runs",
-      "started_at": "2026-09-23T20:23:28.064634Z",
-      "elapsed_seconds": 0.018719465471804142,
+      "started_at": "2026-09-30T15:17:44.220726Z",
+      "elapsed_seconds": 0.026115484535694122,
       "http_status": 202,
       "action_hash": null,
       "action_status": null,
@@ -67,40 +67,40 @@
       "id": "observe-b",
       "description": "轮询工单 B 的运行直到终态；本案例的 run 与终态以这一次为准",
       "action": "GET /v1/servicemind/runs/{run_id}",
-      "started_at": "2026-09-23T20:23:28.083466Z",
-      "elapsed_seconds": 21.461923016235232,
+      "started_at": "2026-09-30T15:17:44.246945Z",
+      "elapsed_seconds": 27.582805092446506,
       "http_status": 200,
       "action_hash": null,
       "action_status": null,
       "outcome": null,
-      "detail": "{\"status\": \"succeeded\", \"elapsed_seconds\": 21.5, \"error\": null, \"termination_code\": null}"
+      "detail": "{\"status\": \"succeeded\", \"elapsed_seconds\": 27.6, \"error\": null, \"termination_code\": null}"
     },
     {
       "id": "activate-memory",
       "description": "以 globex-approver 走人工审核端点激活该条程序记忆（该端点要求 approver 角色；发起该运行的仍是 globex-analyst-g3）",
       "action": "memory review activation",
-      "started_at": "2026-09-23T20:23:49.557182Z",
-      "elapsed_seconds": 0.06694289389997721,
+      "started_at": "2026-09-30T15:18:11.842323Z",
+      "elapsed_seconds": 0.05194734316319227,
       "http_status": 200,
       "action_hash": null,
       "action_status": null,
       "outcome": null,
-      "detail": "{\"memory_id\": \"9f380262-17b9-4216-9157-21341c6f51b4\", \"status_before\": \"quarantine\", \"version\": 108, \"proposed_by_run\": \"b9f7c519-d531-4cb5-9e73-5ee53277251e\", \"proposed_by_the_cases_named_run\": true, \"response\": {\"memory_id\": \"9f380262-17b9-4216-9157-21341c6f51b4\", \"memory_type\": \"procedural\", \"subject_key\": \"procedure:cross-ticket:0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9\", \"content\": \"{\\\"change_recommendation\\\":\\\"no change record is proposed: the cited knowledge states the mfa secret lives on the device and does not migrate on handset replacement, and that nothing in the account needs to change, so the remediation is a device rebind rather than a change to the directory or gateway.\\\",\\\"classification\\\":\\\"vpn mfa failure after handset change (mfa device rebind)\\\",\\\"problem_recommendation\\\":\\\"consider opening a problem record: the graph reports a sibling incident (ticket 25) on the same ci (globex vpn gateway), and the task states this is the third same-type ticket this month, indicating a recurring pattern rather than an isolated fault.\\\",\\\"recommendation_fields\\\":[\\\"change_recommendation\\\",\\\"problem_recommendation\\\"],\\\"recommended_group\\\":\\\"service desk\\\"}\", \"content_hash\": \"9e191e1a167c6bab494be9682692bb0e32547e74cf0c802151b7ed031ef7b053\", \"version\": 108, \"status\": \"active\", \"confidence\": 0.85, \"importance\": 0.9, \"evidence_refs\": [{\"evidence_id\": \"ev-1608ee49246cc7ef\", \"source_ref\": \"glpi://tickets/25\", \"content_hash\": \"081d52146cefe009b373fdd73173005a11e8c68e9d62e034bc96063ff1f6bbb4\", \"verified\": true}, {\"evidence_id\": \"ev-6782e07e7dcecdbf\", \"source_ref\": \"glpi://tickets/26\", \"content_hash\": \"a0d5c0c3c692bed61ee44bcea4901405eaaa0d067a8ca9f7a3f2d8a46b4330dd\", \"verified\": true}, {\"evidence_id\": \"ev-6a253a81b967f79e\", \"source_ref\": \"glpi://ticket/26\", \"content_hash\": \"739e6b298b3a6014ebd9ee898069f688e28740e4cea20eaa758018ee022377b3\", \"verified\": true}, {\"evidence_id\": \"ev-74293fa53e7db832\", \"source_ref\": \"glpi://groups/3\", \"content_hash\": \"3ace22c1e01c3a4e331f2c90fbdea419c1ddefc0b8b1438af21499b0aca270e9\", \"verified\": true}, {\"evidence_id\": \"ev-9e81999bf41ad8a6\", \"source_ref\": \"glpi://ticket/25\", \"content_hash\": \"3c451ca810e7a2ca04fb413032d15db637c65a78ea51b5f2f62058dc57a46511\", \"verified\": true}, {\"evidence_id\": \"ev-a6e331aca489f967\", \"source_ref\": \"glpi://groups/4\", \"content_hash\": \"8d8b67345333ae4ad22759d937fbe32317af7101b1ba35f2f7cec12a229076a4\", \"verified\": true}, {\"evidence_id\": \"ev-bde3453baad0a7ab\", \"source_ref\": \"acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND\", \"content_hash\": \"29ecf5f8121e09a4972297ba80d6b32a18a34d1e870022eed86befffad11250d\", \"verified\": true}, {\"evidence_id\": \"ev-f380cb32f4a5b880\", \"source_ref\": \"acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND\", \"content_hash\": \"b7c448f866d8ee0506bc65bb8b8368b7d3432ea99965bdeb96360e86f6672957\", \"verified\": true}, {\"evidence_id\": \"ev-f64ae17dc5b65165\", \"source_ref\": \"glpi://ticket/26\", \"content_hash\": \"c8499cad52b73ded52199e7e528fad8e4a8af2833d37034fc8d84a9d7c2c6e69\", \"verified\": true}], \"supporting_episode_ids\": [\"6a0c88ab-139f-4033-925a-bceab8449f2f\", \"772108cd-6cb9-4480-a380-c79da9e374a0\"], \"provenance\": {\"conflict_detected\": true, \"derivation_policy\": \"cross_ticket_verified_episode_v1\", \"source_ticket_ids\": [\"25\", \"26\"], \"required_group_ids\": [3], \"required_entity_ids\": [2], \"procedure_pattern_key\": \"0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9\", \"supporting_episode_count\": 2, \"human_review_ref\": \"P7.6 ACC-12b\"}, \"created_at\": \"2026-09-23T20:23:49.506250Z\"}}"
+      "detail": "{\"memory_id\": \"b905f69c-d49a-4427-80ce-f5d6fb76ae68\", \"status_before\": \"quarantine\", \"version\": 120, \"proposed_by_run\": \"05180ea8-e4cc-4a2f-b453-5f48a353b3e4\", \"proposed_by_the_cases_named_run\": true, \"response\": {\"memory_id\": \"b905f69c-d49a-4427-80ce-f5d6fb76ae68\", \"memory_type\": \"procedural\", \"subject_key\": \"procedure:cross-ticket:0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9\", \"content\": \"{\\\"change_recommendation\\\":\\\"no change record is proposed: the cited knowledge states the mfa secret lives on the device and does not migrate on handset replacement, and that nothing in the account needs to change, so the remediation is a device rebind rather than a change to the directory or gateway.\\\",\\\"classification\\\":\\\"vpn mfa failure after handset change (mfa device rebind)\\\",\\\"problem_recommendation\\\":\\\"consider opening a problem record: the graph reports a sibling incident (ticket 25) on the same ci (globex vpn gateway), and the task states this is the third same-type ticket this month, indicating a recurring pattern rather than an isolated fault.\\\",\\\"recommendation_fields\\\":[\\\"change_recommendation\\\",\\\"problem_recommendation\\\"],\\\"recommended_group\\\":\\\"service desk\\\"}\", \"content_hash\": \"9e191e1a167c6bab494be9682692bb0e32547e74cf0c802151b7ed031ef7b053\", \"version\": 120, \"status\": \"active\", \"confidence\": 0.85, \"importance\": 0.9, \"evidence_refs\": [{\"evidence_id\": \"ev-1608ee49246cc7ef\", \"source_ref\": \"glpi://tickets/25\", \"content_hash\": \"081d52146cefe009b373fdd73173005a11e8c68e9d62e034bc96063ff1f6bbb4\", \"verified\": true}, {\"evidence_id\": \"ev-6782e07e7dcecdbf\", \"source_ref\": \"glpi://tickets/26\", \"content_hash\": \"a0d5c0c3c692bed61ee44bcea4901405eaaa0d067a8ca9f7a3f2d8a46b4330dd\", \"verified\": true}, {\"evidence_id\": \"ev-6a253a81b967f79e\", \"source_ref\": \"glpi://ticket/26\", \"content_hash\": \"739e6b298b3a6014ebd9ee898069f688e28740e4cea20eaa758018ee022377b3\", \"verified\": true}, {\"evidence_id\": \"ev-74293fa53e7db832\", \"source_ref\": \"glpi://groups/3\", \"content_hash\": \"3ace22c1e01c3a4e331f2c90fbdea419c1ddefc0b8b1438af21499b0aca270e9\", \"verified\": true}, {\"evidence_id\": \"ev-9e81999bf41ad8a6\", \"source_ref\": \"glpi://ticket/25\", \"content_hash\": \"3c451ca810e7a2ca04fb413032d15db637c65a78ea51b5f2f62058dc57a46511\", \"verified\": true}, {\"evidence_id\": \"ev-a6e331aca489f967\", \"source_ref\": \"glpi://groups/4\", \"content_hash\": \"8d8b67345333ae4ad22759d937fbe32317af7101b1ba35f2f7cec12a229076a4\", \"verified\": true}, {\"evidence_id\": \"ev-bde3453baad0a7ab\", \"source_ref\": \"acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND\", \"content_hash\": \"29ecf5f8121e09a4972297ba80d6b32a18a34d1e870022eed86befffad11250d\", \"verified\": true}, {\"evidence_id\": \"ev-f380cb32f4a5b880\", \"source_ref\": \"acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND\", \"content_hash\": \"b7c448f866d8ee0506bc65bb8b8368b7d3432ea99965bdeb96360e86f6672957\", \"verified\": true}, {\"evidence_id\": \"ev-f64ae17dc5b65165\", \"source_ref\": \"glpi://ticket/26\", \"content_hash\": \"c8499cad52b73ded52199e7e528fad8e4a8af2833d37034fc8d84a9d7c2c6e69\", \"verified\": true}], \"supporting_episode_ids\": [\"6a0c88ab-139f-4033-925a-bceab8449f2f\", \"772108cd-6cb9-4480-a380-c79da9e374a0\"], \"provenance\": {\"conflict_detected\": true, \"derivation_policy\": \"cross_ticket_verified_episode_v1\", \"source_ticket_ids\": [\"25\", \"26\"], \"required_group_ids\": [3], \"required_entity_ids\": [2], \"procedure_pattern_key\": \"0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9\", \"supporting_episode_count\": 2, \"human_review_ref\": \"P7.6 ACC-12b\"}, \"created_at\": \"2026-09-30T15:18:11.766486Z\"}}"
     }
   ],
-  "run_id": "b9f7c519-d531-4cb5-9e73-5ee53277251e",
+  "run_id": "05180ea8-e4cc-4a2f-b453-5f48a353b3e4",
   "case_run_ids": [
-    "b72385e9-3758-4e5e-be50-15ea6565e33f",
-    "b9f7c519-d531-4cb5-9e73-5ee53277251e"
+    "62844128-c571-4119-af3c-cd8b5907a005",
+    "05180ea8-e4cc-4a2f-b453-5f48a353b3e4"
   ],
   "terminal_status": "succeeded",
-  "total_seconds": 21.479792892932892,
+  "total_seconds": 27.607769918628037,
   "action_intent": null,
   "citations": [
     {
-      "citation_id": "cite-f6d619e7b1b7feb8",
+      "citation_id": "cite-7b1301de460c6b75",
       "document_id": "8d9151dc-faa2-47c5-8b20-e0383b625c97",
-      "parent_chunk_id": "25736116-020c-452c-8a64-4c6c9eb561ea",
+      "parent_chunk_id": "69ecdb4e-9fb5-4635-bff6-ed0bb95d8e91",
       "source": "servicemind_acceptance_fixture",
       "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND",
       "source_record_id": "KB-GLOBEX-VPN-MFA-REBIND",
@@ -118,6 +118,28 @@
       "source_version": "phase7-acceptance-fixtures-v1",
       "content_hash": "ef59f9cf568a9e5d6ef12dca73c0264913082282bd21766014d9e0f9bc7788fe",
       "title": "VPN connection fails after an application or policy update"
+    },
+    {
+      "citation_id": "cite-9d7748093d3b7d03",
+      "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+      "parent_chunk_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-VPN-CONN",
+      "source_record_id": "KB-Q-VPN-CONN",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+      "title": "VPN client connectivity recovery"
+    },
+    {
+      "citation_id": "cite-c727e8d30a41f5fb",
+      "document_id": "56f8cd12-e115-495f-a656-eff553587f69",
+      "parent_chunk_id": "b6309b57-b7a2-4c90-8987-6405e7adf085",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-SPLIT-V2",
+      "source_record_id": "KB-Q-SPLIT-V2",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "be3e5312b941c062a23ae79a66c329d7a4fc889abb8e679f080d9806c5d110c5",
+      "title": "VPN split tunnel policy (revision 2)"
     }
   ],
   "evidence": [
@@ -132,10 +154,10 @@
       "provenance": {
         "provider": "glpi-high-level-api-v2.3",
         "retrieval_method": "glpi.read.ticket",
-        "retrieved_at": "2026-09-23T20:23:34.156993Z",
+        "retrieved_at": "2026-09-30T15:17:51.208366Z",
         "content_hash": "a0d5c0c3c692bed61ee44bcea4901405eaaa0d067a8ca9f7a3f2d8a46b4330dd"
       },
-      "created_at": "2026-09-23T20:23:34.157023Z",
+      "created_at": "2026-09-30T15:17:51.208409Z",
       "confidence": 1.0,
       "metadata": {
         "untrusted_external_content": true,
@@ -171,10 +193,10 @@
       "provenance": {
         "provider": "glpi-high-level-api-v2.3",
         "retrieval_method": "glpi.read.groups",
-        "retrieved_at": "2026-09-23T20:23:34.157051Z",
+        "retrieved_at": "2026-09-30T15:17:51.208440Z",
         "content_hash": "3ace22c1e01c3a4e331f2c90fbdea419c1ddefc0b8b1438af21499b0aca270e9"
       },
-      "created_at": "2026-09-23T20:23:34.157058Z",
+      "created_at": "2026-09-30T15:17:51.208448Z",
       "confidence": 1.0,
       "metadata": {
         "untrusted_external_content": true,
@@ -199,10 +221,10 @@
       "provenance": {
         "provider": "glpi-high-level-api-v2.3",
         "retrieval_method": "glpi.read.groups",
-        "retrieved_at": "2026-09-23T20:23:34.157072Z",
+        "retrieved_at": "2026-09-30T15:17:51.208463Z",
         "content_hash": "8d8b67345333ae4ad22759d937fbe32317af7101b1ba35f2f7cec12a229076a4"
       },
-      "created_at": "2026-09-23T20:23:34.157078Z",
+      "created_at": "2026-09-30T15:17:51.208469Z",
       "confidence": 1.0,
       "metadata": {
         "untrusted_external_content": true,
@@ -217,26 +239,26 @@
       }
     },
     {
-      "evidence_id": "ev-bde3453baad0a7ab",
+      "evidence_id": "ev-f380cb32f4a5b880",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
       "source_ref": "acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND",
       "resource_type": "knowledge_parent_chunk",
-      "resource_id": "25736116-020c-452c-8a64-4c6c9eb561ea",
-      "content": "Symptoms\n\n- The VPN client accepts the password and then fails the challenge step.\n- The failure repeats on every attempt, from every network, with the same password.\n- The user reports replacing, resetting, or factory-wiping a phone in the last 30 days.\n- No lockout is recorded against the account; the account itself is healthy.\n\nA password that is accepted proves the credential is intact. It says nothing about the\nfactor, and it is the factor that is failing.",
+      "resource_id": "69ecdb4e-9fb5-4635-bff6-ed0bb95d8e91",
+      "content": "Diagnosis\n\nMulti-factor authentication is bound to a registered device secret. The secret lives on\nthe device, not in the directory, so replacing the phone does not migrate it: the\ndirectory still believes the old handset will answer. Nothing in the account needs to\nchange, and no directory attribute is wrong.\n\nConfirm the three facts in the ticket before acting: the password step succeeded, the\nchallenge step failed, and the user's handset changed recently. If the password step is\nalso failing, this is not the fault described here and the account-recovery procedure\napplies instead.",
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:23:37.060594Z",
-        "content_hash": "29ecf5f8121e09a4972297ba80d6b32a18a34d1e870022eed86befffad11250d"
+        "retrieved_at": "2026-09-30T15:17:50.793782Z",
+        "content_hash": "b7c448f866d8ee0506bc65bb8b8368b7d3432ea99965bdeb96360e86f6672957"
       },
-      "created_at": "2026-09-23T20:23:37.060639Z",
-      "confidence": 0.9092645,
+      "created_at": "2026-09-30T15:17:50.793834Z",
+      "confidence": 0.9621787,
       "metadata": {
         "citation": {
-          "citation_id": "cite-f6d619e7b1b7feb8",
+          "citation_id": "cite-7b1301de460c6b75",
           "document_id": "8d9151dc-faa2-47c5-8b20-e0383b625c97",
-          "parent_chunk_id": "25736116-020c-452c-8a64-4c6c9eb561ea",
+          "parent_chunk_id": "69ecdb4e-9fb5-4635-bff6-ed0bb95d8e91",
           "source": "servicemind_acceptance_fixture",
           "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND",
           "source_record_id": "KB-GLOBEX-VPN-MFA-REBIND",
@@ -250,26 +272,26 @@
       }
     },
     {
-      "evidence_id": "ev-f380cb32f4a5b880",
+      "evidence_id": "ev-bde3453baad0a7ab",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
       "source_ref": "acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND",
       "resource_type": "knowledge_parent_chunk",
-      "resource_id": "69ecdb4e-9fb5-4635-bff6-ed0bb95d8e91",
-      "content": "Diagnosis\n\nMulti-factor authentication is bound to a registered device secret. The secret lives on\nthe device, not in the directory, so replacing the phone does not migrate it: the\ndirectory still believes the old handset will answer. Nothing in the account needs to\nchange, and no directory attribute is wrong.\n\nConfirm the three facts in the ticket before acting: the password step succeeded, the\nchallenge step failed, and the user's handset changed recently. If the password step is\nalso failing, this is not the fault described here and the account-recovery procedure\napplies instead.",
+      "resource_id": "25736116-020c-452c-8a64-4c6c9eb561ea",
+      "content": "Symptoms\n\n- The VPN client accepts the password and then fails the challenge step.\n- The failure repeats on every attempt, from every network, with the same password.\n- The user reports replacing, resetting, or factory-wiping a phone in the last 30 days.\n- No lockout is recorded against the account; the account itself is healthy.\n\nA password that is accepted proves the credential is intact. It says nothing about the\nfactor, and it is the factor that is failing.",
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:23:37.060671Z",
-        "content_hash": "b7c448f866d8ee0506bc65bb8b8368b7d3432ea99965bdeb96360e86f6672957"
+        "retrieved_at": "2026-09-30T15:17:50.793869Z",
+        "content_hash": "29ecf5f8121e09a4972297ba80d6b32a18a34d1e870022eed86befffad11250d"
       },
-      "created_at": "2026-09-23T20:23:37.060679Z",
-      "confidence": 0.9621787,
+      "created_at": "2026-09-30T15:17:50.793877Z",
+      "confidence": 0.9094255,
       "metadata": {
         "citation": {
-          "citation_id": "cite-7b1301de460c6b75",
+          "citation_id": "cite-f6d619e7b1b7feb8",
           "document_id": "8d9151dc-faa2-47c5-8b20-e0383b625c97",
-          "parent_chunk_id": "69ecdb4e-9fb5-4635-bff6-ed0bb95d8e91",
+          "parent_chunk_id": "25736116-020c-452c-8a64-4c6c9eb561ea",
           "source": "servicemind_acceptance_fixture",
           "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-REBIND",
           "source_record_id": "KB-GLOBEX-VPN-MFA-REBIND",
@@ -293,11 +315,11 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:23:37.060700Z",
+        "retrieved_at": "2026-09-30T15:17:50.793897Z",
         "content_hash": "ce4e879dca740c395f1ddafccf3f2f23a380564da763389dbeacfca073c32a8d"
       },
-      "created_at": "2026-09-23T20:23:37.060706Z",
-      "confidence": 0.36647636,
+      "created_at": "2026-09-30T15:17:50.793903Z",
+      "confidence": 0.36658973,
       "metadata": {
         "citation": {
           "citation_id": "cite-f952b35d19c28ca7",
@@ -326,11 +348,11 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:23:37.060725Z",
+        "retrieved_at": "2026-09-30T15:17:50.793922Z",
         "content_hash": "4a1c532e3254cace196cb2eda4de7aa68d6ce3cb6dbb84aec85935e5f7bd506b"
       },
-      "created_at": "2026-09-23T20:23:37.060730Z",
-      "confidence": 0.26903743,
+      "created_at": "2026-09-30T15:17:50.793928Z",
+      "confidence": 0.26874945,
       "metadata": {
         "citation": {
           "citation_id": "cite-abc8b95921190c8d",
@@ -349,6 +371,138 @@
       }
     },
     {
+      "evidence_id": "ev-b1f70757dbcc4022",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-VPN-CONN",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+      "content": "Procedure\n\n1. Confirm the client version is 7.4 or later. Versions below 7.4 cannot negotiate the\n\ncurrent TLS profile and fail with a handshake timeout that looks like a network fault.\n\n2. Confirm the laptop holds a valid device certificate issued within the last 400 days.\n3. Clear the client state directory `/var/lib/vpn-client/state` and restart the service.\n4. Reconnect once. A second failure within five minutes is not retried automatically.\n5. If the handshake still fails, capture the client log and open a Network Team ticket.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:17:50.793946Z",
+        "content_hash": "0000abefefc109a5d7c23a0e1bedba5a7ac5ac20d3ba8613d90059c0daa67d93"
+      },
+      "created_at": "2026-09-30T15:17:50.793952Z",
+      "confidence": 0.087563835,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-9d7748093d3b7d03",
+          "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+          "parent_chunk_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-VPN-CONN",
+          "source_record_id": "KB-Q-VPN-CONN",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+          "title": "VPN client connectivity recovery"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-d8baa94488f1ba1d",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-VPN-CONN",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "07761ee4-ac10-44c7-b4f3-36fcb30ad1c6",
+      "content": "VPN client connectivity recovery\n\nApplies to the managed VPN client on corporate laptops. Owned by the Network Team.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:17:50.793970Z",
+        "content_hash": "713aa145ae314ffaff6135361e8670c4b8660711465a9ee2c01dae8bfb3bb71a"
+      },
+      "created_at": "2026-09-30T15:17:50.793975Z",
+      "confidence": 0.0006959537,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-eaa265ed5acf58bb",
+          "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+          "parent_chunk_id": "07761ee4-ac10-44c7-b4f3-36fcb30ad1c6",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-VPN-CONN",
+          "source_record_id": "KB-Q-VPN-CONN",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+          "title": "VPN client connectivity recovery"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-c4e8bbc154b5bd3e",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-SPLIT-V2",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "b6309b57-b7a2-4c90-8987-6405e7adf085",
+      "content": "VPN split tunnel policy (revision 2)\n\nSupersedes revision 1. This is the policy in force.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:17:50.793992Z",
+        "content_hash": "342007fb72cc0a9cd2be6c65b0071a833779e26ebb129c8dbdae123a09fe4c3d"
+      },
+      "created_at": "2026-09-30T15:17:50.793997Z",
+      "confidence": 0.00021485926,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-c727e8d30a41f5fb",
+          "document_id": "56f8cd12-e115-495f-a656-eff553587f69",
+          "parent_chunk_id": "b6309b57-b7a2-4c90-8987-6405e7adf085",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-SPLIT-V2",
+          "source_record_id": "KB-Q-SPLIT-V2",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "be3e5312b941c062a23ae79a66c329d7a4fc889abb8e679f080d9806c5d110c5",
+          "title": "VPN split tunnel policy (revision 2)"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-24e102736ad3c87f",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-SPLIT-V2",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "6c80b66a-207d-489d-96bb-66983c9960e9",
+      "content": "Exceptions\n\nA full-tunnel profile is available on request for staff handling regulated data. It needs\nthe Security Team's agreement and is reviewed every 6 months.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:17:50.794014Z",
+        "content_hash": "e2214aea2b734de6f5f16f07c559d6b13ffb60bf576f30aa4b6d34f97311253f"
+      },
+      "created_at": "2026-09-30T15:17:50.794019Z",
+      "confidence": 0.00031999825,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-e2a97c56135d4e43",
+          "document_id": "56f8cd12-e115-495f-a656-eff553587f69",
+          "parent_chunk_id": "6c80b66a-207d-489d-96bb-66983c9960e9",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-SPLIT-V2",
+          "source_record_id": "KB-Q-SPLIT-V2",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "be3e5312b941c062a23ae79a66c329d7a4fc889abb8e679f080d9806c5d110c5",
+          "title": "VPN split tunnel policy (revision 2)"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
       "evidence_id": "ev-ff24bc453152bf9d",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "graph",
@@ -359,10 +513,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_same_ci_incidents",
-        "retrieved_at": "2026-09-23T20:23:37.070173Z",
+        "retrieved_at": "2026-09-30T15:17:50.808760Z",
         "content_hash": "e1953e952d2fab5453a78b5ed0b50453018836abc69b7e56bce0863632a6d936"
       },
-      "created_at": "2026-09-23T20:23:37.070195Z",
+      "created_at": "2026-09-30T15:17:50.808799Z",
       "confidence": null,
       "metadata": {
         "relation": "same_ci_incidents",
@@ -419,10 +573,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_same_ci_incidents",
-        "retrieved_at": "2026-09-23T20:23:37.070221Z",
+        "retrieved_at": "2026-09-30T15:17:50.808834Z",
         "content_hash": "739e6b298b3a6014ebd9ee898069f688e28740e4cea20eaa758018ee022377b3"
       },
-      "created_at": "2026-09-23T20:23:37.070227Z",
+      "created_at": "2026-09-30T15:17:50.808843Z",
       "confidence": null,
       "metadata": {
         "relation": "same_ci_incidents",
@@ -479,10 +633,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_ci_runbook",
-        "retrieved_at": "2026-09-23T20:23:37.070248Z",
+        "retrieved_at": "2026-09-30T15:17:50.808868Z",
         "content_hash": "3c451ca810e7a2ca04fb413032d15db637c65a78ea51b5f2f62058dc57a46511"
       },
-      "created_at": "2026-09-23T20:23:37.070253Z",
+      "created_at": "2026-09-30T15:17:50.808876Z",
       "confidence": null,
       "metadata": {
         "relation": "ci_runbook",
@@ -533,10 +687,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_ci_runbook",
-        "retrieved_at": "2026-09-23T20:23:37.070272Z",
+        "retrieved_at": "2026-09-30T15:17:50.808899Z",
         "content_hash": "c8499cad52b73ded52199e7e528fad8e4a8af2833d37034fc8d84a9d7c2c6e69"
       },
-      "created_at": "2026-09-23T20:23:37.070277Z",
+      "created_at": "2026-09-30T15:17:50.808906Z",
       "confidence": null,
       "metadata": {
         "relation": "ci_runbook",
@@ -587,24 +741,25 @@
     "problem_recommendation": "Consider opening a problem record: the graph reports a sibling incident (ticket 25) on the same CI (Globex VPN gateway), and the task states this is the third same-type ticket this month, indicating a recurring pattern rather than an isolated fault.",
     "change_recommendation": "No change record is proposed: the cited knowledge states the MFA secret lives on the device and does not migrate on handset replacement, and that nothing in the account needs to change, so the remediation is a device rebind rather than a change to the directory or gateway.",
     "proposed_actions": [],
-    "reasoning_summary": "Ticket 26 records a VPN authentication that passes the password step and fails at the MFA challenge, on every attempt and from every network, with no account lockout, nine days after the user's phone was replaced. The knowledge article KB-GLOBEX-VPN-MFA-REBIND states MFA is bound to a device secret that does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change; all three are present in the ticket, so the device-rebind fault is the best-supported root cause. The graph links ticket 26 to the Globex VPN gateway CI and to sibling incident ticket 25 on the same CI, and the task states this is the third same-type ticket this month, so the incident is treated as recurring and a problem record is recommended. The graph also points to runbook KB-GLOBEX-VPN-MFA-G3 as the operating runbook for the affected CI, so following its triage/recovery procedure is recommended. Service Desk is recommended as first-line owner because the ticket was reported to the service desk, but the support-group directory only shows the group exists, so ownership is not established and the recommendation carries residual uncertainty. No write was requested, so no follow-up action is proposed.",
+    "reasoning_summary": "Ticket 26 reports VPN authentication passing the password step and failing at the MFA challenge on every attempt and every network, with the user's handset replaced nine days ago and no account lockout (ev-6782e07e7dcecdbf). The knowledge article KB-GLOBEX-VPN-MFA-REBIND states MFA is bound to a device secret that does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change (ev-f380cb32f4a5b880, ev-bde3453baad0a7ab). All three facts are present, so the device-rebind fault is the best-supported root cause. The graph links ticket 26 to the Globex VPN gateway CI and its runbook KB-GLOBEX-VPN-MFA-G3 (ev-f64ae17dc5b65165), and reports one sibling incident (ticket 25) on the same CI, pointing at a shared root cause (ev-6a253a81b967f79e); the task states this is the third same-type ticket this month, so a problem record is warranted. Ticket fields record impact/urgency/priority 3/3/3 and status New (ev-6782e07e7dcecdbf). The support-group directory lists Service Desk and Network Team (ev-a6e331aca489f967, ev-74293fa53e7db832); the directory shows the groups exist but does not establish ownership, so Service Desk is recommended only as a first-line routing recommendation with that residual uncertainty recorded. No write was requested (request_write=false), so no follow-up action is proposed.",
     "evidence_refs": [
       "ev-6782e07e7dcecdbf",
+      "ev-f64ae17dc5b65165",
+      "ev-9e81999bf41ad8a6",
+      "ev-6a253a81b967f79e",
       "ev-f380cb32f4a5b880",
       "ev-bde3453baad0a7ab",
-      "ev-6a253a81b967f79e",
-      "ev-f64ae17dc5b65165",
       "ev-a6e331aca489f967",
       "ev-74293fa53e7db832"
     ],
-    "confidence": 0.85,
-    "source": "servicemind-agent/model",
+    "confidence": 0.9,
+    "source": "servicemind-agent-v2/model",
     "status": "model",
     "claims": [
       {
         "claim_id": "C1",
         "claim_type": "incident_fact",
-        "statement": "Ticket 26 records that corporate VPN authentication passes the password step and is then rejected at the multi-factor authentication step, failing on every attempt and from every network with the same password, with no account lockout, nine days after the user's phone was replaced; the ticket is New with impact/urgency/priority 3/3/3 and no action taken yet.",
+        "statement": "Ticket 26 records that VPN authentication passes the password step and is then rejected at the MFA step, failing on every attempt and from every network with the same password; the user's phone was replaced nine days ago and there is no account lockout. The ticket's fields record impact 3, urgency 3, priority 3 and status New.",
         "evidence_refs": [
           "ev-6782e07e7dcecdbf"
         ],
@@ -613,22 +768,18 @@
       },
       {
         "claim_id": "C2",
-        "claim_type": "root_cause_hypothesis",
-        "statement": "The knowledge article states that MFA is bound to a registered device secret that lives on the device and does not migrate when the phone is replaced, so the directory still expects the old handset to answer; it states the three confirming facts are a successful password step, a failed challenge step, and a recent handset change. All three are present in ticket 26, so the device-rebind fault is the best-supported root cause.",
+        "claim_type": "incident_fact",
+        "statement": "The graph states that ticket 26 affects CI Globex VPN gateway (acceptance://globex/ci/vpn-gateway), whose operating runbook is acceptance://globex/KB-GLOBEX-VPN-MFA-G3 'Runbook KB-GLOBEX-VPN-MFA-G3', and instructs following that runbook's procedure for triage and recovery.",
         "evidence_refs": [
-          "ev-f380cb32f4a5b880",
-          "ev-bde3453baad0a7ab",
-          "ev-6782e07e7dcecdbf"
+          "ev-f64ae17dc5b65165"
         ],
-        "confidence": 0.85,
-        "assumptions": [
-          "The knowledge article is treated as the procedural authority for this fault; the alternative 'not a factor rebind' article (KB-GLOBEX-VPN-APP-REG) was considered and excluded because it applies when the connection is rejected before the challenge is presented, which is not what ticket 26 records."
-        ]
+        "confidence": 0.95,
+        "assumptions": []
       },
       {
         "claim_id": "C3",
         "claim_type": "incident_fact",
-        "statement": "The graph states that ticket 26 affects CI Globex VPN gateway (acceptance fixture) and that 1 sibling incident (ticket 25) hit the same CI, and it correlates same-CI incidents as pointing at a shared root cause rather than an isolated fault.",
+        "statement": "The graph states that ticket 26 has one sibling incident on the same CI, glpi://ticket/25 '[P7.6-ACCEPTANCE] VPN MFA failure on ticket 25', and that same-CI correlation points at a shared root cause rather than an isolated fault.",
         "evidence_refs": [
           "ev-6a253a81b967f79e"
         ],
@@ -637,56 +788,60 @@
       },
       {
         "claim_id": "C4",
-        "claim_type": "incident_fact",
-        "statement": "The graph states that ticket 26 affects CI Globex VPN gateway, whose operating runbook is acceptance://globex/KB-GLOBEX-VPN-MFA-G3 'Runbook KB-GLOBEX-VPN-MFA-G3', and instructs following that runbook's procedure for triage and recovery.",
+        "claim_type": "root_cause_hypothesis",
+        "statement": "The knowledge article KB-GLOBEX-VPN-MFA-REBIND states that MFA is bound to a registered device secret that lives on the device and does not migrate when the phone is replaced, so the directory still expects the old handset to answer; the three confirming facts are a successful password step, a failed challenge step, and a recent handset change. All three facts are present in ticket 26, so the device-rebind fault is the best-supported root cause of the MFA rejection.",
         "evidence_refs": [
-          "ev-f64ae17dc5b65165"
+          "ev-f380cb32f4a5b880",
+          "ev-bde3453baad0a7ab",
+          "ev-6782e07e7dcecdbf"
         ],
         "confidence": 0.9,
-        "assumptions": []
+        "assumptions": [
+          "The article's confirming-fact test is applied to this ticket's recorded facts; no independent verification of the device secret state was performed."
+        ]
       },
       {
         "claim_id": "C5",
-        "claim_type": "recommended_action",
-        "statement": "Follow runbook KB-GLOBEX-VPN-MFA-G3's procedure for triage and recovery, as the graph identifies it as the operating runbook for the affected CI.",
+        "claim_type": "priority_reason",
+        "statement": "The ticket's own fields record impact 3, urgency 3 and priority 3, so the analysis carries those values forward rather than recomputing them.",
         "evidence_refs": [
-          "ev-f64ae17dc5b65165"
+          "ev-6782e07e7dcecdbf"
         ],
-        "confidence": 0.8,
+        "confidence": 0.95,
         "assumptions": []
       },
       {
         "claim_id": "C6",
         "claim_type": "assignment_reason",
-        "statement": "Service Desk is recommended as the first-line owner because ticket 26 records that the incident was reported by the user to the service desk; the support-group directory lists Service Desk as an existing group, but it does not establish that Service Desk owns this work, so this is a recommendation with residual uncertainty.",
+        "statement": "Service Desk is recommended as the first-line owner because the ticket records that the issue was reported by the user to the service desk; the support-group directory lists Service Desk as an existing group. The directory does not establish ownership of this work, so this is a routing recommendation with residual uncertainty.",
         "evidence_refs": [
           "ev-6782e07e7dcecdbf",
           "ev-a6e331aca489f967"
         ],
         "confidence": 0.6,
         "assumptions": [
-          "The support-group directory shows the group exists, not that it owns this work; ownership is not established by the cited evidence."
+          "No cited evidence records an assignment or ownership of ticket 26; the recommendation rests on where the issue was reported."
         ]
       },
       {
         "claim_id": "C7",
-        "claim_type": "priority_reason",
-        "statement": "Ticket 26's own record sets impact 3, urgency 3 and priority 3, supporting the P3 classification carried into this analysis.",
+        "claim_type": "recommended_action",
+        "statement": "The graph instructs following the procedure of runbook KB-GLOBEX-VPN-MFA-G3 for triage and recovery of this incident, and the knowledge article states the remediation is a device rebind (the MFA secret does not migrate on handset replacement and nothing in the account needs to change).",
         "evidence_refs": [
-          "ev-6782e07e7dcecdbf"
+          "ev-f64ae17dc5b65165",
+          "ev-f380cb32f4a5b880"
         ],
-        "confidence": 0.95,
+        "confidence": 0.85,
         "assumptions": []
       }
     ],
     "alternatives": [
-      "A client or policy fault occurring before the MFA prompt is presented (KB-GLOBEX-VPN-APP-REG) — excluded because ticket 26 records the failure at the challenge step, after the password was accepted.",
-      "An account-recovery scenario — excluded because the password step succeeded, which the knowledge article states rules out that path."
+      "Account-recovery procedure: the knowledge article states that if the password step is also failing, this is not the fault described and the account-recovery procedure applies instead; here the password step succeeded, so this alternative does not apply."
     ],
     "unresolved_questions": [
-      "The task states this is the third same-type ticket this month, but only one sibling incident (ticket 25) is evidenced in the supplied context; the third ticket is not shown.",
-      "No evidence in the supplied context records the outcome of any rebind or recovery attempt for ticket 26.",
-      "No evidence establishes which group formally owns VPN MFA rebind work for this tenant."
+      "No cited evidence records an assignment or ownership of ticket 26; the support-group directory only shows that Service Desk and Network Team exist, so ownership remains unestablished.",
+      "The task states this is the third same-type ticket this month, but the cited evidence shows only one sibling incident (ticket 25) on the same CI; the third ticket is not evidenced in the cited material.",
+      "No cited evidence confirms the current state of the registered device secret or the outcome of a rebind attempt for this user."
     ],
     "validation_feedback": []
   },
@@ -697,21 +852,25 @@
     "conflicts": [],
     "policy_issues": [],
     "risk_level": "low",
-    "feedback": "All claims are backed by their cited evidence. C1/C7 restate ticket 26's fields (password accepted, MFA rejected, every attempt/network, no lockout, phone replaced nine days ago, New, 3/3/3, no action). C2's mechanism and three confirming facts come from KB-GLOBEX-VPN-MFA-REBIND, with the alternative article's exclusion properly hedged in assumptions. C3/C4 report the graph's CI, sibling ticket 25, and runbook KB-GLOBEX-VPN-MFA-G3 as the graph states them. C5 follows the runbook rule the graph records. C6's Service Desk recommendation rests on the ticket's own 'reported by the user to the service desk' record, with the directory's limits disclosed as residual uncertainty. No prompt-injection content; no write requested, so empty proposed_actions is consistent.",
+    "feedback": "All claims are backed by their cited evidence. C1 matches ticket 26's fields and narrative (password step passes, MFA challenge fails on every attempt/network, handset replaced nine days ago, no lockout, impact/urgency/priority 3/3/3, status New). C2 and C3 accurately attribute the CI, runbook, sibling ticket 25 and same-CI correlation to the graph records. C4's root-cause mechanism and three confirming facts come from the KB-GLOBEX-VPN-MFA-REBIND chunks, with the inference hedged in assumptions. C5 carries the ticket's own priority fields. C6's Service Desk recommendation rests on the ticket's 'reported by the user to the service desk' plus the group directory, with the ownership gap explicitly recorded as residual uncertainty. C7's runbook instruction and device-rebind remediation are stated by the cited graph and knowledge records. The analysis's own unresolved_questions correctly flag that the 'third ticket this month' comes only from the task, not the cited evidence. No prompt-injection content appears in the evidence. Action is consistent with request_write=false (no write proposed).",
     "reviewed_evidence_refs": [
       "ev-6782e07e7dcecdbf",
       "ev-74293fa53e7db832",
       "ev-a6e331aca489f967",
-      "ev-bde3453baad0a7ab",
       "ev-f380cb32f4a5b880",
+      "ev-bde3453baad0a7ab",
       "ev-1569bbe7460d1943",
       "ev-2781a9129c6d257f",
+      "ev-b1f70757dbcc4022",
+      "ev-d8baa94488f1ba1d",
+      "ev-c4e8bbc154b5bd3e",
+      "ev-24e102736ad3c87f",
       "ev-ff24bc453152bf9d",
       "ev-6a253a81b967f79e",
       "ev-9e81999bf41ad8a6",
       "ev-f64ae17dc5b65165"
     ],
-    "review_id": "f51f54e9-569c-4dc7-afa6-cf42a8685ceb",
+    "review_id": "383c484e-521b-4a23-8bec-8aae6d66c6bb",
     "findings": [],
     "reviewed_claim_ids": [
       "C1",
@@ -747,7 +906,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "3fb61f40da286bc2b91a0056afceafacf74f90bb25f1c8d1f3c751b486fbea9d",
+      "content_hash": "e393b926bf78201a01f44fffbe320fae3c1d812d63b2097ce9acac0524ae7e5a",
       "tokens": 120,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -755,8 +914,32 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "f7b4970fb97654d56ce41fdb5fd2f509bbeca7fdc6722bc98db612efa9196bc5",
+      "content_hash": "38f6f79fccca71a6a4473e950a9bfb7cf53ddf929ab58375665a2db3fbcf1344",
       "tokens": 170,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "state",
+      "source": "state",
+      "content_hash": "4e5b773092ae724fe0c7267b01a08e26081e9ba6c23a00099658d73e5dc537c5",
+      "tokens": 108,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "policy",
+      "source": "policy",
+      "content_hash": "e7d4efc9c4d9c865d88f65da2a9afe0a85c2f6009b67e9b3ac796c91558446e2",
+      "tokens": 112,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "task",
+      "source": "task",
+      "content_hash": "c4b795eda2925d73e16d99570cfc2d1a477c77bb54154e2cd77beadbb3523e0d",
+      "tokens": 171,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -779,7 +962,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "3fb61f40da286bc2b91a0056afceafacf74f90bb25f1c8d1f3c751b486fbea9d",
+      "content_hash": "e393b926bf78201a01f44fffbe320fae3c1d812d63b2097ce9acac0524ae7e5a",
       "tokens": 120,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -787,39 +970,15 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "6fa23f28a99f81c775539aa7fdeb1c39bb06fe34f042d05aee417c93691d57d5",
-      "tokens": 201,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "state",
-      "source": "state",
-      "content_hash": "4e5b773092ae724fe0c7267b01a08e26081e9ba6c23a00099658d73e5dc537c5",
-      "tokens": 108,
+      "content_hash": "2198d4d57489a5d059db76e40689aa1a64d0226ff7268ebfa84d9130df7bf903",
+      "tokens": 190,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "424e00ccabf045189eff5bc0488a28104c0569d523f2474295440099a90ecc3b",
-      "tokens": 112,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "task",
-      "source": "task",
-      "content_hash": "754a55638d6225dbde70830747bbfd32b88a1bd39e9af43b2c9a02b277b5b623",
-      "tokens": 191,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "policy",
-      "source": "policy",
-      "content_hash": "ef71daeb7aee8738012d22dcd41c95cd0534680dd283731a1df17345664f7729",
+      "content_hash": "4aaec3d93bbab5e57e0aa1eb8b70f030dfa5377c701e7cc38bdafb4a02bd4dff",
       "tokens": 88,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -827,15 +986,15 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "ee800e890275f5f746f6e8afe006c34048761d8b6cc97720cf558e1a3a8624f9",
-      "tokens": 184,
+      "content_hash": "1eb799b0678e70def566f27daf97b10db58b7e710fcbed4c5f90c3b8faf71ff7",
+      "tokens": 186,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "ev-a6e331aca489f967",
       "source": "evidence",
-      "content_hash": "8eaf983dcadfa0fc7d4cab75fd1d484e0185347d89f6d6878fd51310ce0ed592",
+      "content_hash": "514ed5b4fcf14f7a0c4f018b306e82db9af5c25b78fa81196ca25e7162aee2fd",
       "tokens": 347,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -843,7 +1002,7 @@
     {
       "item_id": "ev-74293fa53e7db832",
       "source": "evidence",
-      "content_hash": "2dced4861f60760ae450e40f1a642f0cc7a81e6ef30383fd6f073fdb62a7ec52",
+      "content_hash": "5dc6cf3b78f84ef8d09caf563ffddf4a97d6c7e8897778ac700a22e51288af0a",
       "tokens": 347,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -851,7 +1010,7 @@
     {
       "item_id": "ev-6782e07e7dcecdbf",
       "source": "evidence",
-      "content_hash": "8b4e3541aef4f4ead16906c2d8799f5194db620d40672e988a406f10aaade25e",
+      "content_hash": "4de9dbfe123c81511d7688ae9cfc1db518695d053de3453157f06d5587cfcb9b",
       "tokens": 1115,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -859,7 +1018,7 @@
     {
       "item_id": "ev-f64ae17dc5b65165",
       "source": "evidence",
-      "content_hash": "7e7fefa15ed9acb2f1fa19ea9de2435941db8b47fc6f2cd7a1e4ef92b6c2e8cd",
+      "content_hash": "6aa8d58b2853b89ae3c96024696170a9474d1607065e28ecda3901da71f06581",
       "tokens": 871,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -867,7 +1026,7 @@
     {
       "item_id": "ev-9e81999bf41ad8a6",
       "source": "evidence",
-      "content_hash": "55e6e8ab3290561028240da4daacfeeedc0143534611234ebbf79e821c779a85",
+      "content_hash": "c1ce2b2fedc6e08ecbbbdb147c215482ddb33c7c0dfee62d2ff508d91111cd29",
       "tokens": 871,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -875,7 +1034,7 @@
     {
       "item_id": "ev-6a253a81b967f79e",
       "source": "evidence",
-      "content_hash": "9429548167bc854ae890ba2a052bb5bf489926644a59f71982d139fe29ae0501",
+      "content_hash": "1db323f75c1eceddd445c4cf1ef2452f4123c287a8fd87bde894aedefb733a8b",
       "tokens": 919,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -883,7 +1042,7 @@
     {
       "item_id": "ev-ff24bc453152bf9d",
       "source": "evidence",
-      "content_hash": "3526c53301153c9e7895a2f2d34e92c40a50a61158173af11ec20494cfd784aa",
+      "content_hash": "4940a22e4b32761d4c282ea67be6929309aa60c25e01e0df3dadaa577b2ca807",
       "tokens": 919,
       "decision": "pruned",
       "reason": "source_token_cap_exceeded"
@@ -899,7 +1058,7 @@
     {
       "item_id": "ev-f380cb32f4a5b880",
       "source": "evidence",
-      "content_hash": "006f691a84a3c8f321cb68e1f66cf246a1ea795f3a208e40a44b1a973fe82fb0",
+      "content_hash": "99bce4b2764e35e006479694529bbd06ebb1de9a8821abca2e8de75cdec34c8e",
       "tokens": 851,
       "decision": "selected",
       "reason": "reclaimed_from_source_cap"
@@ -907,7 +1066,7 @@
     {
       "item_id": "ev-bde3453baad0a7ab",
       "source": "evidence",
-      "content_hash": "82ae91840c368998d0d2b3a994f65527bb726bb248b032a2ad85260f24a7b359",
+      "content_hash": "84326e968b7506b662cfc79cad90ba954581d0e763a5a9ba0f29299ee4cebb4b",
       "tokens": 801,
       "decision": "selected",
       "reason": "reclaimed_from_source_cap"
@@ -915,16 +1074,48 @@
     {
       "item_id": "ev-1569bbe7460d1943",
       "source": "evidence",
-      "content_hash": "8320329b6e6a1698581b65b6def72046febcf7c9b10243d0ef35a88e60e25f5c",
+      "content_hash": "dece08e6414b0583cccfb77cc90681219dabc8cc861a4b0174f8c5f1cd273d30",
       "tokens": 811,
-      "decision": "selected",
-      "reason": "reclaimed_from_source_cap"
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
     },
     {
       "item_id": "ev-2781a9129c6d257f",
       "source": "evidence",
-      "content_hash": "f3eb1f5790bd25d399f8fe69620a7d3805cbe5d42f62eb38d73b7deb550da835",
+      "content_hash": "00d4762972cf0998f4dd1e9777392c9ad4fd727c76fc151d3d07e421e8b2d47f",
       "tokens": 778,
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
+    },
+    {
+      "item_id": "ev-b1f70757dbcc4022",
+      "source": "evidence",
+      "content_hash": "8690703cc475a4f772d2afd410f92d47d3f33a8a1e8d692e90382af861a01daf",
+      "tokens": 815,
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
+    },
+    {
+      "item_id": "ev-d8baa94488f1ba1d",
+      "source": "evidence",
+      "content_hash": "8021bf1cdcdbc7a7beb73c33f3e43cb03f9ed3ae4edf598e760540e2b5f1e7ed",
+      "tokens": 606,
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
+    },
+    {
+      "item_id": "ev-24e102736ad3c87f",
+      "source": "evidence",
+      "content_hash": "8d9034da4d0773fb41477fd06bef23b79090ed9ac1dbf627a215cbb7423abc55",
+      "tokens": 639,
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
+    },
+    {
+      "item_id": "ev-c4e8bbc154b5bd3e",
+      "source": "evidence",
+      "content_hash": "1eddd2c4d4b48c79b79daf9676f5db1046bd4e673655be102abee48bf596727b",
+      "tokens": 608,
       "decision": "pruned",
       "reason": "source_token_cap_exceeded"
     },
@@ -937,10 +1128,18 @@
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "memory:ff1ee26c-eecd-40a8-80cc-ad7ac34aae64",
+      "item_id": "memory:9f380262-17b9-4216-9157-21341c6f51b4",
       "source": "memory",
-      "content_hash": "eb9d420532a23bc85a3027ee567b5527ea34347e1c79bf7e293658063fb24366",
+      "content_hash": "a1346de64bc457783fcd07f4486b075c4096898a66ce05e73c9bf27aa04f9214",
       "tokens": 760,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "memory:304d6ec4-0afd-4a43-801f-ff730310d8ec",
+      "source": "memory",
+      "content_hash": "a9e12c630dae1f483e77658e4f8acdadb06d7fdd79850acdd9e7c0e2095c7525",
+      "tokens": 1181,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -985,25 +1184,17 @@
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "memory:d8b9a46a-fa70-4a26-9daf-eaa984cd1333",
-      "source": "memory",
-      "content_hash": "d89a4fc6922742ef971ad55ef479116395b125abfb70261c7e8f7b113031622d",
-      "tokens": 237,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
       "item_id": "state",
       "source": "state",
-      "content_hash": "ea2b1973d87045d0a5996d35dd506b0eabc9575ca3c9e495436addd4e8f664af",
-      "tokens": 3154,
+      "content_hash": "65c1e9d39eae82648479af1500dfde1d02edbd0dc56e9699a60a7df00f151c86",
+      "tokens": 3277,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "ef71daeb7aee8738012d22dcd41c95cd0534680dd283731a1df17345664f7729",
+      "content_hash": "4aaec3d93bbab5e57e0aa1eb8b70f030dfa5377c701e7cc38bdafb4a02bd4dff",
       "tokens": 88,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -1049,6 +1240,14 @@
       "reason": "ranked_within_budget"
     },
     {
+      "item_id": "ev-9e81999bf41ad8a6",
+      "source": "evidence",
+      "content_hash": "d2b380b0b37229e951c889b1102cf04f15dfb3ecd75373636a9addaff8fd5c48",
+      "tokens": 248,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
       "item_id": "ev-6a253a81b967f79e",
       "source": "evidence",
       "content_hash": "92a9e3d44ab16e53eae384f4032af7a8c8f0a04f91a2f5883eac9f8debbc6f2d",
@@ -1073,26 +1272,10 @@
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "ev-9e81999bf41ad8a6",
-      "source": "evidence",
-      "content_hash": "d2b380b0b37229e951c889b1102cf04f15dfb3ecd75373636a9addaff8fd5c48",
-      "tokens": 248,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
       "item_id": "skill:vpn-mfa@1.0.0",
       "source": "skill",
       "content_hash": "f73bbc8917a3e190f38a56d4a634a2d7b704698baeb2779750865dd7f1436503",
       "tokens": 150,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "ev-1569bbe7460d1943",
-      "source": "evidence",
-      "content_hash": "77dd56971176a98c29fd3605dfebfb7ea5333d7fba195fcb2ed04d17e46e794a",
-      "tokens": 571,
       "decision": "selected",
       "reason": "ranked_within_budget"
     }
@@ -1447,93 +1630,93 @@
   "audit_events": [],
   "memory_records": [
     {
-      "memory_id": "d5444738-8f43-41d8-91de-bbe9d8743946",
+      "memory_id": "c8a6fd0a-d904-434d-a520-7c3cd206ff1e",
       "memory_type": "episodic",
       "status": "quarantine",
-      "source_run_id": "b72385e9-3758-4e5e-be50-15ea6565e33f",
+      "source_run_id": "62844128-c571-4119-af3c-cd8b5907a005",
       "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
-      "content": "{\"classification\": \"VPN MFA failure after handset change (MFA device rebind)\", \"execution\": null, \"outcome\": \"Ticket 25 records a VPN client that accepts the password then fails the MFA challenge, repeating on every attempt and from every network, with no account lockout, nine days after a handset replacement (ev-1608ee49246cc7ef). The knowledge article states MFA is bound to a device secret that does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change (ev-f380cb32f4a5b880, ev-bde3453baad0a7ab); all three are present, so the device-rebind fault is the best-supported root cause. The graph links ticket 25 to the Globex VPN gateway CI and to runbook KB-GLOBEX-VPN-MFA-G3 (ev-9e81999bf41ad8a6), and reports a sibling incident on the same CI (ev-6a253a81b967f79e), supporting a recurring pattern. Ticket impact/urgency/priority are 3/3/3 (ev-1608ee49246cc7ef). The support-group directory lists Service Desk and Network Team (ev-a6e331aca489f967, ev-74293fa53e7db832); Service Desk is recommended as first-line owner because the ticket was reported to the service desk, but the directory does not establish ownership, so this is a recommendation with residual uncertainty. No write was requested, so no follow-up action is proposed.\", \"priority\": 3, \"recommended_group\": \"Service Desk\", \"ticket_id\": 25}",
+      "content": "{\"classification\": \"VPN MFA failure after handset change (MFA device rebind)\", \"execution\": null, \"outcome\": \"Ticket 25 reports a VPN client that accepts the password and then fails the MFA challenge, repeating on every attempt and from every network, with no account lockout, nine days after a handset replacement (ev-1608ee49246cc7ef). The knowledge article KB-GLOBEX-VPN-MFA-REBIND states MFA is bound to a device secret that lives on the device and does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change (ev-f380cb32f4a5b880, ev-bde3453baad0a7ab). All three facts are present, so the device-rebind fault is the best-supported root cause. Ticket fields record impact/urgency/priority 3/3/3 (ev-1608ee49246cc7ef). The graph links ticket 25 to the Globex VPN gateway CI and its runbook, and reports a sibling incident (ticket 26) on the same CI, which together with the task's statement of a third same-type ticket this month supports a recurring pattern (ev-9e81999bf41ad8a6, ev-6a253a81b967f79e). The support-group directory lists Service Desk and Network Team (ev-a6e331aca489f967, ev-74293fa53e7db832); Service Desk is recommended as first-line owner because the ticket was reported to the service desk, but the directory does not establish ownership, so this is a recommendation with residual uncertainty. No write was requested, so no follow-up action is proposed.\", \"priority\": 3, \"recommended_group\": \"Service Desk\", \"ticket_id\": 25}",
       "observed_at_step": "observe-a"
     },
     {
-      "memory_id": "8150f19b-367c-400f-9b16-3dd45328c77b",
+      "memory_id": "552460ab-8733-46f2-a49e-c60b6e787277",
       "memory_type": "procedural",
       "status": "quarantine",
-      "source_run_id": "b72385e9-3758-4e5e-be50-15ea6565e33f",
+      "source_run_id": "62844128-c571-4119-af3c-cd8b5907a005",
       "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
-      "content": "{\"change_recommendation\":\"no change record is proposed: the cited knowledge states the mfa secret lives on the device and does not migrate on handset replacement, and that nothing in the account needs to change, so remediation is a device rebind rather than a change to the directory or gateway.\",\"classification\":\"vpn mfa failure after handset change (mfa device rebind)\",\"problem_recommendation\":\"consider opening a problem record: the graph reports a sibling incident (ticket 26) affecting the same ci (globex vpn gateway), and the task states this is the third same-type ticket this month, indicating a recurring pattern rather than an isolated fault.\",\"recommendation_fields\":[\"change_recommendation\",\"problem_recommendation\"],\"recommended_group\":\"service desk\"}",
+      "content": "{\"change_recommendation\":\"no change record is proposed: the cited knowledge states the mfa secret lives on the device and does not migrate on handset replacement, and that nothing in the account needs to change, so the remediation is a device rebind rather than a change to the directory or gateway.\",\"classification\":\"vpn mfa failure after handset change (mfa device rebind)\",\"problem_recommendation\":\"consider opening a problem record: the graph reports a sibling incident (ticket 26) on the same ci (globex vpn gateway), and the task states this is the third same-type ticket this month, indicating a recurring pattern rather than an isolated fault.\",\"recommendation_fields\":[\"change_recommendation\",\"problem_recommendation\"],\"recommended_group\":\"service desk\"}",
       "observed_at_step": "observe-a"
     },
     {
-      "memory_id": "d5444738-8f43-41d8-91de-bbe9d8743946",
+      "memory_id": "c8a6fd0a-d904-434d-a520-7c3cd206ff1e",
       "memory_type": "episodic",
       "status": "quarantine",
-      "source_run_id": "b72385e9-3758-4e5e-be50-15ea6565e33f",
+      "source_run_id": "62844128-c571-4119-af3c-cd8b5907a005",
       "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
-      "content": "{\"classification\": \"VPN MFA failure after handset change (MFA device rebind)\", \"execution\": null, \"outcome\": \"Ticket 25 records a VPN client that accepts the password then fails the MFA challenge, repeating on every attempt and from every network, with no account lockout, nine days after a handset replacement (ev-1608ee49246cc7ef). The knowledge article states MFA is bound to a device secret that does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change (ev-f380cb32f4a5b880, ev-bde3453baad0a7ab); all three are present, so the device-rebind fault is the best-supported root cause. The graph links ticket 25 to the Globex VPN gateway CI and to runbook KB-GLOBEX-VPN-MFA-G3 (ev-9e81999bf41ad8a6), and reports a sibling incident on the same CI (ev-6a253a81b967f79e), supporting a recurring pattern. Ticket impact/urgency/priority are 3/3/3 (ev-1608ee49246cc7ef). The support-group directory lists Service Desk and Network Team (ev-a6e331aca489f967, ev-74293fa53e7db832); Service Desk is recommended as first-line owner because the ticket was reported to the service desk, but the directory does not establish ownership, so this is a recommendation with residual uncertainty. No write was requested, so no follow-up action is proposed.\", \"priority\": 3, \"recommended_group\": \"Service Desk\", \"ticket_id\": 25}",
+      "content": "{\"classification\": \"VPN MFA failure after handset change (MFA device rebind)\", \"execution\": null, \"outcome\": \"Ticket 25 reports a VPN client that accepts the password and then fails the MFA challenge, repeating on every attempt and from every network, with no account lockout, nine days after a handset replacement (ev-1608ee49246cc7ef). The knowledge article KB-GLOBEX-VPN-MFA-REBIND states MFA is bound to a device secret that lives on the device and does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change (ev-f380cb32f4a5b880, ev-bde3453baad0a7ab). All three facts are present, so the device-rebind fault is the best-supported root cause. Ticket fields record impact/urgency/priority 3/3/3 (ev-1608ee49246cc7ef). The graph links ticket 25 to the Globex VPN gateway CI and its runbook, and reports a sibling incident (ticket 26) on the same CI, which together with the task's statement of a third same-type ticket this month supports a recurring pattern (ev-9e81999bf41ad8a6, ev-6a253a81b967f79e). The support-group directory lists Service Desk and Network Team (ev-a6e331aca489f967, ev-74293fa53e7db832); Service Desk is recommended as first-line owner because the ticket was reported to the service desk, but the directory does not establish ownership, so this is a recommendation with residual uncertainty. No write was requested, so no follow-up action is proposed.\", \"priority\": 3, \"recommended_group\": \"Service Desk\", \"ticket_id\": 25}",
       "observed_at_step": "observe-b"
     },
     {
-      "memory_id": "8150f19b-367c-400f-9b16-3dd45328c77b",
+      "memory_id": "552460ab-8733-46f2-a49e-c60b6e787277",
       "memory_type": "procedural",
       "status": "quarantine",
-      "source_run_id": "b72385e9-3758-4e5e-be50-15ea6565e33f",
+      "source_run_id": "62844128-c571-4119-af3c-cd8b5907a005",
       "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
-      "content": "{\"change_recommendation\":\"no change record is proposed: the cited knowledge states the mfa secret lives on the device and does not migrate on handset replacement, and that nothing in the account needs to change, so remediation is a device rebind rather than a change to the directory or gateway.\",\"classification\":\"vpn mfa failure after handset change (mfa device rebind)\",\"problem_recommendation\":\"consider opening a problem record: the graph reports a sibling incident (ticket 26) affecting the same ci (globex vpn gateway), and the task states this is the third same-type ticket this month, indicating a recurring pattern rather than an isolated fault.\",\"recommendation_fields\":[\"change_recommendation\",\"problem_recommendation\"],\"recommended_group\":\"service desk\"}",
+      "content": "{\"change_recommendation\":\"no change record is proposed: the cited knowledge states the mfa secret lives on the device and does not migrate on handset replacement, and that nothing in the account needs to change, so the remediation is a device rebind rather than a change to the directory or gateway.\",\"classification\":\"vpn mfa failure after handset change (mfa device rebind)\",\"problem_recommendation\":\"consider opening a problem record: the graph reports a sibling incident (ticket 26) on the same ci (globex vpn gateway), and the task states this is the third same-type ticket this month, indicating a recurring pattern rather than an isolated fault.\",\"recommendation_fields\":[\"change_recommendation\",\"problem_recommendation\"],\"recommended_group\":\"service desk\"}",
       "observed_at_step": "observe-b"
     },
     {
-      "memory_id": "f564224e-15fa-48c7-a008-3b0f00b9e396",
+      "memory_id": "07d05f5e-0831-4dc2-b1e6-21dd8ab86b06",
       "memory_type": "episodic",
       "status": "quarantine",
-      "source_run_id": "b9f7c519-d531-4cb5-9e73-5ee53277251e",
+      "source_run_id": "05180ea8-e4cc-4a2f-b453-5f48a353b3e4",
       "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
-      "content": "{\"classification\": \"VPN MFA failure after handset change (MFA device rebind)\", \"execution\": null, \"outcome\": \"Ticket 26 records a VPN authentication that passes the password step and fails at the MFA challenge, on every attempt and from every network, with no account lockout, nine days after the user's phone was replaced. The knowledge article KB-GLOBEX-VPN-MFA-REBIND states MFA is bound to a device secret that does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change; all three are present in the ticket, so the device-rebind fault is the best-supported root cause. The graph links ticket 26 to the Globex VPN gateway CI and to sibling incident ticket 25 on the same CI, and the task states this is the third same-type ticket this month, so the incident is treated as recurring and a problem record is recommended. The graph also points to runbook KB-GLOBEX-VPN-MFA-G3 as the operating runbook for the affected CI, so following its triage/recovery procedure is recommended. Service Desk is recommended as first-line owner because the ticket was reported to the service desk, but the support-group directory only shows the group exists, so ownership is not established and the recommendation carries residual uncertainty. No write was requested, so no follow-up action is proposed.\", \"priority\": 3, \"recommended_group\": \"Service Desk\", \"ticket_id\": 26}",
+      "content": "{\"classification\": \"VPN MFA failure after handset change (MFA device rebind)\", \"execution\": null, \"outcome\": \"Ticket 26 reports VPN authentication passing the password step and failing at the MFA challenge on every attempt and every network, with the user's handset replaced nine days ago and no account lockout (ev-6782e07e7dcecdbf). The knowledge article KB-GLOBEX-VPN-MFA-REBIND states MFA is bound to a device secret that does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change (ev-f380cb32f4a5b880, ev-bde3453baad0a7ab). All three facts are present, so the device-rebind fault is the best-supported root cause. The graph links ticket 26 to the Globex VPN gateway CI and its runbook KB-GLOBEX-VPN-MFA-G3 (ev-f64ae17dc5b65165), and reports one sibling incident (ticket 25) on the same CI, pointing at a shared root cause (ev-6a253a81b967f79e); the task states this is the third same-type ticket this month, so a problem record is warranted. Ticket fields record impact/urgency/priority 3/3/3 and status New (ev-6782e07e7dcecdbf). The support-group directory lists Service Desk and Network Team (ev-a6e331aca489f967, ev-74293fa53e7db832); the directory shows the groups exist but does not establish ownership, so Service Desk is recommended only as a first-line routing recommendation with that residual uncertainty recorded. No write was requested (request_write=false), so no follow-up action is proposed.\", \"priority\": 3, \"recommended_group\": \"Service Desk\", \"ticket_id\": 26}",
       "observed_at_step": "observe-b"
     },
     {
-      "memory_id": "9f380262-17b9-4216-9157-21341c6f51b4",
+      "memory_id": "b905f69c-d49a-4427-80ce-f5d6fb76ae68",
       "memory_type": "procedural",
       "status": "quarantine",
-      "source_run_id": "b9f7c519-d531-4cb5-9e73-5ee53277251e",
+      "source_run_id": "05180ea8-e4cc-4a2f-b453-5f48a353b3e4",
       "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
       "content": "{\"change_recommendation\":\"no change record is proposed: the cited knowledge states the mfa secret lives on the device and does not migrate on handset replacement, and that nothing in the account needs to change, so the remediation is a device rebind rather than a change to the directory or gateway.\",\"classification\":\"vpn mfa failure after handset change (mfa device rebind)\",\"problem_recommendation\":\"consider opening a problem record: the graph reports a sibling incident (ticket 25) on the same ci (globex vpn gateway), and the task states this is the third same-type ticket this month, indicating a recurring pattern rather than an isolated fault.\",\"recommendation_fields\":[\"change_recommendation\",\"problem_recommendation\"],\"recommended_group\":\"service desk\"}",
       "observed_at_step": "observe-b"
     },
     {
-      "memory_id": "d5444738-8f43-41d8-91de-bbe9d8743946",
-      "memory_type": "episodic",
-      "status": "quarantine",
-      "source_run_id": "b72385e9-3758-4e5e-be50-15ea6565e33f",
-      "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
-      "content": "{\"classification\": \"VPN MFA failure after handset change (MFA device rebind)\", \"execution\": null, \"outcome\": \"Ticket 25 records a VPN client that accepts the password then fails the MFA challenge, repeating on every attempt and from every network, with no account lockout, nine days after a handset replacement (ev-1608ee49246cc7ef). The knowledge article states MFA is bound to a device secret that does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change (ev-f380cb32f4a5b880, ev-bde3453baad0a7ab); all three are present, so the device-rebind fault is the best-supported root cause. The graph links ticket 25 to the Globex VPN gateway CI and to runbook KB-GLOBEX-VPN-MFA-G3 (ev-9e81999bf41ad8a6), and reports a sibling incident on the same CI (ev-6a253a81b967f79e), supporting a recurring pattern. Ticket impact/urgency/priority are 3/3/3 (ev-1608ee49246cc7ef). The support-group directory lists Service Desk and Network Team (ev-a6e331aca489f967, ev-74293fa53e7db832); Service Desk is recommended as first-line owner because the ticket was reported to the service desk, but the directory does not establish ownership, so this is a recommendation with residual uncertainty. No write was requested, so no follow-up action is proposed.\", \"priority\": 3, \"recommended_group\": \"Service Desk\", \"ticket_id\": 25}",
-      "observed_at_step": "activate-memory"
-    },
-    {
-      "memory_id": "8150f19b-367c-400f-9b16-3dd45328c77b",
-      "memory_type": "procedural",
-      "status": "quarantine",
-      "source_run_id": "b72385e9-3758-4e5e-be50-15ea6565e33f",
-      "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
-      "content": "{\"change_recommendation\":\"no change record is proposed: the cited knowledge states the mfa secret lives on the device and does not migrate on handset replacement, and that nothing in the account needs to change, so remediation is a device rebind rather than a change to the directory or gateway.\",\"classification\":\"vpn mfa failure after handset change (mfa device rebind)\",\"problem_recommendation\":\"consider opening a problem record: the graph reports a sibling incident (ticket 26) affecting the same ci (globex vpn gateway), and the task states this is the third same-type ticket this month, indicating a recurring pattern rather than an isolated fault.\",\"recommendation_fields\":[\"change_recommendation\",\"problem_recommendation\"],\"recommended_group\":\"service desk\"}",
-      "observed_at_step": "activate-memory"
-    },
-    {
-      "memory_id": "f564224e-15fa-48c7-a008-3b0f00b9e396",
-      "memory_type": "episodic",
-      "status": "quarantine",
-      "source_run_id": "b9f7c519-d531-4cb5-9e73-5ee53277251e",
-      "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
-      "content": "{\"classification\": \"VPN MFA failure after handset change (MFA device rebind)\", \"execution\": null, \"outcome\": \"Ticket 26 records a VPN authentication that passes the password step and fails at the MFA challenge, on every attempt and from every network, with no account lockout, nine days after the user's phone was replaced. The knowledge article KB-GLOBEX-VPN-MFA-REBIND states MFA is bound to a device secret that does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change; all three are present in the ticket, so the device-rebind fault is the best-supported root cause. The graph links ticket 26 to the Globex VPN gateway CI and to sibling incident ticket 25 on the same CI, and the task states this is the third same-type ticket this month, so the incident is treated as recurring and a problem record is recommended. The graph also points to runbook KB-GLOBEX-VPN-MFA-G3 as the operating runbook for the affected CI, so following its triage/recovery procedure is recommended. Service Desk is recommended as first-line owner because the ticket was reported to the service desk, but the support-group directory only shows the group exists, so ownership is not established and the recommendation carries residual uncertainty. No write was requested, so no follow-up action is proposed.\", \"priority\": 3, \"recommended_group\": \"Service Desk\", \"ticket_id\": 26}",
-      "observed_at_step": "activate-memory"
-    },
-    {
-      "memory_id": "9f380262-17b9-4216-9157-21341c6f51b4",
+      "memory_id": "b905f69c-d49a-4427-80ce-f5d6fb76ae68",
       "memory_type": "procedural",
       "status": "active",
-      "source_run_id": "b9f7c519-d531-4cb5-9e73-5ee53277251e",
+      "source_run_id": "05180ea8-e4cc-4a2f-b453-5f48a353b3e4",
       "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
       "content": "{\"change_recommendation\":\"no change record is proposed: the cited knowledge states the mfa secret lives on the device and does not migrate on handset replacement, and that nothing in the account needs to change, so the remediation is a device rebind rather than a change to the directory or gateway.\",\"classification\":\"vpn mfa failure after handset change (mfa device rebind)\",\"problem_recommendation\":\"consider opening a problem record: the graph reports a sibling incident (ticket 25) on the same ci (globex vpn gateway), and the task states this is the third same-type ticket this month, indicating a recurring pattern rather than an isolated fault.\",\"recommendation_fields\":[\"change_recommendation\",\"problem_recommendation\"],\"recommended_group\":\"service desk\"}",
+      "observed_at_step": "activate-memory"
+    },
+    {
+      "memory_id": "c8a6fd0a-d904-434d-a520-7c3cd206ff1e",
+      "memory_type": "episodic",
+      "status": "quarantine",
+      "source_run_id": "62844128-c571-4119-af3c-cd8b5907a005",
+      "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
+      "content": "{\"classification\": \"VPN MFA failure after handset change (MFA device rebind)\", \"execution\": null, \"outcome\": \"Ticket 25 reports a VPN client that accepts the password and then fails the MFA challenge, repeating on every attempt and from every network, with no account lockout, nine days after a handset replacement (ev-1608ee49246cc7ef). The knowledge article KB-GLOBEX-VPN-MFA-REBIND states MFA is bound to a device secret that lives on the device and does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change (ev-f380cb32f4a5b880, ev-bde3453baad0a7ab). All three facts are present, so the device-rebind fault is the best-supported root cause. Ticket fields record impact/urgency/priority 3/3/3 (ev-1608ee49246cc7ef). The graph links ticket 25 to the Globex VPN gateway CI and its runbook, and reports a sibling incident (ticket 26) on the same CI, which together with the task's statement of a third same-type ticket this month supports a recurring pattern (ev-9e81999bf41ad8a6, ev-6a253a81b967f79e). The support-group directory lists Service Desk and Network Team (ev-a6e331aca489f967, ev-74293fa53e7db832); Service Desk is recommended as first-line owner because the ticket was reported to the service desk, but the directory does not establish ownership, so this is a recommendation with residual uncertainty. No write was requested, so no follow-up action is proposed.\", \"priority\": 3, \"recommended_group\": \"Service Desk\", \"ticket_id\": 25}",
+      "observed_at_step": "activate-memory"
+    },
+    {
+      "memory_id": "552460ab-8733-46f2-a49e-c60b6e787277",
+      "memory_type": "procedural",
+      "status": "quarantine",
+      "source_run_id": "62844128-c571-4119-af3c-cd8b5907a005",
+      "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
+      "content": "{\"change_recommendation\":\"no change record is proposed: the cited knowledge states the mfa secret lives on the device and does not migrate on handset replacement, and that nothing in the account needs to change, so the remediation is a device rebind rather than a change to the directory or gateway.\",\"classification\":\"vpn mfa failure after handset change (mfa device rebind)\",\"problem_recommendation\":\"consider opening a problem record: the graph reports a sibling incident (ticket 26) on the same ci (globex vpn gateway), and the task states this is the third same-type ticket this month, indicating a recurring pattern rather than an isolated fault.\",\"recommendation_fields\":[\"change_recommendation\",\"problem_recommendation\"],\"recommended_group\":\"service desk\"}",
+      "observed_at_step": "activate-memory"
+    },
+    {
+      "memory_id": "07d05f5e-0831-4dc2-b1e6-21dd8ab86b06",
+      "memory_type": "episodic",
+      "status": "quarantine",
+      "source_run_id": "05180ea8-e4cc-4a2f-b453-5f48a353b3e4",
+      "procedure_pattern_key": "0d986b7a13317cc7a0adee7d65be850c57289d6505a19cbd149c78d063c13fe9",
+      "content": "{\"classification\": \"VPN MFA failure after handset change (MFA device rebind)\", \"execution\": null, \"outcome\": \"Ticket 26 reports VPN authentication passing the password step and failing at the MFA challenge on every attempt and every network, with the user's handset replaced nine days ago and no account lockout (ev-6782e07e7dcecdbf). The knowledge article KB-GLOBEX-VPN-MFA-REBIND states MFA is bound to a device secret that does not migrate when the phone is replaced, and that the three confirming facts are a successful password step, a failed challenge step, and a recent handset change (ev-f380cb32f4a5b880, ev-bde3453baad0a7ab). All three facts are present, so the device-rebind fault is the best-supported root cause. The graph links ticket 26 to the Globex VPN gateway CI and its runbook KB-GLOBEX-VPN-MFA-G3 (ev-f64ae17dc5b65165), and reports one sibling incident (ticket 25) on the same CI, pointing at a shared root cause (ev-6a253a81b967f79e); the task states this is the third same-type ticket this month, so a problem record is warranted. Ticket fields record impact/urgency/priority 3/3/3 and status New (ev-6782e07e7dcecdbf). The support-group directory lists Service Desk and Network Team (ev-a6e331aca489f967, ev-74293fa53e7db832); the directory shows the groups exist but does not establish ownership, so Service Desk is recommended only as a first-line routing recommendation with that residual uncertainty recorded. No write was requested (request_write=false), so no follow-up action is proposed.\", \"priority\": 3, \"recommended_group\": \"Service Desk\", \"ticket_id\": 26}",
       "observed_at_step": "activate-memory"
     }
   ],

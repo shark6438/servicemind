@@ -5,8 +5,8 @@
     "entitlement_verifier_configured": true,
     "base_url": "http://127.0.0.1:18080",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
-    "recorded_at": "2026-09-23T20:16:53.147402Z",
-    "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(92 files)",
+    "recorded_at": "2026-09-30T15:11:03.071639Z",
+    "deployed_revision": "cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)",
     "notes": [
       "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
       "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
@@ -16,8 +16,8 @@
     "username": "globex-analyst-g3",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
     "roles": [
-      "viewer",
-      "analyst"
+      "analyst",
+      "viewer"
     ],
     "entity_ids": [
       2
@@ -31,8 +31,8 @@
       "id": "produce-same",
       "description": "对三条同根因的固定输入求 pattern_key（大小写/空白差异、换词重写、recurring_incident 取反），三条必须得到同一个 key",
       "action": "procedural memory pattern_key producer",
-      "started_at": "2026-09-23T20:23:02.233047Z",
-      "elapsed_seconds": 0.00020514335483312607,
+      "started_at": "2026-09-30T15:17:13.221224Z",
+      "elapsed_seconds": 0.0001954091712832451,
       "http_status": null,
       "action_hash": null,
       "action_status": null,
@@ -43,8 +43,8 @@
       "id": "produce-different",
       "description": "对两条不同根因的固定输入各求一次 pattern_key（只改 classification / 只改 recommended_group），两条都必须与基准不同",
       "action": "procedural memory pattern_key producer",
-      "started_at": "2026-09-23T20:23:02.233314Z",
-      "elapsed_seconds": 0.00008979346603155136,
+      "started_at": "2026-09-30T15:17:13.221471Z",
+      "elapsed_seconds": 0.00008900370448827744,
       "http_status": null,
       "action_hash": null,
       "action_status": null,

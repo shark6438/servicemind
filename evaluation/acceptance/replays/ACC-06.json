@@ -5,8 +5,8 @@
     "entitlement_verifier_configured": true,
     "base_url": "http://127.0.0.1:18080",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
-    "recorded_at": "2026-09-23T20:16:53.147402Z",
-    "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(92 files)",
+    "recorded_at": "2026-09-30T15:11:03.071639Z",
+    "deployed_revision": "cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)",
     "notes": [
       "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
       "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
@@ -16,8 +16,8 @@
     "username": "globex-analyst-g3",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
     "roles": [
-      "viewer",
-      "analyst"
+      "analyst",
+      "viewer"
     ],
     "entity_ids": [
       2
@@ -31,8 +31,8 @@
       "id": "submit",
       "description": "以 globex-analyst-g3 提交只读运行（载荷有意超出上下文预算）",
       "action": "POST /v1/servicemind/runs",
-      "started_at": "2026-09-23T20:18:16.170244Z",
-      "elapsed_seconds": 0.023608297109603882,
+      "started_at": "2026-09-30T15:12:36.564301Z",
+      "elapsed_seconds": 0.025739146396517754,
       "http_status": 202,
       "action_hash": null,
       "action_status": null,
@@ -43,20 +43,20 @@
       "id": "observe-terminal",
       "description": "轮询运行直到终态",
       "action": "GET /v1/servicemind/runs/{run_id}",
-      "started_at": "2026-09-23T20:18:16.193934Z",
-      "elapsed_seconds": 26.646543758921325,
+      "started_at": "2026-09-30T15:12:36.590164Z",
+      "elapsed_seconds": 34.82756742276251,
       "http_status": 200,
       "action_hash": null,
       "action_status": null,
       "outcome": null,
-      "detail": "{\"status\": \"succeeded\", \"elapsed_seconds\": 26.6, \"error\": null, \"termination_code\": null}"
+      "detail": "{\"status\": \"succeeded\", \"elapsed_seconds\": 34.8, \"error\": null, \"termination_code\": null}"
     },
     {
       "id": "build-over-budget-envelope",
       "description": "直接对 ContextBuilder 求值一次固定超预算载荷：2000 可用 token 对 6 条各约 800 token 的证据行，必须出现「至少一条证据行选中、且至少一条被丢弃并写明理由」",
       "action": "context envelope pruning producer",
-      "started_at": "2026-09-23T20:18:42.870854Z",
-      "elapsed_seconds": 0.0048543913289904594,
+      "started_at": "2026-09-30T15:13:11.451550Z",
+      "elapsed_seconds": 0.0046475110575556755,
       "http_status": null,
       "action_hash": null,
       "action_status": null,
@@ -64,25 +64,14 @@
       "detail": "{\"step\": \"build-over-budget-envelope\", \"expectation\": \"an over-budget payload is delivered with at least one evidence row selected and at least one dropped with a stated reason\", \"budget\": {\"max_input_tokens\": 2000, \"system_reserve\": 0, \"output_reserve\": 0, \"usable_tokens\": 2000, \"tokens_used\": 1621, \"tokens_pruned\": 3196}, \"items\": [{\"item_id\": \"probe-control\", \"source\": \"policy\", \"required\": true, \"content_chars\": 51}, {\"item_id\": \"probe-evidence-0\", \"source\": \"evidence\", \"required\": false, \"content_chars\": 1802}, {\"item_id\": \"probe-evidence-1\", \"source\": \"evidence\", \"required\": false, \"content_chars\": 1802}, {\"item_id\": \"probe-evidence-2\", \"source\": \"evidence\", \"required\": false, \"content_chars\": 1802}, {\"item_id\": \"probe-evidence-3\", \"source\": \"evidence\", \"required\": false, \"content_chars\": 1802}, {\"item_id\": \"probe-evidence-4\", \"source\": \"evidence\", \"required\": false, \"content_chars\": 1802}, {\"item_id\": \"probe-evidence-5\", \"source\": \"evidence\", \"required\": false, \"content_chars\": 1802}], \"manifest\": [{\"item_id\": \"probe-control\", \"source\": \"policy\", \"tokens\": 23, \"decision\": \"selected\", \"reason\": \"ranked_within_budget\"}, {\"item_id\": \"probe-evidence-0\", \"source\": \"evidence\", \"tokens\": 799, \"decision\": \"selected\", \"reason\": \"ranked_within_budget\"}, {\"item_id\": \"probe-evidence-1\", \"source\": \"evidence\", \"tokens\": 799, \"decision\": \"selected\", \"reason\": \"ranked_within_budget\"}, {\"item_id\": \"probe-evidence-2\", \"source\": \"evidence\", \"tokens\": 799, \"decision\": \"pruned\", \"reason\": \"token_budget_exceeded\"}, {\"item_id\": \"probe-evidence-3\", \"source\": \"evidence\", \"tokens\": 799, \"decision\": \"pruned\", \"reason\": \"token_budget_exceeded\"}, {\"item_id\": \"probe-evidence-4\", \"source\": \"evidence\", \"tokens\": 799, \"decision\": \"pruned\", \"reason\": \"token_budget_exceeded\"}, {\"item_id\": \"probe-evidence-5\", \"source\": \"evidence\", \"tokens\": 799, \"decision\": \"pruned\", \"reason\": \"token_budget_exceeded\"}], \"selected\": [\"probe-evidence-0\", \"probe-evidence-1\"], \"dropped_with_reason\": [\"probe-evidence-2\", \"probe-evidence-3\", \"probe-evidence-4\", \"probe-evidence-5\"]}"
     }
   ],
-  "run_id": "a07b3d3c-3436-4e17-8a7c-5dcf3de4c327",
+  "run_id": "d877cd5d-a082-464f-81b9-9cf64dab743e",
   "case_run_ids": [
-    "a07b3d3c-3436-4e17-8a7c-5dcf3de4c327"
+    "d877cd5d-a082-464f-81b9-9cf64dab743e"
   ],
   "terminal_status": "succeeded",
-  "total_seconds": 26.66929259803146,
+  "total_seconds": 34.85222360957414,
   "action_intent": null,
   "citations": [
-    {
-      "citation_id": "cite-34b2d2fd172c6af3",
-      "document_id": "a6b275dc-08dc-49f6-9cec-5efd414e3aa4",
-      "parent_chunk_id": "884fdb35-d0e0-4869-a3dd-c96d1fc82322",
-      "source": "servicemind_acceptance_fixture",
-      "source_uri": "acceptance://globex/KB-GLOBEX-VPN-APP-REG",
-      "source_record_id": "KB-GLOBEX-VPN-APP-REG",
-      "source_version": "phase7-acceptance-fixtures-v1",
-      "content_hash": "ef59f9cf568a9e5d6ef12dca73c0264913082282bd21766014d9e0f9bc7788fe",
-      "title": "VPN connection fails after an application or policy update"
-    },
     {
       "citation_id": "cite-f7c1d606b4dbe1b0",
       "document_id": "96d090e5-256e-457d-87c1-6f86b52608ad",
@@ -93,6 +82,17 @@
       "source_version": "phase7-acceptance-fixtures-v1",
       "content_hash": "1e78d03d4e0d7a10664cd793ebcb0db14b3463b293e5126a89e1090e172b9d79",
       "title": "Network Team runbook: VPN MFA break-glass rebind"
+    },
+    {
+      "citation_id": "cite-34b2d2fd172c6af3",
+      "document_id": "a6b275dc-08dc-49f6-9cec-5efd414e3aa4",
+      "parent_chunk_id": "884fdb35-d0e0-4869-a3dd-c96d1fc82322",
+      "source": "servicemind_acceptance_fixture",
+      "source_uri": "acceptance://globex/KB-GLOBEX-VPN-APP-REG",
+      "source_record_id": "KB-GLOBEX-VPN-APP-REG",
+      "source_version": "phase7-acceptance-fixtures-v1",
+      "content_hash": "ef59f9cf568a9e5d6ef12dca73c0264913082282bd21766014d9e0f9bc7788fe",
+      "title": "VPN connection fails after an application or policy update"
     },
     {
       "citation_id": "cite-7f433d6b883e95bd",
@@ -106,6 +106,17 @@
       "title": "VPN MFA enrolment audit checklist"
     },
     {
+      "citation_id": "cite-4d46e13868f4191e",
+      "document_id": "c5823207-1d39-4abb-a676-967ac3423ae4",
+      "parent_chunk_id": "7606222a-5d2e-44d1-89b2-afe049f8b301",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-G3-COMPLIANCE",
+      "source_record_id": "KB-Q-G3-COMPLIANCE",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "eda2ced77f6428fe7e6eb691fe725eb0e59c6e238dfc77363d3fa1673b41841d",
+      "title": "Compliance evidence retention"
+    },
+    {
       "citation_id": "cite-7b1301de460c6b75",
       "document_id": "8d9151dc-faa2-47c5-8b20-e0383b625c97",
       "parent_chunk_id": "69ecdb4e-9fb5-4635-bff6-ed0bb95d8e91",
@@ -115,6 +126,61 @@
       "source_version": "phase7-acceptance-fixtures-v1",
       "content_hash": "7335460b9c4174c5ca25730bcb2aeaa906963e9053d3d977a4796acd7b9dfaa1",
       "title": "VPN MFA device rebind after a handset change"
+    },
+    {
+      "citation_id": "cite-9d7748093d3b7d03",
+      "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+      "parent_chunk_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-VPN-CONN",
+      "source_record_id": "KB-Q-VPN-CONN",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+      "title": "VPN client connectivity recovery"
+    },
+    {
+      "citation_id": "cite-9cbe0537cb865c78",
+      "document_id": "6879c745-da1f-47b2-8f34-0e033e2b6562",
+      "parent_chunk_id": "93b5bfa6-1183-4328-a6b2-8a3adc0444e4",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-DB-FAILOVER",
+      "source_record_id": "KB-Q-DB-FAILOVER",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "16a1363003d045ea4d9c23e71acdc6997f05228d147cabb5739fa1ab2e0a4cdb",
+      "title": "Database failover runbook"
+    },
+    {
+      "citation_id": "cite-53409c562bdf3e24",
+      "document_id": "34573391-029e-4d4b-b896-86c714a5761d",
+      "parent_chunk_id": "6c4800ba-b01a-4392-9018-7b1a9ceaeade",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-SEVERITY",
+      "source_record_id": "KB-Q-SEVERITY",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "84c54810b2df14d31753ca9351edffdae5ff79f176f19bccd267544dfdacd161",
+      "title": "Incident severity matrix"
+    },
+    {
+      "citation_id": "cite-e40af72113a14535",
+      "document_id": "6fbab04d-e75b-4019-aa18-e57a9501be39",
+      "parent_chunk_id": "f6b5e001-2eb4-4ced-b582-b521c510dc77",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-ROLLBACK",
+      "source_record_id": "KB-Q-ROLLBACK",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "e16a808c95e2ab318e98beae960ef25e0e61fc41ee9ed86f9dff1bd9afde829d",
+      "title": "Release rollback criteria"
+    },
+    {
+      "citation_id": "cite-36c48f0811d529d5",
+      "document_id": "f0936126-71f9-4d64-9933-bbaba3279bb0",
+      "parent_chunk_id": "c8ee9e33-9745-4f15-b1f4-a919a4555fb3",
+      "source": "servicemind_quality_fixture",
+      "source_uri": "quality://globex/KB-Q-MIM-COMMS",
+      "source_record_id": "KB-Q-MIM-COMMS",
+      "source_version": "phase7-quality-fixtures-v1",
+      "content_hash": "1e186bb5c21f706c8676fa7d7df73f1c920c3c2f4c6470d77dca1f8237b5ea31",
+      "title": "Major incident communication"
     }
   ],
   "evidence": [
@@ -129,10 +195,10 @@
       "provenance": {
         "provider": "glpi-high-level-api-v2.3",
         "retrieval_method": "glpi.read.ticket",
-        "retrieved_at": "2026-09-23T20:18:22.163746Z",
+        "retrieved_at": "2026-09-30T15:12:43.911234Z",
         "content_hash": "a0d5c0c3c692bed61ee44bcea4901405eaaa0d067a8ca9f7a3f2d8a46b4330dd"
       },
-      "created_at": "2026-09-23T20:18:22.163785Z",
+      "created_at": "2026-09-30T15:12:43.911273Z",
       "confidence": 1.0,
       "metadata": {
         "untrusted_external_content": true,
@@ -168,10 +234,10 @@
       "provenance": {
         "provider": "glpi-high-level-api-v2.3",
         "retrieval_method": "glpi.read.groups",
-        "retrieved_at": "2026-09-23T20:18:22.163819Z",
+        "retrieved_at": "2026-09-30T15:12:43.911309Z",
         "content_hash": "3ace22c1e01c3a4e331f2c90fbdea419c1ddefc0b8b1438af21499b0aca270e9"
       },
-      "created_at": "2026-09-23T20:18:22.163828Z",
+      "created_at": "2026-09-30T15:12:43.911316Z",
       "confidence": 1.0,
       "metadata": {
         "untrusted_external_content": true,
@@ -196,10 +262,10 @@
       "provenance": {
         "provider": "glpi-high-level-api-v2.3",
         "retrieval_method": "glpi.read.groups",
-        "retrieved_at": "2026-09-23T20:18:22.163845Z",
+        "retrieved_at": "2026-09-30T15:12:43.911330Z",
         "content_hash": "8d8b67345333ae4ad22759d937fbe32317af7101b1ba35f2f7cec12a229076a4"
       },
-      "created_at": "2026-09-23T20:18:22.163851Z",
+      "created_at": "2026-09-30T15:12:43.911336Z",
       "confidence": 1.0,
       "metadata": {
         "untrusted_external_content": true,
@@ -214,39 +280,6 @@
       }
     },
     {
-      "evidence_id": "ev-118fc9a165ecf039",
-      "tenant_id": "22222222-2222-4222-8222-222222222222",
-      "source_type": "knowledge",
-      "source_ref": "acceptance://globex/KB-GLOBEX-VPN-APP-REG",
-      "resource_type": "knowledge_parent_chunk",
-      "resource_id": "884fdb35-d0e0-4869-a3dd-c96d1fc82322",
-      "content": "Escalation\n\nA failure that affects every user on a network is an outage, not a ticket. Escalate it\nand stop making per-account changes: per-account changes during an outage produce\nuntraceable state and do not address the shared cause.",
-      "provenance": {
-        "provider": "servicemind_acceptance_fixture",
-        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:18:21.336225Z",
-        "content_hash": "63164362d06a51ee805eee6949c442a0e12733d9b844a9dc0cb4dac5a0b85535"
-      },
-      "created_at": "2026-09-23T20:18:21.336291Z",
-      "confidence": 0.00019871553,
-      "metadata": {
-        "citation": {
-          "citation_id": "cite-34b2d2fd172c6af3",
-          "document_id": "a6b275dc-08dc-49f6-9cec-5efd414e3aa4",
-          "parent_chunk_id": "884fdb35-d0e0-4869-a3dd-c96d1fc82322",
-          "source": "servicemind_acceptance_fixture",
-          "source_uri": "acceptance://globex/KB-GLOBEX-VPN-APP-REG",
-          "source_record_id": "KB-GLOBEX-VPN-APP-REG",
-          "source_version": "phase7-acceptance-fixtures-v1",
-          "content_hash": "ef59f9cf568a9e5d6ef12dca73c0264913082282bd21766014d9e0f9bc7788fe",
-          "title": "VPN connection fails after an application or policy update"
-        },
-        "authority_level": 80,
-        "license": "project-owned",
-        "synthetic": false
-      }
-    },
-    {
       "evidence_id": "ev-7c007349d496bd5e",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
@@ -257,11 +290,11 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:18:21.336346Z",
+        "retrieved_at": "2026-09-30T15:12:43.322439Z",
         "content_hash": "00462300fc3a8bd96b05ed4c95647e1537fec775df7b87afb53352542c343706"
       },
-      "created_at": "2026-09-23T20:18:21.336358Z",
-      "confidence": 0.00031999825,
+      "created_at": "2026-09-30T15:12:43.322549Z",
+      "confidence": 0.0007643033,
       "metadata": {
         "citation": {
           "citation_id": "cite-f7c1d606b4dbe1b0",
@@ -280,6 +313,39 @@
       }
     },
     {
+      "evidence_id": "ev-118fc9a165ecf039",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "acceptance://globex/KB-GLOBEX-VPN-APP-REG",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "884fdb35-d0e0-4869-a3dd-c96d1fc82322",
+      "content": "Escalation\n\nA failure that affects every user on a network is an outage, not a ticket. Escalate it\nand stop making per-account changes: per-account changes during an outage produce\nuntraceable state and do not address the shared cause.",
+      "provenance": {
+        "provider": "servicemind_acceptance_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:43.322637Z",
+        "content_hash": "63164362d06a51ee805eee6949c442a0e12733d9b844a9dc0cb4dac5a0b85535"
+      },
+      "created_at": "2026-09-30T15:12:43.322673Z",
+      "confidence": 0.00006352189,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-34b2d2fd172c6af3",
+          "document_id": "a6b275dc-08dc-49f6-9cec-5efd414e3aa4",
+          "parent_chunk_id": "884fdb35-d0e0-4869-a3dd-c96d1fc82322",
+          "source": "servicemind_acceptance_fixture",
+          "source_uri": "acceptance://globex/KB-GLOBEX-VPN-APP-REG",
+          "source_record_id": "KB-GLOBEX-VPN-APP-REG",
+          "source_version": "phase7-acceptance-fixtures-v1",
+          "content_hash": "ef59f9cf568a9e5d6ef12dca73c0264913082282bd21766014d9e0f9bc7788fe",
+          "title": "VPN connection fails after an application or policy update"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
       "evidence_id": "ev-d7dd5c94583c38ba",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
@@ -290,11 +356,11 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:18:21.336393Z",
+        "retrieved_at": "2026-09-30T15:12:43.322733Z",
         "content_hash": "aea4de6a21f66ffffefc2531b9287476a873d8e8ba10d0a791b7180487d248a7"
       },
-      "created_at": "2026-09-23T20:18:21.336406Z",
-      "confidence": 0.0015487612,
+      "created_at": "2026-09-30T15:12:43.322754Z",
+      "confidence": 0.0005976694,
       "metadata": {
         "citation": {
           "citation_id": "cite-7f433d6b883e95bd",
@@ -313,6 +379,39 @@
       }
     },
     {
+      "evidence_id": "ev-667a9f23d03f6406",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-G3-COMPLIANCE",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "7606222a-5d2e-44d1-89b2-afe049f8b301",
+      "content": "Storage\n\nEvidence is written to the compliance bucket and is immutable for its retention period.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:43.322803Z",
+        "content_hash": "eb312fd5b5c1dde0e02daaec1520f0201b07a15ad170134797735d4254faf9a6"
+      },
+      "created_at": "2026-09-30T15:12:43.322833Z",
+      "confidence": 0.00005874842,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-4d46e13868f4191e",
+          "document_id": "c5823207-1d39-4abb-a676-967ac3423ae4",
+          "parent_chunk_id": "7606222a-5d2e-44d1-89b2-afe049f8b301",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-G3-COMPLIANCE",
+          "source_record_id": "KB-Q-G3-COMPLIANCE",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "eda2ced77f6428fe7e6eb691fe725eb0e59c6e238dfc77363d3fa1673b41841d",
+          "title": "Compliance evidence retention"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
       "evidence_id": "ev-f380cb32f4a5b880",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
@@ -323,11 +422,11 @@
       "provenance": {
         "provider": "servicemind_acceptance_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:18:21.336436Z",
+        "retrieved_at": "2026-09-30T15:12:43.322890Z",
         "content_hash": "b7c448f866d8ee0506bc65bb8b8368b7d3432ea99965bdeb96360e86f6672957"
       },
-      "created_at": "2026-09-23T20:18:21.336447Z",
-      "confidence": 0.00040133507,
+      "created_at": "2026-09-30T15:12:43.322906Z",
+      "confidence": 0.00009387641,
       "metadata": {
         "citation": {
           "citation_id": "cite-7b1301de460c6b75",
@@ -346,6 +445,105 @@
       }
     },
     {
+      "evidence_id": "ev-b1f70757dbcc4022",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-VPN-CONN",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+      "content": "Procedure\n\n1. Confirm the client version is 7.4 or later. Versions below 7.4 cannot negotiate the\n\ncurrent TLS profile and fail with a handshake timeout that looks like a network fault.\n\n2. Confirm the laptop holds a valid device certificate issued within the last 400 days.\n3. Clear the client state directory `/var/lib/vpn-client/state` and restart the service.\n4. Reconnect once. A second failure within five minutes is not retried automatically.\n5. If the handshake still fails, capture the client log and open a Network Team ticket.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:43.322953Z",
+        "content_hash": "0000abefefc109a5d7c23a0e1bedba5a7ac5ac20d3ba8613d90059c0daa67d93"
+      },
+      "created_at": "2026-09-30T15:12:43.322968Z",
+      "confidence": 0.0000450446,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-9d7748093d3b7d03",
+          "document_id": "aedb196e-c2ea-4223-a675-280e1f7ad96c",
+          "parent_chunk_id": "d41ed0ac-e5a1-4203-9679-d9e0a95f14c9",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-VPN-CONN",
+          "source_record_id": "KB-Q-VPN-CONN",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "949c165c4f71db188640d1c6b01d8edf43e66f7fafebc05436e967ef694ec3ce",
+          "title": "VPN client connectivity recovery"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-10f0f0f6cbe4ebdd",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-DB-FAILOVER",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "93b5bfa6-1183-4328-a6b2-8a3adc0444e4",
+      "content": "Procedure\n\n1. Confirm the standby is streaming and its replay lag is under 30 seconds.\n2. Promote the standby and confirm it accepts writes.\n3. Repoint the connection pooler and wait for the pool to drain idle connections.\n4. Confirm application write success rate has recovered above 99 percent.\n5. Rebuild the former primary as a standby before the next maintenance window.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:43.323011Z",
+        "content_hash": "b13e66eccef6a5a8a5ad3a60c119bee4a17e5fde12c49aabe25849cb82389407"
+      },
+      "created_at": "2026-09-30T15:12:43.323029Z",
+      "confidence": 0.00020502214,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-9cbe0537cb865c78",
+          "document_id": "6879c745-da1f-47b2-8f34-0e033e2b6562",
+          "parent_chunk_id": "93b5bfa6-1183-4328-a6b2-8a3adc0444e4",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-DB-FAILOVER",
+          "source_record_id": "KB-Q-DB-FAILOVER",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "16a1363003d045ea4d9c23e71acdc6997f05228d147cabb5739fa1ab2e0a4cdb",
+          "title": "Database failover runbook"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-7475e935015ce7e9",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-G3-COMPLIANCE",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "ab6e4436-b22c-47d4-b527-61029c13bb73",
+      "content": "Compliance evidence retention\n\nRestricted to the Network Team. Not for general distribution.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:43.323070Z",
+        "content_hash": "e4462a5085abb63e1c1c911c03c9821d949a51e89ab31cb8ec368271b9c6f8c1"
+      },
+      "created_at": "2026-09-30T15:12:43.323084Z",
+      "confidence": 0.000100713994,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-f3a16be2fed2848b",
+          "document_id": "c5823207-1d39-4abb-a676-967ac3423ae4",
+          "parent_chunk_id": "ab6e4436-b22c-47d4-b527-61029c13bb73",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-G3-COMPLIANCE",
+          "source_record_id": "KB-Q-G3-COMPLIANCE",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "eda2ced77f6428fe7e6eb691fe725eb0e59c6e238dfc77363d3fa1673b41841d",
+          "title": "Compliance evidence retention"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
       "evidence_id": "ev-6a253a81b967f79e",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "graph",
@@ -356,10 +554,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_same_ci_incidents",
-        "retrieved_at": "2026-09-23T20:18:21.346483Z",
+        "retrieved_at": "2026-09-30T15:12:43.338364Z",
         "content_hash": "739e6b298b3a6014ebd9ee898069f688e28740e4cea20eaa758018ee022377b3"
       },
-      "created_at": "2026-09-23T20:18:21.346510Z",
+      "created_at": "2026-09-30T15:12:43.338396Z",
       "confidence": null,
       "metadata": {
         "relation": "same_ci_incidents",
@@ -416,10 +614,10 @@
       "provenance": {
         "provider": "neo4j-graph",
         "retrieval_method": "graph_ci_runbook",
-        "retrieved_at": "2026-09-23T20:18:21.346538Z",
+        "retrieved_at": "2026-09-30T15:12:43.338438Z",
         "content_hash": "c8499cad52b73ded52199e7e528fad8e4a8af2833d37034fc8d84a9d7c2c6e69"
       },
-      "created_at": "2026-09-23T20:18:21.346544Z",
+      "created_at": "2026-09-30T15:12:43.338449Z",
       "confidence": null,
       "metadata": {
         "relation": "ci_runbook",
@@ -460,32 +658,32 @@
       }
     },
     {
-      "evidence_id": "ev-3568a177759dd65f",
+      "evidence_id": "ev-3c0299a3a3effa8e",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
-      "source_ref": "acceptance://globex/KB-GLOBEX-VPN-MFA-AUDIT",
+      "source_ref": "quality://globex/KB-Q-SEVERITY",
       "resource_type": "knowledge_parent_chunk",
-      "resource_id": "12347882-4af3-490f-a331-3ebbd72c12e6",
-      "content": "Appendix D — glossary\n\n- **Enrolment**: the record that an account has registered a factor. It exists\n\nindependently of any connection attempt.\n\n- **Challenge**: the step at which a registered factor is exercised. A challenge that is\n\nattempted and not completed is a session event, not an enrolment change.\n\n- **Frame**: the population a sample was drawn from, with its date and export name.\n- **Band**: an age grouping, assigned from the enrolment date alone.\n- **Exception**: a sampled account that could not be read in full.\n- **Roll-up**: the quarterly summary sent to service line owners. It contains counts,\n\nages, bands and exception rates, and no inference of any kind.",
+      "resource_id": "6c4800ba-b01a-4392-9018-7b1a9ceaeade",
+      "content": "Incident severity matrix\n\nApplies to all production incidents. Owned by the Service Management Office.",
       "provenance": {
-        "provider": "servicemind_acceptance_fixture",
+        "provider": "servicemind_quality_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:18:25.293112Z",
-        "content_hash": "ca5ad47130d6be9447b280e6ebeffd2dad5273c27ba384184039e428e3f902b5"
+        "retrieved_at": "2026-09-30T15:12:49.118759Z",
+        "content_hash": "58f739859eff1dfaa45c1ccc48ee20f10ef99d7d8d3f845ebc615bead546bc73"
       },
-      "created_at": "2026-09-23T20:18:25.293305Z",
-      "confidence": 0.00090044667,
+      "created_at": "2026-09-30T15:12:49.118766Z",
+      "confidence": 0.00018814208,
       "metadata": {
         "citation": {
-          "citation_id": "cite-abfd5842b569c70a",
-          "document_id": "92106df6-91dd-4052-88b4-31297c807462",
-          "parent_chunk_id": "12347882-4af3-490f-a331-3ebbd72c12e6",
-          "source": "servicemind_acceptance_fixture",
-          "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-AUDIT",
-          "source_record_id": "KB-GLOBEX-VPN-MFA-AUDIT",
-          "source_version": "phase7-acceptance-fixtures-v1",
-          "content_hash": "3630d2ae4236a5920eef4ea9c067dc840bbfe01a49e1bd61d68bb6981bcf9b36",
-          "title": "VPN MFA enrolment audit checklist"
+          "citation_id": "cite-53409c562bdf3e24",
+          "document_id": "34573391-029e-4d4b-b896-86c714a5761d",
+          "parent_chunk_id": "6c4800ba-b01a-4392-9018-7b1a9ceaeade",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-SEVERITY",
+          "source_record_id": "KB-Q-SEVERITY",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "84c54810b2df14d31753ca9351edffdae5ff79f176f19bccd267544dfdacd161",
+          "title": "Incident severity matrix"
         },
         "authority_level": 80,
         "license": "project-owned",
@@ -493,32 +691,65 @@
       }
     },
     {
-      "evidence_id": "ev-3f684dd3bd6f532d",
+      "evidence_id": "ev-8ed0aa52b707172d",
       "tenant_id": "22222222-2222-4222-8222-222222222222",
       "source_type": "knowledge",
-      "source_ref": "acceptance://globex/KB-GLOBEX-VPN-MFA-AUDIT",
+      "source_ref": "quality://globex/KB-Q-ROLLBACK",
       "resource_type": "knowledge_parent_chunk",
-      "resource_id": "9d1d820d-a4d8-4ad2-b260-d29f92c4019d",
-      "content": "Fields to record\n\n| Field | Source | Why it is recorded |\n|---|---|---|\n| Account identifier | Identity console | Joins the sample to the service line roster |\n| Enrolment date | Identity console | Ages the enrolment without reference to any incident |\n| Registered devices | Identity console | Count per account, no device identifiers retained |\n| Last successful challenge | Concentrator log | Date only; a date proves nothing about a mechanism |\n| Directory lockout state | Directory | Separates an account-state question from an enrolment question |\n\nQuantities are recorded for the population. The audit does not retain device identifiers,\nserial numbers or challenge contents: those belong to the account holder and are not\nneeded to count enrolments.",
+      "resource_id": "f6b5e001-2eb4-4ced-b582-b521c510dc77",
+      "content": "Record\n\nEvery rollback records the triggering signal, the time, and the version returned to.",
       "provenance": {
-        "provider": "servicemind_acceptance_fixture",
+        "provider": "servicemind_quality_fixture",
         "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
-        "retrieved_at": "2026-09-23T20:18:25.293387Z",
-        "content_hash": "880fb3a90d45ea996b155f9574c2f89bed8b26e458068cd964bcc5399143a734"
+        "retrieved_at": "2026-09-30T15:12:49.118786Z",
+        "content_hash": "572dda3904e537bec4d3b624228e00e924143abe322bf1a92ac6dad3a93e7ef8"
       },
-      "created_at": "2026-09-23T20:18:25.293399Z",
-      "confidence": 0.0015731122,
+      "created_at": "2026-09-30T15:12:49.118792Z",
+      "confidence": 0.000067092245,
       "metadata": {
         "citation": {
-          "citation_id": "cite-41aab920a1908dbb",
-          "document_id": "92106df6-91dd-4052-88b4-31297c807462",
-          "parent_chunk_id": "9d1d820d-a4d8-4ad2-b260-d29f92c4019d",
-          "source": "servicemind_acceptance_fixture",
-          "source_uri": "acceptance://globex/KB-GLOBEX-VPN-MFA-AUDIT",
-          "source_record_id": "KB-GLOBEX-VPN-MFA-AUDIT",
-          "source_version": "phase7-acceptance-fixtures-v1",
-          "content_hash": "3630d2ae4236a5920eef4ea9c067dc840bbfe01a49e1bd61d68bb6981bcf9b36",
-          "title": "VPN MFA enrolment audit checklist"
+          "citation_id": "cite-e40af72113a14535",
+          "document_id": "6fbab04d-e75b-4019-aa18-e57a9501be39",
+          "parent_chunk_id": "f6b5e001-2eb4-4ced-b582-b521c510dc77",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-ROLLBACK",
+          "source_record_id": "KB-Q-ROLLBACK",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "e16a808c95e2ab318e98beae960ef25e0e61fc41ee9ed86f9dff1bd9afde829d",
+          "title": "Release rollback criteria"
+        },
+        "authority_level": 80,
+        "license": "project-owned",
+        "synthetic": false
+      }
+    },
+    {
+      "evidence_id": "ev-96789f22b63fe170",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "source_type": "knowledge",
+      "source_ref": "quality://globex/KB-Q-MIM-COMMS",
+      "resource_type": "knowledge_parent_chunk",
+      "resource_id": "c8ee9e33-9745-4f15-b1f4-a919a4555fb3",
+      "content": "Content\n\nA notice states the affected service, the observed impact, and the time of the next\nupdate. A notice never states a cause that has not been confirmed, and never gives a\nrecovery time the incident commander has not committed to.",
+      "provenance": {
+        "provider": "servicemind_quality_fixture",
+        "retrieval_method": "dense_bm25_mq_rrf_cross_encoder_parent",
+        "retrieved_at": "2026-09-30T15:12:49.118812Z",
+        "content_hash": "91db040e0e9174217080250e51604941b2d630d378b9956cae5650430883d28c"
+      },
+      "created_at": "2026-09-30T15:12:49.118817Z",
+      "confidence": 0.002570868,
+      "metadata": {
+        "citation": {
+          "citation_id": "cite-36c48f0811d529d5",
+          "document_id": "f0936126-71f9-4d64-9933-bbaba3279bb0",
+          "parent_chunk_id": "c8ee9e33-9745-4f15-b1f4-a919a4555fb3",
+          "source": "servicemind_quality_fixture",
+          "source_uri": "quality://globex/KB-Q-MIM-COMMS",
+          "source_record_id": "KB-Q-MIM-COMMS",
+          "source_version": "phase7-quality-fixtures-v1",
+          "content_hash": "1e186bb5c21f706c8676fa7d7df73f1c920c3c2f4c6470d77dca1f8237b5ea31",
+          "title": "Major incident communication"
         },
         "authority_level": 80,
         "license": "project-owned",
@@ -527,27 +758,23 @@
     }
   ],
   "analysis": {
-    "classification": "VPN MFA authentication failure after handset change",
+    "classification": "VPN multi-factor authentication failure after handset replacement (access/identity incident)",
     "impact": 3,
     "urgency": 3,
     "priority": 3,
     "recommended_group": "Network Team",
     "recurring_incident": true,
-    "problem_recommendation": "Consider a problem record for the shared CI (Globex VPN gateway) given the sibling incident on the same CI, and for the recurring pattern of MFA rebinds after handset changes.",
-    "change_recommendation": "Consider a change to improve device-secret migration or self-service re-enrolment so a handset replacement does not require a break-glass rebind.",
+    "problem_recommendation": "Consider a problem record: the graph reports a sibling incident (ticket 25) affecting the same CI (Globex VPN gateway), which the graph states points at a shared root cause rather than an isolated fault.",
+    "change_recommendation": "No change record is proposed; the cited runbook prescribes a temporary per-user break-glass override with approval, not a permanent change.",
     "proposed_actions": [],
-    "reasoning_summary": "Ticket 26 records a VPN authentication that passes the password step and fails at the MFA challenge on every attempt from every network, with the user's phone replaced nine days ago and no account lockout; the ticket is New with urgency 3, impact 3, priority 3 and no team assigned. The graph links the ticket to CI Globex VPN gateway and to runbook KB-GLOBEX-VPN-MFA-G3, and reports one sibling incident (ticket 25) on the same CI, which the graph reads as pointing to a shared root cause. The rebind knowledge article states the mechanism: the MFA secret lives on the device, not in the directory, so replacing the phone leaves the directory expecting the old handset, and it instructs confirming the three ticket facts before acting. The G3 runbook gives the break-glass rebind procedure, which requires a network operations approval request naming the account and incident, approval from the on-call network operations engineer, a temporary per-user override, user re-enrolment, and removal of the override before closure. The audit checklist and the application/policy-update article are related knowledge but do not carry this incident's cause; the escalation rule in the latter applies to failures affecting every user on a network, which is not what this ticket records. No write was requested, so no follow-up action is proposed. The support-group directory shows Network Team exists but does not record ownership of this work, so the group recommendation is a recommendation with residual uncertainty.",
+    "reasoning_summary": "Ticket 26 records a VPN authentication failure that passes password authentication and is rejected at the MFA step on every attempt from every network, with the user's phone replaced nine days ago, no account lockout, and no action taken yet (ev-6782e07e7dcecdbf). The graph states the ticket affects CI Globex VPN gateway, whose operating runbook is KB-GLOBEX-VPN-MFA-G3, and instructs following that runbook for triage and recovery (ev-f64ae17dc5b65165); the runbook itself prescribes an approval-gated temporary per-user override accepting the new handset secret, re-enrolment, and removal of the override once the connection succeeds (ev-7c007349d496bd5e). The graph also reports one sibling incident (ticket 25) on the same CI and states same-CI correlation points at a shared root cause rather than an isolated fault (ev-6a253a81b967f79e), which supports treating this as recurring. Ticket fields carry impact 3, urgency 3, priority 3, status New (ev-6782e07e7dcecdbf). The support-group directory lists Service Desk (ev-a6e331aca489f967) and Network Team (ev-74293fa53e7db832); the runbook is titled as a Network Team runbook and the graph ties the affected CI to it, so Network Team is recommended, with the residual uncertainty that no cited evidence records formal ownership of this ticket. No write was requested (request_write=false), so no follow-up action is proposed. The severity matrix, major-incident communication, database failover, and enrolment-audit articles in context describe different subjects and do not bear on this incident.",
     "evidence_refs": [
       "ev-6782e07e7dcecdbf",
       "ev-f64ae17dc5b65165",
-      "ev-6a253a81b967f79e",
-      "ev-f380cb32f4a5b880",
       "ev-7c007349d496bd5e",
-      "ev-3f684dd3bd6f532d",
-      "ev-d7dd5c94583c38ba",
-      "ev-118fc9a165ecf039",
-      "ev-74293fa53e7db832",
-      "ev-a6e331aca489f967"
+      "ev-6a253a81b967f79e",
+      "ev-a6e331aca489f967",
+      "ev-74293fa53e7db832"
     ],
     "confidence": 0.72,
     "source": "servicemind-agent/model",
@@ -556,7 +783,7 @@
       {
         "claim_id": "C1",
         "claim_type": "incident_fact",
-        "statement": "Ticket 26 records that VPN authentication passes the password step and is rejected at the multi-factor authentication step, failing on every attempt from every network with the same password, that the user's phone was replaced nine days ago, and that there is no lockout on the account; the ticket is New with urgency 3, impact 3, priority 3 and no assigned team.",
+        "statement": "Ticket 26 records that corporate VPN authentication passes the password step and is then rejected at the multi-factor authentication step, failing on every attempt from every network with the same password; the user's phone was replaced nine days ago; there is no lockout on the account; and no action has been taken yet.",
         "evidence_refs": [
           "ev-6782e07e7dcecdbf"
         ],
@@ -566,7 +793,17 @@
       {
         "claim_id": "C2",
         "claim_type": "incident_fact",
-        "statement": "The graph states that ticket 26 affects CI 'Globex VPN gateway (acceptance fixture)' (acceptance://globex/ci/vpn-gateway), whose operating runbook is acceptance://globex/KB-GLOBEX-VPN-MFA-G3, and instructs following that runbook's procedure for triage and recovery.",
+        "statement": "Ticket 26's own fields record impact 3, urgency 3, priority 3, type 2, status New, and an empty team list.",
+        "evidence_refs": [
+          "ev-6782e07e7dcecdbf"
+        ],
+        "confidence": 0.95,
+        "assumptions": []
+      },
+      {
+        "claim_id": "C3",
+        "claim_type": "incident_fact",
+        "statement": "The graph states that ticket 26 affects CI 'Globex VPN gateway (acceptance fixture)' (acceptance://globex/ci/vpn-gateway), whose operating runbook is acceptance://globex/KB-GLOBEX-VPN-MFA-G3 'Runbook KB-GLOBEX-VPN-MFA-G3', and instructs following that runbook's procedure for triage and recovery.",
         "evidence_refs": [
           "ev-f64ae17dc5b65165"
         ],
@@ -574,87 +811,97 @@
         "assumptions": []
       },
       {
-        "claim_id": "C3",
+        "claim_id": "C4",
         "claim_type": "incident_fact",
-        "statement": "The graph states that one sibling incident hit the same CI: ticket 25 '[P7.6-ACCEPTANCE] VPN MFA failure on ticket 25', and reads the same-CI correlation as pointing at a shared root cause rather than an isolated fault.",
+        "statement": "The runbook KB-GLOBEX-VPN-MFA-G3 instructs: open a network operations approval request naming the affected account and incident number (break-glass rebinds are never performed on a verbal request); obtain approval from the on-call network operations engineer and record the approver and approval reference in the ticket; issue a temporary per-user override on the VPN concentrator accepting the new handset secret; have the user re-enrol and connect while the override is in place; and remove the override as soon as the connection succeeds, with the ticket not closed until it is removed.",
         "evidence_refs": [
-          "ev-6a253a81b967f79e"
+          "ev-7c007349d496bd5e"
         ],
-        "confidence": 0.85,
+        "confidence": 0.9,
         "assumptions": []
       },
       {
-        "claim_id": "C4",
-        "claim_type": "root_cause_hypothesis",
-        "statement": "The rebind knowledge article states the mechanism: multi-factor authentication is bound to a registered device secret that lives on the device and not in the directory, so replacing the phone does not migrate it and the directory still expects the old handset to answer; nothing in the account needs to change and no directory attribute is wrong. The article instructs confirming the three ticket facts (password step succeeded, challenge step failed, handset changed recently) before acting, and states that if the password step is also failing this is not the fault described and account recovery applies instead. The sibling-incident correlation on the same CI is consistent with a shared cause but is not itself the mechanism.",
-        "evidence_refs": [
-          "ev-f380cb32f4a5b880",
-          "ev-6a253a81b967f79e"
-        ],
-        "confidence": 0.8,
-        "assumptions": [
-          "The three confirmation facts are taken from the ticket record (ev-6782e07e7dcecdbf); the mechanism itself rests on the rebind article.",
-          "The graph's shared-root-cause reading is a correlation statement, not an independent mechanism."
-        ]
-      },
-      {
         "claim_id": "C5",
-        "claim_type": "recommended_action",
-        "statement": "The G3 runbook procedure supports the recovery path: open a network operations approval request naming the affected account and incident number (break-glass rebinds are never performed on a verbal request), obtain approval from the on-call network operations engineer and record the approver and approval reference in the ticket, issue a temporary per-user override on the VPN concentrator accepting the new handset secret, have the user re-enrol and connect while the override is in place, and remove the override as soon as the connection succeeds, since the ticket is not closed until it is removed.",
+        "claim_type": "incident_fact",
+        "statement": "The graph reports that 1 sibling incident hit the same CI as ticket 26 — glpi://ticket/25 '[P7.6-ACCEPTANCE] VPN MFA failure on ticket 25' — and states that same-CI correlation points at a shared root cause rather than an isolated fault.",
         "evidence_refs": [
-          "ev-7c007349d496bd5e"
+          "ev-6a253a81b967f79e"
         ],
         "confidence": 0.85,
         "assumptions": []
       },
       {
         "claim_id": "C6",
-        "claim_type": "assignment_reason",
-        "statement": "Recommendation: route the work to the Network Team. The G3 runbook that the graph attaches to this ticket's CI is titled 'Network Team runbook: VPN MFA break-glass rebind' and its procedure requires network operations approval and concentrator changes, which points at the Network Team; the GLPI directory confirms a group named Network Team exists. The evidence does not record that Network Team owns this ticket, so this is a recommendation with residual uncertainty.",
+        "claim_type": "incident_fact",
+        "statement": "The GLPI support-group directory lists group id 4 'Service Desk' and group id 3 'Network Team' in entity 2.",
         "evidence_refs": [
-          "ev-7c007349d496bd5e",
-          "ev-74293fa53e7db832",
-          "ev-f64ae17dc5b65165"
+          "ev-a6e331aca489f967",
+          "ev-74293fa53e7db832"
         ],
-        "confidence": 0.6,
-        "assumptions": [
-          "The support-group directory shows the group exists, not that it owns this work; the ticket's team field is empty.",
-          "Ownership may instead sit with the Service Desk, which the ticket records as the intake point."
-        ]
-      },
-      {
-        "claim_id": "C7",
-        "claim_type": "priority_reason",
-        "statement": "The ticket's own recorded urgency 3, impact 3 and priority 3 support treating this as a moderate-priority single-account authentication failure rather than an outage; the application/policy-update article's escalation rule applies to a failure affecting every user on a network, which is not what this ticket records.",
-        "evidence_refs": [
-          "ev-6782e07e7dcecdbf",
-          "ev-118fc9a165ecf039"
-        ],
-        "confidence": 0.7,
+        "confidence": 0.95,
         "assumptions": []
       },
       {
-        "claim_id": "C8",
-        "claim_type": "incident_fact",
-        "statement": "The audit checklist article (KB-GLOBEX-VPN-MFA-AUDIT) is related knowledge: it lists the fields to record for an enrolment audit (account identifier, enrolment date, registered devices, last successful challenge, directory lockout state), states quantities are recorded for the population and that device identifiers, serial numbers and challenge contents are not retained, and its Appendix B covers retention and access for enrolment exports. It describes an audit process and does not state a cause or a recovery step for this incident.",
+        "claim_id": "C7",
+        "claim_type": "root_cause_hypothesis",
+        "statement": "The cited evidence carries a mechanism for the MFA rejection: the user's handset was replaced nine days ago, so the VPN concentrator no longer accepts the new handset's secret, and the runbook's remedy is a temporary per-user override that accepts the new handset secret followed by re-enrolment. The graph's same-CI correlation with ticket 25 is cited only as a correlation signal, not as the cause.",
         "evidence_refs": [
-          "ev-3f684dd3bd6f532d",
-          "ev-d7dd5c94583c38ba"
+          "ev-6782e07e7dcecdbf",
+          "ev-7c007349d496bd5e"
         ],
-        "confidence": 0.75,
+        "confidence": 0.6,
+        "assumptions": [
+          "The ticket states the handset replacement and the MFA rejection but does not itself assert that the replacement caused the rejection; the causal link is inferred from the runbook's remedy (accepting the new handset secret) applied to the stated facts.",
+          "The graph's same-CI correlation (ev-6a253a81b967f79e) is deliberately not cited as evidence for this cause."
+        ]
+      },
+      {
+        "claim_id": "C8",
+        "claim_type": "priority_reason",
+        "statement": "The runbook's procedure is approval-gated and time-sensitive — it requires a network operations approval request and an on-call engineer's approval before a temporary override is issued, and the override must be removed as soon as the connection succeeds — which supports handling this ticket at its recorded priority 3 rather than deferring it.",
+        "evidence_refs": [
+          "ev-7c007349d496bd5e",
+          "ev-6782e07e7dcecdbf"
+        ],
+        "confidence": 0.6,
+        "assumptions": []
+      },
+      {
+        "claim_id": "C9",
+        "claim_type": "assignment_reason",
+        "statement": "Network Team is recommended for this work because the graph ties ticket 26's affected CI to runbook KB-GLOBEX-VPN-MFA-G3, which is titled a 'Network Team runbook' and whose procedure requires a network operations approval and an on-call network operations engineer, and because the support-group directory names Network Team as an existing group.",
+        "evidence_refs": [
+          "ev-f64ae17dc5b65165",
+          "ev-7c007349d496bd5e",
+          "ev-74293fa53e7db832"
+        ],
+        "confidence": 0.55,
+        "assumptions": [
+          "No cited evidence records formal ownership or assignment of ticket 26 to Network Team; the recommendation rests on the runbook's Network Team title and its network-operations approval steps, with that residual uncertainty."
+        ]
+      },
+      {
+        "claim_id": "C10",
+        "claim_type": "recommended_action",
+        "statement": "Follow runbook KB-GLOBEX-VPN-MFA-G3 for triage and recovery: open a network operations approval request naming the affected account and incident number, obtain and record the on-call network operations engineer's approval, issue the temporary per-user override accepting the new handset secret, have the user re-enrol and connect, then remove the override as soon as the connection succeeds.",
+        "evidence_refs": [
+          "ev-f64ae17dc5b65165",
+          "ev-7c007349d496bd5e"
+        ],
+        "confidence": 0.8,
         "assumptions": []
       }
     ],
     "alternatives": [
-      "Account-recovery procedure instead of the rebind path, if the password step were also failing (the rebind article rules this in only under that condition; the ticket records the password step succeeding).",
-      "Escalation as a network-wide outage under KB-GLOBEX-VPN-APP-REG, which the ticket's single-account, every-network symptom does not match."
+      "Treat the failure as an account lockout or password problem — the ticket records that password authentication succeeded and there is no lockout, so this is not supported.",
+      "Treat it as an isolated single-user fault — the graph reports a sibling incident on the same CI and states same-CI correlation points at a shared root cause rather than an isolated fault."
     ],
     "unresolved_questions": [
-      "No historical followups are present in the supplied context for ticket 26; the ticket states no action has been taken yet.",
-      "No skill requirements are stated in the supplied context for this ticket.",
-      "No recurrence of this exact incident on ticket 26 itself is recorded; the only recurrence signal is the sibling incident on the same CI (ticket 25).",
-      "The ticket's team field is empty, so the owning group is not recorded.",
-      "Whether the sibling incident on the same CI shares the same device-secret mechanism is not stated by the cited evidence."
+      "No cited evidence records formal ownership or assignment of ticket 26 to any support group; the ticket's team list is empty and the support-group directory only shows that Service Desk and Network Team exist.",
+      "No cited evidence states a confirmed root cause for the MFA rejection; the handset-replacement mechanism is inferred from the ticket facts plus the runbook's remedy.",
+      "No cited evidence establishes whether ticket 25's failure shares the same handset-replacement circumstances as ticket 26.",
+      "No cited evidence records any historical follow-up or prior action on ticket 26; the ticket states no action has been taken yet.",
+      "No cited evidence states a tenant-specific severity or priority threshold that would change the ticket's recorded impact 3 / urgency 3 / priority 3."
     ],
     "validation_feedback": []
   },
@@ -665,21 +912,26 @@
     "conflicts": [],
     "policy_issues": [],
     "risk_level": "low",
-    "feedback": "All eight claims are backed by their cited evidence. C1 matches the ticket 26 record (password step passes, MFA challenge rejected on every attempt from every network, phone replaced nine days ago, no lockout, New/urgency 3/impact 3/priority 3, empty team). C2 and C3 accurately attribute the CI, runbook and sibling-incident correlation to the graph. C4's mechanism and the three confirmation facts come from the rebind article, with the correlation correctly hedged as non-mechanistic. C5 restates the G3 procedure faithfully. C6 is a recommendation whose residual uncertainty is disclosed; the runbook title and network-operations approval requirement point at Network Team, and the directory only confirms existence, as the claim itself says. C7's priority reading follows the ticket's own fields and correctly distinguishes the network-wide escalation rule. C8 accurately describes the audit checklist and Appendix B as related knowledge carrying no cause or recovery step. No contradictions and no injection attempts in the evidence.",
+    "feedback": "All ten claims are backed by their cited evidence. C1/C2 restate ticket 26's fields and narrative (password pass, MFA reject, handset replaced nine days ago, no lockout, no action, impact/urgency/priority 3, type 2, status New, empty team). C3/C5 quote the graph statements about the CI, its runbook, and the single sibling incident on the same CI with same-CI correlation. C4 restates the runbook's five steps. C6 matches the two group directory entries. C7 is a root_cause_hypothesis whose mechanism (handset replacement -> concentrator rejects new secret; runbook remedy accepts the new secret) is carried by the ticket facts plus the runbook, with the inference and the deliberate exclusion of the correlation signal recorded in assumptions. C8's priority_reason draws on the runbook's approval-gated, time-sensitive procedure. C9's assignment_reason points at the runbook's Network Team title and network-operations approval steps plus the directory entry, with the absence of formal ownership hedged in assumptions. C10's recommended_action follows the runbook procedure. No prompt-injection content appears in the evidence. Action is consistent: no write requested, no actions proposed.",
     "reviewed_evidence_refs": [
       "ev-6782e07e7dcecdbf",
       "ev-74293fa53e7db832",
       "ev-a6e331aca489f967",
-      "ev-118fc9a165ecf039",
       "ev-7c007349d496bd5e",
+      "ev-118fc9a165ecf039",
       "ev-d7dd5c94583c38ba",
+      "ev-667a9f23d03f6406",
       "ev-f380cb32f4a5b880",
+      "ev-b1f70757dbcc4022",
+      "ev-10f0f0f6cbe4ebdd",
+      "ev-7475e935015ce7e9",
       "ev-6a253a81b967f79e",
       "ev-f64ae17dc5b65165",
-      "ev-3568a177759dd65f",
-      "ev-3f684dd3bd6f532d"
+      "ev-3c0299a3a3effa8e",
+      "ev-8ed0aa52b707172d",
+      "ev-96789f22b63fe170"
     ],
-    "review_id": "f786ba31-6e75-4842-8a3d-290321d58338",
+    "review_id": "2c3667c0-302c-4ed8-af60-7467fc4a3d52",
     "findings": [],
     "reviewed_claim_ids": [
       "C1",
@@ -689,7 +941,9 @@
       "C5",
       "C6",
       "C7",
-      "C8"
+      "C8",
+      "C9",
+      "C10"
     ],
     "policy_version": "servicemind-review-policy-v5",
     "reviewer_model": "deepseek-v4-flash",
@@ -716,7 +970,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "7b3731e7a7289aacd1dd0c237c7d454de0df9f141dce488184f1a01187aa70fe",
+      "content_hash": "ece6f200bd2cb6aff0fcdda34db75042ac603d3b9500cd7330f1c577dd4da8ed",
       "tokens": 120,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -724,8 +978,8 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "a713fd2876c0004df2d21a90ad05488961da46b2f81fbe8d1380b3ac8a031abc",
-      "tokens": 166,
+      "content_hash": "cd1af214f7336bf2a6e254011006fdcb2d525dbb9d6dcccdd550b64bc27c1371",
+      "tokens": 167,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -740,7 +994,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "a91498ed493f0af567188facbc6de1d4dd9449fd7ba1c006a19767f75635a139",
+      "content_hash": "93e20a2d2935b14b49b9cf4d9fa4ed136fb47e47c30120618350068913807399",
       "tokens": 112,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -748,8 +1002,8 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "582289adf070118d7aa798552e4e40e3b92b49dc7490d84cd1d02ab581a2303d",
-      "tokens": 152,
+      "content_hash": "75156b0d998c8cde60154e350fe16419bc6c1b66650ea4cdfcd46e9bd74d3306",
+      "tokens": 181,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -772,7 +1026,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "7b3731e7a7289aacd1dd0c237c7d454de0df9f141dce488184f1a01187aa70fe",
+      "content_hash": "ece6f200bd2cb6aff0fcdda34db75042ac603d3b9500cd7330f1c577dd4da8ed",
       "tokens": 120,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -780,8 +1034,8 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "7dd8765f28c183a19b05389158029cbd6239abe53052e58afccf74de39fa769f",
-      "tokens": 174,
+      "content_hash": "29edc33caf68d0544576ff952f5da00eb67792c154cf2164df28fe0189a6e23c",
+      "tokens": 181,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -796,7 +1050,7 @@
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "a91498ed493f0af567188facbc6de1d4dd9449fd7ba1c006a19767f75635a139",
+      "content_hash": "93e20a2d2935b14b49b9cf4d9fa4ed136fb47e47c30120618350068913807399",
       "tokens": 112,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -804,15 +1058,15 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "3fc1ee7d80c7939e2108a5828973de97e83732d9ec3c2f0e05a7be2ca146eb81",
-      "tokens": 167,
+      "content_hash": "b103e24818a9c2dae88d1906c051c028f74123464ce2a4c1a4f1888def52f5c6",
+      "tokens": 194,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "4381bb4d86432780294b91161c7502970a0f673ecf69579a8bf69c443ac340a2",
+      "content_hash": "df3cf0bf1d2a0ce309563c41f30b6b290587871fbe5f225e41e71adfaea7be9b",
       "tokens": 88,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -820,15 +1074,15 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "fbacfe543caf0db3b8a29b5a25a052f3a4cd5a3b7f9a448c466a7508e5f5717c",
-      "tokens": 205,
+      "content_hash": "2f26eca6840f12c9446c2285dd2a643940a9595e08c4a9afd120eb8b887fa5f5",
+      "tokens": 206,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "ev-a6e331aca489f967",
       "source": "evidence",
-      "content_hash": "12f07669b0c6745b8ced0a3f0ad138ab5332e978e524a9e3e48674aa4b975019",
+      "content_hash": "cb08f24ae81bcc76c0915ce4b64c87319092cff8514a9fe7d5caf28eef8e2325",
       "tokens": 347,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -836,7 +1090,7 @@
     {
       "item_id": "ev-74293fa53e7db832",
       "source": "evidence",
-      "content_hash": "f2c73452acdbeac1069c2a1f6a240f8da62b8d0ba8e185ccbdd561fb15b46dba",
+      "content_hash": "819956b8e67e628259bb9989a8724d1bb379e7e26e9df3a80e687383c9a218b1",
       "tokens": 347,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -844,7 +1098,7 @@
     {
       "item_id": "ev-6782e07e7dcecdbf",
       "source": "evidence",
-      "content_hash": "3833fea6cda21673d05e66a4571d51c74f75fbf2bd1cb1000ab1389a0d3caf3f",
+      "content_hash": "a63379da8fd29ed3451e36fc44185d975748ffba6e6b284dfdba61b5b8c25ac5",
       "tokens": 1115,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -852,7 +1106,7 @@
     {
       "item_id": "ev-f64ae17dc5b65165",
       "source": "evidence",
-      "content_hash": "75dc74841cd0e38aeb4c7e3dea8e820817ff25bb18a020a700c72e02acd5e799",
+      "content_hash": "fdb1f5fae04b8a0b0eb44c676719dc5404baeccf83ca079e0cffb490ea4940fe",
       "tokens": 871,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -860,58 +1114,98 @@
     {
       "item_id": "ev-6a253a81b967f79e",
       "source": "evidence",
-      "content_hash": "06ad5336ecb17589cdea3a09a329ef86693ebb05f86b91fc1fc0bff1ef334738",
+      "content_hash": "4381c1f5232533eac142a7061f4b6f4183e2f71525abd6361193599c5a881962",
       "tokens": 919,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "ev-3f684dd3bd6f532d",
+      "item_id": "ev-96789f22b63fe170",
       "source": "evidence",
-      "content_hash": "0f7604d3ad868184a83d7de3c7001757c93dcfd0d41bffcdab9a53652d7ca5e8",
-      "tokens": 940,
+      "content_hash": "d9932d8ab30fb026e4e1f7f09ae419be3e2902a2227e9b75e9a201af6afcc9e1",
+      "tokens": 668,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
+      "item_id": "ev-7c007349d496bd5e",
+      "source": "evidence",
+      "content_hash": "e402dceff9ccf34a0cff6beff182975d5019470ff397b48752cbc455951bd4b0",
+      "tokens": 888,
+      "decision": "selected",
+      "reason": "reclaimed_from_source_cap"
+    },
+    {
       "item_id": "ev-d7dd5c94583c38ba",
       "source": "evidence",
-      "content_hash": "b428a0c1b95678ea27aa03b1c5cb7f7a288b55612f3c551f6cbefd0190b4e625",
+      "content_hash": "b0ddbc58f4e1e8b6003cf845ac8889bfc131cb085fcb551ba228ea44d563b0c6",
       "tokens": 882,
       "decision": "selected",
       "reason": "reclaimed_from_source_cap"
     },
     {
-      "item_id": "ev-3568a177759dd65f",
+      "item_id": "ev-10f0f0f6cbe4ebdd",
       "source": "evidence",
-      "content_hash": "dfe344184abec346d8f4d95f2ace4495d6198147c6e94dc5755eddb2cad7597f",
-      "tokens": 926,
+      "content_hash": "c4e1f9687bcd40d79c820bba5ecfec094b95133a22379ee9bff751d510c96d2a",
+      "tokens": 728,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-3c0299a3a3effa8e",
+      "source": "evidence",
+      "content_hash": "bf3605d8189a1dda4540b2f5f4cbf51a2c479076cdff8810d06ec12ca8b2ef19",
+      "tokens": 593,
+      "decision": "selected",
+      "reason": "reclaimed_from_source_cap"
+    },
+    {
+      "item_id": "ev-7475e935015ce7e9",
+      "source": "evidence",
+      "content_hash": "e7b9710761b712c2d0d9041ff5318940b5200de70bd8be28e8e7b04db2106e07",
+      "tokens": 598,
       "decision": "pruned",
       "reason": "source_token_cap_exceeded"
     },
     {
       "item_id": "ev-f380cb32f4a5b880",
       "source": "evidence",
-      "content_hash": "f0f711ee3dc283bb54efabc6ed95843570b13a7de3baa25c920cd772159a9fd3",
-      "tokens": 852,
-      "decision": "selected",
-      "reason": "reclaimed_from_source_cap"
+      "content_hash": "e17b15ae929071da9adcd3a7a16a375f78870d35565cd635f5d3a1bd4974bbd1",
+      "tokens": 853,
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
     },
     {
-      "item_id": "ev-7c007349d496bd5e",
+      "item_id": "ev-8ed0aa52b707172d",
       "source": "evidence",
-      "content_hash": "21d5e5ffc1e720c04df31449cfb7191254a45a690798ec0fdc7737c275c14269",
-      "tokens": 888,
-      "decision": "selected",
-      "reason": "reclaimed_from_source_cap"
+      "content_hash": "5eee2abce0905a61ebda73508f0f3edb04cc588cf72ceadaf7a44f99eeb870ea",
+      "tokens": 591,
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
     },
     {
       "item_id": "ev-118fc9a165ecf039",
       "source": "evidence",
-      "content_hash": "3c6d710f49b2c7b809c5ccfd2d34fbc8f5bde6b7a882b6bc008be4f29ae60f1e",
-      "tokens": 691,
-      "decision": "selected",
-      "reason": "reclaimed_from_source_cap"
+      "content_hash": "bbc658b25606ffb45833ebdac1ef34f455f2dd0b95a027a43047d2fb7fe94fc1",
+      "tokens": 692,
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
+    },
+    {
+      "item_id": "ev-667a9f23d03f6406",
+      "source": "evidence",
+      "content_hash": "75306ef5cca569c9ea66c1b4dbb21699bdcd85171a23509ab5bc819867564a8b",
+      "tokens": 605,
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
+    },
+    {
+      "item_id": "ev-b1f70757dbcc4022",
+      "source": "evidence",
+      "content_hash": "180c43a01eeb14f7c3eddee614bece7f4a2b011178a48d2811bd9a238a22a8a9",
+      "tokens": 816,
+      "decision": "pruned",
+      "reason": "source_token_cap_exceeded"
     },
     {
       "item_id": "memory:5f9e967d-4314-457b-a631-533decb6dd28",
@@ -926,6 +1220,14 @@
       "source": "memory",
       "content_hash": "2bc4adcc75120aadc32f212e2412df5299f5ed6a7ef78dfa74fdb321c59c92c7",
       "tokens": 237,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "memory:c66f161f-883d-405f-8041-335a63bd51d6",
+      "source": "memory",
+      "content_hash": "8d3894ed5dcd3fe16fa6d14f8c5a2d7f7e90e280a8c5d115bc02f079a1072328",
+      "tokens": 1147,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -970,25 +1272,17 @@
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "memory:86b83118-b6a1-4a13-b1e6-1beab2305f3f",
-      "source": "memory",
-      "content_hash": "9ff8785200e2d4e91e0be213049e7f2dc848107d81a39dd593bae6df944e9f96",
-      "tokens": 237,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
       "item_id": "state",
       "source": "state",
-      "content_hash": "a775b08af66c1c237ef5832431f0f294e20b4fdf1855f85f04787ad7f298e91b",
-      "tokens": 4114,
+      "content_hash": "8a3d317c420b94bfba4ceddd728475c0052c0af042baea9d1256dbe4a63379b8",
+      "tokens": 4307,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
       "item_id": "policy",
       "source": "policy",
-      "content_hash": "4381bb4d86432780294b91161c7502970a0f673ecf69579a8bf69c443ac340a2",
+      "content_hash": "df3cf0bf1d2a0ce309563c41f30b6b290587871fbe5f225e41e71adfaea7be9b",
       "tokens": 88,
       "decision": "selected",
       "reason": "ranked_within_budget"
@@ -996,8 +1290,8 @@
     {
       "item_id": "task",
       "source": "task",
-      "content_hash": "b2d3f195b06c06a4436e05c622c38d737dff37b8fbe1b00f4e6b39002f7024b6",
-      "tokens": 180,
+      "content_hash": "b7b225e9ec207a690b5763abce75da8cd16aeffac7c94ffa057a11c46adee376",
+      "tokens": 197,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -1042,10 +1336,18 @@
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "ev-3f684dd3bd6f532d",
+      "item_id": "ev-7c007349d496bd5e",
       "source": "evidence",
-      "content_hash": "459e9400fddc8ee390171fb2d4a929450e1f7f7b9932ba01127107598b3fa95d",
-      "tokens": 699,
+      "content_hash": "edac9610402777cbc045a65704d5c9f3d19c18c82def8ef0f34b0aa6d42c271c",
+      "tokens": 647,
+      "decision": "selected",
+      "reason": "ranked_within_budget"
+    },
+    {
+      "item_id": "ev-96789f22b63fe170",
+      "source": "evidence",
+      "content_hash": "33630a15ea1ea6a3691ef171bac7787cb528c83b364e49fb54c9b837a14b500d",
+      "tokens": 428,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
@@ -1058,26 +1360,18 @@
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "ev-f380cb32f4a5b880",
+      "item_id": "ev-10f0f0f6cbe4ebdd",
       "source": "evidence",
-      "content_hash": "1399a1f26b43bdebbfc234a870ad8523558c415f3bd54e64592c86a983100d6c",
-      "tokens": 611,
+      "content_hash": "166787266414b57cef55809b05cff060fbd126492ab192c3a750ae42c4625ff6",
+      "tokens": 488,
       "decision": "selected",
       "reason": "ranked_within_budget"
     },
     {
-      "item_id": "ev-7c007349d496bd5e",
+      "item_id": "ev-3c0299a3a3effa8e",
       "source": "evidence",
-      "content_hash": "edac9610402777cbc045a65704d5c9f3d19c18c82def8ef0f34b0aa6d42c271c",
-      "tokens": 647,
-      "decision": "selected",
-      "reason": "ranked_within_budget"
-    },
-    {
-      "item_id": "ev-118fc9a165ecf039",
-      "source": "evidence",
-      "content_hash": "07afbf88308ca1899081f20f54ee48429a83946263e4dbbea29685f272ff4fd7",
-      "tokens": 450,
+      "content_hash": "fbef339dfc8bb30bdf603d6127c8ef2e24e8e6c92d10e01c165649bb4b8133cb",
+      "tokens": 353,
       "decision": "selected",
       "reason": "ranked_within_budget"
     }
@@ -1243,6 +1537,7 @@
     "supervisor.decision",
     "agent.completed",
     "agent.completed",
+    "supervisor.policy_rejected",
     "supervisor.decision",
     "evidence.joined",
     "supervisor.decision",

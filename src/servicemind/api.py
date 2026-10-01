@@ -19,6 +19,7 @@ from servicemind.domain.task import (
     GOAL_MIN_LENGTH,
     TICKET_ID_MAX,
 )
+from servicemind.foundation.errors import bounded_error_text
 from servicemind.harness.webhooks import (
     WebhookValidationError,
     glpi_webhook_goal,
@@ -193,6 +194,7 @@ async def _process_webhook_run(run: AgentRun, context: TenantContext) -> None:
         # timeline simply stops -- no cause, no node, nothing to reproduce from -- which is
         # how the supervisor's schema violation stayed invisible. A failure the platform
         # cannot describe is a failure it cannot fix.
+        reason = bounded_error_text(exc)
         await repository.append_event(
             run.id,
             "run.failed",
@@ -200,11 +202,15 @@ async def _process_webhook_run(run: AgentRun, context: TenantContext) -> None:
                 "status": RunStatus.FAILED.value,
                 "error_type": type(exc).__name__,
                 "error_code": model_error_code(exc),
-                "reason": str(exc)[:1000],
+                "reason": reason,
                 "stage": "workflow",
             },
         )
-        await repository.update_run(run.id, RunStatus.FAILED, error=type(exc).__name__)
+        # The event carries the reason; the run row has to carry it too. A run list is
+        # read from ``agent_runs``, so a column holding ``RuntimeError`` and nothing else
+        # says a run failed and makes the operator open the event stream of every failed
+        # run to find out why -- which is the lookup this column exists to spare them.
+        await repository.update_run(run.id, RunStatus.FAILED, error=reason)
 
 
 @phase2_router.post(
@@ -404,13 +410,18 @@ async def approve_run(
             ),
         ) from exc
     except Exception as exc:
-        # Logged, because the run row can only hold the class name and the response holds
-        # nothing at all: a resume that fails for an unforeseen reason used to leave no
-        # trace anywhere, and the acceptance run that hit one could only report
-        # "PermissionError" -- the same word for half a dozen distinct refusals. The
-        # traceback carries no request body, so nothing secret is written.
+        # Logged, because the response holds nothing at all: a resume that fails for an
+        # unforeseen reason used to leave no trace anywhere, and the acceptance run that
+        # hit one could only report "PermissionError" -- the same word for half a dozen
+        # distinct refusals. The traceback carries no request body, so nothing secret is
+        # written.
         logger.exception("resuming run %s after approval failed", run.id)
-        await repository.update_run(run.id, RunStatus.FAILED, error=type(exc).__name__)
+        # The row carries the reason, not the class name. The class name is half a dozen
+        # distinct refusals spelled the same way; an operator who was not watching the
+        # response or the journal had nothing to act on. ``bounded_error_text`` keeps this
+        # to the same cap the events use, so a long message cannot turn the column into
+        # the reason a run row stops rendering.
+        await repository.update_run(run.id, RunStatus.FAILED, error=bounded_error_text(exc))
         raise HTTPException(status_code=502, detail="ServiceMind resume failed") from exc
 
     stored = await repository.get_run(run_id)
@@ -507,7 +518,7 @@ async def resolve_review_escalation(
         # Same reason as the approval endpoint above: the class name alone is not enough
         # to tell a policy refusal from a bug.
         logger.exception("resuming run %s after a review decision failed", run.id)
-        await repository.update_run(run.id, RunStatus.FAILED, error=type(exc).__name__)
+        await repository.update_run(run.id, RunStatus.FAILED, error=bounded_error_text(exc))
         raise HTTPException(status_code=502, detail="ServiceMind review resume failed") from exc
     stored = await repository.get_run(run_id)
     assert stored is not None

@@ -3,6 +3,17 @@ import re
 from servicemind.domain.routing import RouteDecision, RouteType
 from servicemind.domain.task import AgentName
 
+#: The agents a question needs once it has to be *answered* rather than looked up:
+#: retrieve facts and knowledge, reason over them, and have the reasoning checked. Three
+#: routes below return this same set, so it is named once -- the routes differ in why
+#: they were chosen, not in what they need.
+_REVIEWED_PIPELINE = (
+    AgentName.DATA,
+    AgentName.KNOWLEDGE,
+    AgentName.ANALYSIS,
+    AgentName.REVIEWER,
+)
+
 FORBIDDEN_PATTERNS = (
     r"\b(delete|erase|purge|destroy)\b",
     r"删除|销毁|清空",
@@ -19,6 +30,44 @@ COMPLEX_PATTERNS = (
     r"(?:创建|关联).*(?:问题单|变更)",
     r"\b(assign|route|take action)\b",
     r"分派|处理建议|执行|修改",
+)
+#: A report of a concrete failure that asks to be handled is a diagnosis request, not a
+#: lookup -- and the troubleshooting rows below used to claim otherwise. They matched on
+#: the interrogative alone ("如何处理", "how to"), which is the exact anti-pattern the data
+#: rows warn about two comments down: the *question shape* was taken for the *question
+#: subject*. "How to troubleshoot VPN MFA?" asks for the documented procedure and is a
+#: lookup; "How do I fix a VPN MFA failure after changing phones?" supplies the symptom
+#: and the change that produced it, so the thing being asked for is a decision about a
+#: situation, and only the reviewed pipeline can give one.
+#:
+#: Measured on the live stack (2026-09-30), the second shape was answered by the
+#: retrieval-only fast path with ``answer`` set to twelve raw parent chunks, no model
+#: call and no reviewer -- and the twelve included the symptom-similar decoy, so the
+#: caller received a competing root cause with nothing marking it as the alternative.
+#: Asking the same question with "应该怎么处理" instead of "该怎么处理" routed it to
+#: ``complex_workflow`` and produced the diagnosis, the decoy named as an alternative,
+#: and the three confirming facts checked. One character of the interrogative decided
+#: which of those two products the user got.
+#:
+#: Both halves are required, which is what keeps this off the artifact lookups: "Find the
+#: runbook for the MFA failure" names a symptom and asks to retrieve a document, so it
+#: stays a lookup. The boundary is pinned by rows on *both* sides of it -- the incident
+#: reports that must reach the pipeline and the artifact lookup that merely mentions a
+#: symptom are both in ``evaluation/routing/routing.jsonl``, so an edit to these patterns
+#: that moves the line has to move a case with it rather than quietly re-route a shape
+#: nothing was measuring.
+_INCIDENT_SYMPTOM = (
+    r"失败|报错|出错|异常|中断|不通|连不上|无法|不能|未通过|没通过|打不开|被拒|卡住|挂住|超时"
+    r"|\b(?:fails?|failing|failed|failure|errors?|broken|cannot|can't|unable|rejected"
+    r"|denied|timed? ?out)\b"
+)
+_INCIDENT_ASK = (
+    r"怎么办|怎么处理|如何处理|如何解决|如何修复|怎么解决|该怎么|帮我|求助"
+    r"|\bhow\s+(?:do|should|can)\s+i\b|\bhow\s+to\b|\bwhat\s+should\b|\bhow\s+should\b"
+)
+INCIDENT_PATTERNS = (
+    rf"(?:{_INCIDENT_SYMPTOM}).{{0,80}}(?:{_INCIDENT_ASK})",
+    rf"(?:{_INCIDENT_ASK}).{{0,80}}(?:{_INCIDENT_SYMPTOM})",
 )
 #: A question that asks *for* a documented procedure, rather than one that merely
 #: mentions one. The artifact noun alone is not enough: "官方手册给出了明确处置。请给出
@@ -121,16 +170,30 @@ class FastPathRouter:
                 reason_code="forbidden_operation",
                 confidence=1,
             )
-        if request_write or any(re.search(pattern, normalized) for pattern in COMPLEX_PATTERNS):
+        if request_write:
             return RouteDecision(
                 route=RouteType.COMPLEX_WORKFLOW,
-                required_capabilities=[
-                    AgentName.DATA,
-                    AgentName.KNOWLEDGE,
-                    AgentName.ANALYSIS,
-                    AgentName.REVIEWER,
-                    *([AgentName.ACTION] if request_write else []),
-                ],
+                required_capabilities=[*_REVIEWED_PIPELINE, AgentName.ACTION],
+                reason_code="analysis_or_action_required",
+                confidence=0.98,
+            )
+        # Before the general analysis row, so a question that is both "分析…" and an
+        # incident report is filed under the narrower reason. Nothing routes differently
+        # -- both are COMPLEX_WORKFLOW with the same capabilities -- but the reason_code
+        # is what a reader has to attribute these runs with, and "the caller reported a
+        # failure" says more about why the full pipeline was spent than "analysis was
+        # mentioned" does.
+        if any(re.search(pattern, normalized) for pattern in INCIDENT_PATTERNS):
+            return RouteDecision(
+                route=RouteType.COMPLEX_WORKFLOW,
+                required_capabilities=list(_REVIEWED_PIPELINE),
+                reason_code="incident_symptom_requires_diagnosis",
+                confidence=0.9,
+            )
+        if any(re.search(pattern, normalized) for pattern in COMPLEX_PATTERNS):
+            return RouteDecision(
+                route=RouteType.COMPLEX_WORKFLOW,
+                required_capabilities=list(_REVIEWED_PIPELINE),
                 reason_code="analysis_or_action_required",
                 confidence=0.98,
             )

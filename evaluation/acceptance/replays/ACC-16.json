@@ -5,8 +5,8 @@
     "entitlement_verifier_configured": true,
     "base_url": "http://127.0.0.1:18080",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
-    "recorded_at": "2026-09-23T20:16:53.147402Z",
-    "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(92 files)",
+    "recorded_at": "2026-09-30T15:11:03.071639Z",
+    "deployed_revision": "cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)",
     "notes": [
       "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
       "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
@@ -16,10 +16,10 @@
     "username": "globex-approver",
     "tenant_id": "22222222-2222-4222-8222-222222222222",
     "roles": [
-      "approver",
-      "viewer",
+      "operator",
       "analyst",
-      "operator"
+      "viewer",
+      "approver"
     ],
     "entity_ids": [
       2
@@ -34,13 +34,13 @@
       "id": "count-outbox",
       "description": "统计 outbox 中 action.approved 行的总数与未投递数，读出最老已投递行的年龄与投递流长度，原始输出写入 detail",
       "action": "outbox tally",
-      "started_at": "2026-09-23T20:25:00.840861Z",
-      "elapsed_seconds": 0.01611928641796112,
+      "started_at": "2026-09-30T15:20:01.479509Z",
+      "elapsed_seconds": 0.014444183558225632,
       "http_status": null,
       "action_hash": null,
       "action_status": null,
       "outcome": "passed",
-      "detail": "{\"event_type\": \"action.approved\", \"total\": 92, \"by_status\": {\"published\": 92}, \"unconsumed\": 0, \"retention_days\": 30, \"oldest_delivered_row\": \"2026-09-23T00:25:48.426866+00:00\", \"oldest_delivered_age_seconds\": 71952.4, \"delivered_rows_within_retention\": true, \"delivered_rows_older_than_one_day\": 0, \"redis\": {\"readable\": true, \"stream\": \"servicemind:tool-events\", \"length\": 93, \"bound\": 100000}, \"note\": \"PASS here means the tally was taken and the retention read, not that a consumer outside this repository drained the queue: no consumer exists in the platform, which is recorded in the baseline document\"}"
+      "detail": "{\"event_type\": \"action.approved\", \"total\": 96, \"by_status\": {\"published\": 96}, \"unconsumed\": 0, \"retention_days\": 30, \"oldest_delivered_row\": \"2026-09-23T00:25:48.426866+00:00\", \"oldest_delivered_age_seconds\": 658453.1, \"delivered_rows_within_retention\": true, \"delivered_rows_older_than_one_day\": 94, \"redis\": {\"readable\": true, \"stream\": \"servicemind:tool-events\", \"length\": 97, \"bound\": 100000}, \"note\": \"PASS here means the tally was taken and the retention read, not that a consumer outside this repository drained the queue: no consumer exists in the platform, which is recorded in the baseline document\"}"
     }
   ],
   "run_id": null,

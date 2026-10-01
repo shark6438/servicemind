@@ -198,6 +198,129 @@ class DynamicPlanner:
         self.validator.validate(plan)
         return plan
 
+    def _next_task_id(self, tasks: list[Task]) -> str:
+        """The next free ``Tn``. Ascending, so a completed-plan revision cannot collide."""
+        used = {task.task_id for task in tasks}
+        index = len(used) + 1
+        while f"T{index}" in used:
+            index += 1
+        return f"T{index}"
+
+    def _has_ancestor(self, tasks: dict[str, Task], task: Task, agent: AgentName) -> bool:
+        """Whether ``task`` reaches ``agent`` through its dependencies.
+
+        The same question ``DagValidator`` asks; asked here over the tasks this method is
+        about to complete, which are not a validated plan yet.
+        """
+        pending = list(task.depends_on)
+        seen: set[str] = set()
+        while pending:
+            identifier = pending.pop()
+            if identifier in seen or identifier not in tasks:
+                continue
+            seen.add(identifier)
+            dependency = tasks[identifier]
+            if dependency.agent is agent:
+                return True
+            pending.extend(dependency.depends_on)
+        return False
+
+    def _complete_evidence_pipeline(
+        self, tasks: list[Task], *, ticket_id: int, due: datetime
+    ) -> list[Task]:
+        """Give an evidence-bearing proposal the Analysis and Reviewer tasks it omitted.
+
+        Measured on 2026-10-01. For a goal the corpus does not cover -- the quality case
+        ``Q-200``, "What is the company policy on accepting gifts from suppliers?" -- the
+        planner returned a plan with no Analysis task (``[knowledge]``, and once
+        ``[knowledge, data]``) or with a Reviewer that had no Analysis to review
+        (``[knowledge, reviewer]``) in six of eight samples. The same prompt returned the
+        full pipeline in the other two, so this is the model's variance, not a fixed bug in
+        it: an instruction to build a *minimal* DAG and a rule that every evidence plan must
+        carry Analysis and Reviewer do not have a common solution the model can find
+        reliably, and it resolves the tension differently each time.
+
+        Asking again does not fix that. The planner gets two attempts and the run then dies
+        with ``critical_error``, which is what the live probe observed: a user question with
+        no matching runbook produced no answer at all, most of the time. The pipeline below
+        is policy, not preference -- the fail-closed rule exists so evidence is never joined
+        and finalized without a review -- and policy that has exactly one correct
+        completion should be *applied*, not requested and then rejected.
+
+        Only the initial plan is completed. A revision is told to add new Analysis and
+        Reviewer tasks and is rejected if it does not; that path was not observed failing,
+        and completing it would have to reconcile with the completed tasks it must preserve.
+
+        The original proposal is not otherwise reshaped: if it already contains the
+        pipeline, or contains no evidence tasks at all, it is returned as it was.
+        """
+        evidence = [
+            task.task_id for task in tasks if task.agent in (AgentName.DATA, AgentName.KNOWLEDGE)
+        ]
+        if not evidence:
+            return tasks
+
+        by_id = {task.task_id: task for task in tasks}
+        analysis = [task for task in tasks if task.agent is AgentName.ANALYSIS]
+        if analysis:
+            analysis_task = analysis[0]
+            # The prompt already requires Analysis to depend on every evidence task, and
+            # a proposal that omitted one of them is the same omission this method exists
+            # to repair: Analysis would be asked to derive from evidence it never joined.
+            for task_id in dict.fromkeys(evidence):
+                if task_id not in analysis_task.depends_on:
+                    analysis_task.depends_on.append(task_id)
+        else:
+            contract = self.registry.get(AgentName.ANALYSIS)
+            analysis_task = Task(
+                task_id=self._next_task_id(tasks),
+                agent=AgentName.ANALYSIS,
+                task_type=contract.task_types[0],
+                input={
+                    "objective": "Derive the ITSM analysis from the joined evidence.",
+                    "ticket_id": ticket_id,
+                },
+                depends_on=list(dict.fromkeys(evidence)),
+                error_policy=ErrorPolicy(contract.error_policy),
+                deadline=due,
+            )
+            tasks.append(analysis_task)
+            by_id[analysis_task.task_id] = analysis_task
+
+        reviewers = [task for task in tasks if task.agent is AgentName.REVIEWER]
+        if reviewers:
+            for reviewer in reviewers:
+                by_id[reviewer.task_id] = reviewer
+                if analysis_task.task_id not in reviewer.depends_on and not self._has_ancestor(
+                    by_id, reviewer, AgentName.ANALYSIS
+                ):
+                    reviewer.depends_on.append(analysis_task.task_id)
+        else:
+            contract = self.registry.get(AgentName.REVIEWER)
+            reviewer = Task(
+                task_id=self._next_task_id(tasks),
+                agent=AgentName.REVIEWER,
+                task_type=contract.task_types[0],
+                input={
+                    "objective": "Review the analysis, its evidence and its reachable actions.",
+                    "ticket_id": ticket_id,
+                },
+                depends_on=[analysis_task.task_id],
+                error_policy=ErrorPolicy(contract.error_policy),
+                deadline=due,
+            )
+            tasks.append(reviewer)
+            by_id[reviewer.task_id] = reviewer
+
+        # ``_validate_control_order`` requires the same thing of Action. An Action task the
+        # model proposed against evidence it believed was already reviewed would otherwise
+        # be compiled into a plan that claims a review happened before the one added here.
+        for action in [task for task in tasks if task.agent is AgentName.ACTION]:
+            by_id[action.task_id] = action
+            if not self._has_ancestor(by_id, action, AgentName.REVIEWER):
+                action.depends_on.append(reviewer.task_id)
+        return tasks
+
     def compile_proposal(
         self,
         proposal: PlanProposal,
@@ -239,6 +362,8 @@ class DynamicPlanner:
                     deadline=due,
                 )
             )
+        if previous is None:
+            tasks = self._complete_evidence_pipeline(tasks, ticket_id=ticket_id, due=due)
         plan = TaskPlan(
             goal=goal,
             tasks=tasks,
@@ -255,6 +380,12 @@ class DynamicPlanner:
         # Fail closed: any plan that reads evidence must run through Analysis *and*
         # the Reviewer gate. Without this, a data/knowledge-only plan would join
         # evidence and let the Supervisor finalize SUCCEEDED with nothing reviewed.
+        #
+        # ``_complete_evidence_pipeline`` applies the pipeline to an initial proposal, so
+        # this is a post-condition of that completion rather than the way the common case is
+        # rejected -- which is the point: the rule is enforced by construction, and a
+        # proposal it cannot complete is still refused. A revision keeps its own, stricter
+        # rules in ``revise_plan``.
         if (
             agents & {AgentName.DATA, AgentName.KNOWLEDGE}
             and not {
@@ -308,12 +439,21 @@ class DynamicPlanner:
         else:
             id_rule = "Task IDs must be T1, T2, ... and dependencies must be acyclic."
         return (
-            "You are the structured planner used by ServiceMind Supervisor. Build a minimal "
-            "DAG from the supplied capability catalog; never invent agents or task types. "
-            "Use Data for GLPI facts and actual support groups. Use Knowledge only when the "
-            "goal needs runbooks or when evidence review requests it. Analysis must depend on "
-            "all evidence tasks. Reviewer must depend on Analysis. If request_write is true, "
-            "Action must depend on Reviewer; otherwise do not add Action. "
+            # ``minimal`` used to stand alone, and the model read it as licence to drop the
+            # review steps for a goal it judged to need little: the shape rules below were
+            # the only thing it was contradicting. Smallest-*valid* says both, and the
+            # mandatory pipeline is now spelled out instead of left to be inferred from the
+            # two dependency rules.
+            "You are the structured planner used by ServiceMind Supervisor. Build the "
+            "smallest valid DAG from the supplied capability catalog; never invent agents or "
+            "task types. Use Data for GLPI facts and actual support groups. Use Knowledge "
+            "only when the goal needs runbooks or when evidence review requests it. "
+            "**A plan containing a Data or Knowledge task must also contain exactly one "
+            "Analysis task and exactly one Reviewer task** -- evidence is never joined and "
+            "finalized without review, so there is no smaller plan that reads evidence. "
+            "Analysis must depend on all evidence tasks. Reviewer must depend on Analysis. "
+            "If request_write is true, Action must depend on Reviewer; otherwise do not add "
+            "Action. "
             f"{id_rule}{shape_rule} Return JSON only. Do not include hidden "
             "reasoning. request_write="
             f"{str(request_write).lower()}."

@@ -200,34 +200,77 @@ def planner() -> DynamicPlanner:
     return DynamicPlanner()
 
 
-def test_compile_rejects_evidence_plan_without_reviewer() -> None:
-    # DATA + ANALYSIS but no REVIEWER: the run would finalize SUCCEEDED unreviewed.
-    with pytest.raises(ValueError, match="Analysis and Reviewer"):
-        planner().compile_proposal(
-            proposal_of(AgentName.DATA, AgentName.ANALYSIS),
-            goal="Analyze ticket",
-            ticket_id=2,
-            request_write=False,
-        )
+def agents_of(plan) -> set[AgentName]:
+    return {task.agent for task in plan.tasks}
 
 
-def test_compile_rejects_data_only_plan() -> None:
+def depends_on(plan, agent: AgentName) -> list[str]:
+    return next(task for task in plan.tasks if task.agent is agent).depends_on
+
+
+@pytest.mark.parametrize(
+    "proposed",
+    [
+        # DATA + ANALYSIS but no REVIEWER: the run would finalize SUCCEEDED unreviewed.
+        (AgentName.DATA, AgentName.ANALYSIS),
+        (AgentName.DATA,),
+        (AgentName.KNOWLEDGE,),
+        # The two shapes the live planner actually returned for Q-200; see
+        # ``_complete_evidence_pipeline``.
+        (AgentName.KNOWLEDGE, AgentName.REVIEWER),
+        (AgentName.KNOWLEDGE, AgentName.DATA),
+    ],
+)
+def test_compile_completes_evidence_plan_missing_the_review_pipeline(proposed) -> None:
+    """Every evidence-bearing plan comes out with Analysis and Reviewer, without exception.
+
+    These cases used to assert the opposite -- that ``compile_proposal`` *rejected* a
+    proposal lacking one of the two. Rejection was the mechanism; the property it existed to
+    protect is that evidence is never joined and finalized unreviewed, and the mechanism did
+    not hold it: a proposal the model re-sent unchanged exhausted the planner's two attempts
+    and killed the run, so "fail closed" meant "the user gets nothing". The pipeline is now
+    applied instead of demanded, which makes the property true of the compiler's *output*
+    rather than true only of the plans it happens to accept.
+
+    The distinction that matters is that no plan leaves here without the pipeline. That is
+    what these assert, over the exact shapes the live planner produced.
+    """
+    plan = planner().compile_proposal(
+        proposal_of(*proposed),
+        goal="Analyze ticket",
+        ticket_id=2,
+        request_write=False,
+    )
+    assert {AgentName.ANALYSIS, AgentName.REVIEWER} <= agents_of(plan)
+    assert AgentName.REVIEWER in agents_of(plan)
+    analysis_id = next(task.task_id for task in plan.tasks if task.agent is AgentName.ANALYSIS)
+    # Reviewer must reach Analysis, not merely follow it in the list.
+    assert analysis_id in depends_on(plan, AgentName.REVIEWER)
+
+
+def test_compile_leaves_an_evidence_plan_that_already_has_the_pipeline_alone() -> None:
+    """Completion is not a rewriter: a proposal that already carries the pipeline is kept."""
+    plan = planner().compile_proposal(
+        proposal_of(AgentName.DATA, AgentName.KNOWLEDGE, AgentName.ANALYSIS, AgentName.REVIEWER),
+        goal="Analyze ticket",
+        ticket_id=2,
+        request_write=False,
+    )
+    assert [task.task_id for task in plan.tasks] == ["T1", "T2", "T3", "T4"]
+
+
+def test_compile_still_refuses_a_plan_it_cannot_complete() -> None:
+    """The fail-closed guard is a post-condition, not a dead branch: a revision has no path
+    through completion (``previous`` is not ``None``), so a revision that drops the review
+    pipeline is still refused rather than completed.
+    """
     with pytest.raises(ValueError, match="Analysis and Reviewer"):
         planner().compile_proposal(
             proposal_of(AgentName.DATA),
             goal="Analyze ticket",
             ticket_id=2,
             request_write=False,
-        )
-
-
-def test_compile_rejects_knowledge_only_plan() -> None:
-    with pytest.raises(ValueError, match="Analysis and Reviewer"):
-        planner().compile_proposal(
-            proposal_of(AgentName.KNOWLEDGE),
-            goal="Find a runbook",
-            ticket_id=2,
-            request_write=False,
+            previous=completed_plan(),
         )
 
 

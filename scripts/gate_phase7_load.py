@@ -54,6 +54,7 @@ from servicemind.evaluation.load_grader import (
     render_report,
     unplanned_tiers,
 )
+from servicemind.evaluation.revisions import recorded_revisions, revision_problems
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LOAD = REPO_ROOT / "evaluation" / "load"
@@ -190,6 +191,30 @@ def check_report_is_current(outcome: LoadOutcome, report_json: Path) -> dict[str
     return notes
 
 
+def check_observations_are_one_revision(
+    observations: list[RunObservation], *, expect: str | None
+) -> dict[str, Any]:
+    """Refuse to grade a batch that does not describe exactly one platform revision.
+
+    ``plan_digest`` and ``workload_digest`` bind an observation to the load plan and the
+    question list it was taken under, and say nothing about which code served it. The
+    grader already collects the distinct revisions for its report -- it renders them as
+    ``被测版本`` -- and this is the same set, made a precondition instead of a caption. A
+    latency or error-rate figure averaged over two deployments is not a measurement of
+    either one. See ``evaluation/revisions.py``.
+    """
+    revisions: list[str | None] = [item.deployed_revision for item in observations]
+    if BATCH.exists():
+        revisions.append(load_batch().deployed_revision)
+    problems = revision_problems(revisions, expect=expect)
+    if problems:
+        raise ConfigurationError(
+            "; ".join(problems) + ". Re-run scripts/verify_phase7_load_live.py on the "
+            "deployment you mean to describe"
+        )
+    return {"deployed_revisions": list(recorded_revisions(revisions))}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="judge the observations on disk")
@@ -205,6 +230,16 @@ def main() -> int:
         "--force",
         action="store_true",
         help="replace a report whose digests disagree with the inputs, instead of refusing",
+    )
+    parser.add_argument(
+        "--expect-revision",
+        default=None,
+        help=(
+            "the source revision these observations must have been taken against, as the "
+            "driver records it (``<sha>`` or ``<sha>+patch(<hex>)``). Without it the gate "
+            "still refuses a batch spanning more than one revision, but cannot tell a single "
+            "stale revision from the current one"
+        ),
     )
     args = parser.parse_args()
 
@@ -228,6 +263,9 @@ def main() -> int:
         plan = load_plan(PLAN)
         workload = resolve_workload(plan, CASES)
         observations = load_observations()
+        # As in the other gates: ``--force`` is about the report, so it does not reach past
+        # the provenance of the observations the report is rendered from.
+        provenance = check_observations_are_one_revision(observations, expect=args.expect_revision)
         drift = {} if args.force else check_observations_match_plan(plan, workload, observations)
         batch = load_batch()
     except ConfigurationError as exc:
@@ -272,6 +310,7 @@ def main() -> int:
         "report_json": str(report_json),
         "report_md": str(report_md),
         "forced": bool(args.force),
+        **provenance,
         **drift,
     }
     if args.format == "markdown":
