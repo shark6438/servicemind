@@ -1,33 +1,42 @@
-# ServiceMind GLPI development stack
+# ServiceMind local infrastructure stack
 
-This stack runs the real GLPI application and MariaDB locally for the first ServiceMind integration milestone.
+This Compose file defines the infrastructure used by the ITSM workflow: GLPI 11.0.8 and
+MariaDB, ServiceMind PostgreSQL 16, Keycloak, OpenSearch, TEI embedding and reranking,
+Neo4j, Redis and OPA. OpenSearch, both TEI services and Neo4j are in the optional `rag`
+profile. It does **not** start the ServiceMind API, Next.js operator console or Streamlit
+console; start those separately after the dependencies are ready.
 
-- GLPI version: `11.0.8`
-- MariaDB version: `11.8`
-- GLPI URL: `http://127.0.0.1:8088`
-- Database port: internal only
-- Persistent data: Docker named volumes
+From this directory, provide a local `.env` containing the credentials and database names
+referenced by [`compose.yaml`](compose.yaml), then run:
 
-## Commands
-
-```powershell
-Set-Location D:\FastAPI\agent-service-toolkit\deploy\glpi
+```sh
 docker compose up -d
 docker compose ps
 docker compose logs --tail 100 glpi
 ```
 
-Stop the stack without deleting data:
+Use `docker compose --profile rag up -d` when the RAG dependencies and their model files
+and GPU devices are available.
 
-```powershell
-docker compose stop
-```
+Local host ports from the Compose file:
 
-Do not use `docker compose down --volumes` unless the GLPI and MariaDB data should be permanently deleted.
+| Service | Address |
+| --- | --- |
+| GLPI | <http://127.0.0.1:18088> |
+| ServiceMind PostgreSQL | `127.0.0.1:55434` |
+| Keycloak | <http://127.0.0.1:8090> |
+| OpenSearch | <http://127.0.0.1:9200> |
+| TEI embedding / reranker | `127.0.0.1:8085` / `127.0.0.1:8086` |
+| Neo4j HTTP / Bolt | `127.0.0.1:17474` / `127.0.0.1:17687` by default |
+| Redis / OPA | `127.0.0.1:6379` / <http://127.0.0.1:8181> |
 
-The initial GLPI administrator account is only for local bootstrap. Change the default password before exposing the service beyond localhost.
+The Neo4j host ports can be overridden through the Compose variables. Stop services
+without deleting their named volumes with
+`docker compose stop`. Never run `docker compose down --volumes` unless the local data
+should be permanently deleted.
 
-`bootstrap_phase2.php`, `bootstrap_oauth.php`, and `bootstrap_service_users.php`
-make the ServiceMind entities, OAuth client, and entity-scoped service identities
-reproducible after a fresh GLPI volume is created. Supply their credentials through
-environment variables; never store them in the PHP files.
+The initial GLPI administrator account is only for local bootstrap. Change its default
+password before exposing the service beyond localhost. The `bootstrap_*.php` scripts
+idempotently provision the ServiceMind entities, OAuth client, service identities,
+webhooks and evaluation tickets; pass credentials through environment variables rather
+than storing them in the scripts.

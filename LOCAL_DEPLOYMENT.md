@@ -1,5 +1,10 @@
 # Local deployment
 
+The Windows/SQLite notes immediately below are historical. For the current Linux
+ServiceMind deployment, use [This Linux server](#this-linux-server) and the infrastructure
+ports in [deploy/glpi/README.md](deploy/glpi/README.md); do not use the older GLPI `:8088`
+or PostgreSQL `:55432` addresses as the current Compose configuration.
+
 This checkout is configured to run entirely on the local machine with Ollama (`qwen2.5:1.5b`) and SQLite. No cloud model API key is required.
 
 `NO_PROXY` is set for localhost because this Windows installation has a system proxy; without the bypass, Python's Ollama client receives a proxy-generated HTTP 502 response.

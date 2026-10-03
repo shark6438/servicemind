@@ -11,29 +11,45 @@ run**. It is designed for the gap between an LLM that can suggest a response and
 platform that must explain its evidence, respect access boundaries and require approval
 before changing a production ticket.
 
+[Quickstart](#quickstart) · [Architecture](#architecture) · [Evaluation](#evaluation-snapshot) · [Usage](#usage-walkthrough)
+
 ## The product flow
+
+Every stage below runs inside one tenant boundary. Reading is filtered on the way out;
+writing is refused until a human resolves a frozen action.
 
 ```mermaid
 flowchart LR
-    A[GLPI ticket or signed webhook] --> B[OIDC tenant and role boundary]
-    B --> C[Router and Supervisor]
-    C --> D[Data Agent]
-    C --> E[Knowledge Agent]
-    D --> F[GLPI / CMDB tools]
-    E --> G[Hybrid RAG / Graph-RAG]
-    F --> H[Analysis Agent]
-    G --> H
-    H --> I[Reviewer: evidence, risk and policy]
-    I --> J{Write requested?}
-    J -->|No| K[Audited answer]
-    J -->|Yes| L[Human-in-the-loop approval]
-    L --> M[Tool Gateway: policy, idempotency, verification]
-    M --> N[Verified GLPI follow-up]
+    subgraph B["Tenant boundary · OIDC claims · retrieval ACL · Postgres RLS"]
+        direction LR
+        A[GLPI ticket event<br/>or signed webhook] --> C[Router / Supervisor<br/>bounded DAG]
+        C --> D[Data Agent]
+        C --> E[Knowledge Agent]
+        D --> F[GLPI / CMDB tools]
+        E --> G[Hybrid RAG<br/>OpenSearch + rerank]
+        E --> G2[Graph-RAG<br/>Neo4j]
+        F --> H[Analysis Agent]
+        G --> H
+        G2 --> H
+        H --> I[Reviewer<br/>evidence · risk · policy]
+        I --> J{Write requested?}
+        J -->|no| K[Audited answer]
+        J -->|yes| L[HITL approval<br/>immutable action hash]
+        L --> M[Tool Gateway<br/>policy · idempotency · verification]
+        M --> N[Verified GLPI follow-up]
+        K -.-> X[(Append-only audit<br/>+ long-term memory)]
+        N -.-> X
+    end
+    classDef gate fill:#fef3c7,stroke:#b45309,stroke-width:2px
+    classDef write fill:#e0f2fe,stroke:#0369a1,stroke-width:2px
+    classDef sink fill:#f1f5f9,stroke:#475569,stroke-dasharray:3 3
+    class L,M gate
+    class N write
+    class X sink
 ```
 
-Every stage is tenant-aware. Read access is constrained by OIDC claims, retrieval ACLs and
-PostgreSQL row-level security; a write is bound to a reviewed ActionIntent and is verified
-against GLPI after it is made.
+Read access is constrained by OIDC claims, retrieval ACLs and PostgreSQL row-level security;
+a write is bound to a reviewed `ActionIntent` and is verified against GLPI after it is made.
 
 ## Core capabilities
 
@@ -50,28 +66,93 @@ against GLPI after it is made.
 The evaluation records are versioned evidence, not marketing claims. The current delivery
 summary and known limitations are in
 [the final deliverable report](docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md).
+Each live evaluation campaign was checked against one deployed revision within that campaign;
+different campaigns are not claimed to share the same source revision.
 
 | Area | Recorded result |
 | --- | --- |
-| End-to-end business quality | **119/120 (99.17%)**, above the 0.85 release threshold |
+| Response quality (frozen suite) | **119/120 answerable cases (99.17%)** passed the reviewer-decision gate; all 80 negative-control cases passed. This is not an answer-accuracy or production-success rate. |
 | Security and fault handling | **72 scenarios passed**; 252 evidence assertions and 87 mutation assertions passed |
 | Reliability | Run status and review decision were stable across 8 cases × 5 repeats; citation output remains flaky (`0.875`) |
 | Load | **Not accepted**: the gate fails on deterministic case `Q-002`; latency itself did not regress |
-| RAG quality | Experimental / not a release claim: the gold-label and corpus work remains incomplete |
+| RAG retrieval quality | **Not certified**: gold-label defects, proxy-corpus mismatch and metric/cutoff issues prevent publishing Recall/MRR/NDCG as performance claims; diagnosis also found four genuine retrieval misses. |
 | Memory | Governance contracts pass; production business quality has not been sampled |
 
 Detailed evidence, including the non-passing gates, is linked from
-[the 18-area coverage audit](docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md). Historical
-artifacts under `evaluation/` are intentionally retained so the recorded conclusions can be
-traced to their inputs.
+[the 18-area coverage audit](docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md). See
+[evaluation/README.md](evaluation/README.md) for the evidence taxonomy and retention policy.
+Historical artifacts under `evaluation/` are intentionally retained so the recorded conclusions
+can be traced to their inputs.
 
 ## Architecture
 
-<img src="media/agent_architecture.png" width="700" alt="ServiceMind architecture diagram">
+ServiceMind is layered, and no layer re-derives authority: intake, orchestration, evidence,
+governance and execution, and the storage/integration edge all inherit the same tenant
+boundary. The **read path** and the **write path** are separate paths with separate gates —
+reads are filtered on the way out, writes are refused until a human resolves a frozen
+`ActionIntent`, and both land in the same append-only ledger.
 
-The repository is derived from the 🧰 [AI Agent Service Toolkit](https://github.com/JoshuaC215/agent-service-toolkit)
-(MIT); the upstream history is retained. ServiceMind adds the ITSM governance, persistence,
-retrieval, approval and evaluation layers described above.
+<img src="media/p1.png" width="900" alt="ServiceMind six-layer conceptual architecture with separate read and approval-gated write paths">
+
+The intake and GLPI action labels in this overview are conceptual: this repository ships
+GLPI/webhook/API/console intake and an approval-gated **ticket follow-up** write. Email and
+Teams/Slack intake, and general ticket create/update/resolve actions, are not shipped
+connectors or write capabilities.
+
+### Tenant and permission model
+
+Authority enters the system exactly once — as OIDC token claims — and is enforced at four
+independent points rather than trusted downstream.
+
+| Enforcement point | The rule |
+| --- | --- |
+| PostgreSQL row-level security | Every product table is read and written under a `set_config`-pinned tenant session. |
+| Retrieval ACL | A document (and a projected graph node) declaring no entity/group restriction is visible tenant-wide; one that declares a restriction requires an intersection with the principal. |
+| Memory ACL | A record's declared `required_entity_ids` / `required_group_ids` must be a **subset** of the principal's, so a narrower principal sees strictly fewer records — never more. |
+| Tool registry | A role intersection is mandatory. An entity-scoped tool additionally requires an entity intersection. |
+
+The graph side channel is not exempt: projected `GraphNode`s carry the same ACL coordinates
+and delegate to the same rule, so the boundary is written once and cannot drift between the
+document path and the graph path.
+
+<img src="media/p6.png" width="900" alt="OIDC identity fans out to PostgreSQL RLS, retrieval ACL, PostgreSQL-backed long-term memory ACL and tool visibility">
+
+Long-term memory and its review queue are persisted in PostgreSQL. The illustration's
+policy snippets are schematic: PostgreSQL RLS enforces the tenant boundary; role checks
+are handled by the service, while retrieval and memory additionally enforce their own
+entity/group ACLs. The table above and the implementation are authoritative.
+
+### Run lifecycle
+
+A run is a durable state machine, not a request. The statuses below are what
+`GET /v1/servicemind/runs/{id}` returns.
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending
+    pending --> running: worker picks the run up
+    running --> succeeded: no refusal on record
+    running --> cancelled: the recorded decision was a rejection
+    running --> waiting_approval: write requested, ActionIntent frozen
+    running --> waiting_review: escalation, replan budget exhausted
+    waiting_approval --> running: decision recorded, approved or rejected
+    waiting_review --> running: escalation resolved
+    pending --> cancelled: cancel
+    waiting_approval --> cancelled: cancel
+    waiting_review --> cancelled: cancel
+    running --> failed: unhandled error
+    waiting_review --> failed: unhandled error
+    succeeded --> [*]
+    cancelled --> [*]
+    failed --> [*]
+```
+
+Two properties are worth reading off that diagram. A rejection ends the run: recording the
+decision returns it to `running` only so the graph can unwind, and it finalizes as
+`cancelled` without executing anything — refusing is never blocked by a missing approval
+path. And `waiting_approval` is a **hold**, not a queue: nothing reaches GLPI while a run
+sits there, and the decision is bound to the frozen `ActionIntent` hash rather than to
+whatever the action has become since.
 
 ## Repository layout
 
@@ -125,9 +206,7 @@ what it describes. Machine-readable results land in
 `evaluation/reports/project_structure_latest.{json,md}`. See
 [`docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md`](docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md).
 
-## Architecture at a glance
-
-<img src="media/agent_architecture.png" width="700" alt="ServiceMind architecture diagram">
+## Runtime topology
 
 A GLPI ticket event (or a `runs` request) enters the **service shell**; the ServiceMind
 **orchestration runtime** plans the run as a multi-step LangGraph graph. Retrieval layers
@@ -139,6 +218,15 @@ model calls go through the **model gateway** (allowlists, cost ceilings, audit).
 [`docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md`](docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md)
 and [`docs/企业IT服务管理(ITSM)智能体平台.md`](docs/企业IT服务管理(ITSM)智能体平台.md).
 
+<img src="media/p7.png" width="900" alt="ServiceMind local runtime topology: Next.js and Streamlit consoles, API, Keycloak, PostgreSQL, retrieval and policy services, and an approval-gated GLPI write path">
+
+Ports in this diagram are local stack defaults. The systemd deployment in
+[LOCAL_DEPLOYMENT.md](LOCAL_DEPLOYMENT.md) binds the API to `127.0.0.1:18080` instead of
+`:8080`; OpenSearch, Neo4j and TEI require the Compose `rag` profile. The Teams/Slack
+intake and general GLPI create/update labels are conceptual, not shipped capabilities:
+the implemented intake is GLPI webhook/API/console, and the governed write is a ticket
+follow-up after approval.
+
 ## Quickstart
 
 ### Prerequisites
@@ -149,7 +237,7 @@ and [`docs/企业IT服务管理(ITSM)智能体平台.md`](docs/企业IT服务管
   toolkit's OpenAI/Anthropic/etc. providers remain available). `USE_FAKE_MODEL=true`
   removes that requirement for a zero-external demo.
 
-### A. Full stack with Docker Compose
+### A. Core stack with Docker Compose
 
 The root [compose.yaml](compose.yaml) starts Postgres, the agent service, and the
 Streamlit app:
@@ -167,8 +255,10 @@ docker compose watch        # or: docker compose up --build
 The ServiceMind API needs Postgres 16, and full incident workflows need GLPI + Keycloak +
 OpenSearch + Neo4j + TEI. The Phase 6 tool platform additionally needs Redis (rate limiting,
 bulkhead, circuit-breaker and task state) and optionally OPA for external policy decisions.
-`deploy/glpi/compose.yaml` provisions the whole local stack;
-see [deploy/glpi/README.md](deploy/glpi/README.md) for commands and ports.
+`deploy/glpi/compose.yaml` defines these infrastructure dependencies; OpenSearch, Neo4j
+and TEI require its `rag` profile. It does **not** start the ServiceMind API or operator
+console. Start those separately after the dependencies are ready; see
+[deploy/glpi/README.md](deploy/glpi/README.md) for commands and ports.
 
 ### C. Manual run without Docker
 
@@ -181,7 +271,8 @@ uv sync --frozen
 #   SERVICEMIND_DATABASE_URL=sqlite+aiosqlite:///./servicemind.db
 cp .env.example .env
 
-# Create/extend the product schema (migrations target Postgres 16):
+# For ITSM endpoints with PostgreSQL, create/extend the product schema.
+# Skip this step for the SQLite UI-only shell demo:
 uv run alembic upgrade head
 
 # Shell 1 — agent service
@@ -218,6 +309,12 @@ request from the wrong role is still rejected with 403.
 | --- | --- | --- |
 | `acme-analyst` | `viewer`, `analyst` | Workbench, Runs, Quality and release |
 | `acme-approver` | `viewer`, `analyst`, `operator`, `approver` | Everything (plus Approvals, Memory review, Audit) |
+
+<img src="media/console-run-detail.png" width="900" alt="Real acme-analyst console screenshot: T1–T4 task dependencies, evidence references and a passed reviewer verdict, without an approval button">
+
+Real browser capture of a completed read-only run, signed in as `acme-analyst`. Identifiers and
+evidence bodies were redacted in the browser before capture; nonessential panels were hidden to
+fit the task plan, evidence and reviewer verdict in one frame. No approval action is visible.
 
 > **Data prerequisite — read this first.** `POST /v1/servicemind/runs` requires
 > `ticket_id ≥ 1`, and every run's first task is `get_ticket`. **If the referenced ticket
@@ -382,31 +479,28 @@ exception is printed in the log and re-enforced automatically.
 and compares each verdict against the report committed for it. It exits 0 when they agree,
 and that exit code is easy to read as "acceptance passes". It is not that.
 
-The verdicts come from grading replays on disk. The acceptance batch is 28 replays, all
-recorded at `cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`; HEAD is several
-commits later. Two properties are checked over those files -- that they all describe one
-revision (homogeneity), and that the grader still reaches the verdict each committed report
-claims. Whether that revision is the *current* one (currency) is a separate question, and
-an offline run on a bare checkout cannot answer it: nothing in the files says which tree
-produced them.
+The default acceptance replays were recorded on 2026-09-30 at
+`cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`. Their revision is recorded
+in each replay's `environment.deployed_revision`, although it is absent from the report's
+per-case rows. A separate [2026-10-03 acceptance batch](evaluation/reports/phase7_acceptance_2026-10-03.md)
+contains 28/28 passing cases and 107/107 passing assertions at one deployed revision
+(`b385df7c…+patch(fbdbefc59bbc)`); its `--expect-revision` check passed against that
+deployment. It does not establish the result for later source revisions.
 
-So the accurate reading of `acceptance exit 0` is **"these 28 observations are mutually
-consistent and the grader still accepts them"**, and not **"the current checkout passes
-acceptance"**. The script prints the revision it graded and reports `currency_checked:
-false` whenever nothing compared it against an expected revision; pass `--expect-revision
-<rev>`, or re-record with `scripts/verify_phase7_acceptance_live.py` against the deployment
-you mean to describe, to turn currency into a checked fact. The other three gates carry the
-same limit.
+An offline gate exit code confirms the selected replays' verdict and revision homogeneity.
+To check whether they match a particular deployed revision, provide `--expect-revision <rev>`.
+Without it, `currency_checked: false`; a later checkout cannot inherit an earlier batch's
+acceptance result. The other live gates have the same boundary.
 
 ## Documentation index
 
-Start here for the current, measured state:
+Start here for the recorded evaluation state and its revision boundaries:
 
 - Final deliverable report (the full execution record; Chinese):
   [`docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md`](docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md)
 - Evaluation coverage audit, 18 categories item by item:
   [`docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md`](docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md)
-- Remaining Phase-7 evaluation items (trajectory, coordination, reliability, semantic judge):
+- Historical Phase-7 evaluation completion plan (trajectory, coordination, reliability, semantic judge):
   [`docs/PHASE7_REMAINING_EVALUATION_2026-10-02.md`](docs/PHASE7_REMAINING_EVALUATION_2026-10-02.md)
 
 Reference and background:
@@ -423,6 +517,11 @@ Reference and background:
 - Local deployment notes: [`LOCAL_DEPLOYMENT.md`](LOCAL_DEPLOYMENT.md)
 - GLPI stack: [`deploy/glpi/README.md`](deploy/glpi/README.md)
 - Dependencies & environment: [`DEPENDENCIES.md`](DEPENDENCIES.md)
+
+`agent_architecture.png`, `agent_architecture.excalidraw` and `agent_diagram.png` are the
+**upstream toolkit's** diagrams, kept for provenance and attribution. They describe the
+inherited scaffold (a Streamlit chat front end over a LangGraph `model`/`tools` loop) and
+**not** ServiceMind's ITSM pipeline — do not present them as this product's architecture.
 
 ## Upstream, history and license
 
@@ -441,7 +540,8 @@ service toolkit by Joshua Carroll and contributors. The relationship is kept hon
   under the same license.
 - **Scaffold code stays attributed** — the inherited toolkit layers (`src/agents`, `src/
   core`, `src/schema`, `src/client`, `src/voice`, `src/streamlit_app.py`, the docker
-  files, and the generic chat endpoints) remain their original authors' work.
+  files, and the generic chat endpoints) remain their original authors' work. The
+  diagrams under `media/agent_*` belong to the same set.
 
 ServiceMind's own additions (the `src/servicemind` product tree, migrations, GLPI stack,
 evaluation harness, skills, and the ServiceMind phase docs) are maintained by

@@ -2,45 +2,122 @@
 
 > **English version: [README.md](README.md)。**
 
-ServiceMind 是一个**企业级 ITSM(IT 服务管理)智能体平台**:它把一条 GLPI 工单转化为一次受治理、可审计、多智能体编排的运行(run)。在此之上叠加了企业级检索能力 —— 基于 OpenSearch 的混合 RAG(含交叉编码器重排)、基于 Neo4j 的结构化 Graph-RAG、受治理的长期记忆、带成本/审计控制的模型网关,以及人工审批工作流 —— 全部构建在 LangGraph agent 服务之上。
+ServiceMind 把一张 GLPI 工单转化为一次**按租户隔离、可审计、由人工把关的 ITSM 运行**。它解决的是「LLM 可以给建议」与「企业 ITSM 必须说明证据、遵守权限边界、写入生产工单前必须获批」之间的落差。
 
-本仓库衍生自 🧰 [AI Agent Service Toolkit](https://github.com/JoshuaC215/agent-service-toolkit)(MIT 许可),完整保留了上游 git 历史。详见[「上游、历史与许可」](#上游历史与许可)。
+[快速开始](#快速开始) · [架构](#架构) · [Evaluation 摘要](#evaluation-摘要) · [使用案例](#使用案例)
 
-## 项目当前的真实状态
+## 完整业务流
 
-这份 README 最该告诉你的是:**哪些结论是测出来的,哪些不是。** 下表全部测于 2026-10-03 的同一个冻结版本;完整执行记录见
-[docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md](docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md),18 项分类的逐项判定见
-[docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md](docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md)。
+下面每一阶段都跑在同一个租户边界内。读取在出口处过滤，写入在人工裁决之前一律拒绝。
 
-| 项 | 结果 |
+```mermaid
+flowchart LR
+    subgraph B["租户边界 · OIDC claims · 检索 ACL · Postgres RLS"]
+        direction LR
+        A[GLPI 工单事件<br/>或签名 Webhook] --> C[Router / Supervisor<br/>有界 DAG]
+        C --> D[数据 Agent]
+        C --> E[知识 Agent]
+        D --> F[GLPI / CMDB 工具]
+        E --> G[混合 RAG<br/>OpenSearch + 重排]
+        E --> G2[Graph-RAG<br/>Neo4j]
+        F --> H[分析 Agent]
+        G --> H
+        G2 --> H
+        H --> I[Reviewer<br/>证据 · 风险 · 策略]
+        I --> J{是否请求写入？}
+        J -->|否| K[可审计的答复]
+        J -->|是| L[HITL 审批<br/>不可变 action hash]
+        L --> M[Tool Gateway<br/>策略 · 幂等 · 回读验证]
+        M --> N[已验证的 GLPI 回写]
+        K -.-> X[(append-only 审计<br/>+ 长期记忆)]
+        N -.-> X
+    end
+    classDef gate fill:#fef3c7,stroke:#b45309,stroke-width:2px
+    classDef write fill:#e0f2fe,stroke:#0369a1,stroke-width:2px
+    classDef sink fill:#f1f5f9,stroke:#475569,stroke-dasharray:3 3
+    class L,M gate
+    class N write
+    class X sink
+```
+
+读取由 OIDC claims、检索 ACL 与 PostgreSQL 行级安全共同约束;写操作绑定已评审的 `ActionIntent`,完成后再从 GLPI 回读验证。
+
+## 核心能力
+
+| 能力 | 提供的价值 |
 | --- | --- |
-| **业务质量(端到端)** | ✅ **119/120 = 0.9917**(门槛 0.85);三个负向整层 40/40、20/20、20/20 全过;gate 退出码 0 |
-| **安全与故障** | ✅ **72 场景全 PASS**;252 条证据全部通过;87 条变异证据全部 `RED (good)`;gate 退出码 0 |
-| **可靠性** | ✅ **结果稳定、引用不稳定**:并发 1 下 8 例 × 5 次,状态与评审决定 **100% 稳定**,方差**全在 `citations` 轴**(`flake_rate 0.875`) |
-| **负载** | ❌ **gate FAIL(退出码 1)**,而**根因不是并发**:6 次未通过**全部是同一条 `Q-002`**,且**并发 1 的基线档自己就不过**;延迟无退化(p95 比值 1.00 / 1.04 / 1.06) |
-| **RAG 检索质量** | ❌ **未达标,且原因是标签而不是检索器**:找到并修掉了一条真实根因缺陷(部署臂在搜索前丢弃用户原话);候选召回臂(R2)被它**自己预设的准入判据**淘汰;标签集**已自证损坏** |
-| **Memory 模块** | ✅ **契约与治理面通过**(14 条硬门禁全 0、泄漏率 0.0、写侧 48 步精确率 1.0);⬜ **业务面未取样**(生产观测 `NO_DATA`),因此**不**声称企业前沿级 |
-| **评测可信度** | ✅ **已修复**:三处仪器缺陷与一处语义裁判契约缺口已从根源修掉并加锁定测试;语义层误纳 **0.714 → 0.0** |
+| **受治理的多智能体编排** | LangGraph Router/Supervisor 将数据、知识、分析、评审与动作任务编排为有界 DAG。 |
+| **企业级证据检索** | OpenSearch 混合检索、重排与引用，外加可选 Neo4j Graph-RAG；全程执行租户、实体、组 ACL。 |
+| **人工控制的变更执行** | 不可变 action hash、Reviewer 门禁、HITL 审批、幂等、回读验证与 append-only 审计。 |
+| **模型与工具治理** | Provider/model 白名单、成本与超时上限、语义缓存、契约校验的 Tool Gateway、OPA 与 MCP 边界。 |
+| **运维控制台** | 受 OIDC 保护的 Next.js 与 Streamlit 界面，覆盖运行、审批、审计、记忆复核与质量可见性。 |
 
-**比上面任何一行都重要的两句话。**
+## Evaluation 摘要
 
-1. **本轮的多数失败不是「平台坏了」,而是「测量平台的东西坏了」。** 三处仪器缺陷在被发现并修好之前,一直在静默地给出好看结论。
-2. **剩下的失败是小样本上的、被单独定位到一条的。** `Q-002` 同时出现在质量批、负载批、可靠性批,是**同一条确定性缺陷**,不是三处独立问题。
+评测记录是版本化证据。当前交付结论与已知限制见[最终交付报告](docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md)。各项 live evaluation 均在**各自批次内**检查并绑定单一部署版本；不同批次不宣称来自同一个 source revision。
 
-未关闭缺陷(D1、`D2`、`D3`、`D5` 及若干架构项)连同复现路径列在交付报告里。有两类**结构性做不了**,如实标注而不是跳过:**人机/评委校准**(标签元数据 `annotators = 0`,算不出 kappa)与**线上生产 KPI**(项目未上线,`production_observation.status = NO_DATA`)。还有一条与其同源、且在采信任何检索数字之前都该知道:**GLPI 知识链路是断的** —— `GlpiKnowledgeBaseSource` 在整仓**从未被实例化**,所以即便明天上线,知识侧也没有内容可检索。
+| 领域 | 已记录结果 |
+| --- | --- |
+| 响应质量（冻结案例集） | 可答案例 **119/120（99.17%）** 通过 Reviewer 决策口径门禁；80 条负向对照案例全部通过。它不是答案事实正确率或生产业务成功率。 |
+| 安全与故障处理 | **72 个场景通过**；252 条证据断言与 87 条变异断言通过 |
+| 可靠性 | 8 个案例 × 5 次重复中，运行状态和评审决策稳定；引用输出仍有波动（`0.875`） |
+| 负载 | **尚未验收**：门禁被确定性案例 `Q-002` 阻断，延迟本身未退化 |
+| RAG 检索质量 | **未认证**：现有 benchmark 同时受 gold-label 缺陷、代理语料失配及 metric/cutoff 口径问题影响，因此不发布 Recall/MRR/NDCG 性能结论；诊断中仍有 4 条真实检索漏失。 |
+| Memory | 治理契约通过；尚未采样生产业务质量 |
 
-## ServiceMind 在做什么(产品特性)
+[18 项覆盖度审计](docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md)保留了未通过门禁在内的完整证据；[`evaluation/README.md`](evaluation/README.md)说明这些数据的目录与保留规则。`evaluation/` 中的历史材料是可追溯结论的输入，而非临时垃圾。
 
-- **ITSM 工单运行** —— `POST /v1/servicemind/runs` 启动一个与 GLPI 工单绑定的受治理 agent 运行。每次运行都按租户隔离、按角色鉴权,并写入 append-only 审计日志。计划写操作的运行会**暂停等待人工审批**(审批以不可变 action hash 为锚);策略内无法解决的运行会暂停等待人工复核,而不是自行臆断。
-- **GLPI 集成** —— 面向 GLPI 11(High-Level API)的读写客户端、签名 Webhook 接入(`/v1/servicemind/webhooks/glpi`,幂等去重)、实体(entity)范围控制与健康探测。可使用 `deploy/glpi/` 内置本地栈运行。
-- **混合企业级 RAG(Phase 4)** —— document → parent → child 语义切块;OpenSearch 上 BM25 + 稠密检索经 reciprocal rank fusion(RRF)融合;交叉编码器重排;多查询(rewrite)词法扩展;携带引文(citation)的证据;带 per-document/source 多样性上限的上下文打包器。检索期强制 ACL 与租户行级安全(RLS)。
-- **Graph-RAG(Phase 4)** —— 在 Neo4j 中投影 `Ticket → CI → Service → Problem → Change` 关系,回答纯文本检索无法表达的结构化问题(如"还有哪些东西依赖这个服务?")。图谱发现是旁路补充;混合文本检索仍是主通道。
-- **受治理长期记忆 + 上下文注入(Phase 5)** —— 声明式、特性开关控制的记忆:置信度阈值自动激活、向量检索、预算内的输入上下文打包器;上线/回滚无需 schema 降级。
-- **模型网关治理(Phase 5)** —— 全局与按租户的 provider/model 白名单、逐调用审计持久化、重试/超时/成本上限、语义缓存。
-- **受治理工具平台(Phase 6)** —— 所有工具调用统一经过一个 **Tool Gateway**:冻结的 Registry(Draft 2020-12 契约)、RBAC/ABAC/能力交集、taint 与注入检查、在强制本地策略之后的 fail-closed OPA 决策、审批绑定,以及只保存 policy/tool/schema 版本与载荷哈希(不保存凭据与正文)的 append-only 审计。MCP(`2026-07-28`)只是同一个网关之上的能力暴露边界,不是第二套权限系统;限流、舱壁、熔断、幂等与持久任务运行在 Redis + PostgreSQL 上,PostgreSQL 是唯一权威源。
-- **技能(Skills)** —— 版本化技能(`skills/`),可为 agent 装配变更风险评估、事件分类、重大事件、重复问题、VPN/MFA 恢复等能力。
+## 架构
 
-同时保留 toolkit 的运行脚手架:一个 FastAPI 服务同时挂载 ServiceMind API 与通用 LangGraph agents、`AgentClient`、以及带语音输入/输出的 Streamlit **ServiceMind Console** 聊天界面。
+ServiceMind 是分层的：接入、身份、编排、证据、治理与执行、存储与集成共用同一个租户边界。**读路径**与**写路径**分离：读取经权限过滤，写入须先由人工裁决冻结的 `ActionIntent`，两条路径都记录到 append-only 审计账本。
+
+<img src="media/p1.png" width="900" alt="ServiceMind 六层概念架构：读路径与人工审批门控的写路径">
+
+图中的接入渠道和 GLPI 动作范围含概念性示意：本仓库实际提供 GLPI/Webhook/API/控制台接入，以及须审批的**工单跟进写入**；Email、Teams/Slack 接入和通用工单创建、更新、解决动作尚未实现，不应当作已交付能力。
+
+### 租户与权限模型
+
+权限进入系统只有一处来源 —— OIDC token claims —— 并在四个相互独立的位置被执行，而不是在链路下游被"信任"。
+
+| 执行点 | 判定规则 |
+| --- | --- |
+| PostgreSQL 行级安全 | 所有产品表都在 `set_config` 钉死的租户会话下读写。 |
+| 检索 ACL | 未声明实体/组限制的文档（及投影后的图节点）在租户内可见；一旦声明了限制，就要求与主体有交集。 |
+| 记忆 ACL | 记录声明的 `required_entity_ids` / `required_group_ids` 必须是主体集合的**子集**，因此主体越窄看到的记录严格越少，绝不会更多。 |
+| 工具注册表 | 角色交集是**必需**的；带实体范围的工具还额外要求实体交集。 |
+
+图侧通道不享有豁免：投影出的 `GraphNode` 携带同一套 ACL 坐标，并委托给同一条规则，所以这条边界只写一次，不会在文档路径和图路径之间漂移。
+
+<img src="media/p6.png" width="900" alt="OIDC 身份派生 PostgreSQL RLS、检索 ACL、PostgreSQL 长期记忆 ACL 与工具可见性四处执行点">
+
+长期记忆记录与复核队列由 PostgreSQL 持久化。图中的策略片段仅是示意：PostgreSQL RLS
+负责租户边界，角色检查由服务层执行，检索与记忆还分别检查实体/组 ACL；以表中的规则和实际代码为准。
+
+### 运行生命周期
+
+一次运行是一台持久状态机，不是一个请求。下面的状态就是 `GET /v1/servicemind/runs/{id}` 会返回的那些。
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending
+    pending --> running: worker 取起该运行
+    running --> succeeded: 没有拒绝记录在案
+    running --> cancelled: 记录在案的裁决是拒绝
+    running --> waiting_approval: 请求写入，ActionIntent 冻结
+    running --> waiting_review: 升级，重规划预算耗尽
+    waiting_approval --> running: 裁决已记录（批准或拒绝）
+    waiting_review --> running: 升级已处置
+    pending --> cancelled: 取消
+    waiting_approval --> cancelled: 取消
+    waiting_review --> cancelled: 取消
+    running --> failed: 未处理错误
+    waiting_review --> failed: 未处理错误
+    succeeded --> [*]
+    cancelled --> [*]
+    failed --> [*]
+```
+
+有两条性质值得从这张图里读出来。**拒绝会终结这次运行**：裁决被记录后运行会回到 `running`，但那只是为了把图收尾，它最终以 `cancelled` 结束且不执行任何动作 —— 所以"拒绝"永远不会因为缺少某条审批路径而被挡住。而 `waiting_approval` 是一个**暂停**，不是队列：运行停在那里时没有任何内容流到 GLPI，且裁决绑定的是已冻结的 `ActionIntent` 哈希，而不是它后来变成了什么。
 
 ## 仓库结构
 
@@ -90,9 +167,7 @@ frontend/               # Next.js 16 运维控制台（OIDC、租户范围 API �
 `evaluation/reports/project_structure_latest.{json,md}`。详见
 [`docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md`](docs/PROJECT_STRUCTURE_ENTERPRISE_AUDIT_2026-09-22.md)。
 
-## 架构速览
-
-<img src="media/agent_architecture.png" width="700" alt="ServiceMind 架构图">
+## 运行时拓扑
 
 一条 GLPI 工单事件(或一次 `runs` 请求)进入 **service 壳**;ServiceMind **编排运行时**
 把该运行规划为多步 LangGraph 图。检索层为规划器供料:**混合 RAG**(OpenSearch + 重排,
@@ -101,6 +176,14 @@ frontend/               # Next.js 16 运维控制台（OIDC、租户范围 API �
 **append-only 审计**;模型调用一律经由**模型网关**(白名单、成本上限、审计)。详见
 [`docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md`](docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md)
 与 [`docs/企业IT服务管理(ITSM)智能体平台.md`](docs/企业IT服务管理(ITSM)智能体平台.md)。
+
+<img src="media/p7.png" width="900" alt="ServiceMind 本地运行时拓扑：Next.js 与 Streamlit 控制台、API、Keycloak、PostgreSQL、检索与策略服务，以及须审批的 GLPI 写路径">
+
+图中端口是本地栈默认值；[本机 systemd 部署](LOCAL_DEPLOYMENT.md)的 API
+监听 `127.0.0.1:18080`，不是 `:8080`。OpenSearch、Neo4j 与 TEI 需启用 Compose 的
+`rag` profile。图中的 Teams/Slack 接入和通用 GLPI 创建/更新标签属于概念示意，
+并非已交付功能：当前实现的入口为 GLPI Webhook/API/控制台，受治理的写操作是审批后的
+工单跟进写入。
 
 ## 快速开始
 
@@ -111,7 +194,7 @@ frontend/               # Next.js 16 运维控制台（OIDC、租户范围 API �
 - `.env` 中至少一个 LLM provider key(ServiceMind 默认 DeepSeek;toolkit 的
   OpenAI/Anthropic 等 provider 仍可用)。`USE_FAKE_MODEL=true` 可去掉该要求,用于零外部依赖演示。
 
-### A. Docker Compose 全栈
+### A. Docker Compose 核心服务栈
 
 根级 [compose.yaml](compose.yaml) 启动 Postgres、agent 服务与 Streamlit 应用:
 
@@ -127,7 +210,9 @@ docker compose watch        # 或: docker compose up --build
 
 ServiceMind API 需要 Postgres 16;完整事件工作流还需要 GLPI + Keycloak + OpenSearch +
 Neo4j + TEI。Phase 6 工具平台另外需要 Redis(限流、舱壁、熔断与任务状态),以及可选的
-OPA(外部策略决策)。`deploy/glpi/compose.yaml` 可一键拉起整套本地栈;命令与端口见
+OPA(外部策略决策)。`deploy/glpi/compose.yaml` 定义这些基础设施依赖；OpenSearch、Neo4j
+与 TEI 需启用其中的 `rag` profile。它**不包含** ServiceMind API 与运维控制台；
+依赖就绪后需分别启动。命令与端口见
 [deploy/glpi/README.md](deploy/glpi/README.md)。
 
 ### C. 免 Docker 手动运行
@@ -141,7 +226,8 @@ uv sync --frozen
 #   SERVICEMIND_DATABASE_URL=sqlite+aiosqlite:///./servicemind.db
 cp .env.example .env
 
-# 创建/扩展产品 schema(迁移面向 Postgres 16):
+# 使用 PostgreSQL 运行 ITSM 端点时创建/扩展产品 schema；
+# SQLite 仅启动 UI 壳的演示跳过此步：
 uv run alembic upgrade head
 
 # 终端 1 —— agent 服务
@@ -176,6 +262,10 @@ systemctl --user enable --now servicemind-frontend.service   # 单元见 deploy/
 | --- | --- | --- |
 | `acme-analyst` | `viewer`、`analyst` | 工作台、运行记录、质量与发布 |
 | `acme-approver` | `viewer`、`analyst`、`operator`、`approver` | 全部(另含审批中心、记忆复核、审计记录) |
+
+<img src="media/console-run-detail.png" width="900" alt="acme-analyst 控制台实拍：T1–T4 任务依赖、证据引用、评审通过结论，且无批准按钮">
+
+截图取自 `acme-analyst` 登录后的真实只读运行。截图前已在浏览器中遮盖工单、租户标识与证据正文，并隐藏非必要面板，使任务计划、证据引用与评审结论同处一帧；页面没有批准操作。
 
 > **数据前提 —— 请先读这一条。** `POST /v1/servicemind/runs` 要求 `ticket_id ≥ 1`,且每次
 > 运行的第一个任务都是 `get_ticket`。**如果 GLPI 中不存在被引用的工单**,GLPI 会返回 404,
@@ -317,25 +407,23 @@ lint、架构门禁以及 docker 集成 job。提交/撰写约定见 [CLAUDE.md]
 `uv run python scripts/check_phase7_gate_reports.py` 会**离线**把四门 Phase-7 gate 各跑一次,再
 与各自已提交的报告逐门比对,一致则退出 0。这个退出码很容易被读成「验收通过」。它不是。
 
-判定来自对磁盘上回放的评分。验收批次是 28 条回放,全部录于
-`cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`,而 HEAD 已是其**后若干提交**。
-对这些文件只检验两件事:它们是否描述**同一个**版本(同源性),以及判定器今天是否仍然给出各份
-报告声称的判定。至于那个版本**是不是当前版本**(时新性),是另一个问题,离线跑在裸检出上无从
-回答:文件里没有任何东西说明它们出自哪棵树。
+默认验收重放录于 2026-09-30，绑定版本为
+`cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`。修订号记录在每条重放的
+`environment.deployed_revision`，不在报告的逐案例行中。另有[2026-10-03 全量验收批次](evaluation/reports/phase7_acceptance_2026-10-03.md)：
+同一部署版本（`b385df7c…+patch(fbdbefc59bbc)`）下 28/28 案例、107/107 断言通过，
+`--expect-revision` 对该部署的断言也通过。这份结果不能自动代表之后的源码修订。
 
-因此 `acceptance exit 0` 的准确含义是「**这 28 条观测彼此同源、判定器仍然接受它们**」,而**不是**
-「**当前代码树通过验收**」。脚本会打印它实际评分的版本,并在没有任何比对对象时报出
-`currency_checked: false`;传入 `--expect-revision <rev>`,或用
-`scripts/verify_phase7_acceptance_live.py` 针对你要描述的那套部署重新录制,才能把时新性变成
-**被检验过的事实**。另外三门 gate 有同样的边界。
+离线 gate 的退出码表明所选回放的判定和批内版本同质性。要确认它们是否属于**指定部署版本**，
+须传入 `--expect-revision <rev>`；不传时报告 `currency_checked: false`。
+另外几门 live gate 也有相同的版本边界。
 
 ## 文档索引
 
-先读这三份,它们描述的是**当前被测出来的状态**:
+先读这三份，它们记录了**已完成批次的评测状态与版本边界**：
 
 - 最终交付报告(完整执行记录,中文):[`docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md`](docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md)
 - 18 项评测分类的逐项判定:[`docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md`](docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md)
-- Phase 7 剩余评估项(轨迹 / 协同 / 可靠性 / 语义裁判):[`docs/PHASE7_REMAINING_EVALUATION_2026-10-02.md`](docs/PHASE7_REMAINING_EVALUATION_2026-10-02.md)
+- Phase 7 评估收尾的历史计划(轨迹 / 协同 / 可靠性 / 语义裁判):[`docs/PHASE7_REMAINING_EVALUATION_2026-10-02.md`](docs/PHASE7_REMAINING_EVALUATION_2026-10-02.md)
 
 参考与背景:
 
@@ -351,6 +439,10 @@ lint、架构门禁以及 docker 集成 job。提交/撰写约定见 [CLAUDE.md]
 - GLPI 栈:[`deploy/glpi/README.md`](deploy/glpi/README.md)
 - 依赖与环境:[`DEPENDENCIES.md`](DEPENDENCIES.md)
 
+`agent_architecture.png`、`agent_architecture.excalidraw` 与 `agent_diagram.png` 是**上游
+toolkit 的**图，保留用于溯源与归属。它们描述的是继承来的脚手架（Streamlit 聊天前端 + LangGraph
+`model`/`tools` 循环），**不是** ServiceMind 的 ITSM 流水线 —— 不要把它们当作本产品的架构图呈现。
+
 ## 上游、历史与许可
 
 本项目衍生自 🧰 [AI Agent Service Toolkit](https://github.com/JoshuaC215/agent-service-toolkit)
@@ -365,7 +457,7 @@ LangGraph + FastAPI + Streamlit agent 服务工具箱。二者关系如实保留
   Copyright (c) 2024 Joshua Carroll;ServiceMind 的增量同样以 MIT 分发。
 - **脚手架代码保持上游归属** —— 继承自 toolkit 的层(`src/agents`、`src/core`、
   `src/schema`、`src/client`、`src/voice`、`src/streamlit_app.py`、docker 文件与通用
-  chat 端点)仍是其原作者的成果。
+  chat 端点)仍是其原作者的成果。`media/agent_*` 那几张图属于同一批。
 
 ServiceMind 自身的增量(`src/servicemind` 产品树、migrations、GLPI 栈、评测 harness、
 skills、ServiceMind 阶段文档)由 **Shark6438** 维护。感谢上游 toolkit 及其作者奠定的基础。
