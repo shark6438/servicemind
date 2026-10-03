@@ -273,6 +273,37 @@ def _semantic_overlap(left: str, right: str) -> float:
     return len(first & second) / len(first | second) if first and second else 0
 
 
+def _lexical_relevance(query_text: str):
+    """How much of the query a memory's content contains, as a rank the database computes.
+
+    ``plainto_tsquery`` joins the query's terms with AND, and ``ts_rank_cd`` returns zero
+    for every document that does not satisfy the whole conjunction. Ordering the candidate
+    query by it therefore sorted partial matches into one undifferentiated block with the
+    documents that share nothing at all, and the ceiling cut that block by recency: a
+    memory sharing one term with the query lost its place to a hundred newer memories
+    sharing none, before the semantic ranker -- enabled in the deployment -- ever saw any
+    of them. That is ranking after a recall decision, which is the wrong order.
+
+    ORing the lexemes asks the question the caller is actually asking: how much of the
+    query is in this memory. Partial matches then rank by how much they match instead of
+    falling off the end.
+
+    The lexemes are quoted one by one because tsquery spells its own operators with
+    characters that occur inside tokens: an unquoted ``e-mail`` parses as ``e`` minus
+    ``mail``. The query is tokenised by the same configuration as the content, so the two
+    sides cannot disagree about what a term is. A query with no lexemes at all produces
+    NULL rather than an error, which is what ``coalesce`` below is for.
+    """
+    any_lexeme = text(
+        "(SELECT to_tsquery('simple', ("
+        "SELECT string_agg(quote_literal(lexeme), ' | ') "
+        "FROM unnest(tsvector_to_array(to_tsvector('simple', :lexical_query))) AS lexeme)))"
+    ).bindparams(lexical_query=query_text)
+    return func.coalesce(
+        func.ts_rank_cd(func.to_tsvector("simple", MemoryRecordRow.content), any_lexeme), 0.0
+    )
+
+
 def _mark_subject_conflict(candidate: MemoryCandidate) -> MemoryCandidate:
     """Stamp a write that collides with a live version of the same subject.
 
@@ -1125,10 +1156,7 @@ class PostgresMemoryRepository:
                     select(MemoryRecordRow)
                     .where(*self._read_filters(query))
                     .order_by(
-                        func.ts_rank_cd(
-                            func.to_tsvector("simple", MemoryRecordRow.content),
-                            func.plainto_tsquery("simple", query.text),
-                        ).desc(),
+                        _lexical_relevance(query.text).desc(),
                         MemoryRecordRow.updated_at.desc(),
                         MemoryRecordRow.confidence.desc(),
                         MemoryRecordRow.importance.desc(),

@@ -275,6 +275,7 @@ async def test_reconcile_does_not_mark_old_generation_rows_during_migration() ->
 # --------------------------------------------------------------------------- live PG
 
 
+@pytest.mark.postgres
 @pytest.mark.docker
 @pytest.mark.asyncio
 async def test_knowledge_repository_job_register_upsert_and_tenant_isolation() -> None:

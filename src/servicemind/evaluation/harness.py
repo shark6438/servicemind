@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import statistics
+from collections.abc import Mapping
 from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -11,6 +12,11 @@ from servicemind.domain.knowledge import (
     RetrievalPrincipal,
 )
 from servicemind.evaluation.gold import GoldQuery, GoldSet
+from servicemind.evaluation.leakage import (
+    EvidenceCoordinates,
+    Violation,
+    visible_evidence_violations,
+)
 from servicemind.evaluation.metrics import (
     dedupe_rate,
     mrr_at_k,
@@ -74,6 +80,10 @@ class EvalQueryOutcome(BaseModel):
     candidate_count: int = 0
     dedupe_rate: float = 0.0
     latency_ms: float = 0.0
+    #: Retrieved items the asker had no right to see. Empty for every run that is not
+    #: broken -- the §4.1 threshold is a zero-count, so a non-empty list here is a
+    #: release blocker rather than a metric that can be averaged or compared.
+    violations: list[Violation] = Field(default_factory=list)
 
 
 class BaselineMetrics(BaseModel):
@@ -89,6 +99,16 @@ class BaselineMetrics(BaseModel):
     @property
     def unanswerable(self) -> list[EvalQueryOutcome]:
         return [outcome for outcome in self.outcomes if outcome.unanswerable]
+
+    def visible_evidence_violations(self) -> list[Violation]:
+        """Every unauthorized item this baseline surfaced, over all queries.
+
+        Reported per baseline rather than per report because the four baselines run the
+        same principal through different filters; a violation appearing in one and not
+        another is a fact about that filter, which is exactly what §4.1 wants to know
+        and what a report-level total would hide.
+        """
+        return [item for outcome in self.outcomes for item in outcome.violations]
 
     def _mean(self, fn) -> float:
         values = [fn(outcome) for outcome in self.answerable]
@@ -133,6 +153,26 @@ class EvalReport(BaseModel):
         raise KeyError(name)
 
 
+def principal_for(gold_query: GoldQuery, default: RetrievalPrincipal) -> RetrievalPrincipal:
+    """The principal this query is asked as, falling back to the run's default.
+
+    §3.2 asks for a "wrong tenant" stratum and §4.1 for a zero-count on wrong-ACL
+    evidence, and both are statements about *who asked*: one query text is answerable for
+    one caller and a disclosure for another. A single principal for the whole run cannot
+    express that, so a query that names its asker overrides the default and one that does
+    not inherits it.
+    """
+    if gold_query.asker_tenant_id is None and not gold_query.asker_group_ids:
+        return default
+    return default.model_copy(
+        update={
+            "tenant_id": gold_query.asker_tenant_id or default.tenant_id,
+            "group_ids": gold_query.asker_group_ids,
+            "entity_ids": gold_query.asker_entity_ids or default.entity_ids,
+        }
+    )
+
+
 async def evaluate(
     provider: RetrievalProvider,
     gold: GoldSet,
@@ -140,26 +180,45 @@ async def evaluate(
     *,
     top_ks: tuple[int, ...] = (5, 10, 20),
     baselines: tuple[Baseline, ...] = BASELINES,
+    coordinates: Mapping[str, EvidenceCoordinates] | None = None,
 ) -> EvalReport:
     """Run every gold query through each retrieval baseline.
 
     Top-k isolation is bounded by how many packed contexts the provider can return
     for one query; the provider is asked for ``max(top_ks) + 4`` so Recall@top_ks is
     measurable rather than truncated by the context packer.
+
+    ``coordinates`` is the ACL ground truth for the corpus that was loaded. When it is
+    supplied, every returned item is checked against the asker that asked for it and any
+    unauthorized one is recorded on the outcome; when it is not, ``violations`` stays
+    empty because nothing is known -- which is a different statement from "none were
+    found", and the two must not render the same way. Callers that index a corpus should
+    pass it; the §4.1 zero-count is not computable without it.
     """
     final_k = max(top_ks) + 4
     per_baseline: list[BaselineMetrics] = []
     for baseline in baselines:
         outcomes: list[EvalQueryOutcome] = []
         for gold_query in gold.queries:
+            asker = principal_for(gold_query, principal)
             result = await provider.retrieve(
-                principal=principal,
+                principal=asker,
                 query=gold_query.query,
                 mode=baseline.mode,
                 run_rerank=baseline.run_rerank,
                 final_k=final_k,
             )
             keys = result_keys(result)
+            violations: list[Violation] = []
+            if coordinates is not None:
+                violations = visible_evidence_violations(
+                    query_id=gold_query.id,
+                    retrieved=keys,
+                    coordinates=coordinates,
+                    asker_tenant_id=asker.tenant_id,
+                    asker_group_ids=asker.group_ids,
+                    query_time=asker.query_time,
+                )
             outcomes.append(
                 EvalQueryOutcome(
                     query_id=gold_query.id,
@@ -172,6 +231,7 @@ async def evaluate(
                         [item.citation.source_record_id for item in result.items]
                     ),
                     latency_ms=result.latency_ms,
+                    violations=violations,
                 )
             )
         per_baseline.append(BaselineMetrics(baseline=baseline.name, outcomes=outcomes))

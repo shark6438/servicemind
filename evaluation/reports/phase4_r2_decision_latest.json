@@ -1,0 +1,200 @@
+{
+ "schema_version": "phase4-r2-decision-v1",
+ "status": "DECISION_RECORD",
+ "generated_at": "2026-10-02T15:05:26+08:00",
+ "decision": "RETIRE the late-interaction arm in its online corpus-scan form",
+ "decided_at_step": "R2.0 (before any full index build)",
+ "authority": "the plan's own stop-loss: 'only one bounded PLAID-style spike is allowed; if it still misses, retire the arm and do not fold it into RRF weight tuning'",
+ "r2_0_spike": {
+  "verdict": "FAIL",
+  "corpus_documents": 1276222,
+  "sampled_documents": 5000,
+  "token_histogram": {
+   "min": 3,
+   "p50": 77,
+   "p90": 233,
+   "p99": 511,
+   "max": 511,
+   "mean": 108.3034
+  },
+  "extrapolated_tokens": 138219181.7548,
+  "extrapolated_bytes": 283072884233.8304,
+  "encode_tokens_per_second": 3683.2561107529,
+  "projected_build_hours": 10.423987906250398,
+  "projected_scan_ms": 2358305.1127675,
+  "cost_budget_ms": 204.0,
+  "baseline_p95_ms": 1020.7,
+  "runtime": {
+   "status": "ok",
+   "model": "BAAI/bge-m3",
+   "revision": "5617a9f61b028005a4858fdac845db406aefb181",
+   "dimension": 1024,
+   "device": "cuda:1",
+   "torch": "2.5.1+cu121",
+   "cuda": "12.1",
+   "gpu_free_bytes": 21310210048,
+   "gpu_total_bytes": 25438126080,
+   "max_doc_tokens": 512,
+   "max_query_tokens": 32,
+   "snapshot": "data/phase4/models/embedding/models--BAAI--bge-m3/snapshots/5617a9f61b028005a4858fdac845db406aefb181"
+  }
+ },
+ "why_the_arm_cannot_meet_its_own_admission_criterion": {
+  "criterion": "pool coverage@100 must rise by >= 2 percentage points, paired, with Recall@5 not regressing",
+  "argument": "Coverage@100 can only rise if the arm ranks gold documents that the existing arms do not already have in their top 100. The only way to find such a document is to score it against the whole 1,276,222-document corpus. Re-scoring the existing candidates with MaxSim is a rerank: it reorders a pool of fixed membership and therefore cannot raise coverage@100 at all, by construction. So the arm's own admission criterion requires exactly the corpus-wide scan the spike measured.",
+  "physical_floor": {
+   "tokens": 138219181.7548,
+   "fp16_bytes": 283072884233.8304,
+   "pcie_one_pass_seconds_at_25GBps": 11.3,
+   "compute_seconds_at_70.3M_tokens_per_second": 1.97,
+   "total_seconds_with_a_perfect_gpu_kernel": 13.3,
+   "budget_seconds": 0.204,
+   "ratio_over_budget": 65.2,
+   "note": "the 70.3 M tokens/s figure is our own measured GPU MaxSim on this card, 1674x the numpy path that produced the projected scan above. Even with that kernel and zero indexing overhead the arm is ~65x over budget, so this is a property of the data size, not of the implementation."
+  }
+ },
+ "label_quality_findings": {
+  "provenance": "external silver labels, no tenant signoff (the diagnostic's own limitation)",
+  "one_document_is_the_answer_to_many_unrelated_questions": {
+   "file": "swg21592093.txt",
+   "title": "IBM SPSS Student Version and Graduate Pack Resources - United States",
+   "labelled_for_queries_in_the_answerable_set": 8,
+   "of_which_in_the_out_of_pool_group": 6,
+   "reading": "a single generic 'SPSS Student Version and Graduate Pack Resources' landing page is the labelled gold for 8 different and mutually unrelated questions (authorization code, licence transfer to a new machine, lock code lookup, licensing overview). It cannot be the correct answer to all of them; the pattern is a crawl artifact, not relevance."
+  },
+  "out_of_pool_gold_is_also_invisible_to_pure_lexical_search": {
+   "absent_from_bm25": 36,
+   "of": 36,
+   "reading": "a relevant document whose terms the question repeats would be found by BM25; none of the 36 are"
+  },
+  "adjudication_of_the_36_out_of_pool_queries": {
+   "method": "every one of the 36 (question, labelled gold title, first dense hit title) triples was read. This block is a recorded READ, not a computation; the per-query reasons are below so it can be disagreed with line by line.",
+   "label_defective": {
+    "count": 17,
+    "queries": {
+     "DEV_Q149": "gold is a 'Late breaking updates to DataPower 7.5' landing page; the hit is an SSH-connection-failure technote",
+     "TRAIN_Q016": "gold is generic ulimit guidance; the hit is literally the DASH 'too many open files' technote",
+     "TRAIN_Q352": "gold is about an 'invalid XML character'; the hit is the WebSphere Adapter for Flat File technote collection",
+     "TRAIN_Q044": "gold is the SPSS student-resources landing page; the hit is how to generate an SPSS authorization key",
+     "TRAIN_Q366": "gold is how to *create* a backup; the question asks how to *restore* from one, which the hit addresses",
+     "DEV_Q141": "gold is about NormalizeCCO merging lines; the hit is the technote for the exact reported symptom",
+     "TRAIN_Q540": "gold is a 'Fix list for Content Navigator 3.0.0' changelog; the hit describes the IE textarea defect",
+     "DEV_Q077": "gold is the SPSS resources landing page; the hit is the license-transfer technote",
+     "TRAIN_Q024": "gold is the SPSS resources landing page; the hit is the license-transfer technote",
+     "TRAIN_Q505": "gold is the SPSS resources landing page; the hit is the license-transfer technote",
+     "DEV_Q283": "gold is the SPSS resources landing page; the hit is the 'what is a lock code' technote",
+     "TRAIN_Q421": "gold is the SPSS resources landing page; the hit is the SPSS licensing overview",
+     "TRAIN_Q497": "gold is 'enabling tracing for the DASH service'; the question is a login failure, which tracing does not answer",
+     "TRAIN_Q295": "gold is 'how to determine if a TIP server is part of an HA cluster'; unrelated to the applet-permissions question",
+     "DEV_Q067": "gold is 'Manage Group Add User search does not return users'; the question is an AppTarget startup hang",
+     "DEV_Q027": "gold is 'batches left in running state'; the question asks how to *create* batches for bulk upload",
+     "TRAIN_Q314": "gold is an SSLv3 security bulletin; the question asks how to configure a minimum TLS version"
+    }
+   },
+   "genuine_retrieval_miss": {
+    "count": 4,
+    "queries": {
+     "TRAIN_Q110": "gold 'Installing the Installation Manager on an NFS mounted disk' answers the question; the retriever missed it",
+     "DEV_Q034": "gold 'Java Health Center Client' answers 'is a profiler provided'; the retriever missed it",
+     "TRAIN_Q247": "gold is the APAR 'VMM DOES NOT CLEAR THE CACHE IF CLEARENTITY MODE IS USED', which is the exact mechanism asked about",
+     "DEV_Q132": "gold 'How to enable Baselining in your monitored application' is the plausible source of the 'unknown' status"
+    }
+   },
+   "ambiguous_neither_document_answers": {
+    "count": 15,
+    "queries": [
+     "DEV_Q110",
+     "DEV_Q123",
+     "DEV_Q240",
+     "TRAIN_Q121",
+     "TRAIN_Q124",
+     "TRAIN_Q135",
+     "TRAIN_Q259",
+     "TRAIN_Q272",
+     "TRAIN_Q283",
+     "TRAIN_Q286",
+     "TRAIN_Q318",
+     "TRAIN_Q428",
+     "TRAIN_Q494",
+     "TRAIN_Q584",
+     "TRAIN_Q596"
+    ]
+   }
+  },
+  "headroom_of_the_entire_r2_business_case": {
+   "claimed_miss_rate": {
+    "numerator": 36,
+    "denominator": 280,
+    "value": 0.12857142857142856
+   },
+   "honest_upper_bound": {
+    "numerator": 4,
+    "denominator": 280,
+    "value": 0.014285714285714285
+   },
+   "admission_bar": 0.02,
+   "reading": "R2 was justified by a 12.86% miss rate. After reading all 36, at most 4 are genuine retrieval misses, and even those assume late interaction would rank them into the top 100. The honest upper bound on the uplift is below the arm's own 2-point admission bar, so the arm cannot clear the bar even if its retriever were perfect on every real miss."
+  }
+ },
+ "candidate_depth_control_already_on_disk": {
+  "source": "evaluation/reports/phase4_query_arm_funnel_latest.json",
+  "note": "this experiment already existed; it is not a new run",
+  "rows": [
+   {
+    "arm": "c0_sq",
+    "depth": 100.0,
+    "recall_at_10": 0.6893,
+    "p95_ms": 927.9
+   },
+   {
+    "arm": "c0_sq_ck200",
+    "depth": 200.0,
+    "recall_at_10": 0.6857,
+    "p95_ms": 1482.1
+   },
+   {
+    "arm": "c0_sq_ck400",
+    "depth": 400.0,
+    "recall_at_10": 0.6821,
+    "p95_ms": 2772.1
+   },
+   {
+    "arm": "c0_mq",
+    "depth": 100.0,
+    "recall_at_10": 0.675,
+    "p95_ms": 1020.7
+   },
+   {
+    "arm": "c0_mq_ck200",
+    "depth": 200.0,
+    "recall_at_10": 0.6893,
+    "p95_ms": 1668.4
+   }
+  ],
+  "control_same_arm_twice": {
+   "queries": 280,
+   "recall_at_10_moved": 0,
+   "recall_at_5_moved": 1
+  },
+  "reading": "quadrupling the candidate pool (100 -> 400) does not raise Recall@10 on the signal arm (0.6893 -> 0.6857 -> 0.6821) while tripling p95. The control arm moved 0 queries at Recall@10 on a repeat run, so the differences here are at or below what this harness can resolve. Widening the funnel is not where the measured loss lives."
+ },
+ "secondary_finding_the_recall_columns_are_pack_limited": {
+  "cutoffs_the_pack_cannot_tell_apart": [
+   "10==20"
+  ],
+  "packed_documents_mean": 7.55,
+  "packed_documents_max": 16,
+  "reading": "Recall@10 equals Recall@20 for every arm because the pack averages 7.5 documents and never exceeds 19, so a cutoff at or above the pack size counts the whole pack. Recall at those cutoffs is a property of the packing/token budget, not of ranking depth."
+ },
+ "what_replaces_it": [
+  "the binding constraint on the measured number is the label set, not the retriever; the next artefact has to be a small, hand-adjudicated, tenant-signed gold set over the real corpus",
+  "keep clean external sets (LoTTE) for component-to-component comparison, where the labels stand",
+  "do not train a reranker (R3) on this silver set: it would be trained to reproduce the noise"
+ ],
+ "limitations": [
+  "the adjudication of the 36 is a reading by this agent, recorded per query so it can be overturned; it is not a human signoff and carries no tenant provenance",
+  "the depth control is the proxy's arms, not OpenSearch's; the production run is what measures production",
+  "n=36; the buckets describe this set, not a population",
+  "the R2.0 spike is a 5000-document sample with a numpy scan path; the encode-throughput number is batch-dependent and would improve with tuning, but the FAIL is decided by the 283 GB corpus size and the 204 ms budget, neither of which the batch size moves"
+ ]
+}

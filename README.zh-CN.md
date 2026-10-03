@@ -282,12 +282,30 @@ python scripts/audit_project_structure.py`(不带 `--check`)——再与代码�
 `.github/workflows/test.yml` 运行 ruff、pyrefly、pytest(Python 3.12/3.13/3.14)、Markdown
 lint、架构门禁以及 docker 集成 job。提交/撰写约定见 [CLAUDE.md](CLAUDE.md)。
 
+### Phase 7 验收门禁说了什么、没说什么
+
+`uv run python scripts/check_phase7_gate_reports.py` 会**离线**把四门 Phase-7 gate 各跑一次,再
+与各自已提交的报告逐门比对,一致则退出 0。这个退出码很容易被读成「验收通过」。它不是。
+
+判定来自对磁盘上回放的评分。验收批次是 28 条回放,全部录于
+`cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`,而 HEAD 已是其**后 5 个提交**。
+对这些文件只检验两件事:它们是否描述**同一个**版本(同源性),以及判定器今天是否仍然给出各份
+报告声称的判定。至于那个版本**是不是当前版本**(时新性),是另一个问题,离线跑在裸检出上无从
+回答:文件里没有任何东西说明它们出自哪棵树。
+
+因此 `acceptance exit 0` 的准确含义是「**这 28 条观测彼此同源、判定器仍然接受它们**」,而**不是**
+「**当前代码树通过验收**」。脚本会打印它实际评分的版本,并在没有任何比对对象时报出
+`currency_checked: false`;传入 `--expect-revision <rev>`,或用
+`scripts/verify_phase7_acceptance_live.py` 针对你要描述的那套部署重新录制,才能把时新性变成
+**被检验过的事实**。另外三门 gate 有同样的边界,且目前是**拒判**而非评分。
+
 ## 文档索引
 
 - 企业级主规格(中文):[`docs/企业IT服务管理(ITSM)智能体平台.md`](docs/企业IT服务管理(ITSM)智能体平台.md)
 - 架构图景:[`docs/PHASE3_CURRENT_ARCHITECTURE_MAP.md`](docs/PHASE3_CURRENT_ARCHITECTURE_MAP.md)
 - Phase 4 RAG 技术基线:[`docs/PHASE4_RAG_TECHNICAL_BASELINE.md`](docs/PHASE4_RAG_TECHNICAL_BASELINE.md)
 - Phase 5 架构与验收:[`docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md`](docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md)
+- Phase 7 验收基线:[`docs/PHASE7_ACCEPTANCE_BASELINE.md`](docs/PHASE7_ACCEPTANCE_BASELINE.md)
 - 各阶段验收报告:`docs/PHASE*_ACCEPTANCE.md`;实时报告见 `evaluation/reports/`
 - 本地部署说明:[`LOCAL_DEPLOYMENT.md`](LOCAL_DEPLOYMENT.md)
 - GLPI 栈:[`deploy/glpi/README.md`](deploy/glpi/README.md)

@@ -4,6 +4,7 @@ from streamlit.testing.v1 import AppTest
 from client import AgentClient
 
 
+@pytest.mark.deployed_stack
 @pytest.mark.docker
 def test_service_with_fake_model():
     """Test the service using the fake model.
@@ -16,6 +17,7 @@ def test_service_with_fake_model():
     assert response.content == "This is a test response from the fake model."
 
 
+@pytest.mark.deployed_stack
 @pytest.mark.docker
 def test_service_with_app():
     """Test the service using the app.

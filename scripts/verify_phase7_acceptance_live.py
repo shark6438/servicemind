@@ -69,6 +69,7 @@ from servicemind.evaluation.acceptance import (
     case_set_digest,
     new_followups,
 )
+from servicemind.evaluation.deployment import refuse_stale_deployment, unit_started_at
 from servicemind.evaluation.graph_probe import graph_fixture_reading, principal_for
 from servicemind.evaluation.source_revision import (
     source_revision as evaluate_source_revision,
@@ -551,6 +552,11 @@ class Stack:
         #: provider. Cleared by the restore path, and read by the cleanup that runs even
         #: when a case dies mid-outage.
         self.outage_active = False
+        #: The platform identity this sweep saw immediately after its own most recent
+        #: restart, or ``None`` if it has not restarted anything. Read by the batch guard
+        #: to tell a restart the sweep performed -- and whose steps therefore record it --
+        #: from one that happened behind the sweep's back.
+        self.identity_at_last_restart: PlatformIdentity | None = None
 
     async def aclose(self) -> None:
         await self.client.aclose()
@@ -608,6 +614,7 @@ class Stack:
         self._systemctl("restart", API_UNIT)
         self.outage_active = True
         await self.await_health()
+        self.identity_at_last_restart = platform_identity()
         return f"{VERIFIER_URL_SETTING}={VERIFIER_OUTAGE_URL} on {API_UNIT}, then restarted"
 
     async def end_outage(self) -> str | None:
@@ -618,6 +625,7 @@ class Stack:
         self._systemctl("restart", API_UNIT)
         self.outage_active = False
         await self.await_health()
+        self.identity_at_last_restart = platform_identity()
         return f"{VERIFIER_URL_SETTING} unset on {API_UNIT}, then restarted"
 
     @staticmethod
@@ -2240,6 +2248,7 @@ async def run_case(
     tickets: dict[str, int],
     environment: ObservedEnvironment,
     cases_digest: str,
+    replays: Path = REPLAYS,
 ) -> CaseExecution:
     case_run = CaseRun(case, stack, tickets)
     subject: ObservedSubject | None = None
@@ -2268,8 +2277,8 @@ async def run_case(
         # evidence would otherwise be the failure that leaves the realm revoked.
         await restore_realm(case_run, stack)
     execution = case_run.execution(environment, subject, cases_digest=cases_digest)
-    REPLAYS.mkdir(parents=True, exist_ok=True)
-    (REPLAYS / f"{case.id}.json").write_text(execution.model_dump_json(indent=2), encoding="utf-8")
+    replays.mkdir(parents=True, exist_ok=True)
+    (replays / f"{case.id}.json").write_text(execution.model_dump_json(indent=2), encoding="utf-8")
     return execution
 
 
@@ -2303,74 +2312,55 @@ def source_revision() -> str | None:
     return evaluate_source_revision(REPO_ROOT)
 
 
-def unit_started_at() -> str | None:
-    completed = subprocess.run(
-        ["systemctl", "--user", "show", "servicemind-api", "-p", "ActiveEnterTimestamp"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    parts = completed.stdout.strip().split("=", 1)
-    return parts[1].strip() if len(parts) == 2 and parts[1].strip() else None
+#: What must stay put for a sweep's replays to be one observation set.
+PlatformIdentity = tuple[str | None, str | None]
 
 
-def _unit_main_pid() -> int | None:
-    completed = subprocess.run(
-        ["systemctl", "--user", "show", "servicemind-api", "-p", "MainPID"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    parts = completed.stdout.strip().split("=", 1)
-    if len(parts) != 2 or not parts[1].strip().isdigit():
-        return None
-    return int(parts[1])
+def platform_identity() -> PlatformIdentity:
+    """The serving process and the tree, together, as one comparable pair."""
+    return (unit_started_at(), source_revision())
 
 
-def _process_started_at(pid: int) -> float | None:
-    """When a process began, as a Unix timestamp.
+def mid_sweep_change(before: PlatformIdentity, after: PlatformIdentity) -> str | None:
+    """Why these two identities are not the same batch, or ``None`` if they are.
 
-    From the boot clock plus the process's own start tick, rather than from systemd's
-    formatted timestamp: that one is rendered in the machine's locale, and this value
-    has to be compared with a file's mtime, not read by a person.
+    Kept as a pure function over two pairs rather than inline, because the condition it
+    encodes is the one that fails silently: both halves look plausible on their own, and a
+    corpus that spans two of them is indistinguishable from one that does not.
     """
-    try:
-        fields = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").split()
-        ticks = int(fields[21])
-    except (OSError, IndexError, ValueError):
+    if before == after:
         return None
-    boot = time.time() - time.clock_gettime(time.CLOCK_BOOTTIME)
-    return boot + ticks / os.sysconf("SC_CLK_TCK")
-
-
-def stale_deployment() -> dict[str, Any] | None:
-    """Whether the serving process predates the code in the tree, and by how much.
-
-    The venv is an editable install of ``src``, which makes it easy to believe a source
-    edit is live. It is not: a running process holds the modules it imported, and this
-    stack had been up since 17:02 the previous day while ``orchestration/`` was edited
-    at 00:44 -- so a whole sweep observed pre-fix behaviour and reported it as the
-    revision in the working tree. ``deployed_revision`` describes the *tree*; this
-    describes whether the tree is what answered, and the two have to be checked
-    separately because the interesting failure is exactly the case where they differ.
-    """
-    pid = _unit_main_pid()
-    started = None if pid is None else _process_started_at(pid)
-    if started is None:
-        return None
-    newest_mtime, newest_path = max(
-        (path.stat().st_mtime, path) for path in (REPO_ROOT / "src").rglob("*.py")
+    return (
+        f"the serving process or the source tree changed mid-sweep: "
+        f"{before} -> {after}. The replays written before that moment describe a "
+        f"different platform than the ones written after it, and neither set says which; "
+        f"re-run the sweep against one deployment"
     )
-    if newest_mtime <= started:
-        return None
-    return {
-        "unit_main_pid": pid,
-        "unit_started_epoch": round(started, 1),
-        "newest_source": str(newest_path.relative_to(REPO_ROOT)),
-        "newest_source_epoch": round(newest_mtime, 1),
-        "seconds_behind": round(newest_mtime - started, 1),
-        "remedy": "systemctl --user restart servicemind-api, then re-run",
-    }
+
+
+def rebaselined_after_restart(
+    before: PlatformIdentity,
+    after: PlatformIdentity,
+    *,
+    declared: PlatformIdentity | None,
+) -> bool:
+    """Whether a mid-sweep change is one the sweep itself caused.
+
+    One case restarts the serving process on purpose -- it points the verifier at a dead
+    port and restarts to make that setting take effect, then restarts again to undo it.
+    Those restarts are declared: they are steps of that case, and the replay records them
+    with the unit they touched. Treating them as drift would make the corpus unrunnable
+    -- which is what happened on 2026-10-03, when the guard aborted the sweep at the case
+    right after that one.
+
+    So the exemption is not "the change was probably ours". It is the narrow claim that
+    the identity now observed is *the one this sweep saw at its own last restart*: an
+    exact match against a value the driver captured itself, at the moment it restarted
+    the unit. A restart from anywhere else -- before ours, after ours, or with ours
+    active -- leaves a different identity and is still an abort. ``before == after`` is
+    not a rebaseline, because nothing moved.
+    """
+    return declared is not None and declared == after and before != after
 
 
 def _case_tickets(case_set: AcceptanceCaseSet, recorded: dict[str, Any]) -> dict[str, int]:
@@ -2400,6 +2390,17 @@ async def main() -> int:
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--only", default="", help="comma-separated case ids to run")
     parser.add_argument(
+        "--replays",
+        type=Path,
+        default=REPLAYS,
+        help=(
+            "where to write this sweep's replays; defaults to the standing corpus. A "
+            "partial sweep (``--only``) written over the standing corpus would leave the "
+            "directory holding two revisions at once, which every gate here refuses -- so "
+            "a partial sweep goes to its own directory and the standing one is left alone"
+        ),
+    )
+    parser.add_argument(
         "--timeout-scale",
         type=float,
         default=1.0,
@@ -2418,12 +2419,9 @@ async def main() -> int:
     # Refused by default, because this is the failure that does not announce itself: a
     # stale process answers every request competently, so the sweep completes and every
     # replay carries the revision of a tree the platform was not running.
-    staleness = stale_deployment()
-    if staleness is not None and not args.allow_stale_deployment:
-        print(json.dumps({"stale_deployment": staleness}, ensure_ascii=False, indent=2))
-        return 3
-    if staleness is not None:
-        print(json.dumps({"stale_deployment": staleness}, ensure_ascii=False))
+    refusal = refuse_stale_deployment(REPO_ROOT, allow=args.allow_stale_deployment, argv=sys.argv)
+    if refusal:
+        return refusal
 
     case_set = AcceptanceCaseSet.model_validate(json.loads(CASES.read_text(encoding="utf-8")))
     # Stamped onto every replay: the gate reads it back to decide whether the observation
@@ -2458,12 +2456,39 @@ async def main() -> int:
         ),
         flush=True,
     )
+    # One batch is one observation set, and the two things that make it one are that the
+    # tree did not move and that the same process answered throughout. ``refuse_stale_deployment``
+    # checks that pairing once, before the first case. Nothing checked it afterwards, and the
+    # gap does not announce itself: the revision stamped into every replay is computed from
+    # the tree, so it describes the tree rather than the process, and a restart part-way
+    # through leaves a corpus that reads as one observation set while being two. Observed
+    # once, on 2026-10-03: the unit was restarted at 00:46:08, four cases into a sweep that
+    # ran 00:42:47-00:49:26, and no replay could say so.
+    batch_identity = platform_identity()
+
     failures: list[str] = []
     try:
         for case in cases:
+            observed = platform_identity()
+            moved = mid_sweep_change(batch_identity, observed)
+            if moved and rebaselined_after_restart(
+                batch_identity, observed, declared=stack.identity_at_last_restart
+            ):
+                # The sweep restarted the unit itself. The case that did it records the
+                # restart as one of its steps, so the split is declared rather than
+                # silent; the batch moves to the new identity and keeps checking.
+                print(f"REBASELINE before {case.id}: {moved}", flush=True)
+                batch_identity = observed
+                moved = None
+            if moved:
+                failures.append(moved)
+                print(f"ABORT {case.id}: {moved}", flush=True)
+                break
             started = now()
             try:
-                execution = await run_case(case, stack, tickets, environment, cases_digest)
+                execution = await run_case(
+                    case, stack, tickets, environment, cases_digest, args.replays
+                )
             except Exception as exc:  # noqa: BLE001 - the next case is still worth running
                 failures.append(f"{case.id}: {exc!r}")
                 print(f"{case.id}: DRIVER FAILURE {exc!r}", flush=True)
@@ -2490,6 +2515,18 @@ async def main() -> int:
                 flush=True,
             )
     finally:
+        # The last case can straddle the change as easily as any other, and a batch that
+        # ended just after a restart has no next case to notice it.
+        observed = platform_identity()
+        moved = mid_sweep_change(batch_identity, observed)
+        if moved and rebaselined_after_restart(
+            batch_identity, observed, declared=stack.identity_at_last_restart
+        ):
+            print(f"REBASELINE after {cases[-1].id}: {moved}", flush=True)
+            moved = None
+        if moved and moved not in failures:
+            failures.append(moved)
+            print(f"ABORT after {cases[-1].id}: {moved}", flush=True)
         await stack.aclose()
         await close_database()
     if failures:

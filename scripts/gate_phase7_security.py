@@ -27,6 +27,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from servicemind.evaluation.refusal import stamp_refusal
 from servicemind.evaluation.revisions import recorded_revisions, revision_problems
 from servicemind.evaluation.security import (
     SecurityScenarioSet,
@@ -46,6 +47,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SCENARIOS = REPO_ROOT / "evaluation" / "security" / "scenarios.v1.json"
 REPLAYS = REPO_ROOT / "evaluation" / "security" / "replays"
 REPORTS = REPO_ROOT / "evaluation" / "reports"
+
+#: Repo-relative, so a refusal stamped into a report names the gate that stamped it.
+GATE_NAME = str(Path(__file__).resolve().relative_to(REPO_ROOT))
 REPORT_JSON = REPORTS / "phase7_security_latest.json"
 REPORT_MD = REPORTS / "phase7_security_latest.md"
 
@@ -142,22 +146,27 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    try:
-        scenario_set = load_scenario_set()
-        observations = load_replays(scenario_set)
-        provenance = check_replays_are_one_revision(observations, expect=args.expect_revision)
-    except ConfigurationError as exc:
-        print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)
-        return EXIT_CONFIGURATION
-
-    outcome = grade(scenario_set, observations, generated_at=datetime.now(tz=UTC))
-
+    # Resolved before the provenance check rather than after it, so the refusal path can
+    # annotate the very files this run would have written. A refusal that returns 3 and
+    # leaves yesterday's ``PASS`` on disk is a report contradicting its own exit code.
     report_json = args.report.with_suffix(".json") if args.report else REPORT_JSON
     report_md = (
         args.report
         if args.report and args.report.suffix == ".md"
         else (REPORT_MD if args.report is None else args.report.with_suffix(".md"))
     )
+
+    try:
+        scenario_set = load_scenario_set()
+        observations = load_replays(scenario_set)
+        provenance = check_replays_are_one_revision(observations, expect=args.expect_revision)
+    except ConfigurationError as exc:
+        print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)
+        stamp_refusal(report_json, report_md, gate=GATE_NAME, reason=str(exc), argv=sys.argv)
+        return EXIT_CONFIGURATION
+
+    outcome = grade(scenario_set, observations, generated_at=datetime.now(tz=UTC))
+
     REPORTS.mkdir(parents=True, exist_ok=True)
     report_json.write_text(dump_outcome(outcome) + "\n", encoding="utf-8")
     report_md.write_text(render_report(outcome), encoding="utf-8")

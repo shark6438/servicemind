@@ -1,0 +1,43 @@
+{
+  "dataset": "lotte-technology",
+  "split": "dev",
+  "sample_documents": 5000,
+  "corpus_documents": 1276222,
+  "sampled_tokens": 541517,
+  "token_histogram": {
+    "min": 3,
+    "p50": 77,
+    "p90": 233,
+    "p99": 511,
+    "max": 511,
+    "mean": 108.3034
+  },
+  "extrapolated_tokens": 138219181.7548,
+  "extrapolated_bytes": 283072884233.8304,
+  "bytes_per_token": 2048,
+  "encode_tokens_per_second": 3683.2561107529,
+  "projected_build_hours": 10.423987906250398,
+  "scan_sample_p50_ms": 9239.40001334995,
+  "scan_half_p50_ms": 1497.0452152192593,
+  "projected_scan_ms": 2358305.1127675,
+  "query_encode_ms": 420.973,
+  "projected_added_ms": 2358726.0857675,
+  "cost_budget_ms": 204.0,
+  "baseline_p95_ms": 1020.7,
+  "verdict": "FAIL",
+  "runtime": {
+    "status": "ok",
+    "model": "BAAI/bge-m3",
+    "revision": "5617a9f61b028005a4858fdac845db406aefb181",
+    "dimension": 1024,
+    "device": "cuda:1",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "gpu_free_bytes": 21310210048,
+    "gpu_total_bytes": 25438126080,
+    "max_doc_tokens": 512,
+    "max_query_tokens": 32,
+    "snapshot": "data/phase4/models/embedding/models--BAAI--bge-m3/snapshots/5617a9f61b028005a4858fdac845db406aefb181"
+  },
+  "index_generation_fingerprint": "9e022f135712"
+}

@@ -51,6 +51,28 @@ def _describe(mutation: Mutation, root: Path) -> str:
     return mutation.path.relative_to(root).as_posix()
 
 
+def snapshot(path: Path) -> tuple[str, tuple[int, int]]:
+    """A file's text and the ``(atime_ns, mtime_ns)`` it carried when it was read."""
+    stat = path.stat()
+    return path.read_text(), (stat.st_atime_ns, stat.st_mtime_ns)
+
+
+def restore(path: Path, text: str, stamp: tuple[int, int] | None) -> None:
+    """Put the text back, and the timestamps with it.
+
+    Restoring the text alone is not restoring the tree. ``evaluation/deployment.py``
+    decides whether the process serving a batch is the code in the tree by comparing its
+    start time against the newest source mtime, so a file rewritten to its own original
+    contents still reads as *newer* than that process -- and every live batch after a
+    mutation sweep then refuses to observe anything. The write is what the detector sees,
+    so undoing the mutation has to undo the write, not only its content.
+    """
+    if path.read_text() != text:
+        path.write_text(text)
+    if stamp is not None:
+        os.utime(path, ns=stamp)
+
+
 def run_mutations(
     *,
     root: Path,
@@ -91,11 +113,13 @@ def run_mutations(
     #: signal handlers, which together cover every exit except ``SIGKILL``; that last
     #: hole is closed by the journal ``_reconcile_interrupted_run`` reads.
     pristine: dict[Path, str] = {}
+    #: The stamp each file carried when it was read, for :func:`restore`. See that
+    #: function for why the write has to be undone and not only its content.
+    stamps: dict[Path, tuple[int, int]] = {}
 
     def restore_all() -> None:
         for path, text in pristine.items():
-            if path.read_text() != text:
-                path.write_text(text)
+            restore(path, text, stamps.get(path))
         # Without this the journal would outlive the run it describes and the next
         # start would report a crash that has already been undone.
         manifest.unlink(missing_ok=True)
@@ -145,6 +169,11 @@ def run_mutations(
             return
         if current == record["mutated"]:
             path.write_text(record["pristine"])
+            # The journal is what survives a ``SIGKILL``, so it carries the pre-mutation
+            # stamp: the run that took it is gone and this one never saw the file intact.
+            stamp = record.get("stamp")
+            if stamp is not None:
+                os.utime(path, ns=(stamp[0], stamp[1]))
             print(
                 f"NOTE: {record['path']} carried an unreverted mutation "
                 f"({record['name']}); it has been restored.",
@@ -169,7 +198,7 @@ def run_mutations(
         signal.signal(signal.SIGINT, handler)
 
     for path in sorted({mutation.path for mutation in mutations}):
-        pristine[path] = path.read_text()
+        pristine[path], stamps[path] = snapshot(path)
     # The anchors are checked before any handler is installed: a missing anchor is a
     # stale script, not a detection result, and it must not be reported as one.
     # All of them are reported, not just the first: a code change that moves one anchor
@@ -224,6 +253,7 @@ def run_mutations(
                     "path": str(mutation.path.relative_to(root)),
                     "pristine": original,
                     "mutated": mutated,
+                    "stamp": list(stamps[mutation.path]),
                 }
             )
         )
@@ -248,7 +278,7 @@ def run_mutations(
             )
             tail = [ln for ln in proc.stdout.strip().splitlines() if ln.strip()][-1]
         finally:
-            mutation.path.write_text(original)
+            restore(mutation.path, original, stamps.get(mutation.path))
             manifest.unlink(missing_ok=True)
         detected = proc.returncode != 0
         # A green run that only skipped graded nothing: the behaviour the mutation removed

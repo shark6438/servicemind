@@ -2,7 +2,7 @@
   "schema_version": "phase4-proxy-release-v1.4",
   "status": "regression_baseline_created",
   "quality_certification": false,
-  "status_semantics": "this report certifies nothing about tenant-domain RAG quality. It reports proxy retrieval metrics on an external silver set and whether they held against the frozen proxy baseline. The \u00a74.1 closure gate is listed but not evaluated; see `gates`.",
+  "status_semantics": "this report certifies nothing about tenant-domain RAG quality. It reports proxy retrieval metrics on an external silver set and whether they held against the frozen proxy baseline. The §4.1 closure gate is listed but not evaluated; see `gates`.",
   "source": {
     "dataset": "nvidia/TechQA-RAG-Eval",
     "revision": "0b5bbc84b7f07d6d09d063130e90b716d8d4a32a",
@@ -225,65 +225,119 @@
       "actual": 0.6857,
       "operator": ">=",
       "threshold": 0.85,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md §4.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
       "applicable": false,
       "passed": null,
-      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
-      "required_input": "tenant-domain release set: private queries + expert qrels",
-      "reason": "not evaluated: this run scores an external silver set, not tenant qrels"
+      "blockers": [
+        "labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80",
+        "no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count",
+        "the set has no hard-negative stratum (§3.2 asks for 80)",
+        "the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart",
+        "the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
+      ],
+      "reason": "not evaluated: labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80; no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count; the set has no hard-negative stratum (§3.2 asks for 80); the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart; the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart; the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart; the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
     },
     "recall_at_10": {
       "actual": 0.7643,
       "operator": ">=",
       "threshold": 0.9,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md §4.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
       "applicable": false,
       "passed": null,
-      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
-      "required_input": "tenant-domain release set: private queries + expert qrels",
-      "reason": "not evaluated: this run scores an external silver set, not tenant qrels"
+      "blockers": [
+        "labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80",
+        "no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count",
+        "the set has no hard-negative stratum (§3.2 asks for 80)",
+        "the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart",
+        "the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
+      ],
+      "reason": "not evaluated: labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80; no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count; the set has no hard-negative stratum (§3.2 asks for 80); the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart; the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart; the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart; the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
     },
     "mrr_at_10": {
       "actual": 0.5848,
       "operator": ">=",
       "threshold": 0.75,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md §4.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
       "applicable": false,
       "passed": null,
-      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
-      "required_input": "tenant-domain release set: private queries + expert qrels",
-      "reason": "not evaluated: this run scores an external silver set, not tenant qrels"
+      "blockers": [
+        "labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80",
+        "no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count",
+        "the set has no hard-negative stratum (§3.2 asks for 80)",
+        "the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart",
+        "the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
+      ],
+      "reason": "not evaluated: labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80; no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count; the set has no hard-negative stratum (§3.2 asks for 80); the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart; the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart; the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart; the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
     },
     "ndcg_at_10": {
       "actual": 0.6279,
       "operator": ">=",
       "threshold": 0.8,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md §4.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
       "applicable": false,
       "passed": null,
-      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
-      "required_input": "tenant-domain release set: private queries + expert qrels",
-      "reason": "not evaluated: this run scores an external silver set, not tenant qrels"
+      "blockers": [
+        "labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80",
+        "no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count",
+        "the set has no hard-negative stratum (§3.2 asks for 80)",
+        "the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart",
+        "the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
+      ],
+      "reason": "not evaluated: labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80; no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count; the set has no hard-negative stratum (§3.2 asks for 80); the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart; the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart; the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart; the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
     },
     "impossible_abstention_rate": {
       "actual": 0.87,
       "operator": ">=",
       "threshold": 0.9,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md §4.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
       "applicable": false,
       "passed": null,
-      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
-      "required_input": "tenant-domain release set: private queries + expert qrels",
+      "blockers": [
+        "labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80",
+        "no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count",
+        "the set has no hard-negative stratum (§3.2 asks for 80)",
+        "the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart",
+        "the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
+      ],
       "reason": "not evaluated: production abstains through the Reviewer's semantic ABSTAIN on evidence sufficiency, not through a retrieval-score cut; on this set the score separates answerable from impossible at ROC-AUC 0.6035 with a best-case balanced accuracy of 0.5979 over every cut"
     },
     "answerable_answer_rate": {
       "actual": 0.275,
       "operator": ">=",
       "threshold": 0.9,
+      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md §4.1",
+      "required_input": "tenant-domain release set: private queries + expert qrels",
       "applicable": false,
       "passed": null,
-      "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a74.1",
-      "required_input": "tenant-domain release set: private queries + expert qrels",
+      "blockers": [
+        "labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80",
+        "no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count",
+        "the set has no hard-negative stratum (§3.2 asks for 80)",
+        "the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart",
+        "the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart",
+        "the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
+      ],
       "reason": "not evaluated: production abstains through the Reviewer's semantic ABSTAIN on evidence sufficiency, not through a retrieval-score cut; on this set the score separates answerable from impossible at ROC-AUC 0.6035 with a best-case balanced accuracy of 0.5979 over every cut"
     }
   },
   "proxy_regression": {
-    "rule": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md \u00a76.4 (no further degradation)",
+    "rule": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md §6.4 (no further degradation)",
     "baseline_file": "evaluation/reports/phase4_proxy_regression_baseline.json",
     "tolerance": 0.0,
     "metrics": {
@@ -323,10 +377,19 @@
   "limitations": [
     "public technical-support distribution, not private tenant query distribution",
     "source-provided silver labels, not independent ServiceMind human qrels",
-    "the \u00a74.1 closure gate is reported but not evaluated here; it needs private tenant queries with expert qrels",
+    "the §4.1 closure gate is reported but not evaluated here; it needs private tenant queries with expert qrels",
     "each answerable query carries a single relevant filename, so a rank-2 hit scores the same as a miss under Recall@10",
-    "passages use the pinned BGE tokenizer instead of cl100k, while preserving the production 420-token/48-overlap shape",
+    "passages use the pinned BGE tokenizer instead of cl100k, at this harness's own 420-token/48-overlap shape -- production chunks at 480/320/120 with the same 48-token overlap, so the two are similar but not the same chunking and this arm is not the production pipeline",
     "dense document ranking uses exact max pooling over child passages; production uses approximate OpenSearch HNSW before parent expansion",
     "abstention is measured as a retrieval-score cut, which the data shows cannot separate answerable from impossible here; production refuses through the Reviewer's semantic ABSTAIN instead"
+  ],
+  "release_gate_blockers": [
+    "labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80",
+    "no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count",
+    "the set has no hard-negative stratum (§3.2 asks for 80)",
+    "the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart",
+    "the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart",
+    "the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart",
+    "the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
   ]
 }

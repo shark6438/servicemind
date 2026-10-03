@@ -391,7 +391,15 @@ def initial(goal: str, *, write: bool = False) -> dict:
     }
 
 
-def services(supervisor=None, planner=None, action=None, executor=None, phase5=None, reviewer=None):
+def services(
+    supervisor=None,
+    planner=None,
+    action=None,
+    executor=None,
+    phase5=None,
+    reviewer=None,
+    knowledge=None,
+):
     return SupervisorRuntimeServices(
         router=FastPathRouter(),
         supervisor=supervisor or StateDrivenSupervisor(),
@@ -399,7 +407,7 @@ def services(supervisor=None, planner=None, action=None, executor=None, phase5=N
         policy=SupervisorPolicy(),
         dispatcher=TaskDispatcher(),
         data=FakeData(),
-        knowledge=FakeKnowledge(),
+        knowledge=knowledge or FakeKnowledge(),
         analysis=FakeAnalysis(),
         reviewer=reviewer or FakeReviewer(),
         action=action or CountingAction(),
@@ -936,9 +944,21 @@ async def test_supervisor_replan_before_any_review_does_not_crash() -> None:
     assert decisions[1] == "replan"
 
 
+#: Every long failure message below ends with this. ``bounded_error_text`` keeps both ends
+#: and drops the middle, so a marker at the very end is what a head-only clip loses -- and a
+#: head-only clip is the regression these three tests exist to catch.
+LONG_FAILURE_MARKER = "<-- cause, at the end"
+
+#: Long enough that the clip has to fire, so "the reason is the clipped one" is testable
+#: rather than asserted about the source.
+LONG_FAILURE_BODY = "filler " * 500
+
+
 class BrokenReplanner(FakePlanner):
     async def revise_plan(self, **kwargs):
-        raise ValueError("replanner model returned an invalid revision")
+        raise ValueError(
+            f"replanner model returned an invalid revision: {LONG_FAILURE_BODY} {LONG_FAILURE_MARKER}"
+        )
 
 
 class RetrieveMoreSupervisor(StateDrivenSupervisor):
@@ -1101,6 +1121,32 @@ async def test_replan_double_failure_finalizes_without_raw_runtime_error() -> No
     assert event_types.count("run.failed") == 1
     assert event_types[-1] == "run.failed"
 
+    # The rejection detail is the shared both-ends clip, observed at the ledger rather than
+    # read off the source. A raw ``str(exc)`` here is not a smaller version of this: it is a
+    # 3500-character line, and a head-only ``[:200]`` drops the marker along with the cause.
+    reasons = [
+        payload["reason"]
+        for event, payload in FakeRepository.events
+        if event == "replanner.proposal_rejected"
+    ]
+    assert reasons, "the two replan attempts are both on the timeline"
+    for reason in reasons:
+        assert len(reason) <= 1000
+        assert "characters elided" in reason
+        assert reason.endswith(" " + LONG_FAILURE_MARKER), (
+            "the end of the detail is where the cause is; a head-only clip drops exactly this"
+        )
+
+
+class UnretrievableKnowledge:
+    """A knowledge branch whose model path fails with more to say than the ledger holds."""
+
+    async def retrieve(self, *, tenant_id, query, retrieval_round=0):
+        del tenant_id, query, retrieval_round
+        raise RuntimeError(
+            f"knowledge model transport failed: {LONG_FAILURE_BODY} {LONG_FAILURE_MARKER}"
+        )
+
 
 class BrokenSupervisor:
     """A control plane whose model will not answer the decision schema."""
@@ -1112,9 +1158,12 @@ class BrokenSupervisor:
         del state_view, policy_feedback
         self.calls += 1
         # The shape the live escape takes: the governed gateway spent its schema-repair
-        # attempt and re-raised the violation it could not talk the model out of.
+        # attempt and re-raised the violation it could not talk the model out of. Padded
+        # with the fields a model invents until the rendered violation is longer than the
+        # clip, so the test can see which end of it survives.
+        invented = {f"invented_field_{index}": "value" for index in range(12)}
         return SupervisorDecision.model_validate(
-            {"confidence": 2, "rationale_summary": "over the documented maximum"}
+            {"confidence": 2, "rationale_summary": "over the documented maximum", **invented}
         )
 
 
@@ -1132,9 +1181,12 @@ class UnassemblableContext:
     async def build_context(self, *, state, task, invocation, agent):
         del state, task, invocation
         if agent is self.agent:
+            # The refusal carries the governed item that did not fit, which is exactly the
+            # case where its message is longer than the ledger's clip.
             raise ContextAssemblyError(
                 "required_item_exceeds_token_budget",
-                f"required context item exceeds token budget: state for {agent.value}",
+                f"required context item exceeds token budget: state for {agent.value}: "
+                f"{LONG_FAILURE_BODY} {LONG_FAILURE_MARKER}",
             )
         return None
 
@@ -1172,6 +1224,19 @@ async def test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_
     )
     assert failure["code"] == "required_item_exceeds_token_budget"
     assert failure["agent"] == "reviewer"
+    # The event's own detail, and the control plane's copy of it, are the shared clip.
+    assert len(failure["reason"]) <= 1000
+    assert "characters elided" in failure["reason"]
+    assert failure["reason"].endswith(" " + LONG_FAILURE_MARKER)
+    control_errors = [
+        item
+        for item in result["final_result"]["control"]["errors"]
+        if item["error_type"] == "ContextAssemblyError"
+    ]
+    assert control_errors, "the refusal is also on the in-state control record"
+    for item in control_errors:
+        assert len(item["reason"]) <= 1000
+        assert item["reason"].endswith(" " + LONG_FAILURE_MARKER)
 
 
 @pytest.mark.asyncio
@@ -1336,6 +1401,14 @@ async def test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_g
     assert rejection["error_type"] == "ValidationError"
     assert rejection["error_code"] == "MODEL_SCHEMA_INVALID"
     assert rejection["attempt"] == 1
+    # A pydantic violation renders the whole completion first and the verdict last, so the
+    # end is the diagnosable half. This one is 2900 characters; the ledger keeps both ends
+    # and says it cut.
+    assert len(rejection["reason"]) <= 1000
+    assert "characters elided" in rejection["reason"]
+    assert "invented_field_11" in rejection["reason"], (
+        "the last schema error is the one a head-only clip loses"
+    )
 
 
 @pytest.mark.asyncio
@@ -1510,3 +1583,36 @@ async def test_a_run_that_joined_nothing_still_publishes_the_envelope() -> None:
     assert _is_envelope(payload), f"finalize wrote {type(payload).__name__} instead"
     assert payload["items"] == []
     assert result["final_result"]["termination_code"] == "deadline_exceeded"
+
+
+@pytest.mark.asyncio
+async def test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its_end() -> None:
+    """The knowledge branch is the third place the graph records why an agent degraded.
+
+    It recorded ``str(error)[:300]`` until 2026-10-01 while the other two went through
+    ``foundation.errors.bounded_error_text``. Both are truncation, and that is the trap:
+    an ``OutputParserException`` opens with the entire completion and ends with the
+    schema violation, so a head-only slice keeps exactly the part that says nothing about
+    this failure. Observed here at the ledger, because that is where an operator reads it.
+    """
+    graph = build_supervisor_graph(services(knowledge=UnretrievableKnowledge()))
+    # The goal names a runbook because that is what makes the fake planner schedule the
+    # knowledge task at all; without it the branch is never dispatched and this test would
+    # pass over an empty timeline.
+    await graph.ainvoke(initial("Analyze VPN with the relevant runbook"))
+
+    completions = [
+        payload
+        for event, payload in FakeRepository.events
+        if event == "agent.completed" and payload["agent_name"] == "knowledge"
+    ]
+    assert completions, "the knowledge task is on the timeline"
+    degraded = [item for item in completions if item["status"] == "degraded"]
+    assert degraded, "a knowledge branch that raised is recorded as degraded"
+    for item in degraded:
+        assert item["failure_code"] == "RuntimeError"
+        assert len(item["failure_detail"]) <= 1000
+        assert "characters elided" in item["failure_detail"]
+        assert item["failure_detail"].endswith(" " + LONG_FAILURE_MARKER), (
+            "a head-only slice records the completion and drops the cause"
+        )

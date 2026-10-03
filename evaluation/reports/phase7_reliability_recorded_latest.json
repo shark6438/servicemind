@@ -1,0 +1,4855 @@
+{
+  "report": "phase7_reliability_recorded",
+  "generated_at": "2026-10-02T16:25:32.992615+00:00",
+  "inputs": {
+    "replay_directory": "/data/shihongye/servicemind/evaluation/load/replays",
+    "observations": 120,
+    "data_revisions": {
+      "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)": 120
+    },
+    "scorer_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(ccfc9889821c)",
+    "revisions": {
+      "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)": 120
+    },
+    "tiers": {
+      "tier-1": 20,
+      "tier-10": 60,
+      "tier-5": 40
+    }
+  },
+  "observations": [
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-001",
+      "subject": "globex-analyst-g3",
+      "run_id": "7c126e89-29e0-47f7-bd5d-25192ae1a1f5",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-SPLIT-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.91,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:16.177026+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-001.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-002",
+      "subject": "globex-analyst-g3",
+      "run_id": "204fa89b-8b97-4984-b949-c78e233785df",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-RAP-V2",
+        "KB-Q-LIC-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-SPLIT-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 34.304,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:31.571853+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-002.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-003",
+      "subject": "globex-analyst-g3",
+      "run_id": "43c1f963-9d46-41b9-bcfe-93660bb7ad1d",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.387,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:15.656099+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-003.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-004",
+      "subject": "globex-analyst-g3",
+      "run_id": "39e17b0d-5977-4459-a438-170b123a56d1",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-Q-ROLLBACK",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-DB-FAILOVER"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.912,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:16.181547+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-004.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-005",
+      "subject": "globex-analyst-g3",
+      "run_id": "f136cb44-e38e-4ffd-b972-17ce5778fa9f",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-Q-PASSWORD",
+        "KB-Q-G3-ESCALATE",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 32.227,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:29.496436+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-005.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-006",
+      "subject": "globex-analyst-g3",
+      "run_id": "65512ca3-d183-4a39-942a-3486978a6aa0",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-RAP-V2",
+        "KB-Q-DB-FAILOVER",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 34.699,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:31.969379+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-006.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-007",
+      "subject": "globex-analyst-g3",
+      "run_id": "9f415de4-8691-483f-82d0-536fa9057f21",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-SPLIT-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.418,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:16.688802+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-007.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-008",
+      "subject": "globex-analyst-g3",
+      "run_id": "0ca61541-624b-49bd-9b9a-c7a17f643d34",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-DB-FAILOVER",
+        "KB-Q-VPN-CONN",
+        "KB-Q-G3-ESCALATE",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 38.566,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:35.837846+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-008.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-009",
+      "subject": "globex-analyst-g3",
+      "run_id": "031725b4-befe-4169-9cd0-50324ccce573",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-G3-COMPLIANCE"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.297,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:16.569025+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-009.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-010",
+      "subject": "globex-analyst-g3",
+      "run_id": "add8efb6-c698-46c1-b329-a5ef2c641200",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-SPLIT-V2",
+        "KB-Q-ENC-V3"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 20.321,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:17.593732+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-010.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-011",
+      "subject": "globex-analyst-g3",
+      "run_id": "7727c44f-6ec8-4f0c-8849-30016c9fcc4c",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-G3"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.055,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:34.712405+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-011.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-012",
+      "subject": "globex-analyst-g3",
+      "run_id": "9109abc7-e6b8-4246-9acd-47ca70a73838",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 34.718,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:50.895927+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-012.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-013",
+      "subject": "globex-analyst-g3",
+      "run_id": "8819325a-3737-4b5c-b632-b1788ac11a55",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-ENC-V3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 35.826,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:52.008115+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-013.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-014",
+      "subject": "globex-analyst-g3",
+      "run_id": "2803c37b-2ee7-4e4a-9ff9-ac423636f72f",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-ENC-V3",
+        "KB-Q-G3-SATELLITE",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 31.082,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:47.651844+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-014.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-015",
+      "subject": "globex-analyst-g3",
+      "run_id": "92ff68ac-7b06-45b4-94a1-ca9037b347e0",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-RET-V4",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 16.991,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:33.680569+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-015.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-016",
+      "subject": "globex-analyst-g3",
+      "run_id": "1c919384-c820-4a66-848e-3801d16c86ad",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-ENC-V3",
+        "KB-Q-DB-BACKUP",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 20.619,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:38.213916+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-016.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-017",
+      "subject": "globex-analyst-g3",
+      "run_id": "3636fcde-3f7b-4814-b4a5-17671ca88dbd",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2",
+        "KB-Q-G3-COMPLIANCE"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.177,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:48.674698+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-017.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-018",
+      "subject": "globex-analyst-g3",
+      "run_id": "17708378-1fdc-4b48-bd1f-26b67365fca6",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.166,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:50.738371+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-018.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-019",
+      "subject": "globex-analyst-g3",
+      "run_id": "f4893eca-78e6-47b8-bd80-a626af165bb1",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-DB-FAILOVER",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 36.549,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:08.519293+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-019.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 0,
+      "case_id": "Q-020",
+      "subject": "globex-analyst-g3",
+      "run_id": "3067631c-848a-4e00-82c4-37aab93420d1",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-DB-FAILOVER",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 34.832,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:08.513137+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r0__Q-020.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-001",
+      "subject": "globex-analyst-g3",
+      "run_id": "f1201ba6-a5dc-4ba2-a9ba-44b5542c6f96",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-G3-IPAM",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.172,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:52.885077+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-001.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-002",
+      "subject": "globex-analyst-g3",
+      "run_id": "72a736fe-eae1-4b3f-a731-e0c3a385376e",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-RAP-V2",
+        "KB-Q-LIC-V2",
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 34.987,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:10.826098+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-002.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-003",
+      "subject": "globex-analyst-g3",
+      "run_id": "e62cdb48-41dd-4f72-8ac0-4cd9ecbb3628",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.96,
+      "errors": [],
+      "observed_at": "2026-10-02T15:54:56.174480+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-003.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-004",
+      "subject": "globex-analyst-g3",
+      "run_id": "c812e106-b3d9-4f53-bc2d-e73d8b69d8cf",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-Q-ROLLBACK",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-SEVERITY"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.711,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:05.363865+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-004.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-005",
+      "subject": "globex-analyst-g3",
+      "run_id": "778b5621-abe1-4971-929d-6b495915e08f",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-PASSWORD",
+        "KB-Q-G3-ESCALATE",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 16.686,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:05.361172+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-005.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-006",
+      "subject": "globex-analyst-g3",
+      "run_id": "c5cdeb79-8509-4ed8-b4c1-df1a95338866",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-DB-FAILOVER",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 35.6,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:26.339669+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-006.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-007",
+      "subject": "globex-analyst-g3",
+      "run_id": "90b8adfe-82dc-48c1-a705-799dacd55910",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-SPLIT-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.908,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:09.804911+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-007.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-008",
+      "subject": "globex-analyst-g3",
+      "run_id": "8ca7f151-5d39-4e9d-8b2e-a3611a4ba014",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-DB-FAILOVER",
+        "KB-Q-VULN-V2",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.799,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:09.808063+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-008.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-009",
+      "subject": "globex-analyst-g3",
+      "run_id": "e0e67481-6983-4285-b8cd-782efa49f7af",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-Q-DB-FAILOVER"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.697,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:11.582942+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-009.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-010",
+      "subject": "globex-analyst-g3",
+      "run_id": "e7bbf41c-22dd-4763-9e88-1982bdd16a56",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-ENC-V3",
+        "KB-Q-SPLIT-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.787,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:14.961876+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-010.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-011",
+      "subject": "globex-analyst-g3",
+      "run_id": "99b61b22-9909-4112-ad24-894afa9e66c5",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-RAP-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.906,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:24.268482+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-011.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-012",
+      "subject": "globex-analyst-g3",
+      "run_id": "fe3eb46b-fac6-4502-b821-6d9b4e9711cd",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 32.972,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:38.336627+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-012.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-013",
+      "subject": "globex-analyst-g3",
+      "run_id": "e4da8190-b6bc-40ac-8809-46885d184e8b",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-ENC-V3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 35.695,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:44.209418+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-013.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-014",
+      "subject": "globex-analyst-g3",
+      "run_id": "e62ee398-e7e4-48c1-b233-2494887ffb07",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-ENC-V3",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-G3-SATELLITE",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 32.556,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:41.075468+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-014.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-015",
+      "subject": "globex-analyst-g3",
+      "run_id": "9f5bf596-c6e3-4036-85af-1c0696419b97",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-RET-V4",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.842,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:28.647776+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-015.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-016",
+      "subject": "globex-analyst-g3",
+      "run_id": "086841b3-3199-4bd3-8790-ef6e9e06db41",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-ENC-V3",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-RET-V4",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-Q-SVCACCT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.658,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:40.466780+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-016.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-017",
+      "subject": "globex-analyst-g3",
+      "run_id": "5a8cd8fc-cc57-4c53-be54-3c9a96793609",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2",
+        "KB-Q-G3-COMPLIANCE"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.844,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:29.670520+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-017.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-018",
+      "subject": "globex-analyst-g3",
+      "run_id": "e143a3eb-3f22-475f-b5bd-2ed956d86df8",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.134,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:30.718197+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-018.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-019",
+      "subject": "globex-analyst-g3",
+      "run_id": "e90c1057-4f7b-4a65-a0d4-2bafa19aed98",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-PASSWORD",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.925,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:45.887601+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-019.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 1,
+      "case_id": "Q-020",
+      "subject": "globex-analyst-g3",
+      "run_id": "96ca495d-0049-4ce5-a077-471d867d3452",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-DB-FAILOVER",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 33.506,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:57.775166+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r1__Q-020.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-001",
+      "subject": "globex-analyst-g3",
+      "run_id": "946dff88-6993-49a2-9fa1-1a751a45e36e",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-RAP-V2",
+        "KB-Q-SPLIT-V2",
+        "KB-Q-G3-IPAM",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.379,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:43.719990+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-001.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-002",
+      "subject": "globex-analyst-g3",
+      "run_id": "41710175-0b66-452e-b67c-986af27475a0",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-RAP-V2",
+        "KB-Q-LIC-V2",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 32.371,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:01.019676+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-002.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-003",
+      "subject": "globex-analyst-g3",
+      "run_id": "cf7823db-06e6-48e6-826c-3b8282ca6214",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.526,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:49.197242+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-003.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-004",
+      "subject": "globex-analyst-g3",
+      "run_id": "70a0b90b-50e7-4573-9620-1d1ecef40b44",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-Q-ROLLBACK",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-PASSWORD"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.475,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:49.193900+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-004.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-005",
+      "subject": "globex-analyst-g3",
+      "run_id": "34a76d78-b91d-4888-a3e3-255c300527c2",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-Q-PASSWORD",
+        "KB-Q-STORAGE",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.371,
+      "errors": [],
+      "observed_at": "2026-10-02T15:55:56.708778+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-005.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-006",
+      "subject": "globex-analyst-g3",
+      "run_id": "1418a4a0-fe3f-4f0b-b753-142ca2b937c0",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-DB-FAILOVER",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 34.269,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:14.736097+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-006.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-007",
+      "subject": "globex-analyst-g3",
+      "run_id": "8d38e99d-9432-42c0-afab-50c8344b47e2",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-Q-SPLIT-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 32.629,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:13.706059+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-007.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-008",
+      "subject": "globex-analyst-g3",
+      "run_id": "08d535f9-7e0f-48fc-b9fc-14c91cb56b4c",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-VULN-V2",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-Q-ONCALL-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.412,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:02.132835+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-008.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-009",
+      "subject": "globex-analyst-g3",
+      "run_id": "f79903ae-3e0a-4e77-a8ba-abdecb795a43",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-Q-DB-FAILOVER"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 21.172,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:05.382001+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-009.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-010",
+      "subject": "globex-analyst-g3",
+      "run_id": "ec2ed949-6f75-408a-a85c-29768b7dfbf1",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-SPLIT-V2",
+        "KB-Q-ENC-V3"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.27,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:03.158540+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-010.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-011",
+      "subject": "globex-analyst-g3",
+      "run_id": "0b1b2c99-acae-4bdb-84aa-08a17b8ea188",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-RAP-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.332,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:08.527054+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-011.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-012",
+      "subject": "globex-analyst-g3",
+      "run_id": "bf32e8f2-35fc-4ec9-9f1e-a62fe9c1346c",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 31.077,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:20.274600+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-012.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-013",
+      "subject": "globex-analyst-g3",
+      "run_id": "3cee7a20-7e67-4462-b09b-e69c91da373f",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-ENC-V3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 33.382,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:30.091932+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-013.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-014",
+      "subject": "globex-analyst-g3",
+      "run_id": "7924c91d-3a9d-4532-b7c7-ee085be84c65",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-ENC-V3",
+        "KB-Q-DB-BACKUP",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.123,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:27.898556+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-014.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-015",
+      "subject": "globex-analyst-g3",
+      "run_id": "5f4a135d-1f21-4d13-8ace-bcc9ee1a0412",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-RET-V4",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 31.663,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:32.684060+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-015.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-016",
+      "subject": "globex-analyst-g3",
+      "run_id": "5a61c530-226a-4ba2-8edb-0eae0ee632a5",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-ENC-V3",
+        "KB-Q-DB-BACKUP",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 32.589,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:34.722645+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-016.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-017",
+      "subject": "globex-analyst-g3",
+      "run_id": "deefca8b-5ea1-4111-82f6-775d7bea19f8",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2",
+        "KB-Q-PASSWORD"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.106,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:20.265254+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-017.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-018",
+      "subject": "globex-analyst-g3",
+      "run_id": "4a295b1e-35d7-4b06-b826-422575970680",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.978,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:23.360630+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-018.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-019",
+      "subject": "globex-analyst-g3",
+      "run_id": "193c6801-3a40-46c6-a752-b9f10bd56fd0",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-RAP-V2",
+        "KB-Q-DB-FAILOVER",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-G3-IPAM"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 31.007,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:39.535212+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-019.json"
+    },
+    {
+      "tier": "tier-10",
+      "concurrency": 10,
+      "repeat_index": 2,
+      "case_id": "Q-020",
+      "subject": "globex-analyst-g3",
+      "run_id": "4d7c97eb-f9b4-4332-9208-d9ad4d6d2e4a",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-DB-FAILOVER",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 33.014,
+      "errors": [],
+      "observed_at": "2026-10-02T15:56:46.720329+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-10__r2__Q-020.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-001",
+      "subject": "globex-analyst-g3",
+      "run_id": "2df6646a-109a-428a-8a03-19ee3ac6f1f3",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-RAP-V2",
+        "KB-Q-SPLIT-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.032,
+      "errors": [],
+      "observed_at": "2026-10-02T15:42:32.650433+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-001.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-002",
+      "subject": "globex-analyst-g3",
+      "run_id": "4321cdf7-14b9-49f5-926a-b20ef43d1ef5",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-RAP-V2",
+        "KB-Q-LIC-V2",
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.647,
+      "errors": [],
+      "observed_at": "2026-10-02T15:43:03.298071+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-002.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-003",
+      "subject": "globex-analyst-g3",
+      "run_id": "1fdba782-9902-464d-852c-bac33f18e684",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.415,
+      "errors": [],
+      "observed_at": "2026-10-02T15:43:20.713653+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-003.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-004",
+      "subject": "globex-analyst-g3",
+      "run_id": "4e453f8b-9505-48ed-9d00-88ac0df8c3fe",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-Q-ROLLBACK",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-PASSWORD",
+        "KB-Q-DB-FAILOVER"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.46,
+      "errors": [],
+      "observed_at": "2026-10-02T15:43:38.174687+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-004.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-005",
+      "subject": "globex-analyst-g3",
+      "run_id": "7d843398-dbea-46d2-bc4e-aa07dd8d2dfd",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-Q-G3-ESCALATE",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-STORAGE",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.671,
+      "errors": [],
+      "observed_at": "2026-10-02T15:44:08.846845+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-005.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-006",
+      "subject": "globex-analyst-g3",
+      "run_id": "e1b06ef4-e843-47f5-be82-2b5693aa0317",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-DB-FAILOVER",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 31.641,
+      "errors": [],
+      "observed_at": "2026-10-02T15:44:40.489310+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-006.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-007",
+      "subject": "globex-analyst-g3",
+      "run_id": "75a8222e-2592-4546-aa5a-cc33eaa87ca8",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-Q-SPLIT-V2",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 33.757,
+      "errors": [],
+      "observed_at": "2026-10-02T15:45:14.247023+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-007.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-008",
+      "subject": "globex-analyst-g3",
+      "run_id": "88443ad5-f29e-46be-ba48-30d4bca3152e",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-VULN-V2",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.408,
+      "errors": [],
+      "observed_at": "2026-10-02T15:45:31.655920+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-008.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-009",
+      "subject": "globex-analyst-g3",
+      "run_id": "ef8e0efc-b926-40fe-b1cd-c648c9a4f09a",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-Q-G3-STOCK"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.407,
+      "errors": [],
+      "observed_at": "2026-10-02T15:45:50.063084+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-009.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-010",
+      "subject": "globex-analyst-g3",
+      "run_id": "51aff586-c76c-42cd-bfec-d1f582488b76",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-SPLIT-V2",
+        "KB-Q-DB-FAILOVER"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 16.402,
+      "errors": [],
+      "observed_at": "2026-10-02T15:46:06.465780+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-010.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-011",
+      "subject": "globex-analyst-g3",
+      "run_id": "b61df7b1-fb59-4d0c-845a-3bb6e68b214e",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.443,
+      "errors": [],
+      "observed_at": "2026-10-02T15:46:23.909850+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-011.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-012",
+      "subject": "globex-analyst-g3",
+      "run_id": "9f297497-9772-4454-ae9d-422535124605",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.741,
+      "errors": [],
+      "observed_at": "2026-10-02T15:46:54.651817+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-012.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-013",
+      "subject": "globex-analyst-g3",
+      "run_id": "6e596c2f-d47a-41a7-8a9c-b25eeea29e91",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-ENC-V3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.693,
+      "errors": [],
+      "observed_at": "2026-10-02T15:47:25.345681+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-013.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-014",
+      "subject": "globex-analyst-g3",
+      "run_id": "6cdda1d1-d393-48b2-8392-f5119fae0893",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-ENC-V3",
+        "KB-Q-G3-SATELLITE",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 31.707,
+      "errors": [],
+      "observed_at": "2026-10-02T15:47:57.053652+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-014.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-015",
+      "subject": "globex-analyst-g3",
+      "run_id": "0bdfb940-cee1-48f1-9bac-af7608d8466b",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-RET-V4",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 15.38,
+      "errors": [],
+      "observed_at": "2026-10-02T15:48:12.434930+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-015.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-016",
+      "subject": "globex-analyst-g3",
+      "run_id": "0f264daf-b520-49c7-98b9-4d83a47d90e4",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-ENC-V3",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-RET-V4",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-Q-SVCACCT",
+        "KB-GLOBEX-VPN-MFA-G3"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 29.639,
+      "errors": [],
+      "observed_at": "2026-10-02T15:48:42.074682+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-016.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-017",
+      "subject": "globex-analyst-g3",
+      "run_id": "ff8fe86c-faf3-4e01-90db-5d08b0448327",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2",
+        "KB-Q-G3-COMPLIANCE"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.406,
+      "errors": [],
+      "observed_at": "2026-10-02T15:48:59.482020+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-017.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-018",
+      "subject": "globex-analyst-g3",
+      "run_id": "aa533f9b-c002-4c77-8f6d-171e499b7055",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.412,
+      "errors": [],
+      "observed_at": "2026-10-02T15:49:17.894716+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-018.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-019",
+      "subject": "globex-analyst-g3",
+      "run_id": "d07099c1-a6a8-4f07-9cad-827aaba01286",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-DB-FAILOVER",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 32.691,
+      "errors": [],
+      "observed_at": "2026-10-02T15:49:50.586268+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-019.json"
+    },
+    {
+      "tier": "tier-1",
+      "concurrency": 1,
+      "repeat_index": 0,
+      "case_id": "Q-020",
+      "subject": "globex-analyst-g3",
+      "run_id": "3c75f970-2376-46b0-ba7d-df9b51facb8b",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-DB-FAILOVER",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 33.74,
+      "errors": [],
+      "observed_at": "2026-10-02T15:50:24.326521+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-1__r0__Q-020.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-001",
+      "subject": "globex-analyst-g3",
+      "run_id": "2007d5c9-f316-41ee-bc24-10e169706293",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-SPLIT-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.584,
+      "errors": [],
+      "observed_at": "2026-10-02T15:50:41.911822+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-001.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-002",
+      "subject": "globex-analyst-g3",
+      "run_id": "e73ad31a-70a8-4c8a-8a4f-3030287eb39a",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-RAP-V2",
+        "KB-Q-LIC-V2",
+        "KB-Q-MFA-ENROL",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 35.239,
+      "errors": [],
+      "observed_at": "2026-10-02T15:50:59.567917+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-002.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-003",
+      "subject": "globex-analyst-g3",
+      "run_id": "cb210633-2aca-4dfe-9404-a1d321ab4fba",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.875,
+      "errors": [],
+      "observed_at": "2026-10-02T15:50:42.205331+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-003.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-004",
+      "subject": "globex-analyst-g3",
+      "run_id": "1f6ea992-fe0c-49c6-b788-d01127a82e9b",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-Q-ROLLBACK",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-SEVERITY"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.883,
+      "errors": [],
+      "observed_at": "2026-10-02T15:50:42.213118+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-004.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-005",
+      "subject": "globex-analyst-g3",
+      "run_id": "e774b10a-e0ea-4424-be68-9008712f10d0",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-PASSWORD",
+        "KB-Q-G3-ESCALATE",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.879,
+      "errors": [],
+      "observed_at": "2026-10-02T15:50:42.210509+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-005.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-006",
+      "subject": "globex-analyst-g3",
+      "run_id": "20f99ae2-42f4-4066-836b-8c8c515ed685",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-Q-RAP-V2",
+        "KB-Q-DB-FAILOVER",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 34.997,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:16.910091+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-006.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-007",
+      "subject": "globex-analyst-g3",
+      "run_id": "8a04eb67-3a19-42cf-85bd-0768ee09d16a",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-SPLIT-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.797,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:02.003121+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-007.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-008",
+      "subject": "globex-analyst-g3",
+      "run_id": "ff98cde2-a68d-4ffd-b314-5b1159c2fc16",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-VULN-V2",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.733,
+      "errors": [],
+      "observed_at": "2026-10-02T15:50:59.944124+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-008.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-009",
+      "subject": "globex-analyst-g3",
+      "run_id": "0775eb3a-2454-485c-b90b-5a1f64210572",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-Q-DB-FAILOVER"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.798,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:02.011920+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-009.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-010",
+      "subject": "globex-analyst-g3",
+      "run_id": "7e5f4490-7c39-4bf7-94ae-02a7643684ae",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-ENC-V3",
+        "KB-Q-SPLIT-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.513,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:17.082192+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-010.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-011",
+      "subject": "globex-analyst-g3",
+      "run_id": "01f806cc-b7e7-4674-be05-a746520a71ec",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-G3"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.441,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:17.385626+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-011.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-012",
+      "subject": "globex-analyst-g3",
+      "run_id": "2aae9e19-9310-4c76-9cbc-f3ad28974ef4",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 33.132,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:35.135477+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-012.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-013",
+      "subject": "globex-analyst-g3",
+      "run_id": "5c013b83-2814-40b0-91f9-b1ad47607651",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-ENC-V3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 29.989,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:32.001304+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-013.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-014",
+      "subject": "globex-analyst-g3",
+      "run_id": "5dbde4d5-6d70-4bb0-9e63-76be0c421d82",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-ENC-V3",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-G3-SATELLITE",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 29.756,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:46.667709+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-014.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-015",
+      "subject": "globex-analyst-g3",
+      "run_id": "bee5df22-7b8d-417e-a8cf-587fa96d6aad",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-RET-V4",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.479,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:34.562213+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-015.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-016",
+      "subject": "globex-analyst-g3",
+      "run_id": "36b50f01-4d6a-40d8-8729-258b17ad842d",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-ENC-V3",
+        "KB-Q-RET-V4",
+        "KB-Q-DB-BACKUP",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.167,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:47.553785+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-016.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-017",
+      "subject": "globex-analyst-g3",
+      "run_id": "0fe672fc-a2e7-45ae-9044-e54c1b389f05",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2",
+        "KB-Q-PASSWORD"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.598,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:49.600367+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-017.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-018",
+      "subject": "globex-analyst-g3",
+      "run_id": "105fd3d9-cf53-44c1-b972-c3036868d19b",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.495,
+      "errors": [],
+      "observed_at": "2026-10-02T15:51:52.058300+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-018.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-019",
+      "subject": "globex-analyst-g3",
+      "run_id": "2d04c658-3fbc-45ad-a3e8-d4683750fe95",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-RAP-V2",
+        "KB-Q-DB-FAILOVER",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-G3"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 35.002,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:10.138190+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-019.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 0,
+      "case_id": "Q-020",
+      "subject": "globex-analyst-g3",
+      "run_id": "338b44be-f9fd-4ebc-ba2f-287879bbfb9b",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-VPN-CONN",
+        "KB-Q-G3-ESCALATE",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 31.853,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:18.521590+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r0__Q-020.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-001",
+      "subject": "globex-analyst-g3",
+      "run_id": "8aa30dbc-05cc-491d-aa65-667cd09a8d47",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-SPLIT-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 19.527,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:07.082159+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-001.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-002",
+      "subject": "globex-analyst-g3",
+      "run_id": "4ef6c46b-6d48-4249-9c8e-16a149134b26",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-RAP-V2",
+        "KB-Q-LIC-V2",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-G3-COMPLIANCE"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.989,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:20.590465+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-002.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-003",
+      "subject": "globex-analyst-g3",
+      "run_id": "cc2676e6-09ca-468d-9b13-4634687b5896",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.478,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:09.537309+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-003.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-004",
+      "subject": "globex-analyst-g3",
+      "run_id": "b45bbf05-795d-494b-8732-96defacbcd1e",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-Q-ROLLBACK",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-PASSWORD",
+        "KB-Q-DB-FAILOVER"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 16.624,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:23.706396+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-004.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-005",
+      "subject": "globex-analyst-g3",
+      "run_id": "2e4f2aaa-fed7-42b1-9b52-ba095ab00346",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-Q-G3-ESCALATE",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.91,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:40.447964+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-005.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-006",
+      "subject": "globex-analyst-g3",
+      "run_id": "ce256736-8942-442b-b444-64ec71f03fea",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-RAP-V2",
+        "KB-Q-DB-FAILOVER",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 33.405,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:43.543268+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-006.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-007",
+      "subject": "globex-analyst-g3",
+      "run_id": "b10c8501-da1e-4d37-9208-127ff89091b0",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-SPLIT-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.259,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:48.781879+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-007.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-008",
+      "subject": "globex-analyst-g3",
+      "run_id": "7879db9a-a321-4359-845f-edb28291fa83",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-VULN-V2",
+        "KB-Q-PASSWORD",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 16.706,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:37.297263+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-008.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-009",
+      "subject": "globex-analyst-g3",
+      "run_id": "a1ec6b31-38b6-42a1-bd46-945a5bda0cda",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-G3-COMPLIANCE"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.781,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:41.488215+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-009.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-010",
+      "subject": "globex-analyst-g3",
+      "run_id": "92721562-6c2f-4650-8822-a7a1e8d91a49",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-VPN-CONN",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-SPLIT-V2",
+        "KB-Q-ENC-V3"
+      ],
+      "expected_citations": [
+        "KB-Q-VPN-CONN"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 16.687,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:53.985065+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-010.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-011",
+      "subject": "globex-analyst-g3",
+      "run_id": "2e127a0b-a96e-4c8f-bb06-1ff7f36b3290",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-RAP-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 18.736,
+      "errors": [],
+      "observed_at": "2026-10-02T15:52:59.185423+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-011.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-012",
+      "subject": "globex-analyst-g3",
+      "run_id": "596b0141-d94f-436f-adb2-fe6d92c31354",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.248,
+      "errors": [],
+      "observed_at": "2026-10-02T15:53:11.736959+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-012.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-013",
+      "subject": "globex-analyst-g3",
+      "run_id": "050eff23-2193-4e79-a611-e4b2fd043c27",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-ENC-V3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 32.368,
+      "errors": [],
+      "observed_at": "2026-10-02T15:53:15.912504+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-013.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-014",
+      "subject": "globex-analyst-g3",
+      "run_id": "171b65f2-eec1-4464-ac28-cbc7543e4461",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-ENC-V3",
+        "KB-Q-G3-SATELLITE",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.364,
+      "errors": [],
+      "observed_at": "2026-10-02T15:53:19.146266+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-014.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-015",
+      "subject": "globex-analyst-g3",
+      "run_id": "6dbcf9ed-2cc5-4000-a117-75e07efa06d4",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-DB-BACKUP",
+        "KB-Q-RET-V4",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-GLOBEX-VPN-MFA-REBIND"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 16.713,
+      "errors": [],
+      "observed_at": "2026-10-02T15:53:10.698385+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-015.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-016",
+      "subject": "globex-analyst-g3",
+      "run_id": "1cb3d6b9-05a6-4ee8-87d7-557052ada39b",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-ENC-V3",
+        "KB-Q-DB-BACKUP",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 30.424,
+      "errors": [],
+      "observed_at": "2026-10-02T15:53:29.610414+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-016.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-017",
+      "subject": "globex-analyst-g3",
+      "run_id": "e9ab0ec8-c29c-4d64-967d-3e731367e1fa",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-APP-REG",
+        "KB-GLOBEX-VPN-MFA-AUDIT",
+        "KB-Q-RAP-V2",
+        "KB-Q-CLASS-V2"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.862,
+      "errors": [],
+      "observed_at": "2026-10-02T15:53:28.561628+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-017.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-018",
+      "subject": "globex-analyst-g3",
+      "run_id": "5184f9b3-c46f-4612-afc8-68e723c4600b",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-Q-G3-COMPLIANCE",
+        "KB-Q-RAP-V2",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 17.877,
+      "errors": [],
+      "observed_at": "2026-10-02T15:53:29.614747+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-018.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-019",
+      "subject": "globex-analyst-g3",
+      "run_id": "0cb234f1-cae8-4d45-96df-641d451a85dd",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-Q-RAP-V2",
+        "KB-Q-DB-FAILOVER",
+        "KB-GLOBEX-VPN-MFA-REBIND",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-GLOBEX-VPN-APP-REG"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 31.132,
+      "errors": [],
+      "observed_at": "2026-10-02T15:53:47.045141+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-019.json"
+    },
+    {
+      "tier": "tier-5",
+      "concurrency": 5,
+      "repeat_index": 1,
+      "case_id": "Q-020",
+      "subject": "globex-analyst-g3",
+      "run_id": "f4ff8363-dadd-4fba-a9b3-40ba236dd3e5",
+      "terminal_status": "succeeded",
+      "reviewer_decision": "passed",
+      "citations": [
+        "KB-Q-MFA-ENROL",
+        "KB-GLOBEX-VPN-MFA-G3",
+        "KB-Q-RAP-V2",
+        "KB-Q-DB-FAILOVER",
+        "KB-GLOBEX-VPN-MFA-AUDIT"
+      ],
+      "expected_citations": [
+        "KB-Q-MFA-ENROL"
+      ],
+      "unreadable_citations": 0,
+      "latency_seconds": 38.118,
+      "errors": [],
+      "observed_at": "2026-10-02T15:53:57.265317+00:00",
+      "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+      "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
+      "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
+      "_replay": "tier-5__r1__Q-020.json"
+    }
+  ],
+  "summary": {
+    "observations": 120,
+    "strata": [
+      {
+        "revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+        "concurrency": 1,
+        "observations": 20,
+        "cases": 20,
+        "repeats_per_case": {
+          "min": 1,
+          "max": 1
+        },
+        "cases_with_any_repeat": 0,
+        "cases_agreeing_on_every_axis": 20,
+        "agreement_rate": 1.0,
+        "agreement_rate_is_meaningful": false,
+        "disagreements": [],
+        "latency_seconds": {
+          "p50": 29.64,
+          "p95": 33.76,
+          "max": 33.76
+        },
+        "expected_citation_hit_rate": 0.95,
+        "unreadable_citations": 0,
+        "observations_with_errors": 0
+      },
+      {
+        "revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+        "concurrency": 5,
+        "observations": 40,
+        "cases": 20,
+        "repeats_per_case": {
+          "min": 2,
+          "max": 2
+        },
+        "cases_with_any_repeat": 20,
+        "cases_agreeing_on_every_axis": 10,
+        "agreement_rate": 0.5,
+        "agreement_rate_is_meaningful": true,
+        "disagreements": [
+          {
+            "case_id": "Q-002",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  7,
+                  7
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-LIC-V2",
+                  "KB-Q-RAP-V2"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-PASSWORD"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-LIC-V2",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-LIC-V2",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-RAP-V2"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-004",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  7,
+                  7
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-ROLLBACK",
+                  "KB-Q-VPN-CONN"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-SEVERITY"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-ROLLBACK",
+                  "KB-Q-SEVERITY",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-ROLLBACK",
+                  "KB-Q-VPN-CONN"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-005",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  5,
+                  6
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-G3-ESCALATE",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-VPN-CONN"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-MFA-REBIND"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-G3-ESCALATE",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-G3-ESCALATE",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-VPN-CONN"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-006",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  6,
+                  7
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-VPN-CONN"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-MFA-REBIND"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-VPN-CONN"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-008",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  5,
+                  6
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-VPN-CONN",
+                  "KB-Q-VULN-V2"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-VPN-CONN",
+                  "KB-Q-VULN-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-VPN-CONN",
+                  "KB-Q-VULN-V2"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-009",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  5,
+                  4
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-VPN-CONN"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-Q-DB-FAILOVER"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-VPN-CONN"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-013",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  6,
+                  6
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-REBIND"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-016",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  7,
+                  6
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-Q-RET-V4"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RET-V4"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-017",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  5,
+                  6
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-Q-CLASS-V2",
+                  "KB-Q-PASSWORD"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-RAP-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-CLASS-V2",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-020",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  5,
+                  5
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-MFA-ENROL"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-G3-ESCALATE",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-VPN-CONN"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-G3-ESCALATE",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              }
+            ]
+          }
+        ],
+        "latency_seconds": {
+          "p50": 19.8,
+          "p95": 35.24,
+          "max": 38.12
+        },
+        "expected_citation_hit_rate": 0.95,
+        "unreadable_citations": 0,
+        "observations_with_errors": 0
+      },
+      {
+        "revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
+        "concurrency": 10,
+        "observations": 60,
+        "cases": 20,
+        "repeats_per_case": {
+          "min": 3,
+          "max": 3
+        },
+        "cases_with_any_repeat": 20,
+        "cases_agreeing_on_every_axis": 6,
+        "agreement_rate": 0.3,
+        "agreement_rate_is_meaningful": true,
+        "disagreements": [
+          {
+            "case_id": "Q-001",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  6,
+                  6,
+                  7
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-VPN-CONN"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-Q-G3-IPAM",
+                  "KB-Q-SPLIT-V2"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-SPLIT-V2",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-G3-IPAM",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-G3-IPAM",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-SPLIT-V2",
+                  "KB-Q-VPN-CONN"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-002",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  7,
+                  6,
+                  6
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-LIC-V2",
+                  "KB-Q-RAP-V2"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-SPLIT-V2"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-LIC-V2",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-SPLIT-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-LIC-V2",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-LIC-V2",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-004",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  7,
+                  7,
+                  6
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-ROLLBACK",
+                  "KB-Q-VPN-CONN"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-SEVERITY"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-ROLLBACK",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-ROLLBACK",
+                  "KB-Q-SEVERITY",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-ROLLBACK",
+                  "KB-Q-VPN-CONN"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-005",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  6,
+                  5,
+                  5
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-VPN-CONN"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-G3-ESCALATE",
+                  "KB-Q-STORAGE"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-G3-ESCALATE",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-G3-ESCALATE",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-STORAGE",
+                  "KB-Q-VPN-CONN"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-006",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  7,
+                  6,
+                  6
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-VPN-CONN"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-MFA-REBIND"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-VPN-CONN"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-008",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  5,
+                  5,
+                  6
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-VPN-CONN"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-G3-ESCALATE",
+                  "KB-Q-ONCALL-V2",
+                  "KB-Q-VULN-V2"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-G3-ESCALATE",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-VPN-CONN",
+                  "KB-Q-VULN-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-ONCALL-V2",
+                  "KB-Q-VPN-CONN",
+                  "KB-Q-VULN-V2"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-009",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  4,
+                  5,
+                  5
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-VPN-CONN"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-Q-DB-FAILOVER"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-VPN-CONN"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-VPN-CONN"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-011",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  5,
+                  4,
+                  5
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-MFA-G3"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-014",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  7,
+                  8,
+                  8
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-Q-G3-SATELLITE",
+                  "KB-Q-PASSWORD"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-G3-SATELLITE",
+                  "KB-Q-MFA-ENROL"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-G3-SATELLITE",
+                  "KB-Q-MFA-ENROL"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-PASSWORD"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-015",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  6,
+                  6,
+                  7
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RET-V4"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-Q-RAP-V2"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RET-V4"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RET-V4"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2",
+                  "KB-Q-RET-V4"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-016",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  5,
+                  8,
+                  5
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-RET-V4",
+                  "KB-Q-SVCACCT"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RET-V4",
+                  "KB-Q-SVCACCT"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-BACKUP",
+                  "KB-Q-ENC-V3",
+                  "KB-Q-MFA-ENROL"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-017",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  6,
+                  6,
+                  5
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-PASSWORD"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-APP-REG",
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-RAP-V2"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-019",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  5,
+                  7,
+                  6
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-G3-IPAM",
+                  "KB-Q-PASSWORD"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-G3-COMPLIANCE",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-PASSWORD",
+                  "KB-Q-RAP-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-GLOBEX-VPN-MFA-REBIND",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-G3-IPAM",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              }
+            ]
+          },
+          {
+            "case_id": "Q-020",
+            "axes": [
+              "citations"
+            ],
+            "detail": {
+              "citations": {
+                "set_sizes": [
+                  5,
+                  5,
+                  5
+                ],
+                "cited_by_every_repeat": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-MFA-ENROL"
+                ],
+                "cited_by_some_but_not_all": [
+                  "KB-Q-PASSWORD",
+                  "KB-Q-RAP-V2"
+                ]
+              }
+            },
+            "outcomes": [
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-PASSWORD"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              },
+              {
+                "citations": [
+                  "KB-GLOBEX-VPN-MFA-AUDIT",
+                  "KB-GLOBEX-VPN-MFA-G3",
+                  "KB-Q-DB-FAILOVER",
+                  "KB-Q-MFA-ENROL",
+                  "KB-Q-RAP-V2"
+                ]
+              }
+            ]
+          }
+        ],
+        "latency_seconds": {
+          "p50": 20.32,
+          "p95": 35.83,
+          "max": 38.57
+        },
+        "expected_citation_hit_rate": 0.95,
+        "unreadable_citations": 0,
+        "observations_with_errors": 0
+      }
+    ],
+    "cross_tier": {
+      "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)": {
+        "tiers": [
+          1,
+          5,
+          10
+        ],
+        "cases_compared": 20,
+        "cases_whose_first_repeat_moved_between_tiers": 0,
+        "moved": []
+      }
+    },
+    "floor": {
+      "repeated_cases": 40,
+      "cases_disagreeing_on_some_axis": 24,
+      "disagreement_rate": 0.6,
+      "axes_that_moved": {
+        "citations": 24
+      }
+    }
+  },
+  "limitations": [
+    "These repeats come from the load batch, not from a repeat experiment: concurrency varies with the number of repeats, so the tier with the most repeats is also the tier with the most contention.",
+    "Every observation is on one revision (`b385df7c2ef6…`), so a difference between tiers is at least not a revision change. That is all it rules out: the tiers hold different numbers of repeats, so this is still not a controlled comparison of concurrency.",
+    "Repeats per case are 1, 2, 3 across the strata. At two repeats a single disagreement is a 50% rate for that case, so per-case rates are not reported.",
+    "The 60.0% floor is measured on the repeats that were recorded and that survived on disk. It is a floor on those repeats, not an estimate of the platform's instability -- and the same limit applies in the other direction, where a low or zero rate would be a fact about the corpus rather than evidence of determinism.",
+    "Four axes are compared. Two runs that differ in a way none of the four records -- a different root cause in the same answer, a different agent path to the same citations -- count as agreeing."
+  ]
+}

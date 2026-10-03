@@ -54,6 +54,7 @@ from servicemind.evaluation.load_grader import (
     render_report,
     unplanned_tiers,
 )
+from servicemind.evaluation.refusal import stamp_refusal
 from servicemind.evaluation.revisions import recorded_revisions, revision_problems
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -63,6 +64,9 @@ REPLAYS = LOAD / "replays"
 BATCH = REPLAYS / "_batch.json"
 CASES = REPO_ROOT / "evaluation" / "quality" / "cases.v1.json"
 REPORTS = REPO_ROOT / "evaluation" / "reports"
+
+#: Repo-relative, so a refusal stamped into a report names the gate that stamped it.
+GATE_NAME = str(Path(__file__).resolve().relative_to(REPO_ROOT))
 REPORT_JSON = REPORTS / "phase7_load_latest.json"
 REPORT_MD = REPORTS / "phase7_load_latest.md"
 
@@ -243,6 +247,15 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    # Resolved before the provenance check rather than after it, so the refusal path can
+    # annotate the very files this run would have written. A refusal that returns 3 and
+    # leaves yesterday's ``PASS`` on disk is a report contradicting its own exit code.
+    report_json = args.report.with_suffix(".json") if args.report else REPORT_JSON
+    report_md = (
+        args.report
+        if args.report and args.report.suffix == ".md"
+        else (REPORT_MD if args.report is None else args.report.with_suffix(".md"))
+    )
     if args.live:
         print(
             json.dumps(
@@ -257,6 +270,13 @@ def main() -> int:
                 indent=2,
             )
         )
+        stamp_refusal(
+            report_json,
+            report_md,
+            gate=GATE_NAME,
+            reason="--live: this gate does not run the load batch; nothing was measured and the report on disk is not a verdict about the deployed platform",
+            argv=sys.argv,
+        )
         return EXIT_CONFIGURATION
 
     try:
@@ -270,11 +290,13 @@ def main() -> int:
         batch = load_batch()
     except ConfigurationError as exc:
         print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)
+        stamp_refusal(report_json, report_md, gate=GATE_NAME, reason=str(exc), argv=sys.argv)
         return EXIT_CONFIGURATION
     except ValueError as exc:
         # ``resolve_workload`` refuses a case list that no longer holds the declared number of
         # questions. That is a configuration error, not a verdict: nothing was measured.
         print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)
+        stamp_refusal(report_json, report_md, gate=GATE_NAME, reason=str(exc), argv=sys.argv)
         return EXIT_CONFIGURATION
 
     outcome = grade(
@@ -283,13 +305,6 @@ def main() -> int:
         observations,
         generated_at=datetime.now(tz=UTC),
         batch=batch,
-    )
-
-    report_json = args.report.with_suffix(".json") if args.report else REPORT_JSON
-    report_md = (
-        args.report
-        if args.report and args.report.suffix == ".md"
-        else (REPORT_MD if args.report is None else args.report.with_suffix(".md"))
     )
 
     if not args.force:

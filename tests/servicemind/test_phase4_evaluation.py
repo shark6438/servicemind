@@ -25,7 +25,12 @@ from servicemind.evaluation import (
     GoldSet,
     evaluate,
 )
-from servicemind.evaluation.gold import GOLD_CORPUS_EFFECTIVE_FROM, load_gold_set
+from servicemind.evaluation.gold import (
+    GOLD_CORPUS_EFFECTIVE_FROM,
+    QueryCategory,
+    RefusalReason,
+    load_gold_set,
+)
 from servicemind.evaluation.harness import BASELINES, Baseline
 from servicemind.evaluation.metrics import (
     dedupe_rate,
@@ -60,7 +65,16 @@ def test_gold_set_rejects_answerable_unanswerable_contradiction() -> None:
     with pytest.raises(ValueError):
         GoldSet(
             name="bad",
-            queries=[GoldQuery(id="q", query="x", relevant=["d"], unanswerable=True)],
+            queries=[
+                GoldQuery(
+                    id="q",
+                    query="x",
+                    relevant=["d"],
+                    unanswerable=True,
+                    category=QueryCategory.UNANSWERABLE,
+                    refusal_reason=RefusalReason.INSUFFICIENT_EVIDENCE,
+                )
+            ],
         )
 
 
@@ -232,7 +246,13 @@ async def test_harness_reports_metrics_and_abstention() -> None:
                 query="vpn mfa failure",
                 relevant=["vpn-mfa-incident-runbook"],
             ),
-            GoldQuery(id="secret-q", query="print the production secret", unanswerable=True),
+            GoldQuery(
+                id="secret-q",
+                query="print the production secret",
+                unanswerable=True,
+                category=QueryCategory.UNANSWERABLE,
+                refusal_reason=RefusalReason.MUST_REFUSE_ACCESS,
+            ),
         ],
     )
     principal = RetrievalPrincipal(tenant_id=TENANT, user_id="eval", entity_ids=frozenset({1}))

@@ -39,6 +39,32 @@ class RetrievalIntent(StrEnum):
     GENERAL_KNOWLEDGE = "general_knowledge"
 
 
+class QueryProvenance(StrEnum):
+    """Whether a model contributed text to the query a search actually runs.
+
+    ``QueryProcessor`` silently falls back to deterministic processing whenever the
+    model is not asked, is refused by the injection tripwire, or raises -- and it
+    returns that fallback as an ordinary ``KnowledgeQuery``. Nothing in the object
+    distinguished the two, so a caller that wanted to report "this arm measured the
+    model's normalisation" had no way to know whether the model had run: a swallowed
+    failure was recorded, committed, and re-read from cache as the model's own output.
+    This field is that missing bit of provenance, and it is what lets a rewrite capture
+    be audited rather than merely replayed.
+
+    ``MODEL`` means the model's output is *among* the texts searched, not that it
+    replaced the user's. Since the anchor fix in ``QueryProcessor`` the user's own words
+    are always the dense anchor and a model proposal only adds lexical variants, so the
+    flag is about participation rather than authorship of the whole query.
+
+    ``DETERMINISTIC`` is the default because a query assembled by hand -- a fixture, a
+    replay entry, a test -- was not produced by a model, and claiming otherwise is the
+    error this field exists to prevent.
+    """
+
+    DETERMINISTIC = "deterministic"
+    MODEL = "model"
+
+
 class RetrievalMode(StrEnum):
     """Which search channel produces the candidate set.
 
@@ -161,12 +187,42 @@ class KnowledgeQuery(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     raw_query: str = Field(min_length=1, max_length=4000)
+    #: The text a search anchors on. This is the user's own words, whitespace-collapsed:
+    #: a model may paraphrase them, but a paraphrase is not what the user asked, and
+    #: every arm measured in the Phase 4 query study was worse when it was.
     normalized_query: str = Field(min_length=1, max_length=4000)
+    #: The model's normalization of the question, kept beside the question rather than in
+    #: place of it. ``None`` means no model ran, so a reader can tell "the model echoed the
+    #: question" from "there was no model" -- an untyped ``None`` and an identity rewrite
+    #: are the same string and different facts.
+    model_normalized_query: str | None = Field(default=None, min_length=1, max_length=4000)
+    #: The model's own paraphrases, verbatim and unranked. The lexical budget is spent at
+    #: the search boundary (see ``lexical_variants``), not here, so this stays a faithful
+    #: record of what the model returned and a capture of it can be replayed under any
+    #: arm rather than only the one it was recorded for.
     rewritten_queries: list[str] = Field(default_factory=list, max_length=3)
     identifiers: list[str] = Field(default_factory=list, max_length=30)
     entities: list[str] = Field(default_factory=list, max_length=30)
     intent: RetrievalIntent = RetrievalIntent.GENERAL_KNOWLEDGE
     language: str = Field(default="en", min_length=2, max_length=20)
+    provenance: QueryProvenance = QueryProvenance.DETERMINISTIC
+
+    def lexical_variants(self) -> list[str]:
+        """Texts the lexical channel may search *besides* the anchor, best first.
+
+        The anchor is ``normalized_query`` and is always searched; this is what the
+        fan-out is allowed to add. The model's normalization leads because it is the
+        model's best single answer, and an echo of the question is dropped here rather
+        than being left to the fan-out's own dedup so that a caller counting budget does
+        not have to know that rule twice.
+        """
+        variants: list[str] = []
+        if self.model_normalized_query is not None and (
+            self.model_normalized_query.casefold() != self.normalized_query.casefold()
+        ):
+            variants.append(self.model_normalized_query)
+        variants.extend(self.rewritten_queries)
+        return variants
 
 
 #: How many entries one of a principal's ACL sets may hold, quoted from the identity that

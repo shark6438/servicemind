@@ -1,0 +1,641 @@
+{
+  "schema_version": "tenant-domain-release-v1",
+  "status": "PIPELINE_COMPARISON_ONLY",
+  "quality_certification": false,
+  "status_semantics": "the corpus has the strata the \u00a74.1 gate is about and the labels are synthetic, so this run shows the gate's inputs are computable and the ACL filter holds in both directions. It certifies nothing about quality: `release_gate_blockers` below names the one clause no fixture can satisfy",
+  "release_gate_blockers": [
+    "labels are tier silver with 0 annotator(s) and kappa None; \u00a73.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80"
+  ],
+  "corpus": {
+    "documents_indexed": 14,
+    "strata": {
+      "documents": 14,
+      "tenants": 2,
+      "group_restricted": 3,
+      "inactive": 1,
+      "with_an_effective_end": 1,
+      "not_yet_in_force": 1
+    },
+    "ingest_seconds": 1.5,
+    "totals": {
+      "22222222-2222-4222-8222-222222222222": {
+        "documents": 2,
+        "parents": 8,
+        "children": 8,
+        "skipped": 0
+      },
+      "11111111-1111-4111-8111-111111111111": {
+        "documents": 12,
+        "parents": 55,
+        "children": 55,
+        "skipped": 0
+      }
+    }
+  },
+  "queries": {
+    "total": 16,
+    "answerable": 11,
+    "unanswerable": 5,
+    "by_category": {
+      "single_evidence": 7,
+      "multi_evidence": 2,
+      "hard_negative": 2,
+      "unanswerable": 5
+    },
+    "refusal_reasons": [
+      "insufficient_evidence",
+      "must_refuse_access",
+      "version_conflict"
+    ]
+  },
+  "results": {
+    "dense": {
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "answered_unanswerable": 5,
+      "abstention_rate": 0.0,
+      "visible_evidence_violations": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      }
+    },
+    "bm25": {
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "answered_unanswerable": 5,
+      "abstention_rate": 0.0,
+      "visible_evidence_violations": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      }
+    },
+    "hybrid": {
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "answered_unanswerable": 5,
+      "abstention_rate": 0.0,
+      "visible_evidence_violations": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      }
+    },
+    "hybrid_rerank": {
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "answered_unanswerable": 5,
+      "abstention_rate": 0.0,
+      "visible_evidence_violations": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      }
+    }
+  },
+  "acl_probes": [
+    {
+      "document": "KB-ACME-VPN-MFA-G3",
+      "axis": "group",
+      "why": "group 3's runbook; an acme caller holding no groups is inside the tenant and still outside the group",
+      "isolation_held": true,
+      "bases_that_surfaced_it": [],
+      "violations_across_arms": 0,
+      "arms": [
+        {
+          "baseline": "dense",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 8,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        },
+        {
+          "baseline": "bm25",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 8,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        },
+        {
+          "baseline": "hybrid",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 8,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        },
+        {
+          "baseline": "hybrid_rerank",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 8,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        }
+      ],
+      "control": true,
+      "bases_that_surfaced_it_for_the_allowed_caller": [
+        "dense",
+        "bm25",
+        "hybrid",
+        "hybrid_rerank"
+      ]
+    },
+    {
+      "document": "KB-ACME-VPN-MFA-G4",
+      "axis": "group",
+      "why": "the counterpart probe: group 3 holds a group, just not this one, so a filter that let any group through would pass the first probe and fail this one",
+      "isolation_held": true,
+      "bases_that_surfaced_it": [],
+      "violations_across_arms": 0,
+      "arms": [
+        {
+          "baseline": "dense",
+          "denied": {
+            "returned": 8,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 7,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        },
+        {
+          "baseline": "bm25",
+          "denied": {
+            "returned": 8,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 7,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        },
+        {
+          "baseline": "hybrid",
+          "denied": {
+            "returned": 8,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 7,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        },
+        {
+          "baseline": "hybrid_rerank",
+          "denied": {
+            "returned": 8,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 7,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        }
+      ],
+      "control": true,
+      "bases_that_surfaced_it_for_the_allowed_caller": [
+        "dense",
+        "bm25",
+        "hybrid",
+        "hybrid_rerank"
+      ]
+    },
+    {
+      "document": "KB-GLOBEX-CITRIX-BREAKGLASS",
+      "axis": "tenant",
+      "why": "another tenant's document. Both callers hold the same groups, so nothing but the tenant filter can be what excludes the denied one",
+      "isolation_held": true,
+      "bases_that_surfaced_it": [],
+      "violations_across_arms": 0,
+      "arms": [
+        {
+          "baseline": "dense",
+          "denied": {
+            "returned": 9,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 2,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        },
+        {
+          "baseline": "bm25",
+          "denied": {
+            "returned": 9,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 2,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        },
+        {
+          "baseline": "hybrid",
+          "denied": {
+            "returned": 9,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 2,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        },
+        {
+          "baseline": "hybrid_rerank",
+          "denied": {
+            "returned": 9,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": {
+            "returned": 2,
+            "surfaced_the_protected_document": true,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          }
+        }
+      ],
+      "control": true,
+      "bases_that_surfaced_it_for_the_allowed_caller": [
+        "dense",
+        "bm25",
+        "hybrid",
+        "hybrid_rerank"
+      ]
+    },
+    {
+      "document": "KB-ACME-VPN-MFA-LEGACY",
+      "axis": "retirement flag",
+      "why": "withdrawn, and unrestricted by group, so the group filter passes for every caller and only the retirement flag can exclude it. There is no allowed caller: the document must not be served to anyone",
+      "isolation_held": true,
+      "bases_that_surfaced_it": [],
+      "violations_across_arms": 0,
+      "arms": [
+        {
+          "baseline": "dense",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        },
+        {
+          "baseline": "bm25",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        },
+        {
+          "baseline": "hybrid",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        },
+        {
+          "baseline": "hybrid_rerank",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        }
+      ],
+      "control": null,
+      "control_note": "no caller may see this document; the isolation claim is the whole test"
+    },
+    {
+      "document": "KB-ACME-VPN-MFA-V1",
+      "axis": "effective window (superseded)",
+      "why": "active in the directory but outside its own effective window at the query time -- a different exclusion from the retirement flag, and a filter that only reads is_active would serve it",
+      "isolation_held": true,
+      "bases_that_surfaced_it": [],
+      "violations_across_arms": 0,
+      "arms": [
+        {
+          "baseline": "dense",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        },
+        {
+          "baseline": "bm25",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        },
+        {
+          "baseline": "hybrid",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        },
+        {
+          "baseline": "hybrid_rerank",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        }
+      ],
+      "control": null,
+      "control_note": "no caller may see this document; the isolation claim is the whole test"
+    },
+    {
+      "document": "KB-ACME-VPN-MFA-Q3",
+      "axis": "effective window (not yet in force)",
+      "why": "approved and not yet in force; the other end of the clock check, which a filter comparing only against effective_from would serve",
+      "isolation_held": true,
+      "bases_that_surfaced_it": [],
+      "violations_across_arms": 0,
+      "arms": [
+        {
+          "baseline": "dense",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        },
+        {
+          "baseline": "bm25",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        },
+        {
+          "baseline": "hybrid",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        },
+        {
+          "baseline": "hybrid_rerank",
+          "denied": {
+            "returned": 6,
+            "surfaced_the_protected_document": false,
+            "violations": {
+              "wrong_tenant": 0,
+              "unauthorized_group": 0,
+              "expired_version": 0,
+              "total": 0
+            }
+          },
+          "allowed": null
+        }
+      ],
+      "control": null,
+      "control_note": "no caller may see this document; the isolation claim is the whole test"
+    }
+  ],
+  "limitations": [
+    "the labels are synthetic and the provenance says so; no human signed them",
+    "the corpus is fixture-sized, so no stratum here is large enough to estimate a per-stratum rate from -- the strata are present, not powered",
+    "the recall figures are saturated: each query was authored against a document whose title shares its vocabulary, over a corpus of fourteen. Recall@5 of 1.000 is a property of the fixture, not a quality measurement, and nothing in this report should be read as one",
+    "`abstention_rate` counts unanswerable queries that returned any context. It is not the Reviewer's semantic abstention and must not be reported as an answerable answer rate",
+    "parents are held in memory rather than read under PostgreSQL row-level security, so this exercises the expansion call and not the RLS policy"
+  ]
+}

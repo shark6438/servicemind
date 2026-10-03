@@ -1,0 +1,235 @@
+{
+  "schema_version": "phase4-techqa-production-v1",
+  "status": "PIPELINE_COMPARISON_ONLY",
+  "quality_certification": false,
+  "status_semantics": "this report compares the production retrieval path against the proxy harness on the same corpus, queries and labels. It is still a silver external set: it certifies nothing about tenant-domain quality, and `release_gate_blockers` below is why the \u00a74.1 thresholds are not applied.",
+  "release_gate_blockers": [
+    "labels are tier silver with 0 annotator(s) and kappa None; \u00a73.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80",
+    "no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the \u00a74.1 wrong-ACL/expired-version count",
+    "the set has no hard-negative stratum (\u00a73.2 asks for 80)",
+    "the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart",
+    "the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart",
+    "the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
+  ],
+  "corpus": {
+    "documents_indexed": 28481,
+    "truncated_to": null,
+    "ingest_seconds": 3217.1,
+    "totals": {
+      "documents": 28481,
+      "parents": 46691,
+      "children": 199410,
+      "skipped": 0
+    },
+    "distinct_sources": 1
+  },
+  "models": {
+    "embedding_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+    "reranker_revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+    "served_by": "tei",
+    "note": "the proxy report pinned these same two revisions, so the model is held constant and the difference below is the pipeline's"
+  },
+  "pipeline": {
+    "index": "sm-techqa-prod-7ce49854",
+    "child_chunking": "480 max / 320 target / 120 min, 48 overlap",
+    "child_tokenizer": "ConservativeOfflineEncoding",
+    "fusion": "cluster-side RRF (rank_constant 60) then 0.85*rerank + 0.15*retrieval",
+    "parent_expansion": "repository lookup by id (RLS in production)"
+  },
+  "queries": {
+    "total": 400,
+    "answerable": 280,
+    "unanswerable": 120
+  },
+  "results": {
+    "dense": {
+      "recall_at_5": 0.6714285714285714,
+      "recall_at_10": 0.7,
+      "recall_at_20": 0.7,
+      "mrr_at_10": 0.561530612244898,
+      "ndcg_at_10": 0.5954783196701486,
+      "answered_unanswerable": 120,
+      "abstention_rate": 0.0
+    },
+    "bm25": {
+      "recall_at_5": 0.5785714285714286,
+      "recall_at_10": 0.6071428571428571,
+      "recall_at_20": 0.6071428571428571,
+      "mrr_at_10": 0.49230442176870753,
+      "ndcg_at_10": 0.5203218062742957,
+      "answered_unanswerable": 120,
+      "abstention_rate": 0.0
+    },
+    "hybrid": {
+      "recall_at_5": 0.6321428571428571,
+      "recall_at_10": 0.6785714285714286,
+      "recall_at_20": 0.6821428571428572,
+      "mrr_at_10": 0.5366695011337869,
+      "ndcg_at_10": 0.5711347255182505,
+      "answered_unanswerable": 120,
+      "abstention_rate": 0.0
+    },
+    "hybrid_rerank": {
+      "recall_at_5": 0.6571428571428571,
+      "recall_at_10": 0.7214285714285714,
+      "recall_at_20": 0.7214285714285714,
+      "mrr_at_10": 0.5684155328798186,
+      "ndcg_at_10": 0.605382001870539,
+      "answered_unanswerable": 120,
+      "abstention_rate": 0.0
+    }
+  },
+  "visible_evidence_violations": {
+    "by_baseline": {
+      "dense": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      },
+      "bm25": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      },
+      "hybrid": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      },
+      "hybrid_rerank": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      }
+    },
+    "corpus_strata": {
+      "documents": 28481,
+      "tenants": 1,
+      "group_restricted": 0,
+      "inactive": 0,
+      "with_an_effective_end": 0,
+      "query_time_strata": 1
+    },
+    "reading": "\u00a74.1's threshold is a zero-count, and this is that count computed against the ACLs the loader assigned rather than read back from the pipeline. Read it with `corpus_strata`: a zero over a single-tenant corpus with no group-restricted documents is a property of this corpus, not a finding about the pipeline. The strata in which a leak could occur are the acceptance fixtures' business."
+  },
+  "proxy_comparison": {
+    "bm25_vs_bm25": {
+      "production_recall_at_5": 0.5786,
+      "proxy_recall_at_5": 0.5286,
+      "delta_recall_at_5": 0.05,
+      "production_recall_at_10": 0.6071,
+      "proxy_recall_at_10": 0.5643,
+      "delta_recall_at_10": 0.0428,
+      "production_recall_at_20": 0.6071,
+      "proxy_recall_at_20": 0.65,
+      "delta_recall_at_20": -0.0429,
+      "production_mrr_at_10": 0.4923,
+      "proxy_mrr_at_10": 0.4414,
+      "delta_mrr_at_10": 0.0509,
+      "production_ndcg_at_10": 0.5203,
+      "proxy_ndcg_at_10": 0.4713,
+      "delta_ndcg_at_10": 0.049
+    },
+    "dense_vs_dense": {
+      "production_recall_at_5": 0.6714,
+      "proxy_recall_at_5": 0.7143,
+      "delta_recall_at_5": -0.0429,
+      "production_recall_at_10": 0.7,
+      "proxy_recall_at_10": 0.7536,
+      "delta_recall_at_10": -0.0536,
+      "production_recall_at_20": 0.7,
+      "proxy_recall_at_20": 0.7679,
+      "delta_recall_at_20": -0.0679,
+      "production_mrr_at_10": 0.5615,
+      "proxy_mrr_at_10": 0.5691,
+      "delta_mrr_at_10": -0.0076,
+      "production_ndcg_at_10": 0.5955,
+      "proxy_ndcg_at_10": 0.6142,
+      "delta_ndcg_at_10": -0.0187
+    },
+    "hybrid_vs_hybrid_rrf": {
+      "production_recall_at_5": 0.6321,
+      "proxy_recall_at_5": 0.6464,
+      "delta_recall_at_5": -0.0143,
+      "production_recall_at_10": 0.6786,
+      "proxy_recall_at_10": 0.7357,
+      "delta_recall_at_10": -0.0571,
+      "production_recall_at_20": 0.6821,
+      "proxy_recall_at_20": 0.7893,
+      "delta_recall_at_20": -0.1072,
+      "production_mrr_at_10": 0.5367,
+      "proxy_mrr_at_10": 0.5406,
+      "delta_mrr_at_10": -0.0039,
+      "production_ndcg_at_10": 0.5711,
+      "proxy_ndcg_at_10": 0.5869,
+      "delta_ndcg_at_10": -0.0158
+    },
+    "hybrid_rerank_vs_production": {
+      "production_recall_at_5": 0.6571,
+      "proxy_recall_at_5": 0.6857,
+      "delta_recall_at_5": -0.0286,
+      "production_recall_at_10": 0.7214,
+      "proxy_recall_at_10": 0.7643,
+      "delta_recall_at_10": -0.0429,
+      "production_recall_at_20": 0.7214,
+      "proxy_recall_at_20": 0.8071,
+      "delta_recall_at_20": -0.0857,
+      "production_mrr_at_10": 0.5684,
+      "proxy_mrr_at_10": 0.5848,
+      "delta_mrr_at_10": -0.0164,
+      "production_ndcg_at_10": 0.6054,
+      "proxy_ndcg_at_10": 0.6279,
+      "delta_ndcg_at_10": -0.0225
+    }
+  },
+  "packing": {
+    "context_token_budget": 8000,
+    "max_parents_per_document": 2,
+    "max_parents_per_source": 4,
+    "distinct_sources": 1,
+    "source_ceiling_enforced": false,
+    "arms_at_the_per_source_ceiling": [
+      "bm25",
+      "dense",
+      "hybrid",
+      "hybrid_rerank"
+    ],
+    "final_k": 24,
+    "documents_packed_per_answerable_query": {
+      "dense": {
+        "mean": 7.439,
+        "min": 4,
+        "max": 16
+      },
+      "bm25": {
+        "mean": 8.104,
+        "min": 4,
+        "max": 19
+      },
+      "hybrid": {
+        "mean": 7.857,
+        "min": 5,
+        "max": 17
+      },
+      "hybrid_rerank": {
+        "mean": 7.496,
+        "min": 4,
+        "max": 16
+      }
+    },
+    "ceiling_note": "Every document here names the same source, so the 4-parent ceiling has no other source to balance and is not in force: the pack is bounded by the token budget and by the candidate list. The arms whose maximum nevertheless reads 4 (bm25, dense, hybrid, hybrid_rerank) pass through that number, they are not stopped by it.",
+    "reading": "the proxy has no token budget and no diversity ceilings, so its top-k is a ranking cut; production's is a prompt-fitting cut. Read every recall figure beside the packed count: where it is below the cutoff, that recall number is reporting the budget, not the retriever."
+  },
+  "limitations": [
+    "the labels are source-provided silver, not tenant-domain human qrels",
+    "each answerable query carries a single relevant filename, so a rank-2 hit scores the same as a miss under Recall@10",
+    "`abstention_rate` counts unanswerable queries that returned *any* context. It is not the Reviewer's semantic abstention and must not be reported as an answerable answer rate",
+    "parents are held in memory rather than read under PostgreSQL row-level security, so this run exercises the expansion *call* and not the RLS policy that authorises it",
+    "the two chunkers count tokens in different units: the proxy splits on the bge-m3 tokenizer (`AutoTokenizer` for the pinned revision), production on `ConservativeOfflineEncoding` whenever the tiktoken table is not cached, which it is not on this host. 480 production tokens and 420 proxy tokens are therefore not the same quantity. The comparison is still the production path against the proxy path, which is what it claims to be; it just cannot be decomposed into RRF's share and the chunker's share",
+    "the two sides cut at different things: the proxy ranks passages and cuts at top-k, production returns the packed prompt, which stops at the token budget and the diversity ceilings. See `packing` for how many documents actually reached the prompt; where that is below the cutoff, the recall number is reporting the budget rather than the retriever"
+  ]
+}

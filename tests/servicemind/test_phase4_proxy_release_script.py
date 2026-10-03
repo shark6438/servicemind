@@ -7,7 +7,12 @@ These guard the three defects found in the published proxy report:
 2. the abstention gate was scored as a retrieval-score cut without publishing how
    little answerability signal that score carries;
 3. the §4.1 tenant-domain closure gate was rendered as PASS/FAIL against a public
-   silver set it was never scoped to;
+   silver set it was never scoped to. It was fixed by writing ``applicable: false``
+   into every gate, which is the right answer for a silver set and unfalsifiable in
+   both directions -- the gate could only ever say what the code said, so a set that
+   *did* meet §3 would have been reported as unevaluable too. It is now the output of
+   ``gold.release_gate_blockers`` over the selection, so the tests below cover both
+   directions: blocked means no verdict, and unblocked means the comparison is made;
 4. the cross-encoder was pinned to a 512-token window while production inherits the
    checkpoint's own window (8192), so the harness truncated passages production scores
    in full - and the window was not part of the score cache key either.
@@ -190,14 +195,28 @@ def test_abstention_holds_out_calibration_queries(proxy):
 # --- defect 3: gate scope -----------------------------------------------------
 
 
-def _gates(proxy, reranked_at_10: float, abstention: dict, recall_at_10: float | None = None):
+def _committed_blockers(proxy) -> list[str]:
+    """Why §4.1 does not apply to the committed selection, derived from the selection."""
+    selection = json.loads(proxy.SELECTION.read_text(encoding="utf-8"))
+    return proxy.release_gate_blockers(proxy._release_set_shape(selection))
+
+
+def _gates(
+    proxy,
+    reranked_at_10: float,
+    abstention: dict,
+    recall_at_10: float | None = None,
+    blockers: list[str] | None = None,
+):
     reranked = {
         "recall_at_5": reranked_at_10,
         "recall_at_10": reranked_at_10 if recall_at_10 is None else recall_at_10,
         "mrr_at_10": reranked_at_10,
         "ndcg_at_10": reranked_at_10,
     }
-    return proxy._reference_gates(reranked, abstention)
+    if blockers is None:
+        blockers = _committed_blockers(proxy)
+    return proxy._reference_gates(reranked, abstention, blockers)
 
 
 def test_reference_gates_are_never_a_verdict(proxy):
@@ -225,6 +244,35 @@ def test_reference_gates_are_never_a_verdict(proxy):
         assert gate["passed"] is None, name
         assert gate["actual"] == pytest.approx(0.99), name
         assert "not evaluated" in gate["reason"], name
+        # And the gate states *why*, derivable from the selection rather than asserted by
+        # this function: the same list the audit re-derives and refuses to disagree with.
+        assert gate["blockers"] == _committed_blockers(proxy), name
+
+
+def test_reference_gates_decide_once_a_set_qualifies(proxy):
+    """The direction the hardcoded ``applicable: false`` could never take.
+
+    ``applicable`` was a literal, so a set that met every clause §3 lists would have been
+    reported as not evaluable all the same -- which made "the gate stays open" true by
+    construction rather than by evidence. With the blockers derived, an empty blocker
+    list is the release set §4.1 was written for, and the gate says pass or fail.
+    """
+    abstention = {
+        "impossible_abstention_rate": 0.99,
+        "answerable_answer_rate": 0.99,
+        "top_score_roc_auc": 0.99,
+        "best_case_balanced_accuracy": 0.99,
+    }
+    passing = _gates(proxy, 0.99, abstention, blockers=[])
+    assert {gate["applicable"] for gate in passing.values()} == {True}
+    assert {gate["passed"] for gate in passing.values()} == {True}
+
+    failing = _gates(proxy, 0.10, dict(abstention, impossible_abstention_rate=0.10), blockers=[])
+    assert failing["recall_at_5"]["passed"] is False
+    assert failing["impossible_abstention_rate"]["passed"] is False
+    # A verdict is only recorded where the gate applies; a blocked gate never carries one
+    # in either direction.
+    assert _gates(proxy, 0.10, abstention)["recall_at_5"]["passed"] is None
 
 
 def test_reference_gates_keep_the_documented_thresholds(proxy):

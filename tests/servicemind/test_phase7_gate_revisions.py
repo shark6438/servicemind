@@ -265,6 +265,9 @@ def test_a_gate_main_exits_three_on_a_replay_from_another_revision(
 
     replays = tmp_path / "replays"
     replays.mkdir()
+    # Loaded before ``write`` is defined: the security branch below needs the digest the
+    # gate computes for the scenario list currently on disk.
+    gate = load_gate(gate_name)
 
     def where(payload: dict) -> dict:
         # The acceptance replay records the deployment under ``environment``; the other three
@@ -279,9 +282,17 @@ def test_a_gate_main_exits_three_on_a_replay_from_another_revision(
         payload = json.loads(source.read_text(encoding="utf-8"))
         if revision is not None:
             where(payload)["deployed_revision"] = revision
+        if gate_name == "security":
+            # ``SEC-*`` observations bind to the scenario list by digest, and that list
+            # changed on 2026-10-01 (SEC-BOUNDS-04's third piece of evidence was a
+            # source-text count and is now six behavioural tests). Every committed security
+            # replay is refused by the loader before the revision check this test is about,
+            # so the binding is re-stamped here the way a re-recording would -- the same move
+            # as stamping the revision below, and for the same reason: the property under
+            # test is the gate's, not this checkout's copy of the corpus.
+            payload["scenarios_digest"] = gate.scenario_set_digest(gate.load_scenario_set())
         (replays / source.name).write_text(json.dumps(payload), encoding="utf-8")
 
-    gate = load_gate(gate_name)
     monkeypatch.setattr(gate, "REPLAYS", replays)
     if batch_attribute is not None:
         # The batch file names one revision for the whole sweep. Point it at a name no run

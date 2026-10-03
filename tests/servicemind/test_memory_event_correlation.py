@@ -263,6 +263,7 @@ async def test_an_event_rejects_a_field_the_ledger_has_no_column_for() -> None:
 LIVE_TENANT = UUID("11111111-1111-4111-8111-111111111111")
 
 
+@pytest.mark.postgres
 @pytest.mark.docker
 async def test_the_stored_rows_carry_the_run_and_nothing_where_there_was_none() -> None:
     """Asserted against PostgreSQL, because the claim is about what was written.

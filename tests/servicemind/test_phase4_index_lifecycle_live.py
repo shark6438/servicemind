@@ -163,6 +163,7 @@ async def _drop_probe_indices(client) -> None:
         await client.indices.delete(index=name, ignore_unavailable=True)
 
 
+@pytest.mark.opensearch
 @pytest.mark.docker
 @pytest.mark.asyncio
 async def test_a_generation_is_built_aliased_and_then_retired_on_the_cluster() -> None:
@@ -223,6 +224,7 @@ async def test_a_generation_is_built_aliased_and_then_retired_on_the_cluster() -
         await client.close()
 
 
+@pytest.mark.opensearch
 @pytest.mark.docker
 @pytest.mark.asyncio
 async def test_a_suspended_row_is_unreachable_through_a_real_filtered_search() -> None:

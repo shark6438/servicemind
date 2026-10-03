@@ -1,0 +1,153 @@
+{
+  "schema_version": "tenant-domain-fixtures-v1",
+  "tenant_id": "11111111-1111-4111-8111-111111111111",
+  "query_time": "2026-05-01T00:00:00+00:00",
+  "revision": "tenant-domain-release-v1",
+  "note": "The corpus strata the §4.1 release gate is about. Every document declares its own coordinates here rather than in prose, for the reason the acceptance fixtures give: a restriction stated only in a document's text lets an isolation check pass against an all-public corpus. Four strata are present on purpose -- a second tenant, group-restricted documents, a withdrawn document, and documents whose effective window excludes the query time. The §4.1 count for this fixture is therefore a finding rather than a shape: there are documents it could be nonzero about.",
+  "documents": [
+    {
+      "file": "vpn-mfa-rebind.md",
+      "source_record_id": "KB-ACME-VPN-MFA-REBIND",
+      "tenant": "acme",
+      "group_ids": [],
+      "is_active": true,
+      "version": "v2",
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "role": "the current remedy for a changed handset; public to the tenant"
+    },
+    {
+      "file": "vpn-mfa-group3-breakglass.md",
+      "source_record_id": "KB-ACME-VPN-MFA-G3",
+      "tenant": "acme",
+      "group_ids": [3],
+      "is_active": true,
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "role": "restricted to group 3. An asker holding no groups must not see it, and the same question text asked by that asker must be refused rather than answered from it"
+    },
+    {
+      "file": "vpn-mfa-group4-desk.md",
+      "source_record_id": "KB-ACME-VPN-MFA-G4",
+      "tenant": "acme",
+      "group_ids": [4],
+      "is_active": true,
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "role": "restricted to group 4, the counterpart of the group-3 runbook: each group's asker sees its own and not the other's"
+    },
+    {
+      "file": "vpn-mfa-legacy-bypass.md",
+      "source_record_id": "KB-ACME-VPN-MFA-LEGACY",
+      "tenant": "acme",
+      "group_ids": [],
+      "is_active": false,
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "role": "withdrawn. Deliberately unrestricted by group, so the group check passes for every asker and the exclusion can only come from is_active -- a withdrawn document nobody was allowed to see would prove nothing about the retirement flag"
+    },
+    {
+      "file": "vpn-mfa-v1-tokens.md",
+      "source_record_id": "KB-ACME-VPN-MFA-V1",
+      "tenant": "acme",
+      "group_ids": [],
+      "is_active": true,
+      "version": "v1",
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "effective_to": "2026-04-01T00:00:00+00:00",
+      "role": "superseded. Active in the directory but outside its effective window at the query time, which is a different exclusion from the retirement flag and is fixed by a different filter"
+    },
+    {
+      "file": "vpn-mfa-v2-tokens.md",
+      "source_record_id": "KB-ACME-VPN-MFA-V2",
+      "tenant": "acme",
+      "group_ids": [],
+      "is_active": true,
+      "version": "v2",
+      "authority": "internal_knowledge",
+      "effective_from": "2026-04-01T00:00:00+00:00",
+      "role": "the version in force. Paired with the v1 document so that a run can be asked which of the two it retrieved"
+    },
+    {
+      "file": "vpn-mfa-ops-note.md",
+      "source_record_id": "KB-ACME-VPN-OPS-NOTE",
+      "tenant": "acme",
+      "group_ids": [],
+      "is_active": true,
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "role": "in force, same authority as KB-ACME-VPN-MFA-V2, and states a different reissue interval. This is the version-conflict stratum's other half: two authoritative in-force documents that disagree, which no amount of retrieval resolves"
+    },
+    {
+      "file": "vpn-mfa-app-registration.md",
+      "source_record_id": "KB-ACME-VPN-APP-REG",
+      "tenant": "acme",
+      "group_ids": [],
+      "is_active": true,
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "role": "similar symptom, different root cause. Retrievable and highly similar to the rebind runbook, so the hard-negative stratum has a distractor that is actually near"
+    },
+    {
+      "file": "vpn-mfa-enrolment-audit.md",
+      "source_record_id": "KB-ACME-VPN-MFA-AUDIT",
+      "tenant": "acme",
+      "group_ids": [],
+      "is_active": true,
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "role": "shares the vocabulary of every VPN MFA question and states no cause and no remedy. A distractor that is wrong for every query in the set, which is what makes it a useful one"
+    },
+    {
+      "file": "vpn-mfa-rollout-q3.md",
+      "source_record_id": "KB-ACME-VPN-MFA-Q3",
+      "tenant": "acme",
+      "group_ids": [],
+      "is_active": true,
+      "authority": "internal_knowledge",
+      "effective_from": "2026-06-01T00:00:00+00:00",
+      "role": "approved, not yet in force at the query time. Excluded by the other end of the effective window from the v1 document, so the two pin both directions of the clock check"
+    },
+    {
+      "file": "password-reset.md",
+      "source_record_id": "KB-ACME-PWD-RESET",
+      "tenant": "acme",
+      "group_ids": [],
+      "is_active": true,
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "role": "a second topic, so the set is not one subject with fourteen near-duplicates"
+    },
+    {
+      "file": "password-reset-group3.md",
+      "source_record_id": "KB-ACME-PWD-G3",
+      "tenant": "acme",
+      "group_ids": [3],
+      "is_active": true,
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "role": "group 3's counterpart to the ordinary password reset runbook, on the second topic: group isolation that is not an artefact of one subject"
+    },
+    {
+      "file": "globex-vpn-mfa-rebind.md",
+      "source_record_id": "KB-GLOBEX-VPN-MFA-REBIND",
+      "tenant": "globex",
+      "group_ids": [],
+      "is_active": true,
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "role": "the second tenant's answer to the same question acme asks. The wrong-tenant stratum has a document that a run could plausibly surface and must not"
+    },
+    {
+      "file": "globex-citrix-breakglass.md",
+      "source_record_id": "KB-GLOBEX-CITRIX-BREAKGLASS",
+      "tenant": "globex",
+      "group_ids": [],
+      "is_active": true,
+      "authority": "internal_knowledge",
+      "effective_from": "2026-01-01T00:00:00+00:00",
+      "role": "a document only the other tenant has. A must-refuse-access query asked by an acme caller is answered by refusing without disclosing that this exists"
+    }
+  ]
+}

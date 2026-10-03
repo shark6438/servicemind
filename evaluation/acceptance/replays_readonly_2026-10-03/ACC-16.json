@@ -1,0 +1,65 @@
+{
+  "case_id": "ACC-16",
+  "cases_digest": "63a3a71fd0a6caedb9041dffa0094cabe80a84afe91bdbf11f13c6334d67356c",
+  "environment": {
+    "entitlement_verifier_configured": true,
+    "base_url": "http://127.0.0.1:18080",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "recorded_at": "2026-10-02T16:42:25.089231Z",
+    "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(47de4c33ae95)",
+    "notes": [
+      "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
+      "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
+    ]
+  },
+  "subject": {
+    "username": "globex-approver",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "roles": [
+      "operator",
+      "analyst",
+      "approver",
+      "viewer"
+    ],
+    "entity_ids": [
+      2
+    ],
+    "group_ids": [
+      3,
+      4
+    ]
+  },
+  "steps": [
+    {
+      "id": "count-outbox",
+      "description": "统计 outbox 中 action.approved 行的总数与未投递数，读出最老已投递行的年龄与投递流长度，原始输出写入 detail",
+      "action": "outbox tally",
+      "started_at": "2026-10-02T16:49:07.694212Z",
+      "elapsed_seconds": 0.015381907112896442,
+      "http_status": null,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "{\"event_type\": \"action.approved\", \"total\": 98, \"by_status\": {\"published\": 98}, \"unconsumed\": 0, \"retention_days\": 30, \"oldest_delivered_row\": \"2026-09-23T00:25:48.426866+00:00\", \"oldest_delivered_age_seconds\": 836599.3, \"delivered_rows_within_retention\": true, \"delivered_rows_older_than_one_day\": 98, \"redis\": {\"readable\": true, \"stream\": \"servicemind:tool-events\", \"length\": 102, \"bound\": 100000}, \"note\": \"PASS here means the tally was taken and the retention read, not that a consumer outside this repository drained the queue: no consumer exists in the platform, which is recorded in the baseline document\"}"
+    }
+  ],
+  "run_id": null,
+  "case_run_ids": [],
+  "terminal_status": null,
+  "total_seconds": null,
+  "action_intent": null,
+  "citations": [],
+  "evidence": [],
+  "analysis": null,
+  "review": null,
+  "selection_manifest": [],
+  "followups_before": [],
+  "followups_after": [],
+  "timeline_events": [],
+  "audit_events": [],
+  "memory_records": [],
+  "graph_readings": [],
+  "foreign_run_status": null,
+  "listed_for_own_tenant": null,
+  "errors": []
+}

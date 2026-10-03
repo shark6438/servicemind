@@ -56,6 +56,7 @@ from servicemind.evaluation.quality_grader import (
     outcome_summary,
     render_report,
 )
+from servicemind.evaluation.refusal import stamp_refusal
 from servicemind.evaluation.revisions import recorded_revisions, revision_problems
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -64,6 +65,9 @@ CASES = QUALITY / "cases.v1.json"
 REPLAYS = QUALITY / "replays"
 BATCH = REPLAYS / "_batch.json"
 REPORTS = REPO_ROOT / "evaluation" / "reports"
+
+#: Repo-relative, so a refusal stamped into a report names the gate that stamped it.
+GATE_NAME = str(Path(__file__).resolve().relative_to(REPO_ROOT))
 REPORT_JSON = REPORTS / "phase7_quality_latest.json"
 REPORT_MD = REPORTS / "phase7_quality_latest.md"
 
@@ -250,6 +254,15 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    # Resolved before the provenance check rather than after it, so the refusal path can
+    # annotate the very files this run would have written. A refusal that returns 3 and
+    # leaves yesterday's ``PASS`` on disk is a report contradicting its own exit code.
+    report_json = args.report.with_suffix(".json") if args.report else REPORT_JSON
+    report_md = (
+        args.report
+        if args.report and args.report.suffix == ".md"
+        else (REPORT_MD if args.report is None else args.report.with_suffix(".md"))
+    )
     if args.live:
         print(
             json.dumps(
@@ -264,6 +277,13 @@ def main() -> int:
                 indent=2,
             )
         )
+        stamp_refusal(
+            report_json,
+            report_md,
+            gate=GATE_NAME,
+            reason="--live: this gate does not run the quality batch; nothing was measured and the report on disk is not a verdict about the deployed platform",
+            argv=sys.argv,
+        )
         return EXIT_CONFIGURATION
 
     try:
@@ -277,16 +297,10 @@ def main() -> int:
         drift = {} if args.force else check_observations_match_cases(case_set, observations)
     except ConfigurationError as exc:
         print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)
+        stamp_refusal(report_json, report_md, gate=GATE_NAME, reason=str(exc), argv=sys.argv)
         return EXIT_CONFIGURATION
 
     outcome = grade(case_set, observations, generated_at=datetime.now(tz=UTC))
-
-    report_json = args.report.with_suffix(".json") if args.report else REPORT_JSON
-    report_md = (
-        args.report
-        if args.report and args.report.suffix == ".md"
-        else (REPORT_MD if args.report is None else args.report.with_suffix(".md"))
-    )
 
     if not args.force:
         try:

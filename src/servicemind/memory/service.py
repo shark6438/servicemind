@@ -151,6 +151,13 @@ def memory_relevance_score(semantic: float, metadata: float) -> float:
     return (1.0 - METADATA_WEIGHT) * semantic + METADATA_WEIGHT * metadata
 
 
+#: The largest candidate window the repositories will return. A cosine ranker needs the
+#: whole window (see ``MemoryRetriever.retrieve``): lexeme overlap is not something the
+#: repository can prune by on the ranker's behalf. The lexical ceiling stays configurable
+#: below this bound; the semantic path uses the bound itself.
+MAX_CANDIDATE_CEILING = 500
+
+
 class MemoryRetriever:
     """Scope-first retrieval followed by ranking and authority revalidation."""
 
@@ -162,8 +169,10 @@ class MemoryRetriever:
         min_semantic_similarity: float = 0.35,
         min_lexical_similarity: float = 0.05,
     ) -> None:
-        if not 1 <= candidate_ceiling <= 500:
-            raise ValueError("memory candidate ceiling must be between 1 and 500")
+        if not 1 <= candidate_ceiling <= MAX_CANDIDATE_CEILING:
+            raise ValueError(
+                f"memory candidate ceiling must be between 1 and {MAX_CANDIDATE_CEILING}"
+            )
         self.repository = repository
         self.embedding = embedding
         self.candidate_ceiling = candidate_ceiling
@@ -179,7 +188,25 @@ class MemoryRetriever:
         self.min_lexical_similarity = min_lexical_similarity
 
     async def retrieve(self, query: MemoryQuery) -> list[MemorySelection]:
-        candidates = await self.repository.candidates(query, ceiling=self.candidate_ceiling)
+        # The window is a cost bound, and it may only cut on the signal the ranker uses.
+        # With an embedding provider the ranker is cosine similarity, which the repository
+        # cannot compute -- it orders candidates by lexeme overlap. Letting that ordering
+        # choose which memories get embedded drops every memory that shares no token with
+        # the query, however close it is in meaning. Measured on the live corpus, that was
+        # 161 of the 261 memories above the semantic floor for one query, and 158 of 254 for
+        # its translation: the single best match, at cosine 0.754, never reached the ranker.
+        # So the semantic path takes the repository's whole window, and says so when even
+        # that is not enough. The lexical path keeps the configured ceiling: there the
+        # repository's order *is* the ranking signal, so cutting on it is exactly right.
+        ceiling = self.candidate_ceiling if self.embedding is None else MAX_CANDIDATE_CEILING
+        candidates = await self.repository.candidates(query, ceiling=ceiling)
+        if self.embedding is not None and len(candidates) >= ceiling:
+            logger.warning(
+                "memory candidate window is full at %d rows; anything past it is ordered by "
+                "lexeme overlap alone, so a memory sharing no token with the query cannot be "
+                "recalled however close it is in meaning",
+                ceiling,
+            )
         candidates = [record for record in candidates if query.allows_record(record)]
         query_vector: list[float] | None = None
         document_vectors: list[list[float]] | None = None

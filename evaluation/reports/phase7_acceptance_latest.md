@@ -4,7 +4,7 @@
 
 ## 一、本次判定的绑定
 
-- 生成时间：`2026-09-30T21:56:40.047089+00:00`
+- 生成时间：`2026-10-01T07:51:08.864054+00:00`
 - 案例清单摘要 `cases_digest`：`63a3a71fd0a6caedb9041dffa0094cabe80a84afe91bdbf11f13c6334d67356c`
 - 观测摘要 `observation_digest`：`ba2829a496bbb3ee402a5caecec2012f1bfce6984bc94ad76eda735f05888ee6`
 - 案例数：28；模块 roster：17

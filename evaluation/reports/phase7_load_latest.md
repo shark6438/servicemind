@@ -7,11 +7,11 @@
 - 判定：**FAIL**
 - 工作负载：evaluation/quality/cases.v1.json（前 20 条，按文件顺序）
 - 基线档位（并发 1）：`tier-1`
-- 被测版本：688dd90854f13f81a08cffa61370dfcedb360b47+dirty(155 files)
-- 观测时间窗：2026-09-24T01:49:43.437049+00:00 ~ 2026-09-24T01:59:04.125379+00:00
-- 生成时间：2026-09-30T16:14:08.733563+00:00（gate 运行时刻，非观测时刻）
+- 被测版本：b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)
+- 观测时间窗：2026-10-02T15:42:32.650433+00:00 ~ 2026-10-02T15:56:46.720329+00:00
+- 生成时间：2026-10-02T16:33:43.302008+00:00（gate 运行时刻，非观测时刻）
 - 单次运行结算预算：240 秒
-- 未通过运行：41 条；观测不足：0 条
+- 未通过运行：5 条；观测不足：2 条
 - plan_digest：`a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd`
 - workload_digest：`6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e`
 
@@ -45,9 +45,9 @@
 
 | 档位 | 并发 | 重复 | 声明运行数 | 实际观测 | 通过 | 未通过 | 未观测 | p50(秒) | p95(秒) | max(秒) | 墙钟(秒) | 运行/分钟 | p95/基线 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| tier-1 | 1 | 1 | 20 | 20 | 20 | 0 | 0 | 17.4 | 23.9 | 26.9 | 360.6 | 3.3 | 1.00× |
-| tier-5 | 5 | 2 | 40 | 40 | 40 | 0 | 0 | 17.5 | 30.1 | 32.0 | 155.1 | 15.5 | 1.26× |
-| tier-10 | 10 | 3 | 60 | 60 | 19 | 41 | 0 | 3.7 | 24.0 | 35.6 | 61.4 | 58.6 | 1.00× |
+| tier-1 | 1 | 1 | 20 | 20 | 19 | 1 | 0 | 24.3 | 33.7 | 33.8 | 490.7 | 2.4 | 1.00× |
+| tier-5 | 5 | 2 | 40 | 40 | 38 | 2 | 0 | 19.7 | 35.0 | 38.1 | 212.9 | 11.3 | 1.04× |
+| tier-10 | 10 | 3 | 60 | 60 | 57 | 3 | 0 | 19.9 | 35.7 | 38.6 | 169.5 | 21.2 | 1.06× |
 
 「运行/分钟」按**声明的运行数**除以档位墙钟计算，不按实际到达数——按到达数除会让一个丢了运行的档位报出更高的速率。
 「p95/基线」是以并发 1 档位 p95 为分母的倍数；该列是相对量，不受本次所跑主机的影响。
@@ -56,40 +56,30 @@
 
 | 档位 | 第几次 | 运行数 | p95(秒) |
 |---|---|---|---|
-| tier-1 | 0 | 20 | 23.9 |
-| tier-5 | 0 | 20 | 30.1 |
-| tier-5 | 1 | 20 | 29.6 |
-| tier-10 | 0 | 20 | 33.2 |
-| tier-10 | 1 | 20 | 24.0 |
-| tier-10 | 2 | 20 | 1.1 |
+| tier-1 | 0 | 20 | 33.7 |
+| tier-5 | 0 | 20 | 35.0 |
+| tier-5 | 1 | 20 | 33.4 |
+| tier-10 | 0 | 20 | 36.5 |
+| tier-10 | 1 | 20 | 35.6 |
+| tier-10 | 2 | 20 | 33.4 |
 
 工作负载在一档内会重复同一批问题，因此服务商侧的提示缓存若对后几遍帮助更大，就会落在这些数字里。
 本批次**不作修正**，把它逐遍列出，让读者看见它是什么，而不是被平均成一个读起来像「平台变快了」的单一数字。
 
 ## 未通过的运行
 
-共 41 条，列出前 20 条：
+共 5 条，列出前 20 条：
 
-- tier-10 Q-001#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-001#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-002#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-002#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-003#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-003#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-004#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-004#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-005#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-005#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-006#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-006#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-007#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-007#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-008#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-008#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-009#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-009#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-010#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
-- tier-10 Q-010#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome
+- tier-5 Q-002#0: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-G3-COMPLIANCE', 'KB-Q-LIC-V2', 'KB-Q-MFA-ENROL', 'KB-Q-RAP-V2']
+- tier-5 Q-002#1: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-G3-COMPLIANCE', 'KB-Q-LIC-V2', 'KB-Q-PASSWORD', 'KB-Q-RAP-V2']
+- tier-10 Q-002#0: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-LIC-V2', 'KB-Q-PASSWORD', 'KB-Q-RAP-V2', 'KB-Q-SPLIT-V2']
+- tier-10 Q-002#1: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-LIC-V2', 'KB-Q-MFA-ENROL', 'KB-Q-RAP-V2']
+- tier-10 Q-002#2: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-LIC-V2', 'KB-Q-MFA-ENROL', 'KB-Q-RAP-V2']
+
+## 观测不足
+
+- tier-1: tier-1 Q-002#0: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-LIC-V2', 'KB-Q-MFA-ENROL', 'KB-Q-RAP-V2']
+- tier-1: the unloaded tier is not a usable baseline (1 run(s) did not behave), so nothing observed under load can be attributed to load
 
 ## 本批次不证明的内容
 

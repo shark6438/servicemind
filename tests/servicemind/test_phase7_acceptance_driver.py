@@ -18,6 +18,7 @@ an action nobody can see is not a retry, it is a different observation.
 
 from __future__ import annotations
 
+import ast
 import importlib.util
 import json
 import sys
@@ -229,3 +230,139 @@ async def test_a_run_that_derived_an_action_is_not_submitted_again() -> None:
     assert stack.submitted == []
     assert case_run.errors == []
     assert case_run.intent is not None
+
+
+def test_a_platform_that_moved_mid_sweep_is_reported() -> None:
+    """Both halves of the identity, because either can move on its own.
+
+    A restart onto the same tree changes the process but not the revision; a source edit
+    without a restart changes the revision but not the process. Whichever moved, the
+    replays on the two sides describe different platforms, and nothing in a replay says so.
+    """
+    same = ("Fri 2026-10-02 23:07:26 CST", "b385df7c+patch(47de4c33ae95)")
+    assert MODULE.mid_sweep_change(same, same) is None
+
+    restarted = ("Sat 2026-10-03 00:46:24 CST", same[1])
+    changed_tree = (same[0], "b385df7c+patch(b066c2f1a5aa)")
+    for after in (restarted, changed_tree):
+        message = MODULE.mid_sweep_change(same, after)
+        assert message is not None
+        assert same[0] in message and after[0] in message
+
+
+def test_a_restart_the_sweep_itself_performed_is_not_drift() -> None:
+    """The exemption is an exact match against what the sweep saw at its own restart.
+
+    One case restarts the unit on purpose -- it points the verifier at a dead port and
+    restarts to make that take effect, then restarts again to undo it. Aborting on that
+    restart makes the corpus unrunnable, which is what happened on 2026-10-03, when the
+    guard stopped the sweep at the case right after it. But "a restart happened somewhere
+    in this sweep's past" is not the claim being made, and accepting anything once the
+    sweep has restarted once would re-open the hole it was built to close. The claim is
+    narrower: the identity observed now is the one this sweep saw at its own last restart.
+    """
+    before = ("Sat 2026-10-03 00:46:24 CST", "b385df7c+patch(502cd954496f)")
+    ours = ("Sat 2026-10-03 13:11:48 CST", before[1])
+    afterwards = ("Sat 2026-10-03 13:20:00 CST", before[1])
+    changed_tree = (ours[0], "b385df7c+patch(deadbeef1234)")
+
+    assert MODULE.rebaselined_after_restart(before, ours, declared=ours) is True
+    assert MODULE.rebaselined_after_restart(before, ours, declared=None) is False, (
+        "nothing in this sweep restarted the unit, so the change is not ours to explain"
+    )
+    assert MODULE.rebaselined_after_restart(before, afterwards, declared=ours) is False, (
+        "our restart happened, but the unit moved again after it -- that second move is drift"
+    )
+    assert MODULE.rebaselined_after_restart(before, changed_tree, declared=ours) is False, (
+        "the tree is not something a restart explains, so it is never absorbed"
+    )
+    assert MODULE.rebaselined_after_restart(before, before, declared=before) is False, (
+        "nothing moved, so there is nothing to re-baseline"
+    )
+
+
+def test_the_exemption_is_asked_for_rather_than_assumed() -> None:
+    """The loop must consult the identity captured at its own restart.
+
+    Structural, because the wrong version of this line is the permissive one: a loop that
+    re-baselines on any change once a restart has happened anywhere in its past reads
+    identically at the call site and passes every behavioural test that only ever produces
+    a change the sweep caused.
+    """
+    source = (
+        Path(__file__).resolve().parents[2] / "scripts" / "verify_phase7_acceptance_live.py"
+    ).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    def exemption_calls(node: ast.AST) -> list[ast.Call]:
+        return [
+            child
+            for child in ast.walk(node)
+            if isinstance(child, ast.Call)
+            and isinstance(child.func, ast.Name)
+            and child.func.id == "rebaselined_after_restart"
+        ]
+
+    loops = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.For) and "run_case" in ast.dump(node)
+    ]
+    assert len(loops) == 1
+    guarded = exemption_calls(loops[0])
+    assert guarded, "the per-case loop must decide whether the change was its own"
+    # The value, not merely the argument name: ``declared=None`` is the same keyword
+    # spelled so that the loop never re-baselines on anything, and a check of the name
+    # alone passes it. This is asserted as source text rather than as a node shape,
+    # because the shape has more ways to be right than it has ways to be wrong.
+    given = [
+        ast.unparse(keyword.value)
+        for call in guarded
+        for keyword in call.keywords
+        if keyword.arg == "declared"
+    ]
+    assert given, "the decision must be given an identity to compare against"
+    assert all(value == "stack.identity_at_last_restart" for value in given), (
+        "the decision must be given the identity captured at the sweep's own restart; "
+        f"found {given}"
+    )
+
+
+def test_the_sweep_asks_that_question_around_every_case() -> None:
+    """The question is asked per case and once more at the end, asserted structurally.
+
+    Reading the source rather than the call, because the defect this guards is an absent
+    call: ``refuse_stale_deployment`` checks the same pairing once, before the first case,
+    and a sweep that only ever asks once is exactly the sweep that cannot notice a restart
+    four cases in -- which is what happened on 2026-10-03.
+    """
+    source = (
+        Path(__file__).resolve().parents[2] / "scripts" / "verify_phase7_acceptance_live.py"
+    ).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    def calls(node: ast.AST) -> bool:
+        return any(
+            isinstance(child, ast.Call)
+            and isinstance(child.func, ast.Name)
+            and child.func.id == "mid_sweep_change"
+            for child in ast.walk(node)
+        )
+
+    case_loops = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.For) and calls(node) and "run_case" in ast.dump(node)
+    ]
+    assert len(case_loops) == 1, (
+        "the per-case loop must ask whether the platform moved before running the case; "
+        "a sweep that asks only once cannot notice a restart part-way through"
+    )
+
+    finals = [
+        node.finalbody for node in ast.walk(tree) if isinstance(node, ast.Try) and node.finalbody
+    ]
+    assert any(any(calls(statement) for statement in block) for block in finals), (
+        "the last case can straddle the change as easily as any other, and a batch that "
+        "ended just after a restart has no next case to notice it"
+    )

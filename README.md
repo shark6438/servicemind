@@ -348,6 +348,28 @@ scripts/audit_project_structure.py` (no `--check`) — and commit both together.
 linting, the architecture gate, and a docker-based integration job. For per-commit
 authoring conventions see [CLAUDE.md](CLAUDE.md).
 
+### What the Phase-7 acceptance gate does and does not say
+
+`uv run python scripts/check_phase7_gate_reports.py` re-runs the four Phase-7 gates offline
+and compares each verdict against the report committed for it. It exits 0 when they agree,
+and that exit code is easy to read as "acceptance passes". It is not that.
+
+The verdicts come from grading replays on disk. The acceptance batch is 28 replays, all
+recorded at `cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`; HEAD is five
+commits later. Two properties are checked over those files -- that they all describe one
+revision (homogeneity), and that the grader still reaches the verdict each committed report
+claims. Whether that revision is the *current* one (currency) is a separate question, and
+an offline run on a bare checkout cannot answer it: nothing in the files says which tree
+produced them.
+
+So the accurate reading of `acceptance exit 0` is **"these 28 observations are mutually
+consistent and the grader still accepts them"**, and not **"the current checkout passes
+acceptance"**. The script prints the revision it graded and reports `currency_checked:
+false` whenever nothing compared it against an expected revision; pass `--expect-revision
+<rev>`, or re-record with `scripts/verify_phase7_acceptance_live.py` against the deployment
+you mean to describe, to turn currency into a checked fact. The other three gates carry the
+same limit, and currently refuse rather than grade.
+
 ## Documentation index
 
 - Enterprise spec (Chinese): [`docs/企业IT服务管理(ITSM)智能体平台.md`](docs/企业IT服务管理(ITSM)智能体平台.md)
@@ -356,6 +378,7 @@ authoring conventions see [CLAUDE.md](CLAUDE.md).
 - Phase 4 RAG quality root cause: [`docs/PHASE4_RAG_QUALITY_ROOT_CAUSE_2026-09-15.md`](docs/PHASE4_RAG_QUALITY_ROOT_CAUSE_2026-09-15.md)
 - Phase 5 architecture & acceptance: [`docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md`](docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md)
 - Phase 5 memory quality evaluation: [`docs/PHASE5_MEMORY_QUALITY_EVALUATION.md`](docs/PHASE5_MEMORY_QUALITY_EVALUATION.md)
+- Phase 7 acceptance baseline: [`docs/PHASE7_ACCEPTANCE_BASELINE.md`](docs/PHASE7_ACCEPTANCE_BASELINE.md)
 - Phase acceptance reports: `docs/PHASE*_ACCEPTANCE.md`, plus live reports under
   `evaluation/reports/`
 - Local deployment notes: [`LOCAL_DEPLOYMENT.md`](LOCAL_DEPLOYMENT.md)

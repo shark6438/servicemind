@@ -11,6 +11,7 @@ THREAD_ID = os.environ.get("SMOKE_THREAD_ID", "smoke-test-persistence-thread")
 
 
 @pytest.mark.docker
+@pytest.mark.deployed_stack
 def test_checkpointer_persists_history():
     """Confirm the configured checkpointer persists conversation state across turns.
 
@@ -38,6 +39,7 @@ def test_checkpointer_persists_history():
 
 
 @pytest.mark.docker
+@pytest.mark.deployed_stack
 def test_threads_lists_user_threads():
     """Confirm /threads enumerates threads through the configured checkpointer.
 

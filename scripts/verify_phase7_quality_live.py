@@ -49,6 +49,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+from servicemind.evaluation.deployment import refuse_stale_deployment
 from servicemind.evaluation.quality import (
     CaseKind,
     QualityCase,
@@ -394,6 +395,13 @@ def _select(cases: Iterable[QualityCase], only: str | None, kinds: set[str]) -> 
 
 
 async def run(args: argparse.Namespace) -> int:
+    # Refused before anything is observed, because the failure does not announce itself:
+    # a process running code older than the tree answers every request competently, so the
+    # batch completes and every record carries the revision of code the platform never ran.
+    refusal = refuse_stale_deployment(REPO_ROOT, allow=args.allow_stale_deployment, argv=sys.argv)
+    if refusal:
+        return refusal
+
     driver = load_acceptance_driver()
     case_set = load_quality_cases(CASES)
     digest = case_set_digest(case_set)
@@ -505,6 +513,14 @@ def main() -> int:
     parser.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY)
     parser.add_argument("--budget", type=float, default=DEFAULT_CASE_BUDGET_SECONDS)
     parser.add_argument("--health-timeout", type=float, default=120.0)
+    parser.add_argument(
+        "--allow-stale-deployment",
+        action="store_true",
+        help=(
+            "observe even though the serving process predates the tree, recording the gap "
+            "as a note instead of refusing; the evidence will describe the older code"
+        ),
+    )
     args = parser.parse_args()
     return asyncio.run(
         run(args), loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector())

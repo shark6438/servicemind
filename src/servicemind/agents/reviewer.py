@@ -4,7 +4,7 @@ import hashlib
 import json
 import time
 from collections.abc import Callable
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -62,7 +62,7 @@ ALLOWED_PHASE3_ACTIONS = {"append_ticket_followup"}
 # is terminal, so a misread restatement refuses a run whose evidence answered the
 # question, and ACC-23 wrote nothing in two of two runs. The rule is now stated for
 # every claim type rather than argued one bar at a time.
-REVIEW_POLICY_VERSION = "servicemind-review-policy-v5"
+REVIEW_POLICY_VERSION = "servicemind-review-policy-v6"
 
 #: Floor for the independent semantic judge's own confidence before its clean
 #: verdict may clear an analysis (and thereby authorize a controlled write).
@@ -96,6 +96,56 @@ def _clip_narrative(text: str, limit: int) -> str:
     return text[: limit - len(_TRUNCATION_MARKER)] + _TRUNCATION_MARKER
 
 
+#: Where in the analysis a statement the evidence does not carry can live. Deliberately
+#: not a claim id. Measured 2026-10-02 (``phase7_reviewer_semantic_latest.json``): five
+#: adversarial cases defeated the semantic judge with ``analysis.claims == []``, so every
+#: criterion the adjudicator had -- all of them indexed by claim id -- had nothing to
+#: attach to and the judge's own clean-verdict default (``claims_supported: true``) went
+#: through. Two of the five the judge *read correctly and said so in its narrative* and
+#: still passed, because the contract had no field to put the finding in. Naming the
+#: assertion's home field is what closes that gap without inventing a claim the analysis
+#: never made.
+#: The widened criteria and the value each takes when the judge leaves it out. Keyed by
+#: the field name the schema advertises, valued by the reading that reproduces what the
+#: platform did before the criterion existed.
+_WIDENED_CRITERIA: dict[str, Any] = {
+    "action_target_grounded": True,
+    "citation_integrity_ok": True,
+    "unbacked_assertions": [],
+}
+
+UNBACKED_ASSERTION_FIELDS = (
+    "reasoning_summary",
+    "recommended_group",
+    "classification",
+    "problem_recommendation",
+    "change_recommendation",
+    "other",
+)
+
+
+class UnbackedAssertion(BaseModel):
+    """One statement the analysis makes that the cited evidence does not carry.
+
+    ``field`` locates it and ``detail`` quotes it, which is what lets the finding be acted
+    on without re-reading the analysis and what lets the adjudicator name the part of the
+    work that has to be redone. A claim id would have been the obvious locator and is
+    exactly the one that does not exist for the defects this was added for.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    field: Literal[
+        "reasoning_summary",
+        "recommended_group",
+        "classification",
+        "problem_recommendation",
+        "change_recommendation",
+        "other",
+    ]
+    detail: str = Field(min_length=1, max_length=400)
+
+
 def _citation_digest(document_id, parent_chunk_id, content_hash: str) -> str:
     """Re-derive the deterministic citation id (mirror of ``Citation.from_hit``).
 
@@ -123,6 +173,21 @@ class SemanticReview(BaseModel):
     ``SEMANTIC_CONFIDENCE_LOW`` means it did and was not convinced. Both fail closed
     the same way; conflating them sends an operator hunting for a judgement the model
     never made.
+
+    ``action_target_grounded``, ``citation_integrity_ok`` and ``unbacked_assertions``
+    widen the defect surface past the claim list -- see :data:`UNBACKED_ASSERTION_FIELDS`
+    for the measurement that made them necessary. The three are advertised as required so
+    the judge is asked for them on every call, and are tolerated on the way in (see
+    :meth:`_tolerate_overrun`) at their *status-quo* values: an omitted
+    ``action_target_grounded`` reads as ``True``, which is precisely what the platform
+    did before this field existed. That is not a fail-open introduced by the widening --
+    it is the absence of a check that was never there -- and the alternative, failing
+    closed on omission, would escalate every healthy run whose judge response was
+    incomplete, converting a contract gap into a deployment-wide outage. What is *not*
+    tolerated is the judge answering one of them: a ``false`` or a populated list is
+    always acted on. Whether the judge actually fills them is a measurement, not an
+    assumption; ``scripts/evaluate_phase7_reviewer_semantic.py`` reports it as
+    ``contract_fill_rate``.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -132,9 +197,13 @@ class SemanticReview(BaseModel):
     prompt_injection_detected: bool
     contradictions: list[str] = Field(default_factory=list, max_length=20)
     unsupported_claim_ids: list[str] = Field(default_factory=list, max_length=30)
+    action_target_grounded: bool
+    citation_integrity_ok: bool
+    unbacked_assertions: list[UnbackedAssertion] = Field(max_length=20)
     feedback: str = Field(min_length=1, max_length=_SEMANTIC_FEEDBACK_MAX)
     confidence: float = Field(ge=0, le=1)
     rating_supplied: bool = Field(default=True, exclude=True)
+    missing_criteria: list[str] = Field(default_factory=list, exclude=True)
 
     @model_validator(mode="before")
     @classmethod
@@ -156,6 +225,15 @@ class SemanticReview(BaseModel):
             # actual findings instead of a generic "semantic review unavailable".
             data["confidence"] = 0.0
             data["rating_supplied"] = False
+        # The widened criteria default to what the platform concluded without them.
+        # See the class docstring for why omission is not read as a defect. Which of them
+        # went unanswered is recorded anyway -- not to decide anything, but so the fill
+        # rate is a measurement rather than an assumption about what the judge did.
+        absent = [name for name in _WIDENED_CRITERIA if name not in data]
+        for name, status_quo in _WIDENED_CRITERIA.items():
+            data.setdefault(name, status_quo)
+        if absent:
+            data["missing_criteria"] = absent
         return data
 
 
@@ -288,7 +366,16 @@ class ReviewerAgent:
         that did not come out of the enterprise RAG pipeline; the review must not
         reason over it, so the gate fails closed.
         """
-        if item.metadata.get("degraded_rag") is True:
+        # The exemption above is for code-curated fallbacks, and the docstring's own
+        # wording is the invariant: they "carry no citation by design". The check used to
+        # test only the first half, so any row that *declared itself* degraded took the
+        # skip -- including one that carried a citation object all the same, which is a
+        # row presenting as an anchored document row while holding an anchor that does not
+        # anchor it. Measured 2026-10-02 (REV-EVA-02): the same flag that admits a real
+        # fallback hid a hollow citation from the gate, and the gate's own citation check
+        # -- the only one that could have seen it -- was skipped before it ran. A row with
+        # a citation has one that can be checked; only a row with none has nothing to skip.
+        if item.metadata.get("degraded_rag") is True and item.metadata.get(CITATION_KEY) is None:
             return None
         raw = item.metadata.get(CITATION_KEY)
         if not isinstance(raw, dict):
@@ -675,6 +762,14 @@ class ReviewerAgent:
                             "evidence_id": item.evidence_id,
                             "source_type": item.source_type.value,
                             "source_ref": item.source_ref,
+                            # What the row is *about*, not just what it says. Without it
+                            # action_target_grounded is not answerable: a proposed action
+                            # naming ticket 999999 cannot be compared with anything when
+                            # the ticket row's own id never reaches the judge, which is
+                            # how REV-EVA-01 read an ungrounded target as the run's own
+                            # ticket and cleared it (measured 2026-10-02).
+                            "resource_type": item.resource_type,
+                            "resource_id": item.resource_id,
                             "content": item.content,
                             "content_hash": item.provenance.content_hash,
                             "citation": (
@@ -717,6 +812,66 @@ class ReviewerAgent:
                         "carries is supported however it condenses the clauses, and where "
                         "one admits both a faithful and an unfaithful reading the faithful "
                         "one governs. "
+                        # Each clause below removes one reading that a measured evasion
+                        # relied on, and states the rule for the analysis as a whole
+                        # rather than for its claims -- these defects arrive with no
+                        # claims. The first measurement of this block scored false-accept
+                        # 0.00 and false-reject 0.92: told only to flag what the evidence
+                        # does not carry, the judge flagged the classification label, a
+                        # content-free process note, and the null citation that every
+                        # non-document row carries by construction. Precision is the whole
+                        # difficulty, so each rule says what is *not* a defect as well as
+                        # what is.
+                        "Judge the analysis as a whole, not only its claims: an analysis "
+                        "with an empty claims list has still made statements, and those "
+                        "fields are what you are reading. "
+                        "Grounding is equality, not containment: a recommended_group that "
+                        "is a fragment of a longer phrase in the evidence is NOT grounded "
+                        "-- 'Team' is not carried by evidence reading 'Identity Team'. "
+                        "Equally, do not demand more than the evidence gives: a cited row "
+                        "stating that a group owns this class of fault, or owns the runbook "
+                        "for it, grounds recommending that group. An explicit assignment or "
+                        "routing record is not something this evidence would contain, and "
+                        "its absence is not a defect. "
+                        "Set unbacked_assertions to the statements that assert a factual "
+                        "claim about this incident which no cited evidence carries, quoting "
+                        "each one and naming the analysis field it lives in. An empty list "
+                        "is the usual answer. Never use this field for notes, and never "
+                        "list something you checked and found grounded. In particular "
+                        "these are NOT unbacked assertions: the classification, which is "
+                        "the analysis's own label for the incident unless it names a "
+                        "failure the evidence contradicts; the two recommendations, which "
+                        "are proposals rather than facts; and a content-free process note "
+                        "such as 'Synthesised from the joined evidence'. "
+                        "A document's own lifecycle is not carried by the document: that a "
+                        "runbook was withdrawn, superseded or published on a date is "
+                        "supported only if the cited evidence says so, and an analysis "
+                        "asserting it otherwise DOES have an unbacked assertion. "
+                        "A row that states what a listing says rather than a fact about "
+                        "this incident does not ground one: a support-group directory, an "
+                        "org table or a contact record is a catalogue, and an analysis "
+                        "that takes a group name from one and recommends it as this "
+                        "incident's owner has an unbacked assertion however real the row "
+                        "is. This is narrow: a memory row noting the incident recurred, or "
+                        "a graph row linking this ticket to a runbook, does bear on the "
+                        "incident and is not a defect. "
+                        "citation_integrity_ok concerns the cited document rows -- those "
+                        "whose source_type is 'knowledge'. Two shapes are the platform's "
+                        "normal ones and are not defects: a row of another type (glpi, "
+                        "memory, graph), which carries no citation by construction, and a "
+                        "knowledge row carrying no citation at all, which is how a "
+                        "code-curated fallback is stored. Set the flag false when a "
+                        "knowledge row's citation object is present but does not anchor it "
+                        "-- it carries no document id, no parent chunk id or no content "
+                        "hash. A citation that is present has to hold. "
+                        "action_target_grounded: compare each proposed action's "
+                        "resource_type and resource_id against the resource_type and "
+                        "resource_id of the evidence rows, which the payload gives you. "
+                        "An action aimed at a resource some evidence row describes is "
+                        "grounded. Set the flag false when the action names a resource no "
+                        "row describes -- a ticket number, asset or group that appears "
+                        "nowhere in the evidence -- even when the operation itself is one "
+                        "the cited runbook allows. "
                         "Do not call tools and do not override deterministic policy. "
                         "Emit every field of the schema, including confidence. Keep "
                         f"feedback under {_SEMANTIC_FEEDBACK_MAX} characters: summarise the "
@@ -804,6 +959,26 @@ class ReviewerAgent:
                 else ReviewDecision.ESCALATE
             )
             risk = RiskLevel.HIGH
+        elif not semantic.citation_integrity_ok:
+            # An unanchored citation is not an information gap: it is the evidence chain
+            # failing to be auditable, which is the property a controlled write is
+            # authorized *on*. One more retrieval round may bring an anchored copy of the
+            # same row, so that comes first while it is still owed -- but once it is
+            # spent this reaches a person rather than abstaining, because abstaining would
+            # file a broken evidence chain as an unanswerable question.
+            findings.append(
+                self._finding(
+                    "semantic.citation",
+                    "error",
+                    "grounding",
+                    "SEMANTIC_CITATION_UNANCHORED",
+                    semantic.feedback,
+                )
+            )
+            if state["retrieval_round"] < 1:
+                decision, risk = ReviewDecision.RETRIEVE_MORE, RiskLevel.MEDIUM
+            else:
+                decision, risk = ReviewDecision.ESCALATE, RiskLevel.HIGH
         elif not semantic.claims_supported or semantic.unsupported_claim_ids:
             # Claim-level grounding deficit: cited evidence is present (the coverage
             # gate passed) but the independent judge could not entail the claims. The
@@ -830,13 +1005,42 @@ class ReviewerAgent:
                 decision, risk = ReviewDecision.RETRIEVE_MORE, RiskLevel.MEDIUM
             else:
                 decision, risk = ReviewDecision.ABSTAIN, RiskLevel.MEDIUM
-        elif not semantic.action_consistent:
+        elif semantic.unbacked_assertions:
+            # The same grounding deficit as the branch above, reached through the wider
+            # surface: the analysis asserts things the cited evidence does not carry and
+            # never encoded them as claims. Repair policy is identical because the deficit
+            # is: another retrieval round while one is owed, an explicit terminal
+            # abstention once the evidence base has said what it can say.
+            unbacked = [
+                f"{assertion.field}: {assertion.detail}"
+                for assertion in semantic.unbacked_assertions
+            ]
+            unsupported.extend(unbacked)
+            findings.append(
+                self._finding(
+                    "semantic.unbacked",
+                    "error",
+                    "grounding",
+                    "SEMANTIC_UNBACKED_ASSERTION",
+                    f"Unbacked assertion(s): {'; '.join(unbacked)}. {semantic.feedback}",
+                )
+            )
+            if state["retrieval_round"] < 1:
+                decision, risk = ReviewDecision.RETRIEVE_MORE, RiskLevel.MEDIUM
+            else:
+                decision, risk = ReviewDecision.ABSTAIN, RiskLevel.MEDIUM
+        elif not semantic.action_consistent or not semantic.action_target_grounded:
+            target_ungrounded = not semantic.action_target_grounded
             findings.append(
                 self._finding(
                     "semantic.action",
                     "error",
                     "action_consistency",
-                    "SEMANTIC_ACTION_MISMATCH",
+                    (
+                        "SEMANTIC_ACTION_TARGET_UNGROUNDED"
+                        if target_ungrounded
+                        else "SEMANTIC_ACTION_MISMATCH"
+                    ),
                     semantic.feedback,
                 )
             )

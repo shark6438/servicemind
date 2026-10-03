@@ -2,18 +2,28 @@
   "mode": "live",
   "base_url": "http://127.0.0.1:18080",
   "tenant_id": "22222222-2222-4222-8222-222222222222",
-  "recorded_at": "2026-09-30T16:23:38.257442+00:00",
-  "deployed_revision": "cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(69 files)",
+  "recorded_at": "2026-10-02T15:56:46.722167+00:00",
+  "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)",
   "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
   "workload_digest": "6b9afe70fc40ae0ef76c95eca74398c254ed555edf7a82e333727d41b9908b0e",
   "workload_size": 20,
   "tiers": [
     {
+      "name": "tier-1",
+      "started_at": "2026-10-02T15:42:13.618071+00:00",
+      "finished_at": "2026-10-02T15:50:24.327634+00:00"
+    },
+    {
+      "name": "tier-5",
+      "started_at": "2026-10-02T15:50:24.327819+00:00",
+      "finished_at": "2026-10-02T15:53:57.266521+00:00"
+    },
+    {
       "name": "tier-10",
-      "started_at": "2026-09-30T16:20:50.069934+00:00",
-      "finished_at": "2026-09-30T16:23:38.256989+00:00"
+      "started_at": "2026-10-02T15:53:57.266696+00:00",
+      "finished_at": "2026-10-02T15:56:46.721456+00:00"
     }
   ],
   "errored": [],
-  "elapsed_seconds": 1503.443
+  "elapsed_seconds": 2978.656
 }

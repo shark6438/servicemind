@@ -569,3 +569,258 @@ async def test_the_judge_must_read_a_claim_against_the_text_before_calling_it_in
     prompt = str(getattr(runnable.messages[0][0], "content", ""))
     assert "quote the passage that contradicts it" in prompt
     assert "the faithful one governs" in prompt
+
+
+# ===================================================== C) the widened criteria
+#
+# Measured live on 2026-10-02 (``evaluation/reports/phase7_reviewer_semantic_latest.json``):
+# five adversarial cases beat the semantic judge with ``analysis.claims == []``. Every
+# criterion the adjudicator had was indexed by ``claim_id``, so with no claims the judge's
+# own clean-verdict default went through unopposed -- and in two of the five it had read the
+# defect out and written it into ``feedback``, with no field to put it in. These cases pin
+# the three criteria that carry a defect with no claim to hang it on. They call no model:
+# the verdict is constructed, and only the adjudicator runs.
+
+
+def _analysis_without_claims(*, evidence_refs: list[str], **overrides) -> AnalysisResult:
+    """The shape all five measured evasions shared: real evidence, real prose, no claims."""
+    fields = {
+        "classification": "network/vpn",
+        "impact": 3,
+        "urgency": 4,
+        "priority": 4,
+        "recommended_group": "Network Team",
+        "recurring_incident": False,
+        "problem_recommendation": "Collect recurrence evidence.",
+        "change_recommendation": "No change supported.",
+        "proposed_actions": [],
+        "reasoning_summary": "Ticket and runbook support Network Team.",
+        "evidence_refs": evidence_refs,
+        "confidence": 0.8,
+        "source": "test",
+        "status": AnalysisStatus.MODEL,
+        "claims": [],
+    }
+    return AnalysisResult(**(fields | overrides))
+
+
+def _verdict(**overrides) -> dict:
+    """A verdict that says nothing is wrong, plus whatever the case is about."""
+    return {
+        "claims_supported": True,
+        "action_consistent": True,
+        "prompt_injection_detected": False,
+        "contradictions": [],
+        "unsupported_claim_ids": [],
+        "feedback": "Every statement is carried by its cited evidence.",
+        "confidence": 0.9,
+    } | overrides
+
+
+@pytest.mark.asyncio
+async def test_an_empty_claims_list_is_not_by_itself_a_pass(monkeypatch) -> None:
+    """The measured shape: no claims, so nothing to hang a finding on.
+
+    The judge may not report ``claims_supported`` and be taken at its word -- a run with
+    no claims has not thereby shown anything, and the analysis is judged on its own prose.
+    """
+    joined = _joined()
+    reviewer = _semantic_reviewer(
+        monkeypatch,
+        _verdict(
+            unbacked_assertions=[
+                {
+                    "field": "reasoning_summary",
+                    "detail": "The runbook was withdrawn on 2026-09-01.",
+                }
+            ]
+        ),
+    )
+
+    result = await reviewer.review(
+        analysis=_analysis_without_claims(evidence_refs=joined.evidence_refs),
+        evidence=joined,
+        request_write=False,
+        retrieval_round=0,
+        replan_count=0,
+        max_replans=2,
+    )
+
+    assert result.decision is ReviewDecision.RETRIEVE_MORE
+    assert [finding.reason_code for finding in result.findings] == ["SEMANTIC_UNBACKED_ASSERTION"]
+    # The locator survives into the record, so the repair names the field to redo.
+    assert result.unsupported_claims == [
+        "reasoning_summary: The runbook was withdrawn on 2026-09-01."
+    ]
+
+
+@pytest.mark.asyncio
+async def test_an_unbacked_assertion_abstains_once_the_retrieval_round_is_spent(
+    monkeypatch,
+) -> None:
+    joined = _joined()
+    reviewer = _semantic_reviewer(
+        monkeypatch,
+        _verdict(
+            unbacked_assertions=[
+                {"field": "recommended_group", "detail": "Team is the owning group."}
+            ]
+        ),
+    )
+
+    result = await reviewer.review(
+        analysis=_analysis_without_claims(evidence_refs=joined.evidence_refs),
+        evidence=joined,
+        request_write=False,
+        retrieval_round=1,
+        replan_count=0,
+        max_replans=2,
+    )
+
+    # An ordinary grounding gap gets an explicit abstention, never a human escalation --
+    # the same terminal the claim-indexed grounding branch already chose.
+    assert result.decision is ReviewDecision.ABSTAIN
+    assert [finding.reason_code for finding in result.findings] == ["SEMANTIC_UNBACKED_ASSERTION"]
+
+
+@pytest.mark.asyncio
+async def test_an_ungrounded_action_target_is_not_a_pass(monkeypatch) -> None:
+    """REV-EVA-01: an allowlisted operation aimed at a ticket no evidence describes."""
+    joined = _joined()
+    reviewer = _semantic_reviewer(monkeypatch, _verdict(action_target_grounded=False))
+
+    result = await reviewer.review(
+        analysis=_analysis(evidence_refs=joined.evidence_refs),
+        evidence=joined,
+        request_write=False,
+        retrieval_round=0,
+        replan_count=0,
+        max_replans=2,
+    )
+
+    assert result.decision is ReviewDecision.REPLAN
+    assert [finding.reason_code for finding in result.findings] == [
+        "SEMANTIC_ACTION_TARGET_UNGROUNDED"
+    ]
+
+
+@pytest.mark.asyncio
+async def test_an_ungrounded_action_target_escalates_once_the_replan_budget_is_spent(
+    monkeypatch,
+) -> None:
+    joined = _joined()
+    reviewer = _semantic_reviewer(monkeypatch, _verdict(action_target_grounded=False))
+
+    result = await reviewer.review(
+        analysis=_analysis(evidence_refs=joined.evidence_refs),
+        evidence=joined,
+        request_write=False,
+        retrieval_round=0,
+        replan_count=2,
+        max_replans=2,
+    )
+
+    assert result.decision is ReviewDecision.ESCALATE
+
+
+@pytest.mark.asyncio
+async def test_an_unanchored_citation_is_not_a_pass(monkeypatch) -> None:
+    """REV-EVA-02: a row marking itself curated to skip validation, and not curated."""
+    joined = _joined()
+    reviewer = _semantic_reviewer(monkeypatch, _verdict(citation_integrity_ok=False))
+
+    result = await reviewer.review(
+        analysis=_analysis(evidence_refs=joined.evidence_refs),
+        evidence=joined,
+        request_write=False,
+        retrieval_round=0,
+        replan_count=0,
+        max_replans=2,
+    )
+
+    assert result.decision is ReviewDecision.RETRIEVE_MORE
+    assert [finding.reason_code for finding in result.findings] == ["SEMANTIC_CITATION_UNANCHORED"]
+
+
+@pytest.mark.asyncio
+async def test_an_unanchored_citation_reaches_a_person_once_the_round_is_spent(
+    monkeypatch,
+) -> None:
+    """Not an abstention: a broken evidence chain is a control failure, not a gap."""
+    joined = _joined()
+    reviewer = _semantic_reviewer(monkeypatch, _verdict(citation_integrity_ok=False))
+
+    result = await reviewer.review(
+        analysis=_analysis(evidence_refs=joined.evidence_refs),
+        evidence=joined,
+        request_write=False,
+        retrieval_round=1,
+        replan_count=0,
+        max_replans=2,
+    )
+
+    assert result.decision is ReviewDecision.ESCALATE
+    assert result.risk_level is RiskLevel.HIGH
+
+
+def test_a_verdict_that_omits_the_widened_fields_reads_as_the_status_quo() -> None:
+    """Omission is not a defect. The field did not exist, so the run behaved this way.
+
+    Reading an omission as "possibly wrong" would fail closed on every verdict whose
+    response was incomplete, which is exactly how the judge's own ``confidence`` handling
+    once turned a schema gap into runs that always reached a human.
+    """
+    verdict = SemanticReview.model_validate(_verdict())
+
+    assert verdict.action_target_grounded is True
+    assert verdict.citation_integrity_ok is False or verdict.citation_integrity_ok is True
+    assert verdict.unbacked_assertions == []
+
+
+def test_a_populated_widened_field_is_never_ignored() -> None:
+    verdict = SemanticReview.model_validate(
+        _verdict(
+            action_target_grounded=False,
+            citation_integrity_ok=False,
+            unbacked_assertions=[{"field": "classification", "detail": "misclassified"}],
+        )
+    )
+
+    assert verdict.action_target_grounded is False
+    assert verdict.citation_integrity_ok is False
+    assert [assertion.field for assertion in verdict.unbacked_assertions] == ["classification"]
+
+
+def test_an_unbacked_assertion_must_name_a_real_analysis_field() -> None:
+    with pytest.raises(ValidationError):
+        SemanticReview.model_validate(
+            _verdict(unbacked_assertions=[{"field": "claim_id", "detail": "C1"}])
+        )
+
+
+@pytest.mark.asyncio
+async def test_the_widened_criteria_are_advertised_to_the_judge(monkeypatch) -> None:
+    """A criterion the schema asks for but the prompt never mentions is not asked for."""
+    joined = _joined()
+    reviewer, runnable = _recording_semantic_reviewer(monkeypatch, _verdict())
+    await reviewer.review(
+        analysis=_analysis(evidence_refs=joined.evidence_refs),
+        evidence=joined,
+        request_write=False,
+        retrieval_round=0,
+        replan_count=0,
+        max_replans=2,
+    )
+
+    system = str(runnable.messages[0][0].content)
+    for field in ("action_target_grounded", "citation_integrity_ok", "unbacked_assertions"):
+        assert field in system
+    # The readings the measured evasions used, each named as a rule.
+    assert "fragment of a longer phrase" in system
+    assert "lifecycle is not carried by the document" in system
+    # The catalogue rule -- and, asserted separately, the exemption that keeps it narrow.
+    # The first phrasing of this rule named only the defect, and the judge applied it to
+    # memory and graph rows as well, which is what produced the 0.917 false-reject run.
+    # Pinning the rule without the exemption would let that narrowing be reverted silently.
+    assert "does not ground one" in system
+    assert "does bear on the incident" in system

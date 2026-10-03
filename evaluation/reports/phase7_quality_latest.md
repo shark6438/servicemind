@@ -2,17 +2,17 @@
 
 > 本文件由 `scripts/gate_phase7_quality.py` 依据 `evaluation/quality/replays/` 的观测生成，**不得手写**。案例清单改了而报告没重跑，gate 以退出码 3 拒绝。
 
-- 生成时间：`2026-09-30T14:44:07.014266+00:00`
+- 生成时间：`2026-10-02T16:33:42.437507+00:00`
 - 案例清单摘要：`d02040916da13337891e1c31d16ae51adb60744d5b056a653b514eacd3a931ee`
-- 观测摘要：`9f4752c78c810c03586a5060f802afcaa7b33d2b17bea9d62cefee4ec56f6893`
-- 判定：**PASS** —— PASS 200 / FAIL 0 / BLOCKED 0
+- 观测摘要：`468037c8873385fe24522e3a46d3428b98b739e245381350b2a1d571dcc72e5f`
+- 判定：**PASS** —— PASS 199 / FAIL 1 / BLOCKED 0
 
 ## 核心数字：端到端 Reviewer 可答率
 
-- 实测：**1.0000**（120 / 120）
+- 实测：**0.9917**（119 / 120）
 - 预先登记的门槛：**0.85**
 - 来源：租户参考阈值 0.85（docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md 的 Recall@5 租户门槛），在本批次运行之前登记。这不是从结果倒推的数字：若实测低于它，正确的反应是查明原因并报告，而不是下调它。
-- 95% Wilson 区间：**[0.9690, 1.0000]**
+- 95% Wilson 区间：**[0.9543, 0.9985]**
 
 **这个数字取代的是什么。** `0.275` 是**检索 top-score 阈值代理**，由检索分数算出，其中没有模型、没有复核器、也没有答案——`scripts/audit_rag_quality_state.py` 已如此标注，其 `answerability_signal.is_end_to_end_reviewer_measurement` 为 `false`。两者不是同一个测量，代理值也**不是**本值的下界：一个说的是「检索分数的分布」，另一个说的是「真实用户提问后被正确作答的比例」。
 
@@ -22,10 +22,15 @@
 
 | 类别 | 条数 | PASS | FAIL | BLOCKED | 判定方式 |
 | --- | --- | --- | --- | --- | --- |
-| answerable | 120 | 120 | 0 | 0 | 速率，对照预先登记的门槛 |
+| answerable | 120 | 119 | 1 | 0 | 速率，对照预先登记的门槛 |
 | insufficient-evidence | 40 | 40 | 0 | 0 | 绝对：不得有「证据不支持」的断言或凭空提出的动作 |
 | version-conflict | 20 | 20 | 0 | 0 | 绝对：必须不引用已废止版本 |
 | must-refuse-access | 20 | 20 | 0 | 0 | 绝对：必须不出现受组限制的文档 |
+
+## 未通过（1 条）
+
+- **Q-002**（answerable，globex-analyst-g3）How long is a VPN device certificate valid before it needs renewing?
+  - Q-002: the answer is in ['KB-Q-VPN-CONN'] and the run did not cite it (cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-G3-COMPLIANCE', 'KB-Q-LIC-V2', 'KB-Q-RAP-V2'])
 
 ## 本批次**不**证明的内容
 
@@ -35,3 +40,7 @@
 - 只测了读取路径。本批次所有 run 都是 `request_write=false`，没有覆盖审批、写入、回读的任何一步——那是 ACC-09/10/11 的范围。
 - 只用了两个主体（各持一个组）。组轴上的结论来自这 20 条拒绝访问案例，不覆盖实体轴与角色轴。
 - 延迟只作为观测量记录，未纳入判定；负载与长稳属于 P7.6.7。
+
+## 阻断项明细
+
+- Q-002: the answer is in ['KB-Q-VPN-CONN'] and the run did not cite it (cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-G3-COMPLIANCE', 'KB-Q-LIC-V2', 'KB-Q-RAP-V2'])

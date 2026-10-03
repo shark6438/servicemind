@@ -1,0 +1,102 @@
+{
+  "schema_version": "phase4-packing-ceiling-v1",
+  "status": "MEASUREMENT_DIAGNOSTIC",
+  "status_semantics": "this says which ceiling cut the packed list. It certifies nothing about retrieval quality, it changes no ceiling, and it does not evaluate what raising one would do to answer quality -- that is a reviewer-side question",
+  "inputs": {
+    "corpus": {
+      "path": "data/phase4/raw/eval/techqa-rag-eval/corpus.zip",
+      "sha256": "c06aa287dcc1abf8db6b49b8495df095db73342d729f6451ac330785245d10be",
+      "tracked": false,
+      "note": "gitignored under data/phase4/raw/; re-running the evaluation reloads it"
+    },
+    "production_report": {
+      "path": "evaluation/reports/phase4_techqa_production_latest.json",
+      "sha256": "f7069a4343e4314781031f5964a0f2056e717c69924e8e1886ec776dabd2cf63",
+      "tracked": false,
+      "note": "written by scripts/evaluate_phase4_retrieval_techqa.py"
+    }
+  },
+  "settings": {
+    "context_token_budget": 8000,
+    "max_parents_per_document": 2,
+    "max_parents_per_source": 4,
+    "final_k": 24
+  },
+  "sampled": {
+    "documents": 400,
+    "selection": "the first N entries of the corpus archive, in archive order",
+    "distinct_sources": 1,
+    "parents": 639,
+    "tokens": {
+      "p50": 1107,
+      "p90": 1501,
+      "p99": 1778,
+      "max": 3114
+    },
+    "mean": 1014.3,
+    "parents_per_document": {
+      "sampled": 1.5975,
+      "whole_corpus": 1.6394
+    }
+  },
+  "observed_packing": {
+    "documents_packed_per_answerable_query": {
+      "dense": {
+        "mean": 7.439,
+        "min": 4,
+        "max": 16
+      },
+      "bm25": {
+        "mean": 8.104,
+        "min": 4,
+        "max": 19
+      },
+      "hybrid": {
+        "mean": 7.857,
+        "min": 5,
+        "max": 17
+      },
+      "hybrid_rerank": {
+        "mean": 7.496,
+        "min": 4,
+        "max": 16
+      }
+    },
+    "maxima": {
+      "dense": 16,
+      "bm25": 19,
+      "hybrid": 17,
+      "hybrid_rerank": 16
+    },
+    "corpus_documents": 28481,
+    "corpus_parents": 46691
+  },
+  "derivation": {
+    "packed_max": 19,
+    "distinct_sources": 1,
+    "source_ceiling_enforced": false,
+    "median_parent_tokens": 1107,
+    "next_parent_headroom_tokens": {
+      "p50": -13033,
+      "p90": -20519,
+      "p99": -25782
+    },
+    "share_of_parents_that_still_fit": {
+      "p50": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "budget_would_admit_another_parent": false,
+    "at_the_per_source_ceiling": false,
+    "final_k_is_reachable": true,
+    "attributed_to": "the token budget"
+  },
+  "reading": "every arm packs at most 19 documents, so every recall cutoff at or above 19 counts the whole pack: comparing such a figure against a threshold written for a depth-100 pool compares a cut list against a ranked one. Whether the budget ended the list is the arithmetic below -- one more parent at the median size would leave -13033 tokens of the 8000-token budget, the budget answering no -- and the verdict below is the other half of the answer: the token budget",
+  "limitations": [
+    "the parent sizes are a sample of 400 documents, not all 28481; the observed maximum is not sampled -- it is read from the production run, which measured every query",
+    "the sample is the first 400 entries of the archive in archive order, which is not a random draw. It chunks into 1.5975 parents per document against 1.6394 over the whole corpus, which is a cross-check on the sample rather than a guarantee about it: the parent counts agree, but nothing here rules out an order effect on parent *sizes*",
+    "the packed parents are the top-ranked ones, not a random draw from this distribution. If ranking correlates with size, the headroom moves; the size table bounds the shape of the answer, not its exact value",
+    "``build_parents`` closes a parent before the block that would overflow its 1500-token target, so one long parsed block can produce a larger parent than the target. The measured maximum above is one of those, and it is larger than every quantile in the table",
+    "nothing here evaluates what a larger packed list does to answer quality. A longer prompt is a change to what the reviewer reads, and that is measured by the end-to-end answerability work, not here"
+  ]
+}

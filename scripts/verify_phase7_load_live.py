@@ -52,6 +52,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+from servicemind.evaluation.deployment import refuse_stale_deployment
 from servicemind.evaluation.load import (
     LoadPlan,
     LoadTier,
@@ -307,6 +308,13 @@ def _slots(plan: LoadPlan, workload: Workload, only: str | None) -> list[Slot]:
 
 
 async def run(args: argparse.Namespace) -> int:
+    # Refused before anything is observed, because the failure does not announce itself:
+    # a process running code older than the tree answers every request competently, so the
+    # batch completes and every record carries the revision of code the platform never ran.
+    refusal = refuse_stale_deployment(REPO_ROOT, allow=args.allow_stale_deployment, argv=sys.argv)
+    if refusal:
+        return refusal
+
     driver = _load_quality_driver().load_acceptance_driver()
     plan = load_plan(PLAN)
     workload = resolve_workload(plan, CASES)
@@ -435,6 +443,14 @@ def main() -> int:
         help="a single tier name from the plan; the default is every declared tier",
     )
     parser.add_argument("--health-timeout", type=float, default=120.0)
+    parser.add_argument(
+        "--allow-stale-deployment",
+        action="store_true",
+        help=(
+            "observe even though the serving process predates the tree, recording the gap "
+            "as a note instead of refusing; the evidence will describe the older code"
+        ),
+    )
     args = parser.parse_args()
     return asyncio.run(
         run(args), loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector())

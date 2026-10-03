@@ -72,6 +72,52 @@ jobs:
       run: |
         uv run pytest --cov=src/ --cov-report=xml
 
+    # Migrations install ENABLE + FORCE ROW LEVEL SECURITY on every tenant table
+    # (0001/0005/0008/0011) behind a policy that reads app.tenant_id. PostgreSQL lets a
+    # superuser bypass those policies whatever FORCE says, and this job's own
+    # SERVICEMIND_DATABASE_URL is `postgres` -- a superuser -- so a suite connecting with it
+    # never exercises the policy, only the bypass. That is invisible until the tests that
+    # assert isolation run: under the superuser URL they come back 3 failed / 12 passed,
+    # each failure a tenant reading another tenant's row. So the marked subset connects as
+    # the same kind of role production uses; deploy/glpi/postgres-init/01-runtime-role.sh
+    # provisions it NOSUPERUSER NOBYPASSRLS there. Runs after the migration, which is what
+    # makes the grants apply to the tables this run created.
+    - name: Provision the runtime role the row-level policies expect
+      env:
+        PGPASSWORD: postgres
+      run: |
+        psql -h localhost -U postgres -d servicemind_test -v ON_ERROR_STOP=1 <<'SQL'
+        SELECT format(
+          'CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS',
+          'servicemind_app', 'servicemind_app'
+        ) WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'servicemind_app') \gexec
+        SELECT format('GRANT CONNECT ON DATABASE %I TO %I', current_database(), 'servicemind_app') \gexec
+        SELECT format('GRANT USAGE ON SCHEMA public TO %I', 'servicemind_app') \gexec
+        SELECT format(
+          'GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO %I',
+          'servicemind_app'
+        ) \gexec
+        SELECT format(
+          'GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO %I', 'servicemind_app'
+        ) \gexec
+        SQL
+
+    # Without this the job had a postgres service and never queried it: `--run-docker` is
+    # what selects the live tests, and the step above does not pass it, so every
+    # PostgreSQL-marked test skipped and CI reported green having exercised sqlite only.
+    # The service is stood up, the database is migrated, and the marked subset is the one
+    # thing this job can run against it. On a database that has *only* been migrated this
+    # selection used to come back 14 failed / 1 passed -- every failure a foreign key into
+    # an empty `tenants` table; tests/conftest.py provisions those rows now. The env
+    # override is the second half of the same problem: with the job's superuser URL those
+    # 14 become 3, and the 3 are the isolation assertions that were never really testing
+    # anything.
+    - name: Test the PostgreSQL-backed paths
+      env:
+        SERVICEMIND_DATABASE_URL: "postgresql+psycopg://servicemind_app:servicemind_app@localhost:5432/servicemind_test"
+      run: |
+        uv run pytest -m "docker and postgres" --run-docker
+
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v7
       with:
@@ -103,6 +149,48 @@ jobs:
     - name: Audit project structure
       run: |
         uv run python scripts/audit_project_structure.py --check
+
+  # The offline half of the Phase-7 acceptance gates. Each gate grades frozen observations
+  # on disk, so this needs no stack: it answers "does the committed report still agree with
+  # the gate that wrote it?". On 2026-10-01 it did not -- phase7_quality_latest.json said
+  # PASS while the quality gate refused the same observations with exit 3, and nothing in
+  # CI could notice, because CI ran no gate at all. The rest of the live half deliberately
+  # does not exist here: it needs a stack this runner has not got. The one live selection CI
+  # can host is the postgres-marked tests, which now run in the test-python job; the roster
+  # of selections, and what makes that one runnable on a bare database, is in
+  # tests/conftest.py.
+  phase7-gates:
+    runs-on: ubuntu-latest
+
+    env:
+      # Importing the evaluation package pulls in the settings model, which raises without
+      # a database URL even though no gate opens a connection. Same two variables the
+      # test-python job sets, for the same reason.
+      SERVICEMIND_DATABASE_URL: "postgresql+psycopg://postgres:postgres@localhost:5432/servicemind_test"
+      OPENAI_API_KEY: "sk-fake-openai-key"
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version-file: "pyproject.toml"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v9.0.0
+      with:
+        version: "0.11.32"
+    - name: Install dependencies with uv
+      run: |
+        uv sync --frozen
+      env:
+        UV_SYSTEM_PYTHON: 1
+    # Exit 0 means the gates and the committed reports agree about the observations on
+    # disk. It does not mean the current tree passes: the observations name the revision
+    # that produced them, that revision is not this commit, and this script prints both
+    # facts rather than leaving the reader to supply them. See the module docstring.
+    - name: Check every gate agrees with the report it wrote
+      run: |
+        uv run python scripts/check_phase7_gate_reports.py
 
   lint-markdown:
     runs-on: ubuntu-latest

@@ -10,7 +10,9 @@ from servicemind.domain.knowledge import (
     AuthorityLevel,
     CorpusScope,
     KnowledgeACL,
+    QueryProvenance,
     RetrievalHit,
+    RetrievalMode,
     RetrievalPrincipal,
 )
 from servicemind.rag.chunking import (
@@ -18,20 +20,25 @@ from servicemind.rag.chunking import (
     child_embedding_text,
 )
 from servicemind.rag.models import CallableReranker, DeterministicEmbeddingProvider, TeiReranker
-from servicemind.rag.opensearch import OpenSearchKnowledgeIndex
+from servicemind.rag.opensearch import (
+    HYBRID_MAX_SUBQUERIES,
+    OpenSearchKnowledgeIndex,
+    _fan_out_texts,
+)
 from servicemind.rag.parsing import StructureParser
+from servicemind.rag.query import query_processor
 from servicemind.rag.service import EnterpriseRAG, _bounded_evidence_content
 from servicemind.rag.sources import make_document
 
 TENANT = UUID("11111111-1111-4111-8111-111111111111")
 
 
-def document(content: str):
+def document(content: str, *, source: str = "test"):
     return make_document(
         title="VPN runbook",
         content=content,
         document_type="runbook",
-        source="test",
+        source=source,
         source_version="v1",
         source_uri="runbook://vpn",
         source_record_id="vpn",
@@ -122,10 +129,12 @@ class FakeIndex:
         self.hits = hits
         self.search_calls = 0
         self.modes = []
+        self.queries = []
 
     async def search(self, query, principal, embedding, *, mode=None, **kwargs):
         self.search_calls += 1
         self.modes.append(mode)
+        self.queries.append(query)
         assert principal.tenant_id == TENANT
         return self.hits
 
@@ -180,7 +189,6 @@ async def test_retrieve_refuses_to_expand_parents_without_repository() -> None:
 @pytest.mark.asyncio
 async def test_injected_query_skips_llm_rewrite(monkeypatch) -> None:
     """Prompt-injection markers in the query must bypass the LLM rewrite stage entirely."""
-    from servicemind.rag.query import query_processor
 
     def boom(_model, _schema):  # pragma: no cover - must never be reached
         raise AssertionError("LLM rewrite must not be invoked for an injected query")
@@ -234,6 +242,177 @@ async def test_hybrid_result_reranks_deduplicates_expands_and_cites() -> None:
     assert result.items[0].citation.citation_id.startswith("cite-")
     evidence = rag.to_evidence(TENANT, result)
     assert evidence[0].metadata["citation"]["source_uri"] == "runbook://vpn"
+
+
+# ------------------------------------------ the searched text is the user's own words
+#
+# Regression suite for the RAG quality defect: ``QueryProcessor`` returned the model's
+# normalization as ``normalized_query``. That field is the single text the dense channel
+# embeds, and ``raw_query`` was read by no search path -- so on every successful model
+# call the question the user actually typed was discarded before search, and the funnel
+# could only lose retrieval it would otherwise have had. The measured cost was 12 of 280
+# answerable queries at the production funnel width (docs/PHASE7_ACCEPTANCE_BASELINE.md
+# section 5.9). Nothing tested what text was searched, which is why it survived.
+
+
+def _fake_rewrite(
+    monkeypatch,
+    *,
+    normalized: str,
+    rewrites: list[str] | None = None,
+    intent: str = "procedure",
+    language: str = "en",
+) -> None:
+    """Install a query proposal as though the model had just returned it."""
+    payload = {
+        "normalized_query": normalized,
+        "rewritten_queries": list(rewrites or []),
+        "entities": [],
+        "intent": intent,
+        "language": language,
+    }
+
+    class _Runnable:
+        async def ainvoke(self, _messages):
+            return payload
+
+    monkeypatch.setattr(
+        "servicemind.rag.query.structured_output", lambda _model, _schema: _Runnable()
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_model_paraphrase_never_displaces_the_users_own_words(monkeypatch) -> None:
+    """The paraphrase is recorded beside the question; the question is what is anchored."""
+    _fake_rewrite(
+        monkeypatch,
+        normalized="troubleshoot VPN authentication failures",
+        rewrites=["vpn mfa failure", "identity provider vpn"],
+    )
+    question = "Why  can't I log in over VPN?"
+    value = await query_processor.process(question, use_model=True)
+
+    assert value.normalized_query == "Why can't I log in over VPN?"
+    assert value.model_normalized_query == "troubleshoot VPN authentication failures"
+    assert value.rewritten_queries == ["vpn mfa failure", "identity provider vpn"]
+    assert value.raw_query == question
+    # The model did run, and its output does reach the funnel -- as a variant, not a
+    # replacement. The flag means "a model contributed text", not "the model wrote it".
+    assert value.provenance is QueryProvenance.MODEL
+
+
+@pytest.mark.asyncio
+async def test_the_fallback_says_no_model_ran_rather_than_echoing_the_question(
+    monkeypatch,
+) -> None:
+    """``None`` and an identity normalization are the same string and different facts.
+
+    A capture that stored only the text could not tell a run where the model was never
+    asked from one where it was asked and repeated the question -- which is exactly the
+    confusion ``provenance`` exists to prevent, one field further in.
+    """
+    monkeypatch.setattr(
+        "servicemind.rag.query.structured_output",
+        lambda _model, _schema: (_ for _ in ()).throw(RuntimeError("model unavailable")),
+    )
+    value = await query_processor.process("How to fix VPN?", use_model=True)
+
+    assert value.normalized_query == "How to fix VPN?"
+    assert value.model_normalized_query is None
+    assert value.provenance is QueryProvenance.DETERMINISTIC
+
+
+@pytest.mark.asyncio
+async def test_a_model_that_echoes_the_question_adds_no_duplicate_arm(monkeypatch) -> None:
+    """58 of 400 capture entries were identity normalizations; those must not spend a slot."""
+    _fake_rewrite(monkeypatch, normalized="How to fix VPN?", rewrites=["vpn fix"])
+    value = await query_processor.process("How to fix VPN?", use_model=True)
+
+    assert value.model_normalized_query == "How to fix VPN?"
+    assert value.rewritten_queries == ["vpn fix"]
+    assert value.lexical_variants() == ["vpn fix"]
+
+
+@pytest.mark.asyncio
+async def test_the_lexical_budget_spends_the_platform_cap_at_the_fan_out(monkeypatch) -> None:
+    """One BM25 arm per text beside the dense anchor is the OpenSearch hybrid cap.
+
+    The cap is spent where it is enforced, so the query object still holds everything the
+    model returned and a capture of it can be replayed under an arm that keeps more.
+    """
+    _fake_rewrite(monkeypatch, normalized="paraphrase of the question", rewrites=["r1", "r2", "r3"])
+    value = await query_processor.process("original question", use_model=True)
+
+    assert value.rewritten_queries == ["r1", "r2", "r3"]
+    texts = _fan_out_texts(value.normalized_query, value.lexical_variants(), use_rewrites=True)
+    assert texts == ["original question", "paraphrase of the question", "r1", "r2"]
+    # 1 dense + 4 BM25 is the whole of what the cluster accepts.
+    assert len(texts) == 4
+    assert len(texts) < HYBRID_MAX_SUBQUERIES
+
+
+@pytest.mark.asyncio
+async def test_the_hybrid_request_anchors_on_the_question_and_arms_the_paraphrase(
+    monkeypatch,
+) -> None:
+    """The request the cluster is actually sent: read the body, do not recompute it.
+
+    An earlier version of this test rebuilt the fan-out in the test body and asserted on
+    its own reconstruction, so pointing the index at ``query.rewritten_queries`` instead
+    of ``query.lexical_variants()`` left it green. The assertion has to come off the wire.
+    """
+    _fake_rewrite(
+        monkeypatch,
+        normalized="troubleshoot VPN authentication failures",
+        rewrites=["vpn mfa failure"],
+    )
+    embedding = DeterministicEmbeddingProvider()
+    question = "Why  can't I log in over VPN?"
+    asked = "Why can't I log in over VPN?"
+
+    sent: dict = {}
+
+    class _CapturingClient:
+        async def search(self, *, index, body, params=None):
+            sent["body"] = body
+            return {"hits": {"hits": []}}
+
+    index = OpenSearchKnowledgeIndex(_CapturingClient(), dimension=embedding.dimension)  # type: ignore[arg-type]
+
+    async def _always(_alias: str) -> set[str]:
+        return {"sm-knowledge-tenant-children-abc123"}
+
+    monkeypatch.setattr(index, "_resolve_alias", _always)
+
+    rag = EnterpriseRAG(
+        index=index,
+        embedding=embedding,
+        reranker=CallableReranker(lambda query, text: 0),
+        repository=FakeRepository(),  # type: ignore[arg-type]
+    )
+    await rag.retrieve(
+        principal=RetrievalPrincipal(tenant_id=TENANT, user_id="u1", entity_ids=frozenset({1})),
+        query=question,
+        use_query_model=True,
+        # The deployment's own setting: SERVICEMIND_RAG_MULTI_QUERY defaults True, so the
+        # shipped path fans the rewrites out. A test at the library default would exercise
+        # a configuration production does not run.
+        use_rewrites=True,
+        run_rerank=False,
+        mode=RetrievalMode.HYBRID,
+    )
+
+    queries = sent["body"]["query"]["hybrid"]["queries"]
+    dense = queries[0]["bool"]["must"][0]["knn"]["embedding"]["vector"]
+    assert dense == await embedding.embed_query(asked)
+    assert dense != await embedding.embed_query("troubleshoot VPN authentication failures")
+
+    lexical = [clause["bool"]["must"][0]["multi_match"]["query"] for clause in queries[1:]]
+    assert lexical[0] == asked
+    assert "troubleshoot VPN authentication failures" in lexical
+    assert "vpn mfa failure" in lexical
+    # 1 dense + at most HYBRID_MAX_SUBQUERIES - 1 lexical arms.
+    assert len(queries) <= HYBRID_MAX_SUBQUERIES
 
 
 def test_acl_rejects_invalid_effective_window() -> None:
@@ -304,6 +483,94 @@ async def test_context_packer_enforces_per_document_ceiling(monkeypatch) -> None
 
 
 @pytest.mark.asyncio
+async def test_context_packer_enforces_per_source_ceiling_between_competing_sources(
+    monkeypatch,
+) -> None:
+    """No single source may drown every other source (Phase 4 baseline §7).
+
+    Two sources each offer two parents. With a ceiling of one parent per source the pack
+    takes the best parent of each, so the lower-ranked source still reaches the answer --
+    which is the whole point of the guard: without it ``alpha`` would have taken both
+    places on its own.
+    """
+    from core import settings
+
+    monkeypatch.setattr(settings, "SERVICEMIND_RAG_MAX_PARENTS_PER_DOCUMENT", 2)
+    monkeypatch.setattr(settings, "SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE", 1)
+    doc_a = document("# A\n\ncontent", source="alpha")
+    doc_b = document("# B\n\ncontent", source="beta")
+    hits = [
+        make_hit(doc_a, "a-one", UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1"), 0.9),
+        make_hit(doc_a, "a-two", UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2"), 0.8),
+        make_hit(doc_b, "b-one", UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1"), 0.7),
+        make_hit(doc_b, "b-two", UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2"), 0.6),
+    ]
+    scores = {"a-one": 1.0, "a-two": 0.8, "b-one": 0.7, "b-two": 0.6}
+    rag = EnterpriseRAG(
+        index=FakeIndex(hits),  # type: ignore[arg-type]
+        embedding=DeterministicEmbeddingProvider(),
+        reranker=CallableReranker(lambda query, text: scores[text.rsplit("\n", 1)[-1]]),
+        repository=FakeRepository(),  # type: ignore[arg-type]
+    )
+    result = await rag.retrieve(
+        principal=RetrievalPrincipal(tenant_id=TENANT, user_id="u1", entity_ids=frozenset({1})),
+        query="Which document is relevant?",
+        use_query_model=False,
+    )
+    assert [item.hit.child_content for item in result.items] == ["a-one", "b-one"]
+
+
+@pytest.mark.asyncio
+async def test_the_per_source_ceiling_does_not_cap_a_single_source_tenant(monkeypatch) -> None:
+    """The ceiling balances sources against each other; with one source there is nothing to balance.
+
+    Every ingester in ``rag/sources.py`` stamps one ``provenance.source`` on everything it
+    loads -- four of the five hardcode it, ``AttachmentSource`` takes it at construction --
+    so a tenant fed by a single connector has exactly one. Applying the bound there makes it
+    an absolute cap on the whole prompt, however much of the token budget is left over,
+    which is not what "no single source may drown every other source" says: with one source
+    there is no second source to be drowned. The per-document ceiling and the token budget
+    are what bound the pack in that case, and this test pins both halves -- five parents
+    over three documents, none of them crowded.
+    """
+    from core import settings
+
+    monkeypatch.setattr(settings, "SERVICEMIND_RAG_MAX_PARENTS_PER_DOCUMENT", 2)
+    monkeypatch.setattr(settings, "SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE", 1)
+    doc_a = document("# A\n\ncontent")
+    doc_b = document("# B\n\ncontent")
+    doc_c = document("# C\n\ncontent")
+    # One document contributes at most two parents, so more than two documents have to be
+    # present before "five parents from one source" is even reachable.
+    hits = [
+        make_hit(doc_a, "a-one", UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1"), 0.9),
+        make_hit(doc_a, "a-two", UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2"), 0.8),
+        make_hit(doc_b, "b-one", UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1"), 0.7),
+        make_hit(doc_b, "b-two", UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2"), 0.6),
+        make_hit(doc_c, "c-one", UUID("cccccccc-cccc-4ccc-8ccc-ccccccccccc1"), 0.5),
+    ]
+    scores = {"a-one": 1.0, "a-two": 0.8, "b-one": 0.7, "b-two": 0.6, "c-one": 0.5}
+    rag = EnterpriseRAG(
+        index=FakeIndex(hits),  # type: ignore[arg-type]
+        embedding=DeterministicEmbeddingProvider(),
+        reranker=CallableReranker(lambda query, text: scores[text.rsplit("\n", 1)[-1]]),
+        repository=FakeRepository(),  # type: ignore[arg-type]
+    )
+    result = await rag.retrieve(
+        principal=RetrievalPrincipal(tenant_id=TENANT, user_id="u1", entity_ids=frozenset({1})),
+        query="Which document is relevant?",
+        use_query_model=False,
+    )
+    assert [item.hit.child_content for item in result.items] == [
+        "a-one",
+        "a-two",
+        "b-one",
+        "b-two",
+        "c-one",
+    ]
+
+
+@pytest.mark.asyncio
 async def test_rerank_uses_title_and_retains_exact_retrieval_signal(monkeypatch) -> None:
     """A slightly higher semantic score must not erase a dominant exact-match signal."""
     from core import settings
@@ -368,7 +635,6 @@ async def test_retrieve_can_skip_rerank_and_report_label(monkeypatch) -> None:
 @pytest.mark.asyncio
 async def test_retrieve_forwards_retrieval_mode_to_index(monkeypatch) -> None:
     """Baselines select the candidate channel on the index; the label reflects it."""
-    from servicemind.domain.knowledge import RetrievalMode
 
     index = FakeIndex([])  # type: ignore[arg-type]
     rag = EnterpriseRAG(

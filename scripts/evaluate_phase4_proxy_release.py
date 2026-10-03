@@ -42,6 +42,13 @@ import httpx
 import numpy as np
 from dotenv import dotenv_values
 
+from servicemind.evaluation.gold import (
+    AnnotationProvenance,
+    ReleaseSetShape,
+    label_tier_from_recorded,
+    release_gate_blockers,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data" / "phase4" / "raw" / "eval" / "techqa-rag-eval"
 REPORTS = ROOT / "evaluation" / "reports"
@@ -372,7 +379,15 @@ def _embedding_session() -> tuple[Any, Any, str]:
 
 
 def _passages(documents: list[tuple[str, str]], tokenizer: Any) -> list[Passage]:
-    """Create title-aware child passages within the production 420-token ceiling."""
+    """Create title-aware child passages within this harness's own 420-token ceiling.
+
+    Not the production ceiling: production chunks at ``child_max_tokens=480`` with
+    ``child_target_tokens=320``, ``child_min_tokens=120`` and ``child_overlap_tokens=48``
+    (``rag/chunking.py``), and the 420 here is this harness's approximation of it. The
+    two numbers are close enough that rankings usually agree and far enough apart that
+    they need not, so a result from this harness is evidence about *this* chunking until
+    step 3 of the release-set plan runs the same corpus through the production pipeline.
+    """
     result: list[Passage] = []
     for position, (doc_id, text) in enumerate(documents, 1):
         title = next((line.strip() for line in text.splitlines() if line.strip()), doc_id)[:1000]
@@ -536,20 +551,42 @@ def _distinct_documents(hits: list[dict[str, Any]], *, limit: int = 100) -> list
     return result
 
 
-def _reference_gates(
-    reranked: dict[str, Any], abstention: dict[str, Any]
-) -> dict[str, dict[str, Any]]:
-    """The §4.1 closure gate, recorded but explicitly not evaluated on this set.
+def _release_set_shape(selection: dict[str, Any]) -> ReleaseSetShape:
+    """What the committed selection records, as the §4.1 applicability check sees it.
 
-    `docs/PHASE4_EVALUATION_BASELINE_V1_2.md` §4.1 defines these thresholds as the
-    Phase 4 *closure* gate and §3/§6.4 scope that gate to the tenant-domain release
-    set: private tenant queries, expert-signed qrels, ACL and tenant strata. This
-    harness scores a public cross-domain set with source-provided silver labels, so
-    the two are not comparable. `applicable: false` is a scope statement, not a
-    relaxation - the tenant-domain gate stays open and stays an explicit quality
-    exception until Phase 7 produces private qrels, and `passed` stays `None` so no
-    reader can mistake the recorded numbers for a verdict.
+    A selection is a list of ids and filenames. It has no query text, no categories and no
+    relevance grades, so every stratum §3 asks for comes back *absent* -- which is the
+    honest reading, and the same reading ``GoldSet.release_set_shape`` produces for any set
+    that does not record them. The tier is translated rather than compared, so this file
+    and a future tenant qrels file are judged by one function.
     """
+    return ReleaseSetShape(
+        provenance=AnnotationProvenance(
+            label_tier=label_tier_from_recorded(selection["label_tier"]),
+            notes=f"labels supplied by {selection['source']}@{selection['source_revision']}",
+        )
+    )
+
+
+def _reference_gates(
+    reranked: dict[str, Any], abstention: dict[str, Any], blockers: list[str]
+) -> dict[str, dict[str, Any]]:
+    """The §4.1 closure gate, applicable or not according to the set's own contents.
+
+    `docs/PHASE4_EVALUATION_BASELINE_V1_2.md` §4.1 defines these thresholds as the Phase 4
+    *closure* gate and §3/§6.4 scope it to the tenant-domain release set: private tenant
+    queries, expert-signed qrels, ACL and tenant strata, a tune/hold-out partition. This
+    harness scores a public cross-domain set with source-provided silver labels, so the two
+    are not comparable and the gate does not apply.
+
+    That last sentence used to be this function's return value -- ``applicable: false``
+    written into the dict, which is unfalsifiable in both directions: it says the same
+    thing about a set that would qualify as about one that would not, and nothing could
+    tell the two apart without editing the code. It is now the output of
+    ``release_gate_blockers`` over the recorded selection, so the gate opens exactly when
+    the data says it may and the recorded reason is *why*, not *that*.
+    """
+    applicable = not blockers
     thresholds = {
         "recall_at_5": (reranked["recall_at_5"], 0.85),
         "recall_at_10": (reranked["recall_at_10"], 0.90),
@@ -563,11 +600,18 @@ def _reference_gates(
             "actual": actual,
             "operator": ">=",
             "threshold": threshold,
-            "applicable": False,
-            "passed": None,
             "gate_definition": "docs/PHASE4_EVALUATION_BASELINE_V1_2.md §4.1",
             "required_input": "tenant-domain release set: private queries + expert qrels",
-            "reason": "not evaluated: this run scores an external silver set, not tenant qrels",
+            "applicable": applicable,
+            # ``None`` where it does not apply, so no reader can mistake a recorded number
+            # for a verdict; a real comparison where it does.
+            "passed": (actual >= threshold) if applicable else None,
+            "blockers": list(blockers),
+            "reason": (
+                "not evaluated: " + "; ".join(blockers)
+                if blockers
+                else "evaluated against this run's own metrics"
+            ),
         }
         for name, (actual, threshold) in thresholds.items()
     }
@@ -579,7 +623,11 @@ def _reference_gates(
         "over every cut"
     )
     for name in ("impossible_abstention_rate", "answerable_answer_rate"):
-        gates[name]["reason"] = abstention_reason
+        gates[name]["reason"] = (
+            abstention_reason
+            if blockers
+            else "threshold applied; see the abstention caveat in status_semantics"
+        )
     return gates
 
 
@@ -1106,7 +1154,8 @@ def main() -> None:
                     "ndcg_at_10",
                 )
             }
-            gates = _reference_gates(production, abstention)
+            blockers = release_gate_blockers(_release_set_shape(selection))
+            gates = _reference_gates(production, abstention, blockers)
             # Second tier: what this harness *can* decide. §6.4 requires only that the
             # proxy metrics do not degrade, so compare against the frozen proxy baseline.
             regression, regression_status, regression_tolerance = _proxy_regression(
@@ -1129,15 +1178,19 @@ def main() -> None:
                     "this report certifies nothing about tenant-domain RAG quality. It "
                     "reports proxy retrieval metrics on an external silver set and whether "
                     "they held against the frozen proxy baseline. The §4.1 closure gate is "
-                    "listed but not evaluated; see `gates`."
+                    "listed, and whether it applies is derived from the selection's own "
+                    "contents rather than asserted here; see `gates[].blockers`."
                 ),
                 "source": {
                     "dataset": "nvidia/TechQA-RAG-Eval",
                     "revision": TECHQA_REVISION,
                     "corpus_documents": len(documents),
                     "production_shaped_passages": len(passages),
-                    "label_tier": "external_silver_no_tenant_human_signoff",
+                    # One vocabulary: the string the selection file records, translated by
+                    # `label_tier_from_recorded` wherever it is read.
+                    "label_tier": selection["label_tier"],
                 },
+                "release_gate_blockers": blockers,
                 "queries": {"total": 400, "answerable": 280, "impossible": 120},
                 "retrieval": {
                     "bm25": bm25,
@@ -1201,7 +1254,10 @@ def main() -> None:
                     "source-provided silver labels, not independent ServiceMind human qrels",
                     "the §4.1 closure gate is reported but not evaluated here; it needs private tenant queries with expert qrels",
                     "each answerable query carries a single relevant filename, so a rank-2 hit scores the same as a miss under Recall@10",
-                    "passages use the pinned BGE tokenizer instead of cl100k, while preserving the production 420-token/48-overlap shape",
+                    "passages use the pinned BGE tokenizer instead of cl100k, at this "
+                    "harness's own 420-token/48-overlap shape -- production chunks at "
+                    "480/320/120 with the same 48-token overlap, so the two are similar "
+                    "but not the same chunking and this arm is not the production pipeline",
                     "dense document ranking uses exact max pooling over child passages; production uses approximate OpenSearch HNSW before parent expansion",
                     "abstention is measured as a retrieval-score cut, which the data shows cannot separate answerable from impossible here; production refuses through the Reviewer's semantic ABSTAIN instead",
                 ],

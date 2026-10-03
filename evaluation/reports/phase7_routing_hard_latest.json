@@ -1,0 +1,134 @@
+{
+  "schema_version": "phase7-routing-hard-v1",
+  "golden": {
+    "source": "evaluation/routing/routing.jsonl",
+    "cases": 107,
+    "accuracy": 1.0,
+    "note": "the set the router rules were written against; a perfect score here is saturation, not evidence of discrimination"
+  },
+  "hard": {
+    "source": "evaluation/routing/routing_hard.v1.jsonl",
+    "overall": {
+      "cases": 41,
+      "correct": 36,
+      "accuracy": 0.878
+    },
+    "by_family": {
+      "ambiguous": {
+        "cases": 8,
+        "correct": 8,
+        "accuracy": 1.0
+      },
+      "compound": {
+        "cases": 8,
+        "correct": 6,
+        "accuracy": 0.75
+      },
+      "data-boundary": {
+        "cases": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "forbidden-boundary": {
+        "cases": 4,
+        "correct": 3,
+        "accuracy": 0.75
+      },
+      "goal-change": {
+        "cases": 5,
+        "correct": 5,
+        "accuracy": 1.0
+      },
+      "missing-info": {
+        "cases": 6,
+        "correct": 4,
+        "accuracy": 0.6667
+      },
+      "mixed-read-write": {
+        "cases": 7,
+        "correct": 7,
+        "accuracy": 1.0
+      }
+    },
+    "by_strength": {
+      "boundary": {
+        "cases": 9,
+        "correct": 4,
+        "accuracy": 0.4444
+      },
+      "contract": {
+        "cases": 32,
+        "correct": 32,
+        "accuracy": 1.0
+      }
+    }
+  },
+  "mismatches": [
+    {
+      "id": "hard-cmp-06",
+      "text": "查询工单 2 的状态，并查找 VPN 操作手册",
+      "request_write": false,
+      "family": "compound",
+      "expectation_strength": "boundary",
+      "expected_route": "complex_workflow",
+      "actual_route": "simple_knowledge_query",
+      "reason_code": "knowledge_lookup_only",
+      "confidence": 0.97,
+      "correct": false,
+      "rationale": "spans the data and knowledge surfaces; a single-agent fast path carries only one capability"
+    },
+    {
+      "id": "hard-cmp-07",
+      "text": "What is ticket 2's priority, and what does the priority matrix say?",
+      "request_write": false,
+      "family": "compound",
+      "expectation_strength": "boundary",
+      "expected_route": "complex_workflow",
+      "actual_route": "simple_data_query",
+      "reason_code": "fact_lookup_only",
+      "confidence": 0.97,
+      "correct": false,
+      "rationale": "same span as cmp-06, in the other order"
+    },
+    {
+      "id": "hard-mis-03",
+      "text": "如何处理？",
+      "request_write": false,
+      "family": "missing-info",
+      "expectation_strength": "boundary",
+      "expected_route": "complex_workflow",
+      "actual_route": "simple_knowledge_query",
+      "reason_code": "knowledge_lookup_only",
+      "confidence": 0.97,
+      "correct": false,
+      "rationale": "no subject at all, yet 如何处理 is listed as a knowledge row; the lookup has nothing to look up"
+    },
+    {
+      "id": "hard-mis-04",
+      "text": "该怎么办？",
+      "request_write": false,
+      "family": "missing-info",
+      "expectation_strength": "boundary",
+      "expected_route": "complex_workflow",
+      "actual_route": "simple_knowledge_query",
+      "reason_code": "knowledge_lookup_only",
+      "confidence": 0.97,
+      "correct": false,
+      "rationale": "same shape as mis-03 via 怎么办"
+    },
+    {
+      "id": "hard-neg-03",
+      "text": "Does the runbook cover deleting old records?",
+      "request_write": false,
+      "family": "forbidden-boundary",
+      "expectation_strength": "boundary",
+      "expected_route": "unsupported",
+      "actual_route": "complex_workflow",
+      "reason_code": "ambiguous_request_requires_review",
+      "confidence": 0.7,
+      "correct": false,
+      "rationale": "forbidden verb inside a knowledge question"
+    }
+  ],
+  "reading": "contract rows are those the router's own documented rules decide outright; boundary rows are design trade-offs the contract does not settle. A contract mismatch is an implementation defect; a boundary mismatch is a decision for a maintainer. The two are reported apart so neither hides behind the other."
+}

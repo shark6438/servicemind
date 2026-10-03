@@ -15,7 +15,7 @@ import servicemind.tool_platform.providers as providers_module
 from servicemind.agents.action import ActionAgent
 from servicemind.agents.analysis import AnalysisAgent
 from servicemind.agents.data import DataAcquisitionPlan, DataAgent, DataToolCall
-from servicemind.agents.reviewer import ReviewerAgent, SemanticReview
+from servicemind.agents.reviewer import REVIEW_POLICY_VERSION, ReviewerAgent, SemanticReview
 from servicemind.domain.analysis import AnalysisClaim, AnalysisResult, AnalysisStatus
 from servicemind.domain.evidence import (
     Evidence,
@@ -278,7 +278,7 @@ async def test_reviewer_semantic_judge_cannot_bypass_rule_gate(monkeypatch) -> N
         max_replans=2,
     )
     assert result.output.decision is ReviewDecision.PASSED
-    assert result.output.policy_version == "servicemind-review-policy-v5"
+    assert result.output.policy_version == REVIEW_POLICY_VERSION
     assert result.metrics.model_calls == 1
 
 

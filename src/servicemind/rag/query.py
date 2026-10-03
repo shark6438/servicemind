@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from core import get_model, settings
 from servicemind.context.builder import redact_for_model
-from servicemind.domain.knowledge import KnowledgeQuery, RetrievalIntent
+from servicemind.domain.knowledge import KnowledgeQuery, QueryProvenance, RetrievalIntent
 from servicemind.runtime.structured import structured_output
 
 logger = logging.getLogger("servicemind.rag.query")
@@ -127,14 +127,30 @@ class QueryProcessor:
                         "proposal and using deterministic fallback."
                     )
                 else:
+                    # The user's own words stay the searched text; the model's
+                    # normalization is recorded *beside* the question rather than in place
+                    # of it. Letting the proposal replace ``normalized_query`` meant the
+                    # dense anchor was a paraphrase nobody typed, while ``raw_query`` was
+                    # read by no search path at all -- so a model call could only displace
+                    # the question, never add to it. Measured at the production funnel width
+                    # that displacement cost 12 of 280 answerable queries, and keeping the
+                    # question as the anchor recovered 8 of them; see
+                    # docs/PHASE7_ACCEPTANCE_BASELINE.md section 5.9 for the seven arms.
+                    #
+                    # Nothing is truncated here on purpose. The lexical budget belongs
+                    # where the platform cap is enforced (``lexical_variants`` /
+                    # ``_fan_out_texts``), so this object stays a faithful record of what
+                    # the model returned and a capture of it can be replayed under any arm.
                     return KnowledgeQuery(
                         raw_query=query,
-                        normalized_query=proposal.normalized_query,
-                        rewritten_queries=proposal.rewritten_queries,
+                        normalized_query=normalized,
+                        model_normalized_query=proposal.normalized_query,
+                        rewritten_queries=list(proposal.rewritten_queries),
                         identifiers=identifiers,
                         entities=proposal.entities,
                         intent=proposal.intent,
                         language=proposal.language,
+                        provenance=QueryProvenance.MODEL,
                     )
         lowered = normalized.casefold()
         intent = (
@@ -152,6 +168,7 @@ class QueryProcessor:
             identifiers=identifiers,
             intent=intent,
             language="zh" if re.search(r"[\u4e00-\u9fff]", normalized) else "en",
+            provenance=QueryProvenance.DETERMINISTIC,
         )
 
 

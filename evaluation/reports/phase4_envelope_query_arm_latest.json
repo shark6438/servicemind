@@ -1,0 +1,243 @@
+{
+  "schema_version": "phase4-envelope-query-arm-v1",
+  "status": "ENVELOPE_QUERY_ARM_MEASUREMENT",
+  "quality_certification": false,
+  "generated_at": "2026-10-02T05:55:43.474269+00:00",
+  "status_semantics": "this measures the third gap between the committed TechQA numbers and the deployed pipeline: the *input* the rewrite stage is given. The labels remain silver, so it certifies nothing about tenant-domain quality.",
+  "inputs": {
+    "producer": {
+      "path": "scripts/probe_phase4_envelope_query_arm.py",
+      "sha256": "ad5455732ff2e5aa96933c282b2c56543e9d13d3de9766dcad2e38f604fb9c7a",
+      "tracked": true
+    },
+    "envelope_capture": {
+      "path": "evaluation/gold/techqa_rewrites_envelope.v1.json",
+      "sha256": "59a535260754395ec50b6efb42f5b56518745980d83ad3f59310da44c6581208",
+      "model": "deepseek-v4-flash",
+      "tracked": false
+    },
+    "plain_capture": {
+      "path": "evaluation/gold/techqa_rewrites.v1.json",
+      "sha256": "314cdb58d5f2b05befd7bda0df7dfcea0926381a0df2f61af98ae2a831766d67",
+      "tracked": false
+    },
+    "repeat_capture": {
+      "path": "evaluation/gold/techqa_rewrites_repeat.v1.json",
+      "sha256": "e2d02f03dea030a41cc0d28b80a6ae14f1fd4342ed7e770fc1364b3ed9233f77",
+      "tracked": false,
+      "note": "the bare-question pass re-run on the same input. It is the control for every number in rewrite_sensitivity, not a second measurement."
+    },
+    "funnel_report": {
+      "path": "evaluation/reports/phase4_query_arm_funnel_latest.json",
+      "sha256": "0512064a51d88c3a96c4524f916409e85714eda081f21b63f88a98545a1a8652"
+    },
+    "index_prefix": "sm-techqa-arms-v1",
+    "index_rebuilt": false
+  },
+  "corpus": {
+    "active_generation": "a5daf639d749",
+    "children_on_cluster": 199409,
+    "parents_on_cluster": 46691,
+    "rebuilt_here": false
+  },
+  "envelope_input": {
+    "call_site": "src/servicemind/orchestration/supervisor_workflow.py:1000",
+    "builder": "Phase5Governance.build_fast_knowledge_context",
+    "context_enabled_default": true,
+    "deployed_value": "true (deploy/glpi/.env(.example))"
+  },
+  "rewrite_sensitivity": {
+    "queries_compared": 400,
+    "queries_without_a_model_answer": 0,
+    "model_output_changed": 275,
+    "model_output_changed_share": 0.6875,
+    "model_normalisation_changed": 275,
+    "only_the_rewrites_changed": 121,
+    "unchanged": 4,
+    "examples": [
+      {
+        "query": "Is there a way set a timeout for shell task?\n\nI have run into couple of shell task in Urbancode, for example start websphere server, or run a test.bat file using the shell task, The problem I have, though the task is successful executed, it keeps ruining this shell task and does not moving to the next task. Can I set a time out for the shell task",
+        "bare_question_normalised": "Is there a way to set a timeout for a shell task in UrbanCode? I have encountered shell tasks, such as starting a WebSphere server or running a test.bat file, where the task executes successfully but continues running and does not move to the next task. Can I set a timeout for the shell task?",
+        "envelope_normalised": "Is there a way to set a timeout for a shell task in UrbanCode Deploy, so that a shell task such as starting a WebSphere server or running a test.bat file does not keep running and can move to the next task?"
+      },
+      {
+        "query": "I am getting a random invalid handle exception for my MQ .NET client applicatoin.\n\nWhile running a MQ .NET application, I get the following exception at random times:\n\n   Event Type:                 Error\n   Event Source:             ClientApplicationName\n   Event Category:        None\n   Event ID:  0\n   Date:                             8/12/2015\n   Time:                             7:19:51 AM\n   User:                             N/A\n   Computer:                  TXPILAP01\n   Description:\n    System.ComponentModel.Win32Exception (0x80004005): The handle is invalid\n    at System.Diagnostics.NtProcessManager.GetModuleInfos(Int32\n    processId, Boolean firstModuleOnly)\n    at System.Diagnostics.ProcessManager.GetModuleInfos(Int32 processId)\n    at System.Diagnostics.Process.get_Modules()\n    at IBM.WMQ.Nmqi.UnmanagedNmqiMQ.MQCONNX(String pQMgrName, MQCNO&\n    pConnectOpts, Hconn parentHconn, Phconn phconn, Int32& pCompCode,\n    Int32& pReason)\n    at IBM.WMQ.Nmqi.UnmanagedNmqiMQ.MQCONNX(String pQMgrName,\n    MQConnectOptions pConnectOpts, Phconn phconn, Int32& pCompCode, Int32&\n    pReason)\n    at IBM.WMQ.MQQueueManager.Connect(String queueManagerName)\n    at IBM.WMQ.MQQueueManager..ctor(String queueManagerName, String\n    Channel, String ConnName)\n    at ClientApplicationName.ServiceAgents.Integration.MQISA.\n    InitializeQueueManager(String queueManagerName)\n    at ClientApplicationName.ServiceAgents.Integration.MQISA.SendRequest\n    (String request)",
+        "bare_question_normalised": "Random invalid handle exception in MQ .NET client application when connecting to queue manager, with stack trace showing Win32Exception at System.Diagnostics.NtProcessManager.GetModuleInfos during IBM.WMQ.Nmqi.UnmanagedNmqiMQ.MQCONNX.",
+        "envelope_normalised": "Random invalid handle exception in MQ .NET client application during MQQueueManager.Connect / MQCONNX"
+      },
+      {
+        "query": "After applying cumulative fix, why does xmlaccess use the base portal instead of the virtual portal when attempting an export or import?\n\nAfter applying a cumulative fix (CF) to WebSphere Portal 8.5 (with no other CF currently applied), attempts to export from or import to a virtual portal result in the action occurring against the base portal. This can be confirmed when looking at the exported xml and seeing the following in the initial comment of the export: \nvirtual portal: none (default virtual portal) ",
+        "bare_question_normalised": "After applying a cumulative fix to WebSphere Portal 8.5, why does xmlaccess use the base portal instead of the virtual portal when attempting an export or import? The export comment shows 'virtual portal: none (default virtual portal)'.",
+        "envelope_normalised": "After applying a cumulative fix to WebSphere Portal 8.5, why does xmlaccess use the base portal instead of the virtual portal when attempting an export or import?"
+      }
+    ],
+    "reading": "the model is asked to rewrite a JSON envelope instead of the question. This counts how often that changes the model's output -- the normalization and the paraphrases the lexical arms search with -- not whether the answer is better. The dense anchor is the user's own question under both inputs, so no envelope can move it, and a sensitivity of zero here would mean the input never reached the model at all.",
+    "noise_floor": {
+      "queries_compared": 400,
+      "queries_without_a_model_answer": 0,
+      "model_output_changed": 78,
+      "model_output_changed_share": 0.195,
+      "model_normalisation_changed": 78,
+      "only_the_rewrites_changed": 114,
+      "unchanged": 208,
+      "examples": [
+        {
+          "query": "I am getting a random invalid handle exception for my MQ .NET client applicatoin.\n\nWhile running a MQ .NET application, I get the following exception at random times:\n\n   Event Type:                 Error\n   Event Source:             ClientApplicationName\n   Event Category:        None\n   Event ID:  0\n   Date:                             8/12/2015\n   Time:                             7:19:51 AM\n   User:                             N/A\n   Computer:                  TXPILAP01\n   Description:\n    System.ComponentModel.Win32Exception (0x80004005): The handle is invalid\n    at System.Diagnostics.NtProcessManager.GetModuleInfos(Int32\n    processId, Boolean firstModuleOnly)\n    at System.Diagnostics.ProcessManager.GetModuleInfos(Int32 processId)\n    at System.Diagnostics.Process.get_Modules()\n    at IBM.WMQ.Nmqi.UnmanagedNmqiMQ.MQCONNX(String pQMgrName, MQCNO&\n    pConnectOpts, Hconn parentHconn, Phconn phconn, Int32& pCompCode,\n    Int32& pReason)\n    at IBM.WMQ.Nmqi.UnmanagedNmqiMQ.MQCONNX(String pQMgrName,\n    MQConnectOptions pConnectOpts, Phconn phconn, Int32& pCompCode, Int32&\n    pReason)\n    at IBM.WMQ.MQQueueManager.Connect(String queueManagerName)\n    at IBM.WMQ.MQQueueManager..ctor(String queueManagerName, String\n    Channel, String ConnName)\n    at ClientApplicationName.ServiceAgents.Integration.MQISA.\n    InitializeQueueManager(String queueManagerName)\n    at ClientApplicationName.ServiceAgents.Integration.MQISA.SendRequest\n    (String request)",
+          "bare_question_normalised": "Random invalid handle exception in MQ .NET client application when connecting to queue manager, with stack trace showing Win32Exception at System.Diagnostics.NtProcessManager.GetModuleInfos during IBM.WMQ.Nmqi.UnmanagedNmqiMQ.MQCONNX.",
+          "envelope_normalised": "Random invalid handle exception in MQ .NET client application during MQCONNX, with stack trace showing System.ComponentModel.Win32Exception (0x80004005): The handle is invalid at System.Diagnostics.NtProcessManager.GetModuleInfos, IBM.WMQ.Nmqi.UnmanagedNmqiMQ.MQCONNX, MQQueueManager.Connect, and MQQueueManager constructor."
+        },
+        {
+          "query": "Which Socket Gateway should I be using with Netcool Omnibus (NOI) ?\n\nWhich Socket Gateway should I be using with Netcool Omnibus (NOI) ?\n\nThere are 2 versions of the gateway; nco-g-socket-java-2_0 and nco-g-socket-10_0 Users may be confused what version they should download or use ",
+          "bare_question_normalised": "Which Socket Gateway should be used with Netcool Omnibus (NOI)? There are two versions: nco-g-socket-java-2_0 and nco-g-socket-10_0. Users may be confused about which version to download or use.",
+          "envelope_normalised": "Which Socket Gateway should I be using with Netcool Omnibus (NOI)? There are 2 versions of the gateway; nco-g-socket-java-2_0 and nco-g-socket-10_0. Users may be confused what version they should download or use."
+        },
+        {
+          "query": "How to proceed when jextract utility is throwing an OutOfMemory error ?\n\n\n\nI was getting a crash and was told to provide a \"jextracted core dump\". I ran the jextract command as instructed:\n\n/java/jre/bin/jextract [CORE_PATH]\n\nbut I am getting now an OutOfMemory error when jextract itself is running so I cannot proceed with the original crash investigation.",
+          "bare_question_normalised": "How to proceed when the jextract utility throws an OutOfMemory error while generating a jextracted core dump from a core file at [CORE_PATH]?",
+          "envelope_normalised": "How to proceed when the jextract utility throws an OutOfMemory error while generating a jextracted core dump for crash investigation?"
+        }
+      ],
+      "reading": "the model is asked to rewrite a JSON envelope instead of the question. This counts how often that changes the model's output -- the normalization and the paraphrases the lexical arms search with -- not whether the answer is better. The dense anchor is the user's own question under both inputs, so no envelope can move it, and a sensitivity of zero here would mean the input never reached the model at all."
+    },
+    "noise_floor_reading": "the same comparison run on a repeat of the *same* input. Anything the envelope number does not exceed this by is sampling, not the input."
+  },
+  "arms": {
+    "c0_env": {
+      "recall_at_5": 0.6536,
+      "recall_at_10": 0.6857,
+      "recall_at_20": 0.6857,
+      "mrr_at_10": 0.5682,
+      "ndcg_at_10": 0.5972,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.52
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 641.2,
+        "p95": 863.5
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 268.5,
+      "use_query_model": true,
+      "use_rewrites": false,
+      "reading": "production rewrite input (context envelope), fan-out off",
+      "rewrite_capture": "envelope"
+    },
+    "c0_mq_env": {
+      "recall_at_5": 0.6536,
+      "recall_at_10": 0.675,
+      "recall_at_20": 0.675,
+      "mrr_at_10": 0.5646,
+      "ndcg_at_10": 0.5921,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 17,
+        "mean": 7.64
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 742.2,
+        "p95": 962.8
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 306.4,
+      "use_query_model": true,
+      "use_rewrites": true,
+      "reading": "the deployed arm as closely as it can be reproduced off-line: envelope input, production normalisation, multi-query fan-out",
+      "rewrite_capture": "envelope"
+    },
+    "c0_mq": {
+      "recall_at_5": 0.6571,
+      "recall_at_10": 0.675,
+      "recall_at_20": 0.675,
+      "mrr_at_10": 0.565,
+      "ndcg_at_10": 0.5921,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.71
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 755.3,
+        "p95": 1015.3
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 317.3,
+      "use_query_model": true,
+      "use_rewrites": true,
+      "reading": "in-process control: the same fan-out arm on the bare-question capture, re-measured here so both rows share one index generation and one process",
+      "rewrite_capture": "plain"
+    }
+  },
+  "published_funnel_arms": {
+    "c0_off": {
+      "recall_at_10": 0.7286,
+      "packed_max": 16
+    },
+    "c0_sq": {
+      "recall_at_10": 0.6893,
+      "packed_max": 16
+    },
+    "c0_mq": {
+      "recall_at_10": 0.675,
+      "packed_max": 16
+    },
+    "c0_sq_ck200": {
+      "recall_at_10": 0.6857,
+      "packed_max": 18
+    },
+    "c0_sq_ck400": {
+      "recall_at_10": 0.6821,
+      "packed_max": 18
+    },
+    "c0_mq_ck200": {
+      "recall_at_10": 0.6893,
+      "packed_max": 16
+    },
+    "c0_anchor": {
+      "recall_at_10": 0.6893,
+      "packed_max": 16
+    }
+  },
+  "limitations": [
+    "the envelope reproduced here is the *fast knowledge* path's; the knowledge-task path assembles memory and ticket items the release set does not have, so it is not reproducible off-line",
+    "the ticket id in the task item is a constant: the release set has no GLPI tickets",
+    "the labels are source-provided silver, not tenant-domain human qrels",
+    "the rewrite capture is one sample of a non-deterministic stage; the vendored sha256 is what makes this sample reproducible, not the stage",
+    "the index is the kept one from the query-arm run, so these rows share its generation by construction; an unreachable or empty generation is refused rather than measured, but a *stale* one -- a kept index whose generation no longer matches the query-arm report's -- is not detected here",
+    "parent expansion reads the index's parent alias rather than PostgreSQL under row-level security, so this run exercises the expansion call, its tenant scoping and its ACL filter, but not the RLS policy itself"
+  ]
+}

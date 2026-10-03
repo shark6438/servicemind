@@ -606,11 +606,16 @@
       "category": "data-bounds",
       "title": "有界错误保留说明成因的那一端",
       "defends_against": "错误文本只截头端，使 schema 违规一类把成因写在末尾的失败变成不可诊断的一行，运维无法定位。",
-      "teeth": "该项只由通过的测试背书；此前的头端切片版本正是 ACC-07 的实测成因。",
+      "teeth": "该项只由通过的测试背书；此前的头端切片版本正是 ACC-07 的实测成因。2026-10-01 起，背书改为在**每个调用点**观察到的行为：剪辑器自身两条，加上图里四处降级（上下文装配失败、控制面决定被 schema 拒绝、重规划两次失败、知识分支失败）与分析代理两条（草稿失败、修订失败）各一条——每条都用一个长于上限、且把成因写在末尾的异常，断言落库的那条 `reason`/`failure_detail` 保住了末尾。此前的第三条证据是一条**源码文本计数**（`source.count(\"bounded_error_text(str(exc))\") == 3`），重构即红、且对知识分支那句`str(error)[:300]` 视而不见——它已经删掉，换成上面六条。",
       "evidence": [
         {"kind": "test", "ref": "tests/servicemind/test_foundation_errors.py::test_a_bounded_error_keeps_the_end_that_states_the_cause"},
         {"kind": "test", "ref": "tests/servicemind/test_foundation_errors.py::test_a_bounded_error_reports_the_exception_type_and_leaves_short_text_alone"},
-        {"kind": "test", "ref": "tests/servicemind/test_foundation_errors.py::test_a_bounded_error_is_the_one_clip_the_orchestration_layer_uses"}
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_the_graph"},
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_graph"},
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_replan_double_failure_finalizes_without_raw_runtime_error"},
+        {"kind": "test", "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its_end"},
+        {"kind": "test", "ref": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure"},
+        {"kind": "test", "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_broken_model_path_degrades_without_waiting"}
       ]
     },
     {

@@ -1,10 +1,34 @@
-from servicemind.evaluation.gold import GoldCorpusSource, GoldQuery, GoldSet, load_gold_set
+from servicemind.evaluation.gold import (
+    ANSWERING_GRADE,
+    AnnotationProvenance,
+    GoldCorpusSource,
+    GoldQuery,
+    GoldSet,
+    JudgedItem,
+    LabelTier,
+    Nugget,
+    NuggetSupport,
+    QueryCategory,
+    RefusalReason,
+    ReleaseSetShape,
+    Split,
+    label_tier_from_recorded,
+    load_gold_set,
+    release_gate_blockers,
+)
 from servicemind.evaluation.harness import (
     Baseline,
     EvalQueryOutcome,
     EvalReport,
     RetrievalProvider,
     evaluate,
+)
+from servicemind.evaluation.leakage import (
+    EvidenceCoordinates,
+    LeakKind,
+    Violation,
+    summarize,
+    visible_evidence_violations,
 )
 from servicemind.evaluation.metrics import (
     dedupe_rate,
@@ -13,20 +37,45 @@ from servicemind.evaluation.metrics import (
     precision_at_k,
     recall_at_k,
 )
+from servicemind.evaluation.tenant_domain import (
+    TenantDomainError,
+    TenantDomainFixture,
+    load_fixture,
+)
 
 __all__ = [
+    "ANSWERING_GRADE",
+    "AnnotationProvenance",
     "Baseline",
     "EvalQueryOutcome",
     "EvalReport",
+    "EvidenceCoordinates",
     "GoldCorpusSource",
     "GoldQuery",
     "GoldSet",
+    "JudgedItem",
+    "LabelTier",
+    "LeakKind",
+    "Nugget",
+    "NuggetSupport",
+    "QueryCategory",
+    "RefusalReason",
+    "ReleaseSetShape",
     "RetrievalProvider",
+    "Split",
+    "TenantDomainError",
+    "TenantDomainFixture",
+    "Violation",
     "dedupe_rate",
     "evaluate",
+    "label_tier_from_recorded",
+    "load_fixture",
     "load_gold_set",
     "mrr_at_k",
     "ndcg_at_k",
     "precision_at_k",
     "recall_at_k",
+    "release_gate_blockers",
+    "summarize",
+    "visible_evidence_violations",
 ]

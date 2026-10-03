@@ -1,0 +1,279 @@
+{
+  "schema_version": "phase4-label-diagnostic-v1",
+  "status": "MEASUREMENT_DIAGNOSTIC",
+  "status_semantics": "this decides whether the shortfall against the §4.1 thresholds is a retrieval finding or a property of the label set. It certifies nothing about quality in either direction and it changes no threshold",
+  "inputs": {
+    "candidate_diagnostics": {
+      "path": "data/phase4/raw/eval/techqa-rag-eval/phase4_proxy_candidate_diagnostics.json",
+      "sha256": "c482f6f1325f6f6dbfb13c5725a833aa54a213dbd7342c1e54aecd442b26e4bf",
+      "tracked": false,
+      "note": "gitignored under data/phase4/raw/; re-running the proxy regenerates it"
+    },
+    "corpus": {
+      "path": "data/phase4/raw/eval/techqa-rag-eval/corpus.zip",
+      "sha256": "c06aa287dcc1abf8db6b49b8495df095db73342d729f6451ac330785245d10be"
+    },
+    "selection": {
+      "path": "evaluation/gold/phase4_proxy_release_v1.2.json",
+      "sha256": "027ba1868c4ba0f1c6e26418add0afb4025fae6414d93a494dc90a41332c84f4"
+    },
+    "label_tier": "external_silver_no_tenant_human_signoff"
+  },
+  "queries": {
+    "total": 400,
+    "answerable": 280,
+    "impossible": 120,
+    "gold_documents": 251
+  },
+  "candidate_funnel": {
+    "arm": "production_blend",
+    "depth": 100,
+    "note": "depth 100 is SERVICEMIND_RAG_CANDIDATE_K, so this is the headline of the production funnel and not an artefact of the proxy",
+    "declared_depth": 100,
+    "contains_gold": 244,
+    "contains_gold_rate": 0.8714,
+    "gold_in_top_5": 192,
+    "gold_in_top_5_rate": 0.6857,
+    "median_rank_when_present": 1.0,
+    "list_lengths_observed": [
+      100
+    ]
+  },
+  "arms": {
+    "bm25": {
+      "declared_depth": 100,
+      "contains_gold": 221,
+      "contains_gold_rate": 0.7893,
+      "gold_in_top_5": 148,
+      "gold_in_top_5_rate": 0.5286,
+      "median_rank_when_present": 2,
+      "list_lengths_observed": [
+        84,
+        96,
+        97,
+        98,
+        99,
+        100
+      ]
+    },
+    "dense": {
+      "declared_depth": 100,
+      "contains_gold": 239,
+      "contains_gold_rate": 0.8536,
+      "gold_in_top_5": 200,
+      "gold_in_top_5_rate": 0.7143,
+      "median_rank_when_present": 1,
+      "list_lengths_observed": [
+        100
+      ]
+    },
+    "hybrid": {
+      "declared_depth": 30,
+      "contains_gold": 222,
+      "contains_gold_rate": 0.7929,
+      "gold_in_top_5": 181,
+      "gold_in_top_5_rate": 0.6464,
+      "median_rank_when_present": 1.0,
+      "list_lengths_observed": [
+        30
+      ]
+    },
+    "hybrid_reranked": {
+      "declared_depth": 30,
+      "contains_gold": 222,
+      "contains_gold_rate": 0.7929,
+      "gold_in_top_5": 190,
+      "gold_in_top_5_rate": 0.6786,
+      "median_rank_when_present": 1.0,
+      "list_lengths_observed": [
+        30
+      ]
+    },
+    "production_blend": {
+      "declared_depth": 100,
+      "contains_gold": 244,
+      "contains_gold_rate": 0.8714,
+      "gold_in_top_5": 192,
+      "gold_in_top_5_rate": 0.6857,
+      "median_rank_when_present": 1.0,
+      "list_lengths_observed": [
+        100
+      ]
+    }
+  },
+  "loss_split": {
+    "in_pool": {
+      "queries": 244,
+      "title_overlap": {
+        "queries": 244,
+        "mean_question_vs_gold_title": 0.2372,
+        "mean_question_vs_first_title": 0.2404,
+        "mean_gap_gold_minus_first": -0.0031,
+        "first_hit_title_closer": 49,
+        "first_hit_title_closer_rate": 0.2008
+      }
+    },
+    "out_of_pool": {
+      "queries": 36,
+      "title_overlap": {
+        "queries": 36,
+        "mean_question_vs_gold_title": 0.0636,
+        "mean_question_vs_first_title": 0.1325,
+        "mean_gap_gold_minus_first": -0.0688,
+        "first_hit_title_closer": 31,
+        "first_hit_title_closer_rate": 0.8611
+      },
+      "also_absent_from_bm25": 36,
+      "gold_documents_no_query_retrieves": 28
+    }
+  },
+  "examples": [
+    {
+      "query_id": "DEV_Q149",
+      "question": "Why SSH connections fail after upgrade to v7.5.2 and above? Why SSH connections fail after upgrade to v7.5.2 and above? The same configuration works on v7.2.",
+      "labelled": {
+        "file": "swg21974106.txt",
+        "title": "IBM Late breaking updates to DataPower 7.5 documentation - United States"
+      },
+      "first_dense_hit": {
+        "file": "nas8N1021014.txt",
+        "title": "IBM After Applying PTFs for 5733SC1, SSH/SFTP/SCP Connections to/from IBM i May Fail with Cipher Errors - United States"
+      },
+      "title_overlap_advantage_of_the_first_hit": 0.2105,
+      "gold_in_the_100_deep_pool": false
+    },
+    {
+      "query_id": "TRAIN_Q016",
+      "question": "What can be done about \"Too many open files\" messages in the DASH systemOut? What can be done about \"Too many open files\" messages in the DASH systemOut log?",
+      "labelled": {
+        "file": "swg21469413.txt",
+        "title": "IBM Guidelines for setting ulimits (WebSphere Application Server) - United States"
+      },
+      "first_dense_hit": {
+        "file": "swg21968787.txt",
+        "title": "IBM DASH Services Stops Automatically After Few hours.  \"Too many open files\" - United States"
+      },
+      "title_overlap_advantage_of_the_first_hit": 0.2,
+      "gold_in_the_100_deep_pool": false
+    },
+    {
+      "query_id": "TRAIN_Q283",
+      "question": "What is the latest Alcatel 5620 SAM probe? We have the nco_p_alcatel_5620_sam_v13 probe, is there a newer version of the probe. Does this probe support Release 14 of the 5620 SAM?",
+      "labelled": {
+        "file": "swg22005197.txt",
+        "title": "IBM Tivoli Netcool/OMINbus Integrations Release Notice - Probe for Nokia Network Functions Manager for Packet (nco-p-nokia-nfmp-1_0) - United States"
+      },
+      "first_dense_hit": {
+        "file": "swg21902388.txt",
+        "title": "IBM Netcool Probe for Alcatel-Lucent 5620 SAM support for SAM Release 12.0 - United States"
+      },
+      "title_overlap_advantage_of_the_first_hit": 0.1925,
+      "gold_in_the_100_deep_pool": false
+    },
+    {
+      "query_id": "TRAIN_Q352",
+      "question": "How to Create an Application with the the Websphere Adapter for Flat File using Hex05 delimeter? How to Create an Application with the the Websphere Adapter for Flat File using Hex05 delimeter?",
+      "labelled": {
+        "file": "swg21425772.txt",
+        "title": "IBM \"An invalid XML character\" error is thrown when handling data originating from a WebSphere Adapter - United States"
+      },
+      "first_dense_hit": {
+        "file": "swg27024018.txt",
+        "title": "IBM Collection of WebSphere Adapter for Flat File Technotes - United States"
+      },
+      "title_overlap_advantage_of_the_first_hit": 0.1857,
+      "gold_in_the_100_deep_pool": false
+    },
+    {
+      "query_id": "TRAIN_Q044",
+      "question": "Authorization code missing for SPSS 25? I purchased the IBM SPSS from Amazon, and I do not know where to locate the authorization code of license code/key. Can anyone help me?",
+      "labelled": {
+        "file": "swg21592093.txt",
+        "title": "IBM SPSS Student Version and Graduate Pack Resources - United States"
+      },
+      "first_dense_hit": {
+        "file": "swg21968944.txt",
+        "title": "IBM How To Generate an Authorization or License Key for your SPSS product - United States"
+      },
+      "title_overlap_advantage_of_the_first_hit": 0.1825,
+      "gold_in_the_100_deep_pool": false
+    },
+    {
+      "query_id": "TRAIN_Q366",
+      "question": "How do to restore corrupted Object server DB using data from Backup Object server in Linux? Error: E-REG-002-025: Region 'table_store', from directory '/opt/IBM/tivoli/netcool/omnibus/db/NCOMS/', has been recovered in a corrupt state: Extent statistics mismatch Error: E-OBX-102-020: Failed to start the storage system. (-490:Extent statistics mismatch)",
+      "labelled": {
+        "file": "swg21631606.txt",
+        "title": "IBM Create backup of the ObjectServer database - United States"
+      },
+      "first_dense_hit": {
+        "file": "swg21421816.txt",
+        "title": "IBM Object Server table_store recovered in a corrupt state - United States"
+      },
+      "title_overlap_advantage_of_the_first_hit": 0.1759,
+      "gold_in_the_100_deep_pool": false
+    },
+    {
+      "query_id": "TRAIN_Q584",
+      "question": "Help with Security Bulletin: Vulnerability identified in IBM WebSphere Application Server shipped with WSRR (CVE-2017-1741) I need to understand details regarding Security Bulletin: Vulnerability identified in IBM WebSphere Application Server shipped with IBM WebSphere Service Registry and Repository (CVE-2017-1741). We are running WAS traditional V9.0.0.0. What is the recommended fix?",
+      "labelled": {
+        "file": "swg22012345.txt",
+        "title": "IBM Security Bulletin: Potential Privilege Escalation in WebSphere Application Server Admin Console (CVE-2017-1731) - United States"
+      },
+      "first_dense_hit": {
+        "file": "swg22016822.txt",
+        "title": "IBM Security Bulletin: A security vulnerability has been identified in IBM Websphere Application Server shipped with IBM Security Directory Server (CVE-2017-1741) - United States"
+      },
+      "title_overlap_advantage_of_the_first_hit": 0.1313,
+      "gold_in_the_100_deep_pool": false
+    },
+    {
+      "query_id": "DEV_Q141",
+      "question": "Why is OCR is putting multiple lines on one line? I am running an APT application, and multiple detail lines are getting put on a single line within my .TXT file. Is there something I can do about this?",
+      "labelled": {
+        "file": "swg21701910.txt",
+        "title": "IBM NormalizeCCO merging lines with IBM Datacap Taskmaster Capture - United States"
+      },
+      "first_dense_hit": {
+        "file": "swg22008456.txt",
+        "title": "IBM Why is the Description entered over multiple lines saved/shown as a single line? - United States"
+      },
+      "title_overlap_advantage_of_the_first_hit": 0.1267,
+      "gold_in_the_100_deep_pool": false
+    },
+    {
+      "query_id": "TRAIN_Q596",
+      "question": "Why is ITCAM MQ agent shutting down often? We have an MQ agent instance that keeps shutting down randomly. Below is the version of agent: mq WebSphere MQ Monitoring Agent lx8263 Version: 07.30.01.00",
+      "labelled": {
+        "file": "swg24043057.txt",
+        "title": "IBM ITCAM Agents for WebSphere Messaging Version 7.3.0 Fix Pack 02 (7.3.0-TIV-XEforMsg-FP0002) - United States"
+      },
+      "first_dense_hit": {
+        "file": "swg24044438.txt",
+        "title": "IBM ITCAM Agent for WebSphere MQ Version 7.3.0 Fix Pack 02 Provisional Fix 01 - United States"
+      },
+      "title_overlap_advantage_of_the_first_hit": 0.125,
+      "gold_in_the_100_deep_pool": false
+    },
+    {
+      "query_id": "DEV_Q077",
+      "question": "I need to transfer my SPSS 24 licence to a new computer I need to transfer my SPSS 24 license to a new machine. I have only used my activation code on one computer so far, and that computer was found to be defective which has led me to get a new computer. I was able to download SPSS 24 Gradpack onto the new computer, but every time I put in the activation code, the program gives me an error message saying that I am not allowed to generate any new licenses.",
+      "labelled": {
+        "file": "swg21592093.txt",
+        "title": "IBM SPSS Student Version and Graduate Pack Resources - United States"
+      },
+      "first_dense_hit": {
+        "file": "swg21985888.txt",
+        "title": "IBM How do I transfer my IBM SPSS product/software license from one machine to another? - United States"
+      },
+      "title_overlap_advantage_of_the_first_hit": 0.1012,
+      "gold_in_the_100_deep_pool": false
+    }
+  ],
+  "reading": "the funnel ceiling is the highest Recall@k any reranker can reach on this label set, because RRF, the cross-encoder and the blend only reorder what the 100 candidates contain. Compare it against the §4.1 thresholds: a threshold above it cannot be met by ranking better. Then read the two title-overlap blocks together -- in the in-pool group the label and the first hit are topically equivalent, which is what a working retriever looks like; in the out-of-pool group the first hit is systematically closer to the question than the label. Where that holds, widening the funnel buys less than the raw miss rate suggests",
+  "limitations": [
+    "title overlap is a lexical Jaccard over content words, in the same family as the proxy's offline fallback. It is a heuristic for topical proximity, not a human judgment, and it is wrong on any document whose title is vaguer than its body",
+    "n=36 in the out-of-pool group; the rate is a description of this set, not an estimate of a population",
+    "the diagnostics dump is the *proxy's* arms. It says what that funnel returns, not what OpenSearch returns; the production run is the thing that measures production",
+    "the label tier is external silver with no tenant signoff, so neither the labels nor this critique of them carry the §3.3 provenance"
+  ]
+}

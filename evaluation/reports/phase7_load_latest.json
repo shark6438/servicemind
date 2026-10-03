@@ -1,55 +1,22 @@
 {
   "baseline_tier": "tier-1",
-  "blockers": [],
+  "blockers": [
+    "tier-1: tier-1 Q-002#0: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-LIC-V2', 'KB-Q-MFA-ENROL', 'KB-Q-RAP-V2']",
+    "tier-1: the unloaded tier is not a usable baseline (1 run(s) did not behave), so nothing observed under load can be attributed to load"
+  ],
   "deployed_revisions": [
-    "688dd90854f13f81a08cffa61370dfcedb360b47+dirty(155 files)"
+    "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(96133a9537b6)"
   ],
   "findings": [
-    "tier-10 Q-001#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-001#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-002#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-002#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-003#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-003#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-004#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-004#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-005#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-005#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-006#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-006#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-007#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-007#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-008#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-008#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-009#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-009#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-010#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-010#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-011#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-011#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-012#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-012#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-013#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-013#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-014#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-014#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-015#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-015#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-016#0: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-016#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-016#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-017#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-017#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-018#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-018#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-019#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-019#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-020#1: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome",
-    "tier-10 Q-020#2: the same question rested at 'succeeded' on an idle machine and at 'failed' under 10-way concurrency, so the load changed the outcome"
+    "tier-5 Q-002#0: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-G3-COMPLIANCE', 'KB-Q-LIC-V2', 'KB-Q-MFA-ENROL', 'KB-Q-RAP-V2']",
+    "tier-5 Q-002#1: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-G3-COMPLIANCE', 'KB-Q-LIC-V2', 'KB-Q-PASSWORD', 'KB-Q-RAP-V2']",
+    "tier-10 Q-002#0: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-LIC-V2', 'KB-Q-PASSWORD', 'KB-Q-RAP-V2', 'KB-Q-SPLIT-V2']",
+    "tier-10 Q-002#1: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-LIC-V2', 'KB-Q-MFA-ENROL', 'KB-Q-RAP-V2']",
+    "tier-10 Q-002#2: the run succeeded without citing ['KB-Q-VPN-CONN']; it cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-LIC-V2', 'KB-Q-MFA-ENROL', 'KB-Q-RAP-V2']"
   ],
-  "generated_at": "2026-09-30T16:14:08.733563Z",
-  "observed_from": "2026-09-24T01:49:43.437049Z",
-  "observed_to": "2026-09-24T01:59:04.125379Z",
+  "generated_at": "2026-10-02T16:33:43.302008Z",
+  "observed_from": "2026-10-02T15:42:32.650433Z",
+  "observed_to": "2026-10-02T15:56:46.720329Z",
   "plan_digest": "a76d24410682b891b44bb4979e8fc065862d4b7c01a400e57f03834f3e1c93dd",
   "schema_version": "phase7-load-v1",
   "settle_budget_seconds": 240.0,
@@ -57,92 +24,92 @@
     {
       "by_repeat": [
         {
-          "p95_seconds": 23.857,
+          "p95_seconds": 33.74,
           "repeat_index": 0,
           "runs": 20
         }
       ],
       "concurrency": 1,
       "declared_runs": 20,
-      "failed": 0,
+      "failed": 1,
       "latency": {
         "count": 20,
-        "max_seconds": 26.937,
-        "median_seconds": 17.367,
-        "p95_seconds": 23.857
+        "max_seconds": 33.757,
+        "median_seconds": 24.335,
+        "p95_seconds": 33.74
       },
       "missing": [],
       "name": "tier-1",
       "observed_runs": 20,
-      "passed": 20,
+      "passed": 19,
       "repeats": 1,
-      "runs_per_minute": 3.328,
-      "wall_seconds": 360.592
+      "runs_per_minute": 2.445,
+      "wall_seconds": 490.71
     },
     {
       "by_repeat": [
         {
-          "p95_seconds": 30.107,
+          "p95_seconds": 35.002,
           "repeat_index": 0,
           "runs": 20
         },
         {
-          "p95_seconds": 29.641,
+          "p95_seconds": 33.405,
           "repeat_index": 1,
           "runs": 20
         }
       ],
       "concurrency": 5,
       "declared_runs": 40,
-      "failed": 0,
+      "failed": 2,
       "latency": {
         "count": 40,
-        "max_seconds": 32.002,
-        "median_seconds": 17.455,
-        "p95_seconds": 30.107
+        "max_seconds": 38.118,
+        "median_seconds": 19.662,
+        "p95_seconds": 35.002
       },
       "missing": [],
       "name": "tier-5",
       "observed_runs": 40,
-      "passed": 40,
+      "passed": 38,
       "repeats": 2,
-      "runs_per_minute": 15.474,
-      "wall_seconds": 155.101
+      "runs_per_minute": 11.271,
+      "wall_seconds": 212.939
     },
     {
       "by_repeat": [
         {
-          "p95_seconds": 33.247,
+          "p95_seconds": 36.549,
           "repeat_index": 0,
           "runs": 20
         },
         {
-          "p95_seconds": 23.959,
+          "p95_seconds": 35.6,
           "repeat_index": 1,
           "runs": 20
         },
         {
-          "p95_seconds": 1.14,
+          "p95_seconds": 33.382,
           "repeat_index": 2,
           "runs": 20
         }
       ],
       "concurrency": 10,
       "declared_runs": 60,
-      "failed": 41,
+      "failed": 3,
       "latency": {
         "count": 60,
-        "max_seconds": 35.6,
-        "median_seconds": 3.663,
-        "p95_seconds": 23.959
+        "max_seconds": 38.566,
+        "median_seconds": 19.924,
+        "p95_seconds": 35.695
       },
       "missing": [],
       "name": "tier-10",
       "observed_runs": 60,
-      "passed": 19,
+      "passed": 57,
       "repeats": 3,
-      "runs_per_minute": 58.644,
-      "wall_seconds": 61.387
+      "runs_per_minute": 21.245,
+      "wall_seconds": 169.455
     }
   ],
   "verdict": "FAIL",

@@ -1,0 +1,242 @@
+{
+  "arms": {
+    "c0_off": {
+      "recall_at_5": 0.6643,
+      "recall_at_10": 0.7286,
+      "recall_at_20": 0.7286,
+      "mrr_at_10": 0.5797,
+      "ndcg_at_10": 0.6156,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.55
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 729.2,
+        "p95": 1111.5
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 311.9,
+      "use_query_model": false,
+      "use_rewrites": false,
+      "candidate_k": null,
+      "reading": "the arm every committed TechQA number was measured on (deterministic query processing, no fan-out); present as the fidelity anchor",
+      "visible_evidence_violations": 0
+    },
+    "c0_sq": {
+      "recall_at_5": 0.6607,
+      "recall_at_10": 0.6893,
+      "recall_at_20": 0.6893,
+      "mrr_at_10": 0.5748,
+      "ndcg_at_10": 0.603,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.51
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 679.5,
+        "p95": 927.9
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 288.9,
+      "use_query_model": true,
+      "use_rewrites": false,
+      "candidate_k": null,
+      "reading": "production query normalisation, fan-out off",
+      "visible_evidence_violations": 0
+    },
+    "c0_mq": {
+      "recall_at_5": 0.6571,
+      "recall_at_10": 0.675,
+      "recall_at_20": 0.675,
+      "mrr_at_10": 0.565,
+      "ndcg_at_10": 0.5921,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.7
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 787.5,
+        "p95": 1020.7
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 328.2,
+      "use_query_model": true,
+      "use_rewrites": true,
+      "candidate_k": null,
+      "reading": "the deployment's arm: production normalisation with multi-query fan-out",
+      "visible_evidence_violations": 0
+    },
+    "c0_sq_ck200": {
+      "recall_at_5": 0.6536,
+      "recall_at_10": 0.6857,
+      "recall_at_20": 0.6857,
+      "mrr_at_10": 0.5707,
+      "ndcg_at_10": 0.5989,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 5,
+        "p50": 7.0,
+        "max": 18,
+        "mean": 7.7
+      },
+      "candidates": {
+        "min": 200,
+        "p50": 200.0,
+        "max": 200
+      },
+      "latency_ms": {
+        "p50": 1151.5,
+        "p95": 1482.1
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 486.9,
+      "use_query_model": true,
+      "use_rewrites": false,
+      "candidate_k": 200,
+      "reading": "as c0_sq with the RRF funnel widened to 200",
+      "visible_evidence_violations": 0
+    },
+    "c0_sq_ck400": {
+      "recall_at_5": 0.6571,
+      "recall_at_10": 0.6821,
+      "recall_at_20": 0.6821,
+      "mrr_at_10": 0.5711,
+      "ndcg_at_10": 0.5985,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 5,
+        "p50": 8.0,
+        "max": 18,
+        "mean": 7.85
+      },
+      "candidates": {
+        "min": 400,
+        "p50": 400.0,
+        "max": 400
+      },
+      "latency_ms": {
+        "p50": 2075.0,
+        "p95": 2772.1
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 877.5,
+      "use_query_model": true,
+      "use_rewrites": false,
+      "candidate_k": 400,
+      "reading": "as c0_sq with the RRF funnel widened to 400",
+      "visible_evidence_violations": 0
+    },
+    "c0_mq_ck200": {
+      "recall_at_5": 0.6571,
+      "recall_at_10": 0.6893,
+      "recall_at_20": 0.6893,
+      "mrr_at_10": 0.5696,
+      "ndcg_at_10": 0.599,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 5,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.78
+      },
+      "candidates": {
+        "min": 200,
+        "p50": 200.0,
+        "max": 200
+      },
+      "latency_ms": {
+        "p50": 1282.7,
+        "p95": 1668.4
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 534.8,
+      "use_query_model": true,
+      "use_rewrites": true,
+      "candidate_k": 200,
+      "reading": "as c0_mq with the RRF funnel widened to 200",
+      "visible_evidence_violations": 0
+    },
+    "c0_anchor": {
+      "recall_at_5": 0.6679,
+      "recall_at_10": 0.6893,
+      "recall_at_20": 0.6893,
+      "mrr_at_10": 0.56,
+      "ndcg_at_10": 0.5919,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.74
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 893.0,
+        "p95": 1324.4
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 374.7,
+      "use_query_model": true,
+      "use_rewrites": true,
+      "candidate_k": null,
+      "reading": "the deployment's arm with one change: the text the *question* was written in is kept as the searched text and the model's normalisation joins the fan-out as one more paraphrase. `QueryProcessor` replaces the question with the model's rewording, so today the only text any channel sees is the model's -- which is why enabling the model loses recall instead of adding it. This arm measures what making the model's contribution additive would be worth.",
+      "visible_evidence_violations": 0
+    }
+  }
+}

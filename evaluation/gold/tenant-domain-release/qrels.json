@@ -1,0 +1,261 @@
+{
+  "schema_version": "phase4-gold-v1",
+  "name": "tenant-domain-release-v1",
+  "description": "The §3 strata as data: graded 0--4 judgments against a corpus that spans two tenants, three group restrictions, a withdrawn document and both ends of an effective window. The labels here are synthetic and the provenance says so, which is why the §4.1 thresholds still do not apply to this set -- what it demonstrates is that the only thing between it and the gate is human signoff, which is the one clause no amount of fixture authoring can satisfy.",
+  "provenance": {
+    "label_tier": "silver",
+    "guideline_version": "synthetic-fixture",
+    "annotator_count": 0,
+    "notes": "authored to exercise the strata, not judged by a domain expert. Deliberately not recorded as double-annotated: a fixture that claimed the annotation protocol would unlock the release gate on labels no person ever read, which is the failure this field exists to prevent."
+  },
+  "documents": {
+    "KB-ACME-VPN-MFA-REBIND": "VPN MFA Device Rebind Runbook",
+    "KB-ACME-VPN-MFA-G3": "Network Team VPN MFA Break-Glass Runbook",
+    "KB-ACME-VPN-MFA-G4": "Service Desk VPN MFA Rebind Script",
+    "KB-ACME-VPN-MFA-LEGACY": "VPN MFA Challenge Bypass (Retired)",
+    "KB-ACME-VPN-MFA-V1": "VPN MFA Token Store Procedure (v1)",
+    "KB-ACME-VPN-MFA-V2": "VPN MFA Token Store Procedure (v2)",
+    "KB-ACME-VPN-OPS-NOTE": "VPN MFA Operations Note",
+    "KB-ACME-VPN-APP-REG": "VPN MFA Application Registration",
+    "KB-ACME-VPN-MFA-AUDIT": "VPN MFA Enrolment Audit Checklist",
+    "KB-ACME-VPN-MFA-Q3": "VPN MFA Phased Rollout (from 2026-06-01)",
+    "KB-ACME-PWD-RESET": "User Password Reset and Account Unlock",
+    "KB-ACME-PWD-G3": "Network Team Account Recovery Runbook",
+    "KB-GLOBEX-VPN-MFA-REBIND": "Globex VPN MFA Rebind Guide",
+    "KB-GLOBEX-CITRIX-BREAKGLASS": "Globex Citrix Break-Glass Procedure"
+  },
+  "queries": [
+    {
+      "id": "td-rebind-single",
+      "query": "A user replaced their handset and VPN multi-factor authentication times out on every sign-in; what is the supported rebind procedure?",
+      "category": "single_evidence",
+      "split": "test",
+      "relevant": ["KB-ACME-VPN-MFA-REBIND"],
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "source_record_id": "KB-ACME-VPN-MFA-REBIND", "grade": 4},
+        {"parent_chunk_id": "KB-ACME-VPN-APP-REG#document", "source_record_id": "KB-ACME-VPN-APP-REG", "grade": 1},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-AUDIT#document", "source_record_id": "KB-ACME-VPN-MFA-AUDIT", "grade": 1},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-LEGACY#document", "source_record_id": "KB-ACME-VPN-MFA-LEGACY", "grade": 0}
+      ],
+      "nuggets": [
+        {
+          "id": "td-rebind-verify-identity",
+          "text": "verify the caller's identity before changing the enrolment",
+          "required": true,
+          "supporting": [{"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "span": "Verify the caller's identity"}]
+        },
+        {
+          "id": "td-rebind-never-disable-mfa",
+          "text": "multi-factor authentication must never be disabled to work around the failed enrolment",
+          "required": true,
+          "supporting": [{"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "span": "Never disable multi-factor authentication"}]
+        }
+      ]
+    },
+    {
+      "id": "td-token-store-single",
+      "query": "How is a VPN MFA token reissued so that it is accepted in every gateway region?",
+      "category": "single_evidence",
+      "split": "test",
+      "relevant": ["KB-ACME-VPN-MFA-V2"],
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-V2#document", "source_record_id": "KB-ACME-VPN-MFA-V2", "grade": 4},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-V1#document", "source_record_id": "KB-ACME-VPN-MFA-V1", "grade": 0},
+        {"parent_chunk_id": "KB-ACME-VPN-OPS-NOTE#document", "source_record_id": "KB-ACME-VPN-OPS-NOTE", "grade": 1}
+      ]
+    },
+    {
+      "id": "td-password-single",
+      "query": "An account is locked after repeated sign-on failures; what is the safe reset and unlock procedure?",
+      "category": "single_evidence",
+      "split": "test",
+      "relevant": ["KB-ACME-PWD-RESET"],
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-PWD-RESET#document", "source_record_id": "KB-ACME-PWD-RESET", "grade": 4},
+        {"parent_chunk_id": "KB-ACME-PWD-G3#document", "source_record_id": "KB-ACME-PWD-G3", "grade": 0}
+      ]
+    },
+    {
+      "id": "td-breakglass-group3",
+      "query": "How does the network team regain gateway access when the identity provider is unreachable?",
+      "category": "single_evidence",
+      "split": "test",
+      "asker_group_ids": [3],
+      "relevant": ["KB-ACME-VPN-MFA-G3"],
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-G3#document", "source_record_id": "KB-ACME-VPN-MFA-G3", "grade": 4, "group_ids": [3]},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-G4#document", "source_record_id": "KB-ACME-VPN-MFA-G4", "grade": 0, "group_ids": [4]},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "source_record_id": "KB-ACME-VPN-MFA-REBIND", "grade": 1}
+      ]
+    },
+    {
+      "id": "td-desk-script-group4",
+      "query": "What script does the service desk follow to complete a VPN MFA rebind without escalating?",
+      "category": "single_evidence",
+      "split": "development",
+      "asker_group_ids": [4],
+      "relevant": ["KB-ACME-VPN-MFA-G4"],
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-G4#document", "source_record_id": "KB-ACME-VPN-MFA-G4", "grade": 4, "group_ids": [4]},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-G3#document", "source_record_id": "KB-ACME-VPN-MFA-G3", "grade": 0, "group_ids": [3]},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "source_record_id": "KB-ACME-VPN-MFA-REBIND", "grade": 1}
+      ]
+    },
+    {
+      "id": "td-privileged-recovery-group3",
+      "query": "A privileged gateway administration account is locked out; how is it recovered?",
+      "category": "single_evidence",
+      "split": "development",
+      "asker_group_ids": [3],
+      "relevant": ["KB-ACME-PWD-G3"],
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-PWD-G3#document", "source_record_id": "KB-ACME-PWD-G3", "grade": 4, "group_ids": [3]},
+        {"parent_chunk_id": "KB-ACME-PWD-RESET#document", "source_record_id": "KB-ACME-PWD-RESET", "grade": 1}
+      ]
+    },
+    {
+      "id": "td-rebind-multi",
+      "query": "After a handset change the rebind succeeded but sign-in still prompts for a challenge; which documents explain the cause and the repair?",
+      "category": "multi_evidence",
+      "split": "test",
+      "relevant": ["KB-ACME-VPN-MFA-REBIND", "KB-ACME-VPN-APP-REG"],
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "source_record_id": "KB-ACME-VPN-MFA-REBIND", "grade": 3},
+        {"parent_chunk_id": "KB-ACME-VPN-APP-REG#document", "source_record_id": "KB-ACME-VPN-APP-REG", "grade": 4},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-AUDIT#document", "source_record_id": "KB-ACME-VPN-MFA-AUDIT", "grade": 1},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-V1#document", "source_record_id": "KB-ACME-VPN-MFA-V1", "grade": 0}
+      ],
+      "nuggets": [
+        {
+          "id": "td-multi-delivered-not-timed-out",
+          "text": "a challenge that is delivered and then repeated is not a device fault",
+          "required": true,
+          "supporting": [{"parent_chunk_id": "KB-ACME-VPN-APP-REG#document", "span": "asked for again"}]
+        },
+        {
+          "id": "td-multi-reregister",
+          "text": "the repair is to re-register the VPN client application",
+          "required": true,
+          "supporting": [{"parent_chunk_id": "KB-ACME-VPN-APP-REG#document", "span": "Re-register the VPN client application"}]
+        },
+        {
+          "id": "td-multi-rebind-context",
+          "text": "the rebind runbook is relevant background but does not fix this fault",
+          "required": false,
+          "supporting": [{"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "span": "Rebinding the device does not fix it"}]
+        }
+      ]
+    },
+    {
+      "id": "td-breakglass-multi",
+      "query": "During an identity provider outage the network team needs gateway access and a token reissue; which runbooks apply?",
+      "category": "multi_evidence",
+      "split": "test",
+      "asker_group_ids": [3],
+      "relevant": ["KB-ACME-VPN-MFA-G3", "KB-ACME-VPN-MFA-V2"],
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-G3#document", "source_record_id": "KB-ACME-VPN-MFA-G3", "grade": 4, "group_ids": [3]},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-V2#document", "source_record_id": "KB-ACME-VPN-MFA-V2", "grade": 3},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-G4#document", "source_record_id": "KB-ACME-VPN-MFA-G4", "grade": 0, "group_ids": [4]}
+      ]
+    },
+    {
+      "id": "td-hard-negative-repeated-prompt",
+      "query": "A user is prompted for a multi-factor challenge on every sign-in although the token is valid and the handset has not changed; what explains it?",
+      "category": "hard_negative",
+      "split": "test",
+      "relevant": ["KB-ACME-VPN-APP-REG"],
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-APP-REG#document", "source_record_id": "KB-ACME-VPN-APP-REG", "grade": 4},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "source_record_id": "KB-ACME-VPN-MFA-REBIND", "grade": 1},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-AUDIT#document", "source_record_id": "KB-ACME-VPN-MFA-AUDIT", "grade": 1},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-V2#document", "source_record_id": "KB-ACME-VPN-MFA-V2", "grade": 0}
+      ]
+    },
+    {
+      "id": "td-hard-negative-audit",
+      "query": "Which routine checks confirm the multi-factor enrolment store is in the state the platform expects?",
+      "category": "hard_negative",
+      "split": "test",
+      "relevant": ["KB-ACME-VPN-MFA-AUDIT"],
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-AUDIT#document", "source_record_id": "KB-ACME-VPN-MFA-AUDIT", "grade": 4},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "source_record_id": "KB-ACME-VPN-MFA-REBIND", "grade": 1},
+        {"parent_chunk_id": "KB-GLOBEX-VPN-MFA-REBIND#document", "source_record_id": "KB-GLOBEX-VPN-MFA-REBIND", "grade": 0}
+      ]
+    },
+    {
+      "id": "td-globex-rebind",
+      "query": "In the Globex realm a handset was replaced and VPN multi-factor authentication fails; what is the rebind procedure?",
+      "category": "single_evidence",
+      "split": "test",
+      "asker_tenant_id": "22222222-2222-4222-8222-222222222222",
+      "relevant": ["KB-GLOBEX-VPN-MFA-REBIND"],
+      "graded": [
+        {"parent_chunk_id": "KB-GLOBEX-VPN-MFA-REBIND#document", "source_record_id": "KB-GLOBEX-VPN-MFA-REBIND", "grade": 4, "tenant_id": "22222222-2222-4222-8222-222222222222"},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "source_record_id": "KB-ACME-VPN-MFA-REBIND", "grade": 0, "tenant_id": "11111111-1111-4111-8111-111111111111"}
+      ]
+    },
+    {
+      "id": "td-impossible-certificate-window",
+      "query": "Which TLS certificate rotation window applies to the VPN gateway certificates?",
+      "category": "unanswerable",
+      "split": "test",
+      "unanswerable": true,
+      "refusal_reason": "insufficient_evidence",
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-AUDIT#document", "source_record_id": "KB-ACME-VPN-MFA-AUDIT", "grade": 0},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "source_record_id": "KB-ACME-VPN-MFA-REBIND", "grade": 0}
+      ]
+    },
+    {
+      "id": "td-impossible-retired-bypass",
+      "query": "What did the retired multi-factor challenge bypass procedure instruct, and does it still apply?",
+      "category": "unanswerable",
+      "split": "test",
+      "unanswerable": true,
+      "refusal_reason": "insufficient_evidence",
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-LEGACY#document", "source_record_id": "KB-ACME-VPN-MFA-LEGACY", "grade": 0},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-REBIND#document", "source_record_id": "KB-ACME-VPN-MFA-REBIND", "grade": 1}
+      ]
+    },
+    {
+      "id": "td-impossible-version-conflict",
+      "query": "What is the current VPN MFA token reissue interval?",
+      "category": "unanswerable",
+      "split": "development",
+      "unanswerable": true,
+      "refusal_reason": "version_conflict",
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-V2#document", "source_record_id": "KB-ACME-VPN-MFA-V2", "grade": 1},
+        {"parent_chunk_id": "KB-ACME-VPN-OPS-NOTE#document", "source_record_id": "KB-ACME-VPN-OPS-NOTE", "grade": 1},
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-V1#document", "source_record_id": "KB-ACME-VPN-MFA-V1", "grade": 1}
+      ]
+    },
+    {
+      "id": "td-refuse-cross-tenant-document",
+      "query": "What does the Globex Citrix break-glass procedure require for its credential store?",
+      "category": "unanswerable",
+      "split": "test",
+      "unanswerable": true,
+      "refusal_reason": "must_refuse_access",
+      "asker_tenant_id": "11111111-1111-4111-8111-111111111111",
+      "graded": [
+        {"parent_chunk_id": "KB-GLOBEX-CITRIX-BREAKGLASS#document", "source_record_id": "KB-GLOBEX-CITRIX-BREAKGLASS", "grade": 0, "tenant_id": "22222222-2222-4222-8222-222222222222"}
+      ]
+    },
+    {
+      "id": "td-refuse-without-group",
+      "query": "What does the network team's VPN MFA break-glass runbook say about retrieving the sealed credential?",
+      "category": "unanswerable",
+      "split": "test",
+      "unanswerable": true,
+      "refusal_reason": "must_refuse_access",
+      "asker_tenant_id": "11111111-1111-4111-8111-111111111111",
+      "graded": [
+        {"parent_chunk_id": "KB-ACME-VPN-MFA-G3#document", "source_record_id": "KB-ACME-VPN-MFA-G3", "grade": 0, "group_ids": [3]}
+      ]
+    }
+  ]
+}

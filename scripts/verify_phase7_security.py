@@ -38,6 +38,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from servicemind.evaluation.acceptance import case_set_digest, load_acceptance_cases
+from servicemind.evaluation.deployment import refuse_stale_deployment
 from servicemind.evaluation.security import (
     EvidenceKind,
     SecurityScenarioSet,
@@ -405,7 +406,22 @@ def main() -> int:
         help="also run the pinned tests marked `docker`, which need PostgreSQL; without it "
         "the outbox retention scenarios are recorded unexercised",
     )
+    parser.add_argument(
+        "--allow-stale-deployment",
+        action="store_true",
+        help=(
+            "observe even though the serving process predates the tree, recording the gap "
+            "as a note instead of refusing; the evidence will describe the older code"
+        ),
+    )
     args = parser.parse_args()
+
+    # Refused before anything is observed, because the failure does not announce itself:
+    # a process running code older than the tree answers every request competently, so the
+    # batch completes and every record carries the revision of code the platform never ran.
+    refusal = refuse_stale_deployment(REPO_ROOT, allow=args.allow_stale_deployment, argv=sys.argv)
+    if refusal:
+        return refusal
 
     scenario_set = load_security_scenarios(SCENARIOS)
     only = {item.strip() for item in args.only.split(",") if item.strip()} if args.only else set()

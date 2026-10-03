@@ -1,0 +1,413 @@
+{
+  "schema_version": "phase4-query-arm-funnel-v1",
+  "status": "QUERY_ARM_MEASUREMENT",
+  "quality_certification": false,
+  "generated_at": "2026-10-02T05:36:48.601721+00:00",
+  "status_semantics": "this report measures the *production query arm* and the funnel depth on the TechQA release set through the production retrieval path. The labels remain silver, so it certifies nothing about tenant-domain quality; it answers a narrower question -- which query arm the deployed pipeline actually runs, and how much the measured numbers depend on the harness's choice of arm.",
+  "measurement_gap": {
+    "harness_arm": "use_query_model=False, use_rewrites=False",
+    "production_arm": "use_query_model=True, use_rewrites=settings.SERVICEMIND_RAG_MULTI_QUERY (True)",
+    "harness_call_site": "scripts/evaluate_phase4_retrieval_techqa.py HarnessProvider.retrieve",
+    "production_call_site": "src/servicemind/agents/knowledge.py retrieve(...)"
+  },
+  "inputs": {
+    "producer": {
+      "path": "scripts/measure_phase4_production_query_arms.py",
+      "sha256": "fe360f79c1fff6c82555afdfa0cc3d1a16cb2eb7c92289f50c433b862695b3d0",
+      "tracked": true
+    },
+    "release_loader": {
+      "path": "scripts/evaluate_phase4_retrieval_techqa.py",
+      "sha256": "8cc96c61ade23e84cb107a823b9c0394471cfb316af725abb7ffb8820e3dfd54",
+      "tracked": true
+    },
+    "rewrite_cache": {
+      "path": "evaluation/gold/techqa_rewrites.v1.json",
+      "sha256": "314cdb58d5f2b05befd7bda0df7dfcea0926381a0df2f61af98ae2a831766d67",
+      "captured_at": "2026-10-02T03:04:54.421394+00:00",
+      "model": "deepseek-v4-flash",
+      "capture_seconds": 84.1,
+      "queries_with_no_rewrite": 0,
+      "queries_normalised_by_the_model": 400,
+      "queries_served_by_the_deterministic_fallback": 0,
+      "tracked": false,
+      "note": "the capture holds the model's rewrites of public dataset questions only; it carries no secret, but it is regenerable and is not tracked"
+    },
+    "selection": {
+      "path": "evaluation/gold/phase4_proxy_release_v1.2.json",
+      "sha256": "027ba1868c4ba0f1c6e26418add0afb4025fae6414d93a494dc90a41332c84f4",
+      "tracked": true
+    },
+    "corpus": {
+      "path": "data/phase4/raw/eval/techqa-rag-eval/corpus.zip",
+      "sha256": "c06aa287dcc1abf8db6b49b8495df095db73342d729f6451ac330785245d10be"
+    },
+    "production_report": {
+      "path": "evaluation/reports/phase4_techqa_production_latest.json",
+      "sha256": "f7069a4343e4314781031f5964a0f2056e717c69924e8e1886ec776dabd2cf63"
+    }
+  },
+  "corpus": {
+    "documents_indexed": 28481,
+    "ingest_seconds": null,
+    "totals": {},
+    "index_prefix": "sm-techqa-arms-v1",
+    "index_kept": true,
+    "index_reused": true,
+    "arms_measured": [
+      "c0_off",
+      "c0_sq",
+      "c0_mq",
+      "c0_sq_ck200",
+      "c0_sq_ck400",
+      "c0_mq_ck200",
+      "c0_anchor"
+    ],
+    "arms_measured_is_the_full_table": true,
+    "active_generation": "a5daf639d749",
+    "children_on_cluster": 199409,
+    "parents_on_cluster": 46691
+  },
+  "models": {
+    "embedding_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+    "reranker_revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+    "rewrite_model": "deepseek-v4-flash",
+    "default_candidate_k": 100,
+    "default_final_k_production": 8,
+    "harness_final_k": 24
+  },
+  "queries": {
+    "total": 400,
+    "answerable": 280,
+    "unanswerable": 120
+  },
+  "arms": {
+    "c0_off": {
+      "recall_at_5": 0.6643,
+      "recall_at_10": 0.7286,
+      "recall_at_20": 0.7286,
+      "mrr_at_10": 0.5797,
+      "ndcg_at_10": 0.6156,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.55
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 729.2,
+        "p95": 1111.5
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 311.9,
+      "use_query_model": false,
+      "use_rewrites": false,
+      "candidate_k": null,
+      "reading": "the arm every committed TechQA number was measured on (deterministic query processing, no fan-out); present as the fidelity anchor",
+      "visible_evidence_violations": 0
+    },
+    "c0_sq": {
+      "recall_at_5": 0.6607,
+      "recall_at_10": 0.6893,
+      "recall_at_20": 0.6893,
+      "mrr_at_10": 0.5748,
+      "ndcg_at_10": 0.603,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.51
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 679.5,
+        "p95": 927.9
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 288.9,
+      "use_query_model": true,
+      "use_rewrites": false,
+      "candidate_k": null,
+      "reading": "production query normalisation, fan-out off",
+      "visible_evidence_violations": 0
+    },
+    "c0_mq": {
+      "recall_at_5": 0.6571,
+      "recall_at_10": 0.675,
+      "recall_at_20": 0.675,
+      "mrr_at_10": 0.565,
+      "ndcg_at_10": 0.5921,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.7
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 787.5,
+        "p95": 1020.7
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 328.2,
+      "use_query_model": true,
+      "use_rewrites": true,
+      "candidate_k": null,
+      "reading": "the deployment's arm: production normalisation with multi-query fan-out",
+      "visible_evidence_violations": 0
+    },
+    "c0_sq_ck200": {
+      "recall_at_5": 0.6536,
+      "recall_at_10": 0.6857,
+      "recall_at_20": 0.6857,
+      "mrr_at_10": 0.5707,
+      "ndcg_at_10": 0.5989,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 5,
+        "p50": 7.0,
+        "max": 18,
+        "mean": 7.7
+      },
+      "candidates": {
+        "min": 200,
+        "p50": 200.0,
+        "max": 200
+      },
+      "latency_ms": {
+        "p50": 1151.5,
+        "p95": 1482.1
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 486.9,
+      "use_query_model": true,
+      "use_rewrites": false,
+      "candidate_k": 200,
+      "reading": "as c0_sq with the RRF funnel widened to 200",
+      "visible_evidence_violations": 0
+    },
+    "c0_sq_ck400": {
+      "recall_at_5": 0.6571,
+      "recall_at_10": 0.6821,
+      "recall_at_20": 0.6821,
+      "mrr_at_10": 0.5711,
+      "ndcg_at_10": 0.5985,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 5,
+        "p50": 8.0,
+        "max": 18,
+        "mean": 7.85
+      },
+      "candidates": {
+        "min": 400,
+        "p50": 400.0,
+        "max": 400
+      },
+      "latency_ms": {
+        "p50": 2075.0,
+        "p95": 2772.1
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 877.5,
+      "use_query_model": true,
+      "use_rewrites": false,
+      "candidate_k": 400,
+      "reading": "as c0_sq with the RRF funnel widened to 400",
+      "visible_evidence_violations": 0
+    },
+    "c0_mq_ck200": {
+      "recall_at_5": 0.6571,
+      "recall_at_10": 0.6893,
+      "recall_at_20": 0.6893,
+      "mrr_at_10": 0.5696,
+      "ndcg_at_10": 0.599,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 5,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.78
+      },
+      "candidates": {
+        "min": 200,
+        "p50": 200.0,
+        "max": 200
+      },
+      "latency_ms": {
+        "p50": 1282.7,
+        "p95": 1668.4
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 534.8,
+      "use_query_model": true,
+      "use_rewrites": true,
+      "candidate_k": 200,
+      "reading": "as c0_mq with the RRF funnel widened to 200",
+      "visible_evidence_violations": 0
+    },
+    "c0_anchor": {
+      "recall_at_5": 0.6679,
+      "recall_at_10": 0.6893,
+      "recall_at_20": 0.6893,
+      "mrr_at_10": 0.56,
+      "ndcg_at_10": 0.5919,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.74
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 893.0,
+        "p95": 1324.4
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 374.7,
+      "use_query_model": true,
+      "use_rewrites": true,
+      "candidate_k": null,
+      "reading": "the deployment's arm with one change: the text the *question* was written in is kept as the searched text and the model's normalisation joins the fan-out as one more paraphrase. `QueryProcessor` replaces the question with the model's rewording, so today the only text any channel sees is the model's -- which is why enabling the model loses recall instead of adding it. This arm measures what making the model's contribution additive would be worth.",
+      "visible_evidence_violations": 0
+    }
+  },
+  "fidelity_anchor": {
+    "published_arm": "phase4_techqa_production_latest.json results.hybrid_rerank",
+    "published_recall_at_10": 0.7214285714285714,
+    "reproduced_recall_at_10": 0.7286,
+    "delta_recall_at_10": 0.0072,
+    "published_packed_max": 16,
+    "reproduced_packed_max": 16,
+    "reading": "c0_off replays the published run's query arm on this run's index. A delta of 0.0000 means the two builds agree and the published recall is this run's baseline. A non-zero delta is a difference between two *index builds*, not between two arms: every arm in this table shares one index and one capture. What the control repeats is measured, not assumed -- see 控制臂自身的可复现度 below -- and a delta at or below the movement reported there is not a difference this table can resolve."
+  },
+  "control_repeatability": {
+    "first": {
+      "recall_at_5": 0.6643,
+      "recall_at_10": 0.7286,
+      "recall_at_20": 0.7286,
+      "mrr_at_10": 0.5797,
+      "ndcg_at_10": 0.6156,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.55
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 729.2,
+        "p95": 1111.5
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 311.9,
+      "use_query_model": false,
+      "use_rewrites": false,
+      "candidate_k": null,
+      "reading": "the arm every committed TechQA number was measured on (deterministic query processing, no fan-out); present as the fidelity anchor",
+      "visible_evidence_violations": 0
+    },
+    "second": {
+      "recall_at_5": 0.6679,
+      "recall_at_10": 0.7286,
+      "recall_at_20": 0.7286,
+      "mrr_at_10": 0.5798,
+      "ndcg_at_10": 0.6157,
+      "answerable": 280,
+      "unanswerable": 120,
+      "answered_unanswerable": 120,
+      "packed_documents": {
+        "min": 4,
+        "p50": 7.0,
+        "max": 16,
+        "mean": 7.55
+      },
+      "candidates": {
+        "min": 100,
+        "p50": 100.0,
+        "max": 100
+      },
+      "latency_ms": {
+        "p50": 730.5,
+        "p95": 1104.2
+      },
+      "cutoffs_the_pack_cannot_tell_apart": [
+        "10==20"
+      ],
+      "arm_seconds": 313.0
+    },
+    "queries_compared": 280,
+    "queries_in_one_pass_only": [],
+    "recall_at_5_moved": 1,
+    "recall_at_10_moved": 0,
+    "reciprocal_rank_moved": 1,
+    "reading": "The same arm, the same index, the same capture and the same principal; the only difference between the two columns is the pass. A delta at or below what moved here is not a difference this table can resolve, and where the cutoff columns moved while the rank column did not, what this stack does not repeat is the order of near-tied documents rather than which documents it retrieved."
+  },
+  "limitations": [
+    "the labels are source-provided silver, not tenant-domain human qrels, so no row here is a release threshold",
+    "each answerable query carries a single relevant filename, so a rank-2 hit scores the same as a miss under Recall@k",
+    "the harness packs to final_k = max(top_ks) + 4 = 24 while production's first round packs to 8; every packed count here is the harness's, and the rows whose cutoffs collapse are reporting the pack length rather than the retriever",
+    "parents are read from the index's parent alias rather than under PostgreSQL row-level security, so this run exercises the expansion call, its tenant scoping and its ACL filter, but not the RLS policy itself",
+    "the rewrite capture is one sample of a non-deterministic stage: a second capture would differ in wording. The vendored sha256 is what makes this particular sample reproducible, not the stage",
+    "the control arm's own reproducibility was measured in this run (see 控制臂自身的可复现度): a delta at or below the movement reported there is not a difference this table resolves",
+    "the index was not rebuilt in this run. It was reused under `sm-techqa-arms-v1-tenant-11111111-1111-4111-8111-111111111111-*` because re-ingesting 28,481 documents costs ~53 minutes and the corpus digest has not moved. What the report records is the active generation and its parent/child counts, read back from the cluster; that proves the generation is reachable and populated, not that it holds *this* corpus. The run's own check is the fidelity anchor -- if `c0_off` did not reproduce the published `hybrid_rerank` recall, none of the rows beside it may be read"
+  ]
+}

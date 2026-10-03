@@ -96,7 +96,22 @@ class CannedQueryProcessor:
     def __init__(self, mapping: dict[str, KnowledgeQuery]) -> None:
         self.mapping = mapping
 
-    async def process(self, query: str, *, use_model: bool = True) -> KnowledgeQuery:
+    async def process(
+        self,
+        query: str,
+        *,
+        use_model: bool = True,
+        model_query: str | None = None,
+    ) -> KnowledgeQuery:
+        """``model_query`` is accepted and ignored.
+
+        ``EnterpriseRAG.retrieve`` always passes it (``rag/service.py``), so a replay
+        that does not accept it raises ``TypeError`` on the first call -- after the
+        script has already claimed it measured an arm. The mapping is keyed by the
+        question the harness asks with, which is what the production processor is
+        handed here, so the second argument has nothing to add. See
+        ``measure_phase4_production_query_arms.py``, which carries the same seam.
+        """
         processed = self.mapping.get(query)
         if processed is None:  # pragma: no cover - every gold query is pre-captured
             raise KeyError(f"no committed processed query for: {query!r}")
@@ -117,10 +132,20 @@ def _processed_from_sidecar(sidecar: dict, gold) -> dict[str, KnowledgeQuery]:
 
 
 def _reranker() -> CallableReranker:
-    # Deterministic token-overlap stand-in keeps the harness offline; swap for the
-    # BGE cross-encoder when --model bge (the acceptance run).
+    # Deterministic Jaccard token-overlap stand-in keeps the harness offline; swap
+    # for the BGE cross-encoder when --model bge (the acceptance run). It MUST be a
+    # normalized [0,1] score: ``EnterpriseRAG.retrieve`` rejects any hit whose score
+    # falls outside that range, and a raw overlap count would fail that guard as soon
+    # as a candidate shares more than one term with the query -- which is why the
+    # deterministic arm used to raise on its first candidate instead of measuring.
     return CallableReranker(
-        lambda query, text: len(set(query.casefold().split()) & set(text.casefold().split()))
+        lambda query, text: (
+            len(set(query.casefold().split()) & set(text.casefold().split()))
+            / max(
+                len(set(query.casefold().split()) | set(text.casefold().split())),
+                1,
+            )
+        )
     )
 
 
@@ -150,9 +175,9 @@ async def main() -> None:
     processor = CannedQueryProcessor(_processed_from_sidecar(sidecar, gold))
 
     client = build_opensearch_client()
-    if args.model == "bge":
-        from core import settings
+    from core import settings
 
+    if args.model == "bge":
         embedding = BgeM3EmbeddingProvider(
             model_revision=settings.SERVICEMIND_EMBEDDING_REVISION,
             device=settings.SERVICEMIND_MODEL_DEVICE or "cpu",
@@ -226,12 +251,20 @@ async def main() -> None:
             processed = processor.mapping[gold_query.query]
             probe = {}
             for name, spec in arms.items():
+                # Sized from the same settings ``EnterpriseRAG.retrieve`` reads, not
+                # from ``index.search``'s own defaults (60/60/40). Measuring the pool
+                # at a narrower funnel than the deployment runs would report the
+                # breadth of a candidate set production never hands the reranker --
+                # and on a corpus larger than this gold set the cap would bind.
                 hits = await index.search(
                     processed,
                     principal,
                     embedding,
                     mode=RetrievalMode.HYBRID,
                     use_rewrites=spec["use_rewrites"],
+                    dense_k=settings.SERVICEMIND_RAG_DENSE_K,
+                    bm25_k=settings.SERVICEMIND_RAG_BM25_K,
+                    candidate_k=settings.SERVICEMIND_RAG_CANDIDATE_K,
                 )
                 probe[name] = {
                     "candidate_hits": len(hits),

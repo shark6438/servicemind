@@ -751,13 +751,15 @@ class OpenSearchKnowledgeIndex:
         three, so mode is never a way to widen visibility.
 
         ``use_rewrites`` (hybrid only) fans the query out at the lexical channel: one
-        BM25 sub-query per distinct ``rewritten_queries`` paraphrase, on top of the
-        unchanged single dense anchor, all inside one OpenSearch ``hybrid`` query so
-        the cluster's RRF pipeline merges them. OpenSearch caps ``hybrid`` at 5
-        sub-queries, which is why rewrites expand BM25 (term-level) coverage instead
-        of spawning duplicate dense arms; the rerank step still scores against the
-        normalized query. With no rewrites it builds exactly the legacy two-arm
-        request.
+        BM25 sub-query per distinct variant from ``lexical_variants`` -- the model's
+        normalization first, then its paraphrases -- on top of the unchanged single
+        dense anchor, all inside one OpenSearch ``hybrid`` query so the cluster's RRF
+        pipeline merges them. The dense anchor is always ``normalized_query``, which is
+        the user's own words: a model paraphrase is an extra arm, never the arm.
+        OpenSearch caps ``hybrid`` at 5 sub-queries, which is why this expands BM25
+        (term-level) coverage instead of spawning duplicate dense arms; the rerank step
+        still scores against the anchor. With no variants it builds exactly the legacy
+        two-arm request.
         """
         alias = self.child_alias(principal.tenant_id)
         if not await self._resolve_alias(alias):
@@ -767,7 +769,7 @@ class OpenSearchKnowledgeIndex:
         params: dict[str, str] = {}
         if mode is RetrievalMode.HYBRID:
             texts = _fan_out_texts(
-                query.normalized_query, query.rewritten_queries, use_rewrites=use_rewrites
+                query.normalized_query, query.lexical_variants(), use_rewrites=use_rewrites
             )
             vector = await embedding.embed_query(query.normalized_query)
             queries: list[dict[str, Any]] = [

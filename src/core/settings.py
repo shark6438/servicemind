@@ -228,6 +228,12 @@ class Settings(BaseSettings):
     # must not crowd the context, and no single source may drown every other source;
     # selection still only packs parents whose rerank earned them a place.
     SERVICEMIND_RAG_MAX_PARENTS_PER_DOCUMENT: int = 2
+    # The source ceiling is a bound *between* sources, so rag/service.py applies it only
+    # when the candidate pool names more than one. With a single source -- which is what
+    # every ingester in rag/sources.py produces when it is the tenant's only connector --
+    # there is nothing to balance, and the bound would silently become a ceiling on the
+    # whole prompt. This knob therefore controls inter-source fairness; how much evidence
+    # one answer may carry is SERVICEMIND_RAG_CONTEXT_TOKENS.
     SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE: int = 4
     #: Multi-query fan-out (hybrid only): add one BM25 sub-query per LLM rewrite to
     #: the unchanged single dense anchor, inside one OpenSearch ``hybrid`` query that
@@ -279,6 +285,11 @@ class Settings(BaseSettings):
     SERVICEMIND_MEMORY_ENABLED: bool = False
     SERVICEMIND_MEMORY_AUTO_ACTIVATION_CONFIDENCE: float = 0.9
     SERVICEMIND_MEMORY_VECTOR_ENABLED: bool = False
+    #: The lexical candidate window, i.e. how many memories the repository may hand a
+    #: lexical ranker. With ``SERVICEMIND_MEMORY_VECTOR_ENABLED`` the ranker is cosine
+    #: similarity and the window widens to the repository cap (500): ordering candidates
+    #: by lexeme overlap is not a sound way to prune for a cosine comparison, and a
+    #: memory sharing no token with the query would never be scored at all.
     SERVICEMIND_MEMORY_CANDIDATE_CEILING: int = Field(default=100, ge=1, le=500)
     #: Automatically propose (never auto-activate) a procedure after the same
     #: normalized recommendation is verified on at least two distinct tickets.

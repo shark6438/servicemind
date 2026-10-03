@@ -285,3 +285,103 @@ async def test_the_last_cursor_the_log_column_can_hold_is_still_a_valid_cursor(
 
     assert response.status_code == 200
     assert cursors == [EVENT_SEQUENCE_MAX]
+
+
+@pytest.mark.asyncio
+async def test_cancel_run_demands_a_mutating_role_and_only_stops_live_runs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Cancelling stops work the caller may not have started.
+
+    ``list_runs`` exposes every run in the tenant, so an ungated cancel let a
+    read-only ``viewer`` halt other people's work. The gate is ``analyst`` -- the
+    same floor that lets the caller create a run -- and approvers hold it too, so
+    nobody already involved in a run's lifecycle loses access.
+    """
+    from servicemind.persistence.models import RunStatus
+
+    now = datetime(2026, 9, 22, tzinfo=UTC)
+
+    class Repository:
+        touches: list[str] = []
+
+        def __init__(self, tenant_id: UUID) -> None:
+            assert tenant_id == TENANT_ID
+
+        async def get_run(self, run_id: UUID) -> SimpleNamespace | None:
+            self.touches.append("get_run")
+            if run_id == self.missing_id:
+                return None
+            return SimpleNamespace(
+                id=run_id,
+                tenant_id=TENANT_ID,
+                user_id="analyst-1",
+                ticket_id=42,
+                goal="Investigate VPN incident",
+                request_write=False,
+                status=self.status,
+                result=None,
+                error=None,
+                created_at=now,
+                updated_at=now,
+            )
+
+        async def update_run(self, run_id: UUID, run_status: str) -> SimpleNamespace:
+            self.touches.append(f"update_run:{run_status}")
+            self.status = run_status
+            return await self.get_run(run_id)
+
+        async def audit(self, **_: object) -> None:
+            self.touches.append("audit")
+
+        async def get_action_intent(self, run_id: UUID) -> None:
+            return None
+
+    Repository.touches = []
+    Repository.missing_id = uuid4()
+    Repository.status = RunStatus.PENDING.value
+    monkeypatch.setattr(api_module, "ServiceMindRepository", Repository)
+
+    live = uuid4()
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=_app(_context({"viewer"}))),
+        base_url="http://test",
+    ) as client:
+        denied = await client.post(f"/v1/servicemind/runs/{live}:cancel")
+        assert denied.status_code == 403
+    # The refusal happens before the repository is consulted at all, so a denied
+    # caller cannot even learn whether the run exists.
+    assert Repository.touches == []
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=_app(_context({"viewer", "analyst"}))),
+        base_url="http://test",
+    ) as client:
+        cancelled = await client.post(f"/v1/servicemind/runs/{live}:cancel")
+        assert cancelled.status_code == 200
+        assert cancelled.json()["status"] == RunStatus.CANCELLED.value
+    assert Repository.touches == [
+        "get_run",
+        f"update_run:{RunStatus.CANCELLED.value}",
+        "get_run",
+        "audit",
+    ]
+
+    missing = uuid4()
+    Repository.missing_id = missing
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=_app(_context({"analyst"}))),
+        base_url="http://test",
+    ) as client:
+        absent = await client.post(f"/v1/servicemind/runs/{missing}:cancel")
+        assert absent.status_code == 404
+
+    # A run that already reached a terminal state must not be resurrected into
+    # CANCELLED: the audit trail would then disagree with what the workflow did.
+    Repository.status = RunStatus.SUCCEEDED.value
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=_app(_context({"analyst"}))),
+        base_url="http://test",
+    ) as client:
+        settled = await client.post(f"/v1/servicemind/runs/{live}:cancel")
+        assert settled.status_code == 409

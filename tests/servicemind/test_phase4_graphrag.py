@@ -7,11 +7,11 @@ identifier/entity seeding and typed-edge findings.
 """
 
 import logging
-import os
 from uuid import UUID
 
 import pytest
 
+from core import settings
 from servicemind.domain.evidence import (
     EVIDENCE_RESOURCE_ID_MAX,
     EVIDENCE_SOURCE_REF_MAX,
@@ -708,21 +708,35 @@ async def test_rag_graph_side_channel_degrades_silently() -> None:
 # ---------------------------------------------------------------- live Neo4j
 
 
+def _live_graph_driver():
+    """The driver the two live tests share, built from the platform's own settings.
+
+    These tests used to read ``os.environ`` directly. That never worked: ``.env`` is
+    loaded into the settings object by pydantic-settings, not into the process
+    environment, so ``os.environ.get("NEO4J_PASSWORD")`` was ``None`` on every machine
+    that ran ``pytest --run-docker`` -- the graph was configured, reachable and
+    completely unexamined, while the run reported green. Reading the same field the
+    production code reads is what makes the skip mean "this deployment has no graph"
+    instead of "I looked in the wrong place".
+    """
+    password = settings.NEO4J_PASSWORD
+    if password is None:
+        pytest.skip("NEO4J_PASSWORD is not configured; no graph to project into")
+    from neo4j import AsyncGraphDatabase
+
+    return AsyncGraphDatabase.driver(
+        settings.NEO4J_URI, auth=(settings.NEO4J_USER, password.get_secret_value())
+    )
+
+
+@pytest.mark.neo4j
 @pytest.mark.docker
 @pytest.mark.asyncio
 async def test_neo4j_store_live_projection_lifecycle() -> None:
-    """One live pass against the real Neo4j (needs --run-docker + creds in env)."""
-    password = os.environ.get("NEO4J_PASSWORD")
-    if not password:
-        pytest.skip("NEO4J_PASSWORD not set; cannot reach the graph container")
-    from neo4j import AsyncGraphDatabase
-
+    """One live pass against the real Neo4j (needs --run-docker + a configured graph)."""
     from servicemind.graphrag.neo4j import Neo4jGraphStore
 
-    driver = AsyncGraphDatabase.driver(
-        os.environ.get("NEO4J_URI", "bolt://127.0.0.1:7687"),
-        auth=(os.environ.get("NEO4J_USER", "neo4j"), password),
-    )
+    driver = _live_graph_driver()
     store = Neo4jGraphStore(driver)
     batch = project_incidents(TENANT, _vpn_topology())
     try:
@@ -748,6 +762,7 @@ async def test_neo4j_store_live_projection_lifecycle() -> None:
         await store.close()
 
 
+@pytest.mark.neo4j
 @pytest.mark.docker
 @pytest.mark.asyncio
 async def test_neo4j_store_live_applies_node_acls_on_both_read_paths() -> None:
@@ -759,17 +774,9 @@ async def test_neo4j_store_live_applies_node_acls_on_both_read_paths() -> None:
     coordinates existed it also has to read an absent property as the empty list rather
     than as a null that drops the row.
     """
-    password = os.environ.get("NEO4J_PASSWORD")
-    if not password:
-        pytest.skip("NEO4J_PASSWORD not set; cannot reach the graph container")
-    from neo4j import AsyncGraphDatabase
-
     from servicemind.graphrag.neo4j import Neo4jGraphStore
 
-    driver = AsyncGraphDatabase.driver(
-        os.environ.get("NEO4J_URI", "bolt://127.0.0.1:7687"),
-        auth=(os.environ.get("NEO4J_USER", "neo4j"), password),
-    )
+    driver = _live_graph_driver()
     store = Neo4jGraphStore(driver)
     batch = project_incidents(
         TENANT, _restricted_topology()[:2], similar=[("INC-2000", "INC-2001", 0.9)]

@@ -1,7 +1,9 @@
 {
   "answerable_rate_target": 0.85,
   "answerable_rate_target_source": "租户参考阈值 0.85（docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md 的 Recall@5 租户门槛），在本批次运行之前登记。这不是从结果倒推的数字：若实测低于它，正确的反应是查明原因并报告，而不是下调它。",
-  "blockers": [],
+  "blockers": [
+    "Q-002: the answer is in ['KB-Q-VPN-CONN'] and the run did not cite it (cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-G3-COMPLIANCE', 'KB-Q-LIC-V2', 'KB-Q-RAP-V2'])"
+  ],
   "cases": [
     {
       "case_id": "Q-001",
@@ -13,11 +15,13 @@
     },
     {
       "case_id": "Q-002",
-      "findings": [],
+      "findings": [
+        "Q-002: the answer is in ['KB-Q-VPN-CONN'] and the run did not cite it (cited ['KB-GLOBEX-VPN-MFA-AUDIT', 'KB-GLOBEX-VPN-MFA-G3', 'KB-GLOBEX-VPN-MFA-REBIND', 'KB-Q-G3-COMPLIANCE', 'KB-Q-LIC-V2', 'KB-Q-RAP-V2'])"
+      ],
       "kind": "answerable",
       "question": "How long is a VPN device certificate valid before it needs renewing?",
       "subject": "globex-analyst-g3",
-      "verdict": "PASS"
+      "verdict": "FAIL"
     },
     {
       "case_id": "Q-003",
@@ -1605,8 +1609,8 @@
     }
   ],
   "cases_digest": "d02040916da13337891e1c31d16ae51adb60744d5b056a653b514eacd3a931ee",
-  "generated_at": "2026-09-30T14:44:07.014266Z",
-  "observations_digest": "9f4752c78c810c03586a5060f802afcaa7b33d2b17bea9d62cefee4ec56f6893",
+  "generated_at": "2026-10-02T16:33:42.437507Z",
+  "observations_digest": "468037c8873385fe24522e3a46d3428b98b739e245381350b2a1d571dcc72e5f",
   "schema_version": "phase7-quality-v1",
   "verdict": "PASS"
 }

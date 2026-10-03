@@ -1,0 +1,213 @@
+{
+  "schema_version": "phase4-source-ceiling-effect-v1",
+  "status": "MEASUREMENT_DIAGNOSTIC",
+  "status_semantics": "this records what changed between two runs. It certifies no retrieval quality, and the recall columns are not comparable across it: the pack grew, so each cutoff names a different quantity in the two halves",
+  "change": {
+    "what": "SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE is applied only when the candidate pool names more than one source, through the shared predicate servicemind.rag.service.source_ceiling_applies. The ceiling is a fairness bound between sources; on a single-source corpus it had nothing to balance and became a ceiling on the whole prompt",
+    "kind": "semantics of the guard, not the value of the setting",
+    "setting_value_unchanged": 4
+  },
+  "inputs": {
+    "before_report": {
+      "path": "evaluation/reports/phase4_techqa_production_before_source_ceiling_fix.json",
+      "sha256": "0a113446a88f8aa6940c302a142accda5555b2ea298afe485f110b39ee967d30",
+      "tracked": false,
+      "note": "a pre-fix run, preserved by hand; the current code cannot regenerate it"
+    },
+    "after_report": {
+      "path": "evaluation/reports/phase4_techqa_production_latest.json",
+      "sha256": "f7069a4343e4314781031f5964a0f2056e717c69924e8e1886ec776dabd2cf63",
+      "tracked": false,
+      "note": "written by scripts/evaluate_phase4_retrieval_techqa.py"
+    }
+  },
+  "run_context": {
+    "before": {
+      "documents_indexed": 28481,
+      "parents": 46691,
+      "queries": 400,
+      "answerable": 280,
+      "models": {
+        "embedding_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+        "reranker_revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+        "served_by": "tei",
+        "note": "the proxy report pinned these same two revisions, so the model is held constant and the difference below is the pipeline's"
+      },
+      "label_source": null
+    },
+    "after": {
+      "documents_indexed": 28481,
+      "parents": 46691,
+      "queries": 400,
+      "answerable": 280,
+      "models": {
+        "embedding_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+        "reranker_revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+        "served_by": "tei",
+        "note": "the proxy report pinned these same two revisions, so the model is held constant and the difference below is the pipeline's"
+      },
+      "label_source": null
+    }
+  },
+  "headline": {
+    "ceiling": 4,
+    "context_token_budget": 8000,
+    "final_k": 24,
+    "before_packed_max": 4,
+    "after_packed_max": 19,
+    "before_arms_stopped_at_the_ceiling": [
+      "bm25",
+      "dense",
+      "hybrid",
+      "hybrid_rerank"
+    ],
+    "after_arms_stopped_at_the_ceiling": [
+      "bm25",
+      "dense",
+      "hybrid",
+      "hybrid_rerank"
+    ],
+    "before_cutoffs_are_one_measurement": true,
+    "after_cutoffs_are_one_measurement": false
+  },
+  "arms": {
+    "bm25": {
+      "before": {
+        "recall_at_5": 0.5607,
+        "recall_at_10": 0.5607,
+        "recall_at_20": 0.5607,
+        "mrr_at_10": 0.4845,
+        "ndcg_at_10": 0.5038,
+        "packed_mean": 3.943,
+        "packed_min": 3,
+        "packed_max": 4,
+        "cutoffs_are_one_measurement": true
+      },
+      "after": {
+        "recall_at_5": 0.5786,
+        "recall_at_10": 0.6071,
+        "recall_at_20": 0.6071,
+        "mrr_at_10": 0.4923,
+        "ndcg_at_10": 0.5203,
+        "packed_mean": 8.104,
+        "packed_min": 4,
+        "packed_max": 19,
+        "cutoffs_are_one_measurement": false
+      },
+      "delta": {
+        "recall_at_5": 0.0179,
+        "recall_at_10": 0.0464,
+        "recall_at_20": 0.0464,
+        "mrr_at_10": 0.0078,
+        "ndcg_at_10": 0.0165,
+        "packed_mean": 4.161,
+        "packed_max": 15
+      }
+    },
+    "dense": {
+      "before": {
+        "recall_at_5": 0.6643,
+        "recall_at_10": 0.6643,
+        "recall_at_20": 0.6643,
+        "mrr_at_10": 0.5592,
+        "ndcg_at_10": 0.5857,
+        "packed_mean": 3.761,
+        "packed_min": 2,
+        "packed_max": 4,
+        "cutoffs_are_one_measurement": true
+      },
+      "after": {
+        "recall_at_5": 0.6714,
+        "recall_at_10": 0.7,
+        "recall_at_20": 0.7,
+        "mrr_at_10": 0.5615,
+        "ndcg_at_10": 0.5955,
+        "packed_mean": 7.439,
+        "packed_min": 4,
+        "packed_max": 16,
+        "cutoffs_are_one_measurement": false
+      },
+      "delta": {
+        "recall_at_5": 0.0071,
+        "recall_at_10": 0.0357,
+        "recall_at_20": 0.0357,
+        "mrr_at_10": 0.0023,
+        "ndcg_at_10": 0.0098,
+        "packed_mean": 3.678,
+        "packed_max": 12
+      }
+    },
+    "hybrid": {
+      "before": {
+        "recall_at_5": 0.6179,
+        "recall_at_10": 0.6179,
+        "recall_at_20": 0.6179,
+        "mrr_at_10": 0.5327,
+        "ndcg_at_10": 0.5544,
+        "packed_mean": 3.907,
+        "packed_min": 2,
+        "packed_max": 4,
+        "cutoffs_are_one_measurement": true
+      },
+      "after": {
+        "recall_at_5": 0.6321,
+        "recall_at_10": 0.6786,
+        "recall_at_20": 0.6821,
+        "mrr_at_10": 0.5367,
+        "ndcg_at_10": 0.5711,
+        "packed_mean": 7.857,
+        "packed_min": 5,
+        "packed_max": 17,
+        "cutoffs_are_one_measurement": false
+      },
+      "delta": {
+        "recall_at_5": 0.0142,
+        "recall_at_10": 0.0607,
+        "recall_at_20": 0.0642,
+        "mrr_at_10": 0.004,
+        "ndcg_at_10": 0.0167,
+        "packed_mean": 3.95,
+        "packed_max": 13
+      }
+    },
+    "hybrid_rerank": {
+      "before": {
+        "recall_at_5": 0.6536,
+        "recall_at_10": 0.6536,
+        "recall_at_20": 0.6536,
+        "mrr_at_10": 0.567,
+        "ndcg_at_10": 0.5888,
+        "packed_mean": 3.875,
+        "packed_min": 2,
+        "packed_max": 4,
+        "cutoffs_are_one_measurement": true
+      },
+      "after": {
+        "recall_at_5": 0.6571,
+        "recall_at_10": 0.7214,
+        "recall_at_20": 0.7214,
+        "mrr_at_10": 0.5684,
+        "ndcg_at_10": 0.6054,
+        "packed_mean": 7.496,
+        "packed_min": 4,
+        "packed_max": 16,
+        "cutoffs_are_one_measurement": false
+      },
+      "delta": {
+        "recall_at_5": 0.0035,
+        "recall_at_10": 0.0678,
+        "recall_at_20": 0.0678,
+        "mrr_at_10": 0.0014,
+        "ndcg_at_10": 0.0166,
+        "packed_mean": 3.621,
+        "packed_max": 12
+      }
+    }
+  },
+  "reading": "before, every arm packed at most 4 documents -- the ceiling of 4 -- with the budget of 8000 tokens more than a third unspent; after, the pack continues to 19 and the budget is what bounds it. The recall columns moved, and the move is not evidence of better retrieval: with a longer pack, Recall@5 counts the first five of a list that no longer stops at four. Read each recall beside the packed mean on the same row",
+  "limitations": [
+    "neither run records the tokens a pack actually spent, only how many documents it held. The budget arithmetic is measured separately, over parent sizes rebuilt with the production chunker, in evaluation/reports/phase4_packing_ceiling_latest.json",
+    "the hybrid arm issues LLM-written lexical sub-queries, so it is not reproducible run to run; a repeated run of the *same* revision moved its Recall@5 by about 0.004 (one query in 280), which is the floor on any hybrid delta here, before and after alike",
+    "one corpus, one label set, one model revision. Nothing here generalises to a corpus with more than one source, where the ceiling is in force in both halves and the fix changes nothing"
+  ]
+}

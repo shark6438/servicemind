@@ -6,7 +6,16 @@
     "status": "NOT_EVALUATED",
     "gate_count": 6,
     "evaluated_count": 0,
-    "required_input": "tenant-domain release queries with independent human qrels"
+    "required_input": "tenant-domain release queries with independent human qrels",
+    "blockers": [
+      "labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80",
+      "no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count",
+      "the set has no hard-negative stratum (§3.2 asks for 80)",
+      "the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart",
+      "the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart",
+      "the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart",
+      "the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden"
+    ]
   },
   "external_silver": {
     "dataset": "nvidia/TechQA-RAG-Eval",
@@ -42,6 +51,220 @@
     "best_case_balanced_accuracy": 0.5979,
     "reviewer_semantic_calibration": "NOT_EVALUATED"
   },
+  "label_diagnostic": {
+    "status": "MEASUREMENT_DIAGNOSTIC",
+    "report": "evaluation/reports/phase4_label_diagnostic_latest.json",
+    "candidate_pool": {
+      "arm": "production_blend",
+      "depth": 100,
+      "note": "depth 100 is SERVICEMIND_RAG_CANDIDATE_K, so this is the headline of the production funnel and not an artefact of the proxy",
+      "declared_depth": 100,
+      "contains_gold": 244,
+      "contains_gold_rate": 0.8714,
+      "gold_in_top_5": 192,
+      "gold_in_top_5_rate": 0.6857,
+      "median_rank_when_present": 1.0,
+      "list_lengths_observed": [
+        100
+      ]
+    },
+    "thresholds_above_the_ceiling": [
+      "recall_at_10"
+    ],
+    "thresholds_below_it": [
+      "recall_at_5"
+    ],
+    "selection": {
+      "path": "evaluation/gold/phase4_proxy_release_v1.2.json",
+      "sha256": "027ba1868c4ba0f1c6e26418add0afb4025fae6414d93a494dc90a41332c84f4"
+    },
+    "label_tier": "external_silver_no_tenant_human_signoff",
+    "reading": "the funnel ceiling is the highest Recall@k any reranker can reach on this label set, because RRF, the cross-encoder and the blend only reorder what the 100 candidates contain. Compare it against the §4.1 thresholds: a threshold above it cannot be met by ranking better. Then read the two title-overlap blocks together -- in the in-pool group the label and the first hit are topically equivalent, which is what a working retriever looks like; in the out-of-pool group the first hit is systematically closer to the question than the label. Where that holds, widening the funnel buys less than the raw miss rate suggests",
+    "answerable": 280,
+    "gold_documents": 251,
+    "arms_contains_gold": {
+      "bm25": 0.7893,
+      "dense": 0.8536,
+      "hybrid": 0.7929,
+      "hybrid_reranked": 0.7929,
+      "production_blend": 0.8714
+    },
+    "title_overlap": {
+      "in_pool": {
+        "queries": 244,
+        "mean_question_vs_gold_title": 0.2372,
+        "mean_question_vs_first_title": 0.2404,
+        "mean_gap_gold_minus_first": -0.0031,
+        "first_hit_title_closer": 49,
+        "first_hit_title_closer_rate": 0.2008
+      },
+      "out_of_pool": {
+        "queries": 36,
+        "mean_question_vs_gold_title": 0.0636,
+        "mean_question_vs_first_title": 0.1325,
+        "mean_gap_gold_minus_first": -0.0688,
+        "first_hit_title_closer": 31,
+        "first_hit_title_closer_rate": 0.8611
+      }
+    },
+    "gold_documents_no_query_retrieves": 28
+  },
+  "packing_ceiling": {
+    "status": "MEASUREMENT_DIAGNOSTIC",
+    "report": "evaluation/reports/phase4_packing_ceiling_latest.json",
+    "attributed_to": "the token budget",
+    "context_token_budget": 8000,
+    "max_parents_per_source": 4,
+    "max_parents_per_document": 2,
+    "distinct_sources": 1,
+    "source_ceiling_enforced": false,
+    "packed_max": 19,
+    "median_parent_tokens": 1107,
+    "next_parent_headroom_tokens": {
+      "p50": -13033,
+      "p90": -20519,
+      "p99": -25782
+    },
+    "share_of_parents_that_still_fit": {
+      "p50": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "reading": "every arm packs at most 19 documents, so every recall cutoff at or above 19 counts the whole pack: comparing such a figure against a threshold written for a depth-100 pool compares a cut list against a ranked one. Whether the budget ended the list is the arithmetic below -- one more parent at the median size would leave -13033 tokens of the 8000-token budget, the budget answering no -- and the verdict below is the other half of the answer: the token budget"
+  },
+  "production_path": {
+    "status": "PIPELINE_COMPARISON_ONLY",
+    "report": "evaluation/reports/phase4_techqa_production_latest.json",
+    "final_k": 24,
+    "context_token_budget": 8000,
+    "distinct_sources": 1,
+    "source_ceiling_enforced": false,
+    "arms": {
+      "dense": {
+        "packed_mean": 7.439,
+        "packed_min": 4,
+        "packed_max": 16,
+        "recall": {
+          "recall_at_5": 0.6714285714285714,
+          "recall_at_10": 0.7,
+          "recall_at_20": 0.7
+        },
+        "cutoffs_the_pack_cannot_tell_apart": [
+          20
+        ],
+        "metrics_the_pack_is_too_short_for": [],
+        "one_measurement": false
+      },
+      "bm25": {
+        "packed_mean": 8.104,
+        "packed_min": 4,
+        "packed_max": 19,
+        "recall": {
+          "recall_at_5": 0.5785714285714286,
+          "recall_at_10": 0.6071428571428571,
+          "recall_at_20": 0.6071428571428571
+        },
+        "cutoffs_the_pack_cannot_tell_apart": [
+          20
+        ],
+        "metrics_the_pack_is_too_short_for": [],
+        "one_measurement": false
+      },
+      "hybrid": {
+        "packed_mean": 7.857,
+        "packed_min": 5,
+        "packed_max": 17,
+        "recall": {
+          "recall_at_5": 0.6321428571428571,
+          "recall_at_10": 0.6785714285714286,
+          "recall_at_20": 0.6821428571428572
+        },
+        "cutoffs_the_pack_cannot_tell_apart": [
+          20
+        ],
+        "metrics_the_pack_is_too_short_for": [],
+        "one_measurement": false
+      },
+      "hybrid_rerank": {
+        "packed_mean": 7.496,
+        "packed_min": 4,
+        "packed_max": 16,
+        "recall": {
+          "recall_at_5": 0.6571428571428571,
+          "recall_at_10": 0.7214285714285714,
+          "recall_at_20": 0.7214285714285714
+        },
+        "cutoffs_the_pack_cannot_tell_apart": [
+          20
+        ],
+        "metrics_the_pack_is_too_short_for": [],
+        "one_measurement": false
+      }
+    },
+    "arms_where_the_cutoffs_are_one_measurement": [],
+    "thresholds_no_arm_can_distinguish": [],
+    "metrics_no_arm_reaches": [],
+    "reading": "the proxy has no token budget and no diversity ceilings, so its top-k is a ranking cut; production's is a prompt-fitting cut. Read every recall figure beside the packed count: where it is below the cutoff, that recall number is reporting the budget, not the retriever."
+  },
+  "tenant_domain": {
+    "status": "STRATA_PRESENT_NOT_POWERED",
+    "report": "evaluation/reports/tenant_domain_release_latest.json",
+    "corpus_strata": {
+      "documents": 14,
+      "tenants": 2,
+      "group_restricted": 3,
+      "inactive": 1,
+      "with_an_effective_end": 1,
+      "not_yet_in_force": 1
+    },
+    "queries_by_category": {
+      "single_evidence": 7,
+      "multi_evidence": 2,
+      "hard_negative": 2,
+      "unanswerable": 5
+    },
+    "refusal_reasons": [
+      "insufficient_evidence",
+      "must_refuse_access",
+      "version_conflict"
+    ],
+    "visible_evidence_violations": {
+      "dense": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      },
+      "bm25": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      },
+      "hybrid": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      },
+      "hybrid_rerank": {
+        "wrong_tenant": 0,
+        "unauthorized_group": 0,
+        "expired_version": 0,
+        "total": 0
+      }
+    },
+    "acl_probes": {
+      "probes": 6,
+      "isolation_held": 6,
+      "with_a_positive_control": 3,
+      "controls_held": 3
+    },
+    "release_gate_blockers": [
+      "labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80"
+    ],
+    "reading": "the §4.1 clauses each have a document here to be about, and the ACL count is computed against the loader's own coordinates. The set is synthetic, so its blockers still name human signoff -- which is what makes it evidence that the only unmet clause is the one no fixture can supply. It is not a quality measurement: the corpus is fixture-sized and its recall is saturated"
+  },
   "committed_gold": {
     "status": "SMOKE_ONLY_SATURATED",
     "documents": 8,
@@ -63,7 +286,13 @@
     "next_plan": "docs/PHASE4_RAG_QUALITY_IMPROVEMENT_PLAN_V2_0.md"
   },
   "release_blockers": [
-    "tenant-domain human qrels are unavailable",
+    "labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators over a stratified 20% sample with kappa >= 0.80",
+    "no query carries 0--4 judgments, so the set can only be scored by the binary metrics and cannot express the §4.1 wrong-ACL/expired-version count",
+    "the set has no hard-negative stratum (§3.2 asks for 80)",
+    "the set has no must-refuse query of kind insufficient_evidence; a single abstention rate cannot tell the three apart",
+    "the set has no must-refuse query of kind version_conflict; a single abstention rate cannot tell the three apart",
+    "the set has no must-refuse query of kind must_refuse_access; a single abstention rate cannot tell the three apart",
+    "the set has no development split, so nothing could have been tuned without touching the queries that are supposed to stay hidden",
     "Reviewer answerability and abstention correctness are not calibrated on domain labels",
     "production evidence/context-cap impact has no non-synthetic observations"
   ]

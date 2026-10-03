@@ -140,6 +140,12 @@ def joined_evidence():
     )
 
 
+#: Marks the end of a deliberately over-long failure message: the half a head-only clip
+#: loses, and the half that names the cause.
+MARKER = "<-- cause, at the end"
+LONG_FAILURE_BODY = "filler " * 500
+
+
 def invocation(*, deadline_seconds: float = 300.0) -> AgentInvocationContext:
     return AgentInvocationContext(
         run_id=uuid4(),
@@ -259,12 +265,20 @@ async def test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited(monkey
 @pytest.mark.asyncio
 async def test_a_broken_model_path_degrades_without_waiting(monkeypatch) -> None:
     """The wait is for throttling. A transport fault is not made better by being repeated."""
-    runnable = ScriptedRunnable(TransportCrash("connection reset"))
+    # The message is longer than the ledger's clip on purpose. A real ``OutputParserException``
+    # opens with the entire completion and ends with the schema violation, so which end of it
+    # survives is the difference between a diagnosable run and a recorded class name.
+    runnable = ScriptedRunnable(TransportCrash(f"connection reset: {LONG_FAILURE_BODY} {MARKER}"))
     result, slept = await analyze(monkeypatch, runnable)
     assert slept.seconds == []
     assert runnable.calls == 1
     assert result.status is AgentRunStatus.DEGRADED
     assert result.failure_code == "ANALYSIS_MODEL_FAILURE"
+    assert len(result.failure_detail) <= 1000
+    assert "characters elided" in result.failure_detail
+    assert result.failure_detail.endswith(" " + MARKER), (
+        "a head-only clip records the completion and drops what was wrong with it"
+    )
 
 
 # --- an empty completion is re-asked, without a wait and without feedback -----------------

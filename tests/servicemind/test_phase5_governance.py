@@ -2412,6 +2412,44 @@ async def test_semantic_cache_is_tenant_partitioned() -> None:
     assert [record.status for record in sink.records] == ["succeeded", "cache_hit", "succeeded"]
 
 
+@pytest.mark.asyncio
+async def test_a_refused_call_is_not_cached_into_a_free_replay() -> None:
+    """A cost budget a caller defeats by asking twice is not a budget.
+
+    The result used to be written to the cache before the spend was adjudicated,
+    so a call the budget refused left its answer behind: one plain retry hit that
+    entry, was audited at zero cost as ``cache_hit``, and returned the very result
+    the budget had just declined to pay for.
+    """
+    model = StubModel({"value": 7}, {"value": 7})
+    sink = InMemoryModelAuditSink()
+    policy = ModelRoutePolicy(allowed_providers=("unknown",))
+    policy.allow_cache = lambda context: context.cache_allowed  # type: ignore[method-assign]
+    gateway = ModelGateway(
+        policy=policy,
+        audit_sink=sink,
+        cache=SemanticModelCache(),
+        max_retries=0,
+        prices_per_million={"stub-v1": (1.0, 1.0)},
+    )
+
+    def tight_budget() -> ModelCallContext:
+        return model_context(cache_allowed=True).model_copy(update={"max_cost_usd": 1e-9})
+
+    for _ in range(2):
+        with pytest.raises(ModelCostBudgetExceeded):
+            await gateway.invoke(model, GatewayResult, "same", context=tight_budget())
+
+    # Neither attempt may be answered from cache: the second one reached the model
+    # again and was refused again, on its own merits.
+    assert model.calls[0] == 2
+    assert [record.status for record in sink.records] == ["failed", "failed"]
+    assert [record.error_code for record in sink.records] == [
+        "MODEL_COST_BUDGET_EXCEEDED",
+        "MODEL_COST_BUDGET_EXCEEDED",
+    ]
+
+
 # --- memory ranking: metadata is a bounded tie-breaker, never a relevance source
 
 
@@ -3686,6 +3724,7 @@ async def test_a_memory_reaches_the_model_with_the_identity_of_who_wrote_it(
     assert {"memory_id", "scope", "status", "created_at", "updated_at"} & payload.keys() == set()
 
 
+@pytest.mark.postgres
 @pytest.mark.docker
 @pytest.mark.asyncio
 async def test_a_withdrawn_action_gives_its_slot_to_the_one_that_replaces_it() -> None:

@@ -335,6 +335,7 @@ async def _seed_document(
     return document_id
 
 
+@pytest.mark.postgres
 @pytest.mark.docker
 async def test_the_repository_counts_matches_and_real_moves_against_postgres() -> None:
     """The counts the service reports upward are only worth reporting if they are real.

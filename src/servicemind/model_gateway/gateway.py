@@ -99,6 +99,19 @@ def model_error_code(error: BaseException) -> str:
     return f"MODEL_{name[:80]}"
 
 
+def provider_is_down(error: BaseException) -> bool:
+    """Whether a failed call is evidence that the *provider* is unavailable.
+
+    Everything except a schema violation is: a timeout, a rate limit, a transport error
+    and a 5xx all say the provider did not serve the request. ``MODEL_SCHEMA_INVALID``
+    says the opposite -- the provider answered, and the answer could not be used -- so
+    counting it opens the breaker for every tenant in the process on the strength of one
+    agent's run of bad prompts, which is a different failure from the one a breaker is
+    for.
+    """
+    return model_error_code(error) != "MODEL_SCHEMA_INVALID"
+
+
 def model_returned_nothing(error: BaseException) -> bool:
     """Whether a structured call failed because the model sent no completion at all.
 
@@ -286,6 +299,8 @@ class ModelGateway:
         cache: SemanticModelCache | None = None,
         max_retries: int | None = None,
         prices_per_million: dict[str, tuple[float, float]] | None = None,
+        circuit_failure_threshold: int = 5,
+        circuit_open_seconds: float = 30.0,
     ) -> None:
         self.policy = policy or SettingsModelRoutePolicy()
         self.audit_sink = audit_sink or ConfiguredModelAuditSink()
@@ -298,6 +313,8 @@ class ModelGateway:
             "deepseek-v4-flash": (0.44, 1.32),
             "deepseek-v4-pro": (1.32, 3.96),
         }
+        self.circuit_failure_threshold = circuit_failure_threshold
+        self.circuit_open_seconds = circuit_open_seconds
         self._failures: dict[str, int] = {}
         self._open_until: dict[str, float] = {}
 
@@ -347,9 +364,25 @@ class ModelGateway:
                 revision=revision,
                 context=context,
             )
-            if self._open_until.get(provider, 0) > time.monotonic():
-                last_error = RuntimeError(f"model circuit is open: {provider}")
-                continue
+            open_until = self._open_until.get(provider, 0)
+            if open_until > time.monotonic():
+                # A breaker shared by the process is right: one provider is one upstream,
+                # whoever is calling it. Refusing the call is not. The failures that
+                # opened it belong to other runs, and a run that was merely concurrent
+                # with the burst was being terminated for them -- on the 2026-09-24 load
+                # batch, ten-way concurrency rested forty-one of sixty runs at failed in
+                # whole repeats, each within about a second, which is the shape of a
+                # shared flag flipping and not of any retry schedule. Wait the window out
+                # instead, so the provider is still not hammered.
+                remaining = open_until - time.monotonic()
+                budget = context.timeout_seconds - (time.perf_counter() - call_started)
+                if remaining >= budget:
+                    # The caller cannot outlast the window, so waiting would spend its
+                    # whole budget to arrive at the timeout it is already facing. Refuse
+                    # now and leave the budget to whichever candidate comes next.
+                    last_error = RuntimeError(f"model circuit is open: {provider}")
+                    continue
+                await asyncio.sleep(remaining)
             cache_key = stable_hash(
                 {
                     "tenant": str(context.tenant_id),
@@ -424,8 +457,6 @@ class ModelGateway:
                         result = schema.model_validate(raw)
                     self._failures[provider] = 0
                     latency_ms = (time.perf_counter() - started) * 1000
-                    if self.policy.allow_cache(context):
-                        await self.cache.put(cache_key, result.model_dump(mode="json"))
                     cost_exceeded = await self._audit(
                         context=context,
                         route=route,
@@ -442,6 +473,13 @@ class ModelGateway:
                     )
                     if cost_exceeded:
                         raise ModelCostBudgetExceeded("model invocation exceeded its cost budget")
+                    # Stored only once the budget has admitted the call. Writing it
+                    # first made a refused call retrievable: the entry was already in
+                    # the cache, so one plain retry hit it, was audited at zero cost
+                    # as ``cache_hit``, and returned the answer the budget had just
+                    # refused -- a budget that any caller defeats by asking twice.
+                    if self.policy.allow_cache(context):
+                        await self.cache.put(cache_key, result.model_dump(mode="json"))
                     return result
                 except ModelCostBudgetExceeded:
                     raise
@@ -459,9 +497,10 @@ class ModelGateway:
                             - (time.perf_counter() - call_started),
                         )
                     )
-            self._failures[provider] = self._failures.get(provider, 0) + 1
-            if self._failures[provider] >= 5:
-                self._open_until[provider] = time.monotonic() + 30
+            if provider_is_down(last_error):
+                self._failures[provider] = self._failures.get(provider, 0) + 1
+                if self._failures[provider] >= self.circuit_failure_threshold:
+                    self._open_until[provider] = time.monotonic() + self.circuit_open_seconds
             if candidate_index + 1 == len(models):
                 latency_ms = (time.perf_counter() - started) * 1000
                 await self._audit(

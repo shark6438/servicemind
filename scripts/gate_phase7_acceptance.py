@@ -57,6 +57,7 @@ from servicemind.evaluation.acceptance_grader import (
     grade,
     render_coverage_markdown,
 )
+from servicemind.evaluation.refusal import stamp_refusal
 from servicemind.evaluation.revisions import recorded_revisions, revision_problems
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -64,6 +65,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 CASES = REPO_ROOT / "evaluation" / "acceptance" / "cases.v1.json"
 REPLAYS = REPO_ROOT / "evaluation" / "acceptance" / "replays"
 REPORTS = REPO_ROOT / "evaluation" / "reports"
+
+#: Repo-relative, so a refusal stamped into a report names the gate that stamped it.
+GATE_NAME = str(Path(__file__).resolve().relative_to(REPO_ROOT))
 REPORT_JSON = REPORTS / "phase7_acceptance_latest.json"
 REPORT_MD = REPORTS / "phase7_acceptance_latest.md"
 PIPELINE = REPORTS / "phase7_pipeline_evidence.json"
@@ -104,18 +108,18 @@ def load_case_set() -> AcceptanceCaseSet:
         raise ConfigurationError(f"{CASES} is not valid JSON: {exc}") from exc
 
 
-def load_replays(case_set: AcceptanceCaseSet) -> list[CaseExecution]:
+def load_replays(case_set: AcceptanceCaseSet, replays: Path = REPLAYS) -> list[CaseExecution]:
     """Read every replay, refusing any that does not belong to this case list.
 
     A replay for a case that no longer exists is not ignorable: it is either a case
     that was deleted without deleting its evidence, or a typo in a case id, and both
     mean the report would describe a case list nobody has.
     """
-    if not REPLAYS.is_dir():
-        raise ConfigurationError(f"no replays directory: {REPLAYS}")
+    if not replays.is_dir():
+        raise ConfigurationError(f"no replays directory: {replays}")
     known = {case.id for case in case_set.cases}
     executions: list[CaseExecution] = []
-    for path in sorted(REPLAYS.glob("*.json")):
+    for path in sorted(replays.glob("*.json")):
         try:
             execution = CaseExecution.model_validate_json(path.read_text(encoding="utf-8"))
         except ValidationError as exc:
@@ -126,7 +130,7 @@ def load_replays(case_set: AcceptanceCaseSet) -> list[CaseExecution]:
             )
         executions.append(execution)
     if not executions:
-        raise ConfigurationError(f"no replays found under {REPLAYS}")
+        raise ConfigurationError(f"no replays found under {replays}")
     return executions
 
 
@@ -486,6 +490,12 @@ def main() -> int:
     parser.add_argument("--format", default="markdown", choices=("markdown", "json"))
     parser.add_argument("--report", type=Path, default=None, help="where to write the report")
     parser.add_argument(
+        "--replays",
+        type=Path,
+        default=REPLAYS,
+        help="which corpus to grade; defaults to the standing one",
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="replace a report whose digests disagree with the inputs, instead of refusing",
@@ -502,6 +512,15 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    # Resolved before the provenance check rather than after it, so the refusal path can
+    # annotate the very files this run would have written. A refusal that returns 3 and
+    # leaves yesterday's ``PASS`` on disk is a report contradicting its own exit code.
+    report_json = args.report.with_suffix(".json") if args.report else REPORT_JSON
+    report_md = (
+        args.report
+        if args.report and args.report.suffix == ".md"
+        else (REPORT_MD if args.report is None else args.report.with_suffix(".md"))
+    )
     if args.live:
         print(
             json.dumps(
@@ -516,27 +535,29 @@ def main() -> int:
                 indent=2,
             )
         )
+        stamp_refusal(
+            report_json,
+            report_md,
+            gate=GATE_NAME,
+            reason="--live: this gate does not run the acceptance; nothing was measured and the report on disk is not a verdict about the deployed platform",
+            argv=sys.argv,
+        )
         return EXIT_CONFIGURATION
 
     try:
         case_set = load_case_set()
-        executions = load_replays(case_set)
+        executions = load_replays(case_set, args.replays)
         # As in the quality gate: ``--force`` is about the report, so it does not reach
         # past the provenance of the observations the report is rendered from.
         provenance = check_replays_are_one_revision(executions, expect=args.expect_revision)
         drift = {} if args.force else check_replays_match_cases(case_set, executions)
     except ConfigurationError as exc:
         print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)
+        stamp_refusal(report_json, report_md, gate=GATE_NAME, reason=str(exc), argv=sys.argv)
         return EXIT_CONFIGURATION
 
     outcome = grade(case_set, executions, generated_at=datetime.now(tz=UTC))
 
-    report_json = args.report.with_suffix(".json") if args.report else REPORT_JSON
-    report_md = (
-        args.report
-        if args.report and args.report.suffix == ".md"
-        else (REPORT_MD if args.report is None else args.report.with_suffix(".md"))
-    )
     REPORTS.mkdir(parents=True, exist_ok=True)
     report_json.write_text(dump_outcome(outcome), encoding="utf-8")
     report_md.write_text(render_report(outcome, executions), encoding="utf-8")

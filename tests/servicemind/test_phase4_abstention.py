@@ -31,7 +31,7 @@ from uuid import UUID, uuid4
 import pytest
 
 import servicemind.agents.reviewer as reviewer_module
-from servicemind.agents.reviewer import ReviewerAgent, SemanticReview
+from servicemind.agents.reviewer import REVIEW_POLICY_VERSION, ReviewerAgent, SemanticReview
 from servicemind.domain.analysis import (
     CLAIM_TYPE_BAR_TEXT,
     AnalysisClaim,
@@ -340,7 +340,7 @@ async def test_clean_semantic_judge_passes(monkeypatch) -> None:
         max_replans=2,
     )
     assert result.decision is ReviewDecision.PASSED
-    assert result.policy_version == "servicemind-review-policy-v5"
+    assert result.policy_version == REVIEW_POLICY_VERSION
 
 
 @pytest.mark.asyncio

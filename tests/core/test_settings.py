@@ -193,11 +193,6 @@ def test_settings_with_both_openai_and_azure():
         assert settings.AVAILABLE_MODELS == expected_models
 
 
-def test_settings_azure_deployment_names():
-    # Delete this test
-    pass
-
-
 def test_settings_azure_missing_deployment_names():
     with patch.dict(
         os.environ,

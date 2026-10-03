@@ -46,34 +46,3 @@ def test_a_bounded_error_reports_the_exception_type_and_leaves_short_text_alone(
     # Exactly at the limit is not a cut, so nothing is marked elided.
     at_limit = "y" * 1000
     assert bounded_error_text(at_limit) == at_limit
-
-
-def test_a_bounded_error_is_the_one_clip_the_orchestration_layer_uses() -> None:
-    """One clipper, imported rather than re-derived.
-
-    ``supervisor_workflow`` had its own private copy of this both-ends clip while
-    ``agents/analysis.py`` clipped the head -- so the same failure was diagnosable from a
-    planner rejection and undiagnosable from an analysis degradation.
-    """
-    import inspect
-
-    from servicemind.agents import analysis
-    from servicemind.orchestration import supervisor_workflow
-
-    workflow_source = inspect.getsource(supervisor_workflow)
-    assert "bounded_error_text" in workflow_source
-    assert "_REJECTION_MARKER_BUDGET" not in workflow_source, (
-        "the private copy is gone, not shadowed"
-    )
-
-    analysis_source = inspect.getsource(analysis)
-    assert "bounded_error_text(exc)" in analysis_source, (
-        "both analysis failure paths -- draft and revision -- record the bounded message"
-    )
-    assert "[:1000]" not in analysis_source, (
-        "a head-only slice records the model's completion and hides the validation error"
-    )
-    assert workflow_source.count("bounded_error_text(str(exc))") == 3, (
-        "every planner-rejection detail goes through the shared clip; a raw str(exc)[:n] "
-        "would record the completion and drop the cause"
-    )

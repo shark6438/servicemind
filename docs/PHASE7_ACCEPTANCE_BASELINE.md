@@ -36,19 +36,25 @@
 [`evaluation/reports/phase7_acceptance_latest.json`](../evaluation/reports/phase7_acceptance_latest.json)（机器源）。
 本文件引用并摘录该机器报告，**不另写一套叙述**；两者不一致时以机器报告为准。
 
-## 版本沿革（v1.0 → v2.0 → v3.0 → v3.1 → v3.2 → v3.3 → v3.4）
+## 版本沿革（v1.0 → v2.0 → v3.0 → v3.1 → v3.2 → v3.3 → v3.4 → v3.5 → v3.6 → v3.7）
 
-| | v1.0 | v2.0 | v3.0 | v3.1 | v3.2 | v3.3 | **v3.4** |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 案例数 | 22 | 28 | 28（不变） | 28（不变） | 28（不变） | 28（不变） | 28（不变） |
-| 核验身份 | **未配置** | 已配置且可达 | 已配置且可达（不变） | 已配置且可达（不变） | 已配置且可达（不变） | 已配置且可达（不变） | 已配置且可达（不变） |
-| 计数 | PASS 16 / FAIL 1 / BLOCKED 5 | PASS 26 / FAIL 1 / BLOCKED 1 | PASS 27 / FAIL 0 / BLOCKED 1 | PASS 26 / FAIL 2 / BLOCKED 0 | PASS 28 / FAIL 0 / BLOCKED 0 | PASS 28 / FAIL 0 / BLOCKED 0 | **PASS 28 / FAIL 0 / BLOCKED 0（不变）** |
-| 断言计数 | — | — | — | 105 条：103 PASS / 2 FAIL | 106 条：106 PASS / 0 FAIL | 107 条：107 PASS / 0 FAIL | **107 条：107 PASS / 0 FAIL（不变）** |
-| FAIL | ACC-03 | ACC-03 | 无 | ACC-03、ACC-06 | 无 | 无 | **无** |
-| 阻塞缺陷 | D1 + 5 条 BLOCKED | D1 + D14（ACC-03）、D15（ACC-12b） | 仅 D15（ACC-12b） | D16（ACC-03）、D17（ACC-06） | 无（D3 / D16 / D17 均已关闭） | 无（R1 / R3 / G1 三条本轮新确认的缺陷已修复） | 无（**另有 R4 / R5 两条本轮新确认的缺陷已修复；未评估项比 v3.3 少一项**） |
-| gate 退出码 | 1 | 1 | 2（观测不足：必需案例 BLOCKED） | 1（有 blocking FAIL） | 0（PASS） | 0（PASS） | **0（PASS）** |
-| 被测源码版本 | — | — | — | `7a6e675` | `7a6e675` | `cf08ac8`（v3.2 之后仓库新增的一次提交） | **`cf08ac8+patch(0ce86f5d19bc)`**（同为 `cf08ac8`，v3.4 起版本号按**源码内容指纹**记录） |
-| 判定 | 未通过 | 未通过 | 仍未通过 | 仍未通过 | 通过 | 通过 | **通过** |
+| | v1.0 | v2.0 | v3.0 | v3.1 | v3.2 | v3.3 | v3.4 | **v3.5** | **v3.6** | **v3.7** |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 案例数 | 22 | 28 | 28（不变） | 28（不变） | 28（不变） | 28（不变） | 28（不变） | 28（不变） | 28（不变，且**本轮未重跑**） | 28（不变，且**本轮未重跑**） |
+| 核验身份 | **未配置** | 已配置且可达 | 已配置且可达（不变） | 已配置且可达（不变） | 已配置且可达（不变） | 已配置且可达（不变） | 已配置且可达（不变） | 已配置且可达（不变） | 已配置且可达（不变） | 已配置且可达（不变） |
+| 计数 | PASS 16 / FAIL 1 / BLOCKED 5 | PASS 26 / FAIL 1 / BLOCKED 1 | PASS 27 / FAIL 0 / BLOCKED 1 | PASS 26 / FAIL 2 / BLOCKED 0 | PASS 28 / FAIL 0 / BLOCKED 0 | PASS 28 / FAIL 0 / BLOCKED 0 | PASS 28 / FAIL 0 / BLOCKED 0（不变） | **PASS 28 / FAIL 0 / BLOCKED 0（本轮未重跑，见下）** | **PASS 28 / FAIL 0 / BLOCKED 0（v3.5 的计数，本轮未重跑）** | **PASS 28 / FAIL 0 / BLOCKED 0（v3.6 的计数，本轮未重跑）** |
+| 断言计数 | — | — | — | 105 条：103 PASS / 2 FAIL | 106 条：106 PASS / 0 FAIL | 107 条：107 PASS / 0 FAIL | 107 条：107 PASS / 0 FAIL（不变） | **107 条（本轮未重跑）** | **107 条（本轮未重跑）** | **107 条（本轮未重跑）** |
+| FAIL | ACC-03 | ACC-03 | 无 | ACC-03、ACC-06 | 无 | 无 | 无 | **无** | **无** | **无** |
+| 阻塞缺陷 | D1 + 5 条 BLOCKED | D1 + D14（ACC-03）、D15（ACC-12b） | 仅 D15（ACC-12b） | D16（ACC-03）、D17（ACC-06） | 无（D3 / D16 / D17 均已关闭） | 无（R1 / R3 / G1 三条本轮新确认的缺陷已修复） | 无（另有 R4 / R5 两条本轮新确认的缺陷已修复） | 无（**本轮不处理验收案例；九条审计缺陷中 U1/U4 部分推翻、其余七条修复，另新确认并修复了一条 v3.4 漏看的 U4 代码缺陷**） | 无（**本轮不处置验收案例**；处置的是一条 RAG 交付路径缺陷，见第四节 4.1.1–4.1.4） | 无（**本轮不处置验收案例**；处置的是检索路径上的一条根因缺陷——部署臂在搜索前丢弃用户原话，见 §5.9） |
+| gate 退出码 | 1 | 1 | 2（观测不足：必需案例 BLOCKED） | 1（有 blocking FAIL） | 0（PASS） | 0（PASS） | 0（PASS） | **0（PASS，且新增的 CI 门禁脚本对四门逐门比对通过）** | **0（PASS；本轮未重跑四门，取码沿用 v3.5 的实测值）** | **0（PASS；本轮未重跑四门，取码沿用 v3.5 的实测值）** |
+| 被测源码版本 | — | — | — | `7a6e675` | `7a6e675` | `cf08ac8`（v3.2 之后仓库新增的一次提交） | `cf08ac8+patch(0ce86f5d19bc)`（同为 `cf08ac8`，v3.4 起版本号按**源码内容指纹**记录） | **`cf08ac8+patch(…)` 之上叠加 v3.5 的代码改动，未提交；v3.5 未重跑 28 条案例，故不产生新的被测版本指纹声明** | **在 v3.5 的代码改动之上再叠加 v3.6 的 RAG 改动，未提交；v3.6 未重跑 28 条案例，故不产生新的被测版本指纹声明** | **`b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(8280a495c7b4)`**（80 条改动源码路径；基线提交由 `cf08ac8` 前进到 `b385df7`，其上叠加 v3.5 / v3.6 / v3.7 的未提交改动） |
+| 判定 | 未通过 | 未通过 | 仍未通过 | 仍未通过 | 通过 | 通过 | 通过 | **通过（射程同 v3.4，未扩大）** | **通过（射程同 v3.4，未扩大；本轮未重跑案例）** | **通过（射程同 v3.4，未扩大；本轮未重跑案例）** |
+
+**v3.7 是 R0（生产查询臂闭合）这一轮，它同时改到了那 28 条案例的检索路径。** 本轮把生产**真正在跑**的查询臂在 TechQA 上量化（七臂 × 两样本），过程中查出一条根因：**部署臂在搜索前把用户原话丢了**——模型改写成功时，检索读的是模型归一化文本，提问只剩在 `raw_query` 里，而全仓没有任何检索读取 `raw_query`。修复落在 `src/servicemind/rag/query.py`、`src/servicemind/domain/knowledge.py`、`src/servicemind/rag/opensearch.py` 三个文件（不变量：**模型只能加一条臂，不能换掉那条臂**），细节与实测值见 §5.8–§5.11。**这三个文件在 28 条案例调用的链路上**（`KnowledgeAgent → EnterpriseRAG → OpenSearchKnowledgeIndex`），所以 v3.5 那句「判定路径不在本轮改动范围内」**不能**照抄过来——它与 v3.6 是同一类情形。v3.7 **同样没有重跑那 28 条案例**，计数列与四门取码因此沿用旧值，**不构成任何新的通过声明**。另外两件同轮记下的事：漏斗深度这条杠杆已用尽（`candidate_k` 100→200→400 两样本都在 ±1 条内，§5.9），`R2`（late-interaction 候选召回）与 `R3`（hard-negative 重排训练）**仍无产物**。
+
+**v3.6 改的是一条落在这 28 条验收案例的检索路径上的代码**（`src/servicemind/rag/service.py`，即 `KnowledgeAgent` 调用的那个对象），所以 v3.5 那句「28 条验收案例的判定路径不在本轮改动范围内」**不能**照抄过来——它说的是 v3.5。v3.6 **同样没有重跑那 28 条案例**，因此它的计数列与 v3.5 逐字相同，**这一列不构成任何新的通过声明**，四门 gate 的取码也未重测。v3.6 处置的是 RAG 交付路径的一条语义缺陷（第四节 4.1.1–4.1.4）：`SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE` 这条「来源之间公平」的护栏在单来源语料上变成了整份提示的绝对上限。**「计数与 v3.5 逐字相同」在这里的正确读法是「本轮没有去跑它」，不是「本轮又验证了一次」。**
+
+**v3.5 没有重跑那 28 条案例，因此它的计数列与 v3.4 逐字相同，且这一列不构成任何新的通过声明。** v3.5 处置的是一份外部审计报告（U1–U9），改动落在记忆检索、取消授权、模型缓存、outbox 消费者与 CI 门禁上；28 条验收案例的判定路径**不在本轮改动范围内**（本轮唯一的改动落在评测与编排之外的模块：记忆检索排序、取消授权、模型缓存次序、outbox 消费者、CI 门禁与测试卫生）。**「与 v3.4 逐字相同」在这里的正确读法是「本轮没有去动它」，不是「本轮又验证了一次」。** 四门 gate 的取码在本轮**重新实测过**（见「v3.5」一节），结论为 `acceptance 0 / quality 3 / security 3 / load 3`，与 v3.4 收尾时一致。
 
 **v3.4 的计数与 v3.3 逐字相同，但这一列的读法与前几轮不同。** v3.3 的「计数不变」说明的是「收紧判定器没有改变这 28 条的结论」；**v3.4 的「计数不变」说明的是「本轮根本没有去动那 28 条」**——R4 与 R5 一个改在规划器（不在 28 条案例的判定路径上决定成败），一个改在**版本号的产生方式**（28 条案例的回放本身同源，故不受影响）。**因此本列不构成一次「28 条重新验证过」的声明**：v3.4 没有重跑 28 条案例，它复核的是四门 gate 的取码与四份语料的成因。
 
@@ -126,6 +132,21 @@ v3.3 的改动**不在 28 条案例的判定规则里**，而在**判定器本�
 1. **离线回放只证明判定器可重放**——`--replay-only --check` 在无任何基础设施的机器上重算全部断言，证明「记录的观测 + 冻结的案例 = 报告的判定」这条链是可复算的。
 2. **它不证明当前代码在线通过**——判定的对象是**回放文件里记录的观测**，那些观测由某一次真实运行产生，绑定在下方「被测版本绑定」所列的版本上。代码改动之后未重跑，离线半仍会给出旧判定。
 
+**这两句话里最容易被过度解读的是退出码。** `acceptance exit 0` 的准确含义只有一句：**「磁盘上这 28 条观测彼此同源、判定器今天仍然接受它们」**。它**不**等于「当前代码树通过验收」。具体差在**两个不同的性质**上，而 gate 只保证第一个：
+
+| 性质 | 问的是什么 | 谁能回答 |
+| --- | --- | --- |
+| **同源性**（homogeneity） | 这 28 条彼此是不是同一版本 | **只看观测本身即可判定**，因此**每次都会查**（`evaluation/revisions.py`；跨版本的批次直接拒判） |
+| **时新性**（currency） | 那个版本是不是**当前**版本 | **离线裸检出无从回答**——文件里没有任何东西说明它们出自哪棵树。只有 `--expect-revision` 能把外部事实喂进来 |
+
+**实测差距**：本文件所依据的那 28 条回放**全部录于 `cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`**，而当时的 `HEAD` 是 `b385df7`，**`cf08ac8` 是它的祖先、落后 5 个提交**。也就是说，在本文件写作时，那个绿色退出码**严格地说不是关于当前代码的结论**。
+
+**这条已落到工具与文档里，不再只靠读者自觉**（本轮补，见「U10」）：
+
+- `scripts/check_phase7_gate_reports.py` 现在**每轮都打印它实际评分的版本**（取自 gate 自己的 summary，渲染为「**What this run graded**」清单），并在没有任何比对对象时明确写出 **`Currency was **not** checked`**；JSON 形态同时给出 `currency_checked`（布尔）与 `expect_revision` 两个字段。**没有比对对象与比对通过，从此在输出里长得不一样。**
+- 该脚本新增 `--expect-revision <rev>`，把它透传给四门 gate；给了它，时新性就从「读者需要知道的事」变成「**被检验过的事实**」。**CI 目前不传**——CI 的 `github.sha` 是合并提交，而语料录于 `cf08ac8`，传了只会让 CI 恒红。**这是刻意的**：让结论可核对，而不是让 CI 变绿。
+- **README（中英双份）显式写明**这一段，且**简历/对外材料必须照抄同一句限定**——因为它正是「验收 PASS」最容易被读成「当前树通过验收」的那一处。
+
 ## 冻结范围
 
 ### 租户
@@ -188,13 +209,13 @@ globex entity 2 两张**结构同构**工单，事实固定为「密码认证成
 
 | 维度 | 实际值 |
 | --- | --- |
-| 源码版本 | `cf08ac8a7b731054e492ed81ba5f3164dc381863`（**v3.3 的全部改动都在该提交之上、未提交**；**2026-10-01 冻结时这些改动提交为 `5fea7ca60b4ca71df5495c80ce38751e01f4647f`，内容未改**）。v3.2 记录的 `7a6e675` 在其之前两个提交；仓库作者此后提交了 `688dd90` 与 `cf08ac8`（后者即「暂时移除 phase7-offline-gates 任务」） |
+| 源码版本 | `cf08ac8a7b731054e492ed81ba5f3164dc381863`（**v3.3 的全部改动都在该提交之上、未提交**；**2026-10-01 冻结时这些改动提交为 `9d1f70e35aa0bdce578b1882e242d65e3a801219`，内容未改**；本文件早期版本引用的 `5fea7ca…` 只存在于作者本机的 `backup-before-reword` 分支，主线上的等价提交即本条——树相同、提交信息相同，`git rev-parse 9d1f70e^{tree}` 与它逐字相等）。v3.2 记录的 `7a6e675` 在其之前两个提交；仓库作者此后提交了 `688dd90` 与 `cf08ac8`（后者即「暂时移除 phase7-offline-gates 任务」） |
 | 未提交改动（v3.4 实测） | **206 个**（202 个 `M` + 4 个 `??`，`git status --porcelain` 实时计数）。**这个数字本身是本文件最好的例证**：v3.3 定稿时是 56，v3.4 结束时是 206，而两次之间**代码侧的净变化只有 17 个文件**（4 个新增 + 13 个改动，即 `src/`+`scripts/`+`tests/` 三栏，见下）——**其余约 150 个的增量全部是本轮录制的证据**（安全 72、负载 61、验收 28、质量 14、报告 12）。逐目录：`evaluation/security/` **72**、`evaluation/load/` **61**、`evaluation/acceptance/` **28**、`evaluation/quality/` **14**、`evaluation/reports/` **12**、`src/servicemind/` **6**（4 改 + 2 新增未跟踪）、`scripts/` **6**、`tests/servicemind/` **5**（3 改 + 2 新增未跟踪）、`evaluation/routing/` **1**（金标语料）、`docs/` **1**（本文件）。**所以「未提交改动 206 个文件」这句话几乎不包含关于平台的信息**——它主要在数本轮录了多少证据。**这是 R5 之前版本号所依赖的那个量**，也是它必然失效的原因 |
 | 未提交改动（v3.3 留档） | **批次运行时刻 55 个文件；本文件定稿后 56 个**（`git status --porcelain` 实时计数，两次都数过）。**+1 就是本文件自身**——驱动批次跑完之后才写 v3.3 各节，此前它在工作树里与 HEAD 逐字相同（HEAD 上仍是 v3.2）。逐目录（定稿后）：`evaluation/acceptance/replays/` **28**、`evaluation/reports/` **12**、`scripts/` **4**（四个 gate）、`tests/servicemind/` **3**、`evaluation/quality/replays/` **3**、`src/servicemind/orchestration/` **2**、`src/servicemind/evaluation/` **1**（新增未跟踪 `revisions.py`）、`src/servicemind/` **1**（`api.py`）、`evaluation/routing/` **1**（金标语料 +7 例）、`docs/` **1**（本文件）。**其中 2 个为新增未跟踪文件**（`src/servicemind/evaluation/revisions.py`、`tests/servicemind/test_phase7_gate_revisions.py`）。工作树是本阶段全部工作的**累积**，未回退任何既有改动 |
 | 驱动程序记录的部署版本（v3.3 观测，**原样留档**） | `cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`（`verify_phase7_acceptance_live.py` 横幅逐字）。**本行在 v3.3 曾把 26 解释成「驱动自己的计数口径，与 `git status` 的 55 不是同一个量」——那个解释是错的，v3.4 更正如下。** 驱动从来没有第二个口径：它数的就是 `git status --porcelain` 的行数。26 与 55 的差别只是**两次取数的时刻不同**——横幅在批次开始时打印（此时只有 26 个文件被改动），本文件在批次结束后定稿（此时 28 份新回放与 12 份新报告都已写回工作树，于是变成 55）。**这正是 R5 的病灶**：版本号是「此刻工作树里有多少文件被动过」的函数，而记录这个动作本身就在改这个数。当时无法解释这个差额，于是把它写成了另一个口径——**一个解释不通的现象被记成了一条不存在的规则**。v3.4 起版本号改为源码内容指纹，不再有这个差额 |
 | 驱动程序记录的部署版本（v3.4 起） | `cf08ac8a7b731054e492ed81ba5f3164dc381863+patch(0ce86f5d19bc)`——**四个驱动对本轮工作树的返回值逐字相同**（实测：acceptance / security / quality / load 四份实现各算一次，结果一样）。`patch(0ce86f5d19bc)` 是对工作树中**17 个改动的源码/脚本/测试文件**的路径与内容取的摘要，**与 `evaluation/`、`docs/` 下 188 个证据与文档产物无关**：写一个新回放进去，这个字符串不动 |
-| **提交后：同一棵树的第二个名字**（2026-10-01 冻结点） | **`5fea7ca60b4ca71df5495c80ce38751e01f4647f`**——本轮全部改动已提交，工作树清空，故指纹消失、版本号退化为纯 commit。**这不是版本变更，是同一棵源码树换了一个可解析的名字**：`git diff --name-only cf08ac8 5fea7ca` 共 206 个文件，其中**恰好 17 个**落在 `src/`+`scripts/`+`tests/`——与上一条 `patch(0ce86f5d19bc)` 所摘要的路径集合**一致**，其余 189 个全是本轮录制的证据与本文件。所以**上一条与本条指的是同一份代码**。**这件事本身就是 R5 最好的端到端证明**：在 R5 之前，「提交」这个动作会把它变成**第三个** `dirty(N)`；现在它只是让一个匿名指纹变成了一个别人 `git checkout` 得到的 commit |
-| **四份语料各自实际记录的版本**（2026-10-01 逐条读出，**与上一条的「驱动返回值」不是一回事**） | 上一条说的是**驱动现在会写什么**，本条说的是**语料里已经躺着什么**——两者不同，这正是三门拒判的原因。逐条实测：**验收 28 份全部是 `cf08ac8…+dirty(26 files)`**（**单一版本，故该门取 0**）；**安全 72 份 = 70×`cf08ac8…+dirty(130 files)` + 2×`cf08ac8…+patch(0ce86f5d19bc)`**（70 旧格式 + 2 新格式，即本轮 `--run-docker` 补录的那两条）；**负载 120 份 = 60×`cf08ac8…+dirty(69 files)` + 60×`688dd90…+dirty(155 files)`**；**质量 200 份横跨 6 个版本**（148×`7a6e675…+dirty(121)`、37×`+dirty(120)`、11×`cf08ac8…+dirty(56)`、2×`688dd90…+dirty(131)`、1×`+dirty(8)`、1×`+dirty(69)`）。**因此「旧证据」的准确含义是按语料分级的，不是一句「都是旧版本」**：验收是**同源但陈旧**，其余三门是**不同源**。**读法上的后果（实测）**：带 `--expect-revision 5fea7ca60b4ca71df5495c80ce38751e01f4647f` 跑验收 `--replay-only` → **退出 3**，报文逐字为「the observations were taken against `cf08ac8…+dirty(26 files)` but this run expects `5fea7ca…`」；**不带该参数时只查同源性，仍取 0**（两条都已实跑确认）。拒绝是设计行为，不是回归 |
+| **提交后：同一棵树的第二个名字**（2026-10-01 冻结点） | **`9d1f70e35aa0bdce578b1882e242d65e3a801219`**——本轮全部改动已提交，工作树清空，故指纹消失、版本号退化为纯 commit。**这不是版本变更，是同一棵源码树换了一个可解析的名字**：`git diff --name-only cf08ac8 9d1f70e` 共 206 个文件，其中**恰好 17 个**落在 `src/`+`scripts/`+`tests/`——与上一条 `patch(0ce86f5d19bc)` 所摘要的路径集合**一致**，其余 189 个全是本轮录制的证据与本文件。所以**上一条与本条指的是同一份代码**。**这件事本身就是 R5 最好的端到端证明**：在 R5 之前，「提交」这个动作会把它变成**第三个** `dirty(N)`；现在它只是让一个匿名指纹变成了一个别人 `git checkout` 得到的 commit |
+| **四份语料各自实际记录的版本**（2026-10-01 逐条读出，**与上一条的「驱动返回值」不是一回事**） | 上一条说的是**驱动现在会写什么**，本条说的是**语料里已经躺着什么**——两者不同，这正是三门拒判的原因。逐条实测：**验收 28 份全部是 `cf08ac8…+dirty(26 files)`**（**单一版本，故该门取 0**）；**安全 72 份 = 70×`cf08ac8…+dirty(130 files)` + 2×`cf08ac8…+patch(0ce86f5d19bc)`**（70 旧格式 + 2 新格式，即本轮 `--run-docker` 补录的那两条）；**负载 120 份 = 60×`cf08ac8…+dirty(69 files)` + 60×`688dd90…+dirty(155 files)`**；**质量 200 份横跨 6 个版本**（148×`7a6e675…+dirty(121)`、37×`+dirty(120)`、11×`cf08ac8…+dirty(56)`、2×`688dd90…+dirty(131)`、1×`+dirty(8)`、1×`+dirty(69)`）。**因此「旧证据」的准确含义是按语料分级的，不是一句「都是旧版本」**：验收是**同源但陈旧**，其余三门是**不同源**。**读法上的后果（实测）**：带 `--expect-revision 9d1f70e35aa0bdce578b1882e242d65e3a801219` 跑验收 `--replay-only` → **退出 3**，报文逐字为「the observations were taken against `cf08ac8…+dirty(26 files)` but this run expects `9d1f70e…`」；**不带该参数时只查同源性，仍取 0**（两条都已实跑确认）。拒绝是设计行为，不是回归 |
 | 受测端点 | `http://127.0.0.1:18080` |
 | API 运行方式 | systemd user unit `servicemind-api`；`ExecStart=/home/shihongye/data1/servicemind/.venv/bin/servicemind-api`，`Restart=on-failure`，`ActiveState=active` |
 | **服务本批次起始进程** | **CST `23:08:37`** 启动（`ActiveEnterTimestamp=Wed 2026-09-30 23:08:37 CST`，`INFO: Started server process [1656207]`）。这次重启是**本轮改动的部署动作**：`src/` 有改动必须先重启才能让新代码生效。**ACC-01…ACC-10a 跑在这个进程上** |
@@ -243,6 +264,196 @@ globex entity 2 两张**结构同构**工单，事实固定为「密码认证成
 以下改动**叠加在既有的未提交改动之上**（v3.3 定稿时 `git status --porcelain` 为 **56 个文件**——批次运行时刻为 55，差额是本文件自身；其中 **2 个为新增未跟踪文件**、**无删除**），未回退任何既有改动。工作树是本阶段全部工作的**累积**；下表按「本轮确认并复核过的根因」组织。
 
 **关于文件数的沿革**：v3.0 执行时工作树含 108 个文件（大量为新增未跟踪文件）。随后由**仓库作者（Shark6438）**将其提交为 `7a6e6758d2e4966771546e57482e8b0a5d8b19dc`，这些文件因此离开未跟踪集合。v3.1 结束时为 38 个修改文件；v3.2 结束时为 46 个；**v3.3 批次运行时刻为 55 个、定稿后为 56 个**（批次时为 +9：`tests/servicemind/test_phase7_gate_revisions.py` 与 `src/servicemind/evaluation/revisions.py` 两个**新增**文件，其余为四个 gate、`api.py`、两个 orchestration 文件、`evaluation/routing/routing.jsonl`、以及被新观测覆写的 28 份验收回放与 12 份报告）。**v3.1、v3.2 与 v3.3 均未做任何提交**。
+
+### v3.5 的根因修复（用户审计报告 U1–U9）
+
+**这一轮的输入不是本文件的自我复核，而是一份由仓库作者本人逐条复核过的外部审计报告**（九条缺陷，含一条发布阻断级的记忆版本链指控）。处置原则只有一条：**每一条都先在本部署上取数，再决定是修还是推翻**——不因为报告写得肯定就照修，也不因为断言本来就绿就跳过。九条里有 **7 条确认并修复、2 条（U1、U4）部分推翻**，而在推翻 U4 的过程中发现了**一条 v3.4 未曾看见的真实缺陷**。
+
+**编号说明**：本节用 **U1–U9** 指代该报告的九条，**与本文件既有的 D1–D17 不是同一套编号**（U4 与 v3.4 的 D8 指的是同一处代码，但结论不同，见下）。凡两个编号相遇处，本节逐字说明关系。
+
+| # | 审计报告的说法 | v3.5 的实测结论 | 处置 |
+| --- | --- | --- | --- |
+| **U1** | 记忆版本链在 Postgres 上失效：`NULL = NULL` 使前驱恒为 `None`，每次都是第一版 | **不成立**。SQLAlchemy 把 `Column == None` 编译成 `scope_id IS NULL`，不是绑定参数；活体数据里 **globex 37 个主题中 18 个带多版本、最深 406 版** | **推翻**（并补上报告说对的那一半：版本链断言此前只跑在内存实现上） |
+| **U2** | 记忆召回被 `ts_rank_cd(..., plainto_tsquery(...))` 的 **AND 语义**压成 100 条上限内的重排 | **成立，且比报告说的更糟**：实测该 AND 排序让**全表 292 行全部得 0 分**，上限退化为一刀按时间切的截断。**修完排序后复量召回面，发现报告点到的「100 条上限」本身还独立成立**：窗口是**词法**截断，排在**余弦**重排之前 | **修 SQL 排序 + 差分回归**；**再修窗口选择规则 + 差分回归 + 残余边界告警**（见「U2 的第二半」） |
+| **U3** | `POST /runs/{id}:cancel` 无角色门，只读 `viewer` 可取消他人运行 | **成立** | **修**（`require_role("analyst")`） |
+| **U4** | `RedisStreamConsumer` 从未被实例化，「入队的 `action.approved` 无消费者」 | **前半句字面为真，后半句的推论为假**（核心闭环走同步续跑，不需要它）；但在核对时发现**该类本身是坏的**：`reclaim` 认领消息后既不投递也不 ACK | **修 `reclaim` + 活体 Redis 回归**（并更正 v3.4 D8 的描述） |
+| **U5** | `cache.put()` 在 `_audit()` 之前，超预算抛异常时结果已进缓存，重放可绕过预算 | **成立** | **修**（预算裁决先于写缓存） |
+| **U6** | CI 与真实验收脱节：无 phase7/gate 步骤，12 个真集群用例在 CI 中永不执行，且 `test_phase4_graphrag.py` 缺 `NEO4J_PASSWORD` 即静默跳过 | **成立，但有两处必须更正**：CI 的 `test-docker` **已经**传了 `--run-docker`（真缺口是那个 job 只跑 2 个 `tests/integration` 用例）；而 graphrag 静默跳过的**根因是读错了地方**，不是凭证缺失 | **修 CI + 修根因 + 让跳过变成失败** |
+| **U7** | 磁盘上残留过期 PASS 报告：`phase7_quality_latest.json` 写着 `PASS`，而当前 gate 对同一回放拒绝判定 | **成立** | **重录四份报告 + 新增 CI 门禁** |
+| **U8** | 脆弱测试：空测试计入 `passed`、源码文本断言、把 `0.275` 冻成快照 | **成立** | **修**（删空测试、删文本断言、快照改为关系式断言） |
+| **U9** | `PHASE7_ACCEPTANCE_BASELINE.md` 里的 `5fea7ca` 不可达，任何人 clone 都无法解析 | **成立** | **改为引用等价提交 `9d1f70e`**（树逐字相同） |
+
+#### U1：记忆版本链的「失效」指控——推翻，并补上它说对的那一半
+
+**用什么**：新增 `tests/servicemind/test_phase5_memory_postgres.py`（7 条 `docker+postgres`），驱动**生产实现** `PostgresMemoryRepository` 走真实的 `tenant_session`/RLS 路径。
+
+**干了什么**：报告引用的代码是 `repository.py:904-914` 的 `MemoryRecordRow.scope_id == candidate.scope.scope_id`。**这里的 `candidate.scope.scope_id` 是 Python 的 `None`，不是 SQL 的 `NULL` 占位符**——SQLAlchemy 对 `Column == None` 有专有编译规则，产出 `scope_id IS NULL`，`tenant` 域的行因此**匹配得上**。报告把「SQL 里 `NULL = NULL` 为假」直接套到了一个根本不会生成 `=` 的表达式上。坐实这一点的是三条独立证据：
+
+1. **编译期**：把该表达式编译成 PostgreSQL 方言，输出为 `IS NULL`；作为对照，`literal(None)` 才编出 `col = $1`（这一对照正是报告描述的那种形状）。
+2. **活体数据**：租户 `2222…`（globex）**37 个主题里 18 个带多版本，最深的一条链在 version 406**；租户 `1111…`（Acme）316 个主题里 49 个带多版本。`version` 的生成式是 `previous.version + 1 if previous else 1`——**每一次递增都是一次成功的前驱查找**，一条 406 版的链不可能来自一个恒返回 `None` 的查找。
+3. **变异验证**：把查找**真的**改成报告描述的形状（字面 `literal(None)`，即 `= NULL`），7 条新测试**全部转红**——即「报告描述的那个缺陷如果真存在，这 7 条一定抓得到」。
+
+**报告说对的那一半**：它指出**所有版本链 / 去重 / 冲突生命周期断言此前只跑在 `InMemoryMemoryRepository` 上**。这一条成立，而且是更值得记的发现——**两个实现同一份契约、只有一个被测，不是漏测分支，是整个分叉对测试结构不可见**。7 条新测试补的正是这一半：租户域版本链、同内容复述返回既有行而不新开版本、冲突改写转 `quarantine` 并由复核 `supersede`、撤销后重学落新 `quarantine` 版本、过期后重学刷新 TTL、同 `subject_key` 在两个 scope 类型下是两个主题、并发写同一主题只落一行。
+
+**结果怎么样**：7 条**全绿**（活体 PostgreSQL），U1 的代码指控推翻、结构性指控关闭。**测试自述了一处它证明不了的东西**：并发那条测试在「两把咨询锁都摘掉」的四种配置下**都仍然是绿的**——因为租户级的 `pg_advisory_xact_lock` 先于按主题的锁生效，写者根本不会交错。因此该测试证明的是**收敛**，不是**锁**；这一点写进了测试的 docstring，而不是用一条更弱的断言冒充「锁已被验证」。
+
+#### U2：召回上限——成立，且实测比报告描述的更彻底
+
+**用什么**：对**活体租户 `1111…`（Acme，292 行记忆）**直接求值同一查询下的两种排序。
+
+**干了什么**：原排序是 `ts_rank_cd(to_tsvector('simple', content), plainto_tsquery('simple', :q)) DESC LIMIT 100`。`plainto_tsquery` 用 **AND** 连接查询词，于是**不包含全部词的行一律得 0 分**。实测查询「VPN 多因素认证 失败 重新绑定认证设备」：
+
+| 排序 | 得分非零的行 | 上限窗口里换进来多少行 |
+| --- | --- | --- |
+| 修复前（AND） | **0 / 292** | — |
+| 修复后（OR） | **166 / 292** | **74 行** |
+
+**「全部 0 分」意味着那 100 条上限不是相关性窗口，而是一刀按 `updated_at` 切的截断**——语义重排（本部署 `SERVICEMIND_MEMORY_VECTOR_ENABLED=true`，余弦重排确实在跑）只能在一个**与查询的字面相关性恒为空**的窗口里排序。这不是「混合重排」，是**先截断后排序**。
+
+**具体修法**：新增 `_lexical_relevance()`，用 OR 连接查询自身的词元，并**逐个加引号**——`tsquery` 用自己的字符表达运算符，未加引号的 `e-mail` 会被解析成 `e` 减 `mail`；两侧用**同一个配置**分词，所以两边不会对「什么是一个词」产生分歧；无词元的查询产出 `NULL` 而不是报错，由 `coalesce(..., 0.0)` 兜住。排序的其余次序键（`updated_at` / `confidence` / `importance` / `content_hash` / `idempotency_key`）一律不动。
+
+**结果怎么样**：新增 `tests/servicemind/test_phase5_memory_recall.py`（3 条）：一条把**同一个场景**同时跑在内存实现与 Postgres 实现上（同一组断言、同一份语料）；一条在内存实现上锁参考语义；一条要求两个实现在窗口顶部**给出同一条记忆**。**变异验证**：把排序改回 AND → **Postgres 侧 2 条转红，内存侧 1 条仍绿**——这正是该缺陷的原始形状（两个实现分叉，而只有被部署的那个是错的）。
+
+**报告在同一段里还列了三条，本轮逐条给结论——三条都选择不修，并逐条写明为什么「不修」比「修」更正确**：
+
+| 报告的子项 | 结论 |
+| --- | --- |
+| `memory_records` 上没有 `tsvector` 的 GIN 索引 | **不建**。GIN 索引服务的是 `@@` 谓词；这里的排序键是**随查询而变**的 `ts_rank_cd`，索引无法服务它。而若为了让索引生效而**加上** `@@` 谓词，就会把「与查询零字面重叠、但语义相关」的记忆**整体排除**——那正是语义重排通道存在的理由。**加索引会以牺牲召回为代价换取速度，而本轮的缺陷恰恰是召回。** |
+| `simple` 分词器不做词干化（`rebinding` / `rebind` 匹配不上） | **不换**。内存参考实现用的是同一套词法（`re.findall` 同形），换 `english` 配置会**加深**两个实现的分歧——那正是 U1 那一半要关闭的东西。形态学限制记为一个**两侧共有**的已知边界，而不是只让其中一侧更像样。 |
+| 没有持久化向量，embedding 每次现算 | **仍不建向量列，但代价面本轮变大了，如实记**。该部署**没有 pgvector**（实测仅 `pg_trgm 1.6` 可用），而 `memory_records` 没有向量列——这是**结构性**改动，不属于本轮「根因修复」的范围。代价侧要说清：**第一半修复之后**语义路径每查询最多嵌入 500 条（`MAX_CANDIDATE_CEILING`），而不是可配置的 100 条；重复查询由既有的 `CachedMemoryEmbeddingProvider` 吸收。**合格记忆超过 500 条时，召回重新退化为一刀词法截断**——那正是必须上向量索引的临界点，本轮把这个临界点从**静默**改成**响亮**（见下）。 |
+
+#### U2 的第二半：候选窗口本身是词法截断——首次修复不完整，本轮补修
+
+**为什么回头补**：上半段修的 OR 排序改的是**窗口内部**的次序；窗口**本身**仍是一刀按字面重叠切的截断，而重排器是**余弦**。首次修复后作者本人回到本部署复量了一次**召回面**（不是排序面）：先取全部合格行逐条算余弦，再看 100 条上限漏掉了多少条**已经过了语义准入门槛**（余弦 ≥ 0.35）的记忆。
+
+| 查询 | 合格行 | 旧窗口（100，词法排序） | 余弦 ≥ 0.35 | **被词法窗口挡在重排器之外** |
+| --- | --- | --- | --- | --- |
+| 「VPN 多因素认证失败，用户更换过手机，如何重新绑定认证设备？」 | 265 | 100 | 261 | **161**（其中最高余弦 **0.754**） |
+| 上一句的英文原文 | 265 | 100 | 254 | **158**（最高余弦 **0.571**） |
+
+**根因**：`MemoryRetriever` 先 `candidates(query, ceiling=100)` 取窗口，再对**该窗口**做嵌入与余弦排序。仓库侧的排序键是**字面重叠**，重排器的排序键是**余弦**——**用一个信号剪另一个信号的候选集**。凡与查询**零词元重叠**的记忆（同义改写、翻译、异形词）在任何嵌入被计算之前就被切掉，而且**没有任何迹象**：部署自报 `SERVICEMIND_MEMORY_VECTOR_ENABLED=true`，日志与报告里都写着「语义通道已启用」。**这是「先截断后排序」的第二种形态**——上半段是「窗口里的分数全是 0」，这一半是「窗口外的分数根本没算」。
+
+**具体修法**：`MemoryRetriever.retrieve` 按**排序器类型**选窗口——重排器是余弦时取仓库的整窗上限（`MAX_CANDIDATE_CEILING = 500`），重排器是词法时才用可配置的 `SERVICEMIND_MEMORY_CANDIDATE_CEILING`。规则一句话：**窗口可以剪枝，但只能按排序器自己用的那个信号剪。** 词法路径保留可配置上限，因为那里仓库的次序**就是**排序信号，按它剪是对的；语义路径不能，因为仓库算不出余弦。残余边界必须**说出来**：整窗被填满（≥ 500 行合格）时发 `logger.warning`，逐字写出「超出部分只能按字面排序，与查询无共同词元的记忆不可能被召回」。**残余边界可以接受，没人知道的残余边界不可以。** 配置项的作用域随之在 `settings.py` 与 `.env.example` 中逐字写明。
+
+**结果怎么样**：新增 2 条测试。`test_a_semantic_ranker_sees_what_a_lexical_window_would_cut` 用**固定向量**的桩提供者把「哪条记忆最相关」交给测试决定，只留下「重排器被允许看到谁」这一个变量：一条与查询**零词元重叠**却语义最近的记忆必须被召回；**同一份语料、同一个上限，换回词法路径时它必须仍被挡在外面**——这条反向断言把「按排序器类型决定」与「一律放大窗口」区分开。`test_a_full_semantic_window_is_reported` 灌入 501 条合格记忆，断言那条 warning 确实发出。**变异验证**：把窗口选择改回 `self.candidate_ceiling` → 第一条**转红**（`1 failed`），还原后 `diff -q` 逐字节相同。
+
+**与既有结论的关系**：上面「GIN 索引」那一行写的理由（加 `@@` 谓词会把零字面重叠的记忆整体排除）与本半段是**同一件事的两面**——索引那一侧拒绝用字面重叠换速度，窗口这一侧则纠正「已经用字面重叠换了召回」。
+
+#### U3 / U5 / U7 / U8 / U9：五条确认并修复
+
+| # | 修法 | 结果 |
+| --- | --- | --- |
+| **U3** | `cancel_run` 增加 `context.require_role("analyst")`。取 `analyst` 而不是 `viewer` 的理由写在代码注释里：取消是对**调用者未必创建过**的运行做变更，而 `list_runs` 是租户级可见——没有地板，只读 `viewer` 就能停掉整个租户的活；`analyst` 与「同一个主体能创建一次运行」的地板一致，审批者也持有它，因此**不缩小任何本来就参与过该运行生命周期的人** | 越权面关闭 |
+| **U5** | 把 `cache.put()` 移到**预算裁决之后**，并补上一段逐字说明：写在前面的后果是「被拒绝的调用可被取回」——条目已在缓存里，一次普通重试命中它，以 **零成本**被记为 `cache_hit`，并返回刚刚被预算拒绝的答案；**一个任何调用者问两次就能击穿的预算** | 重放绕过关闭 |
+| **U7** | 重跑四门 gate 重录报告；并新增 `scripts/check_phase7_gate_reports.py`，**离线**把四门 gate 各跑一次到临时目录，用**退出码 → 必须报出的判定**映射（`0→PASS / 1→FAIL / 2→INSUFFICIENT / 3→REFUSED`）与磁盘上那份报告**逐门比对** | 见下方「CI 门禁」——该脚本是 U6 与 U7 的共同修复 |
+| **U8** | 三处逐条改：①`test_settings.py` 里那条注释写着「Delete this test」的**空测试**（函数体只有 `pass`，却计入 `passed`）删除；②断言源码文本出现次数的测试（`source.count("bounded_error_text(...)") == 3`，重构即红）删除，改由**行为**断言覆盖；③`test_rag_quality_state.py` 里把 `answerable_answer_rate == 0.275` 硬编码——**把「产品不达标」冻成了测试**——改为断言「该信号等于它的来源、且落在 `[0,1]`」 | **这一条是本轮唯一一处「断言变弱」的地方，因此必须交代清楚**：0.275 被删掉不是因为它刺眼，而是因为**它断言的是一份数据、不是一条产品性质**；改后的断言在数据变化时仍能报警（值必须等于源头），在数据不变时不再冒充「质量结论」。报告同时确认的好消息（无 `xfail`、无无条件 `skip`、无 mock 掉被测函数）本轮**未改动** |
+| **U9** | 本文件「被测版本绑定」改为引用 `9d1f70e35aa0bdce578b1882e242d65e3a801219`，并逐字写明它与 `5fea7ca` **树相同、提交信息相同**、且 `5fea7ca` 只存在于作者本机的 `backup-before-reword` 分支 | 冻结版本引用在任何 clone 上可解析 |
+
+#### U4：`RedisStreamConsumer`——推翻报告的推论，但发现它比报告说的更坏
+
+**先用数据确定事实**（活体，2026-10-01）：
+
+| 观测 | 结果 |
+| --- | --- |
+| `systemctl --user is-active servicemind-outbox` | **active**（`OutboxRelay(RedisStreamPublisher)`，每秒 claim、投递后标 `published`、按 30 天保留期清理） |
+| `tool_outbox`（globex） | **98 行，全部 `published`**；`pending` / `failed` 各 **0** 行 |
+| Redis `servicemind:tool-events` | **XLEN = 101，`XINFO GROUPS` 为空** |
+
+**报告说对的是事实**：没有任何进程消费这个 stream。**报告说错的是推论**：「入队的 `action.approved` 无消费者」被读成「有事件没人处理」，而**投递半是完整的、已部署、正在跑的**，且核心闭环走**同步续跑**、不依赖这个 feed；崩溃恢复由 `recover_incomplete_runs()`（API 启动时调用）覆盖，也不依赖它。**为了「有消费者」而写一个没人需要的消费者进程，正是「为了修复而修复」**——v3.4 的 D8 已经把这一点写清楚了。
+
+**但核对时发现了 v3.4 漏掉的东西：那个类的 PEL 恢复是坏的。** `reclaim()` 的签名**不收 handler**，实现是 `return len(result[1])`——它把别的消费者认领了却从未 ACK 的消息**搬进了自己的 pending 列表，然后返回一个读起来像「投递成功」的计数**。没有任何人处理它们，没有任何人 ACK 它们。**对于崩溃已经把消息置于风险之中的那批消息，at-least-once 事实上退化成了 at-most-once。** v3.4 的 D8 把该类描述为「at-least-once + PEL 恢复」，是**把一个坏掉的实现当成能用的东西记了一笔**——这正是本文件一直在防的失效模式，只是这一处发生在本文件自己身上。
+
+**具体修法**：`reclaim()` 改为接收 handler，逐条**先处理、后 ACK**（handler 抛异常则消息留在 pending，留待重试——这正是 at-least-once 的另一半）；返回处理条数而非认领条数；`None` 字段（载荷已被裁剪）只 ACK 不投递；把字节解码提为模块级 `_decode()`。
+
+**结果怎么样**：新增 `tests/servicemind/test_phase7_outbox_consumer.py`（3 条 `docker+redis`，打**真实 Redis**）：①投递的事件被 handler 收到**且随后** pending 归零；②被「死掉」的消费者认领且未 ACK 的消息，被幸存者**认领并交给 handler**（同时断言「刚被读走、仍在空闲阈值内的消息**不会**被抢走」——否则正常运行时每条消息都会投递两次）；③handler 抛异常时消息**留在 pending**，不被当成已消费。**变异验证**：把 `reclaim` 改回「只数不投递」→ 第 ② 条转红（`assert [] == ['ce015536-…']`），另两条仍绿。同时把 `redis` 加入 `DOCKER_REQUIREMENTS`，让它在 `-m "docker and redis"` 下可单独选中。
+
+**这一条的正确记法**（与 v3.4 D8 一致，但把描述的准确性补上）：**不得宣称异步消费与恢复已通过**——本部署没有订阅者，也没有订阅者被要求存在；**代码缺陷已修并锁定**，订阅与否是集成决定，而不是平台缺口。
+
+#### U6：CI 门禁——成立，但报告的两处描述必须更正
+
+**报告说「`test-docker` 只跑 `pytest tests/integration`（2 个 fake-model 用例）」。** 事实是：**`--run-docker` 那个 flag 早就传了**（`pytest tests/integration -v --run-docker`）。真缺口是**范围**：那个 job 只跑 `tests/integration`，于是 12 个真集群 / 真库的 docker 用例在 CI 里**永不执行**。把「flag 没传」当成缺口会去改一个本来正确的地方——这类更正对本文件的读法比结论本身更重要。
+
+**报告说「`test_phase4_graphrag.py:716` 缺 `NEO4J_PASSWORD` 即静默跳过」。** 这一条症状对、**根因错**。那两个活体测试读的是 `os.environ.get("NEO4J_PASSWORD")`，而 `.env` 由 pydantic-settings 装进 **settings 对象**、**不装进进程环境**——于是**在任何机器上它都是 `None`**，包括 `NEO4J_PASSWORD` 已经配好的这台。**这不是「凭证缺失」，是「读错了地方」**：一个永远为假的条件，让两条真集群 ACL 测试在本机 `--run-docker` 下**也**一直绿着跳过。改为读生产代码读的同一个字段后，它们**真的跑起来了**（该文件 38 passed / 0 skipped）。
+
+| 修法 | 结果 |
+| --- | --- |
+| 新增 CI job `phase7-gates`：`uv run python scripts/check_phase7_gate_reports.py`，把四门 gate **离线**各跑一次，用「退出码 → 必须报出的判定」与磁盘报告逐门比对 | 该脚本同时是 U7 的修复：**U7 那个缺陷（报告说 PASS 而 gate 拒判）正是它抓的**——把提交进来的质量报告改回 `"verdict": "PASS"` 重跑，脚本**退出 1** 并逐字打印出门与报告的判定分歧 |
+| `.env` 的加载方式不变，改的是**读它的地方**：`test_phase4_graphrag.py` 改用 `core.settings.NEO4J_PASSWORD`，并新增共享的 `_live_graph_driver()` | 两条活体 Neo4j ACL 测试从「永远跳过」变为**真的执行**；`pytest tests/servicemind/test_phase4_graphrag.py --run-docker` → **38 passed, 0 skipped** |
+| `tests/conftest.py` 新增两条钩子：**每个 docker 测试必须声明它需要哪一个服务**（`postgres` / `neo4j` / `opensearch` / `redis` / `deployed_stack`，恰好一个；不声明即 `UsageError`，**且该检查不依赖 `--run-docker`**，所以在**加它的那个 PR 上**就会被拒）；**`--run-docker` 下任何 docker 测试的 skip 转成 FAIL**，并在失败信息里点名缺的是哪个依赖 | 19 个 docker 测试站点逐个打上服务标记。**为什么要让 skip 变红**：`--run-docker` 是一次「我声明我有这些容器」的声明，一个在此声明下静默跳过的测试**什么都没验证**，却和通过长得一样——**上一行那个 graphrag 根因，正是这种「绿着跳过」能潜伏数年的原因** |
+| 26 个 docker 测试站点逐个打上服务标记 | 按服务可选中（全仓 `tests/`，`--collect-only`）：`-m "docker and postgres"` → **15**、`neo4j` → **2**、`opensearch` → **2**、`redis` → **3**、`deployed_stack` → **4**，`docker` 合计 **26** |
+
+**这一条修复自己差点造成一次回归，必须记下来。** 服务标记的守卫第一次只在 `tests/servicemind`、`tests/core`、`tests/service` 三个目录上验过；把它放到**全仓** `tests/` 上时，`tests/smoke/test_persistence.py` 的两条 docker 测试（服务端跑在 `:8080`、需要活的数据库）**没有声明依赖**，于是整个 `tests/` 的收集被 `UsageError` 打断——而 CI 的 `uv run pytest --cov=src/`（`testpaths = ["tests"]`）**正是全仓收集**。也就是说：**一个「让未声明依赖的 docker 测试当场失败」的守卫，第一件事就是抓到了一个自己签发的、会打断 CI 的未声明依赖**（`tests/smoke`，此前 19 个站点的盘点漏掉了它）。两条测试补上 `@pytest.mark.deployed_stack` 后收集恢复正常。**这条记在此处而不是悄悄修掉**：它同时证明了守卫是有效的，和此前那次「19 个站点已全部盘点」的盘点范围不够大。
+
+**U6 的范围缺口本轮再关一半（2026-10-01，用户第二次提出）。** 上表那句「12 个真集群 / 真库的 docker 用例在 CI 里**永不执行**」，在本轮之前**仍然成立**：`test-python` job 起了 `postgres:16` 服务，却**没有任何一步传 `--run-docker`**，于是 15 条 postgres 标记的测试**一条都没跑**——**「job 里有服务」与「测试真的连过库」，在这件事上长得一模一样**。补法是加一步 `uv run pytest -m "docker and postgres" --run-docker`。
+
+**但只加这一步不够，而且这一点是实测出来的，不是推断的。** CI 的库只跑过 `alembic upgrade head`，而**迁移建了 `tenants` 表与所有指向它的外键，却从不插入任何一行**；唯一的播种脚本 `scripts/seed_phase2.py` 还要求 GLPI 凭证与凭据密钥，CI 没有。在一台**只跑过迁移**的库上实测（探针：建临时库 → `alembic upgrade head` → 跑标记子集 → 删库）：**14 failed, 1 passed**——失败全部是 `<table>_tenant_id_fkey` 的 `Key is not present in table "tenants"`，唯一通过的那条**自己建了租户**。
+
+**修在测试侧，不修在环境侧**：`tests/conftest.py` 新增 autouse fixture `_postgres_tenants`，**只在测试带 `postgres` 标记时**幂等插入平台两个已知租户（`1111…`/acme、`2222…`/globex，取值与 `scripts/seed_phase2.py` 一致），走 `global_session()`（非 RLS 表）与 `ON CONFLICT DO NOTHING`。**它不改任何断言，只改测试有没有租户可写**——带 `postgres` 标记的测试本来就需要这两行存在，把它们写在测试里而不是指望环境，是这个子集能在裸库上跑起来的原因。
+
+| 状态 | `pytest -m "docker and postgres" --run-docker`（**只跑过迁移**的库） |
+| --- | --- |
+| 删掉 fixture（变异态＝修复前） | **14 failed, 1 passed**（与修复前基线逐字相同） |
+| 保留 fixture（修复态） | **15 passed, 0 skipped** |
+
+本机（真栈在场）同一条命令同样 **15 passed**；全量 `pytest tests -q` **1146 passed, 26 skipped**——**它是前置条件，不是新断言**。
+
+**结果怎么样**：`scripts/check_phase7_gate_reports.py` 现状——`acceptance 0/PASS/PASS`、`quality|security|load 3/REFUSED/REFUSED`，**脚本退出 0**（四门全部自洽）。
+
+#### U10：`acceptance exit 0` 不是关于当前代码的结论（本轮新查出的，成立）
+
+**指控**：那 28 条回放全部录于 `cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`；当时的 `HEAD` 是 `b385df7`，`cf08ac8` 是它的**祖先、落后 5 个提交**。gate 不带 `--expect-revision` 时**只查同源性**（这 28 条彼此是不是同一版本），**不查时新性**（是不是当前版本）；`scripts/check_phase7_gate_reports.py` **也没有传** `--expect-revision`。因此 `acceptance exit 0` 的准确含义是「这 28 条彼此同源、判定器仍然接受它们」，**不是**「当前树通过验收」。
+
+**成立，复核方式与结果（实跑，非推断）**：`git rev-list --count cf08ac8..HEAD` → **5**；28 条回放按 `environment.deployed_revision` 去重 → **恰好 1 个值**（即上面那串）；`grep -rn "expect_revision" scripts/` → 四门 gate **各自都有**这个参数，**没有任何调用点传它**，检查脚本也不例外。**同源性成立、时新性未查**，两者在这条命令里长得一模一样。
+
+**这条与 U7 是同一条链上的两件事，必须分开记**：U7 说的是「报告与 gate 的**判定**不一致」——已修；U10 说的是「两者一致，但**一致的结论是关于哪套代码的**」——**一致并不能把旧版本变成新版本**。**把 U10 读成「U7 已经覆盖了」，正是这条要防的错。**
+
+**修法（三处，缺一即不算修完）**：
+
+| # | 落点 | 结果 |
+| --- | --- | --- |
+| 1 | **让工具说出来**：`check_phase7_gate_reports.py` 每轮打印实际评分的版本（渲染为 `What this run graded` 清单，取自 gate 自己的 summary），并在**没有任何比对对象时**明确写出 `Currency was **not** checked`；JSON 同时给出 `currency_checked` 与 `expect_revision` | **「没查」与「查过并通过」从此在输出里长得不一样**（此前两者都是「退出 0」） |
+| 2 | **把能力给出来**：新增 `--expect-revision`，透传给四门 gate | 时新性从「读者需要知道的事」变成「**被检验过的事实**」。**CI 不传**：CI 的 `github.sha` 是合并提交、语料录于 `cf08ac8`，传了只会恒红——**可核对 ≠ 恒绿** |
+| 3 | **把限定写死**：本文件「离线与在线」一节增列**同源性 / 时新性对照表**并点名 `cf08ac8` 与 `HEAD` 的 5 个提交差；**README（中英双份）显式写明** `acceptance exit 0` 的正确读法 | 对外材料（简历）**必须照抄同一句限定**——这一处最容易被读成「当前树通过验收」 |
+
+**锁定测试**：`tests/servicemind/test_phase7_gate_report_currency.py`（4 条）——评分版本随判定一起打印、`--expect-revision` 下 `currency_checked` 为真、不传时为假、以及**拒判的 gate 不会被安上它没有记录过的版本**（拒判路径不打印 summary，把沉默读成版本就是凭空造一个版本）。轮询真实 gate 需 13 秒，故该文件桩掉 `judge`；判定如何得出由 `test_phase7_gate_revisions.py` 与各 gate 自身的用例负责。
+
+### v3.5 的锁定测试与变异验证
+
+**每一条修复都配一次「回退即变红」**，本轮共 8 次，逐条记录：
+
+| 变异 | 改回什么 | 结果 |
+| --- | --- | --- |
+| U1 | 把前驱查找改成报告描述的字面形状（`literal(None)`，即真的 `= NULL`） | `test_phase5_memory_postgres.py` **7 条全红** |
+| U2（排序半） | 排序改回 `plainto_tsquery` 的 AND 语义 | `test_phase5_memory_recall.py` **Postgres 侧 2 条红、内存侧 1 条绿**（分叉复现） |
+| U2（窗口半） | 语义路径改回可配置上限（`ceiling = self.candidate_ceiling`） | `test_phase5_memory_recall.py::test_a_semantic_ranker_sees_what_a_lexical_window_would_cut` **1 条红** |
+| U4 | `reclaim` 改回「只返回认领条数、不投递不 ACK」 | `test_phase7_outbox_consumer.py` **1 条红**（`assert [] == ['ce015536-…']`） |
+| U7 | 把提交进来的质量报告 verdict 改回 `PASS` | `check_phase7_gate_reports.py` **退出 1**，逐字打印门与报告的分歧 |
+| U6 | 去掉 `NEO4J_PASSWORD` 配置 | 两条 graphrag 活体测试**不再静默跳过**——`--run-docker` 下转 **FAIL** 并点名缺的变量 |
+| U10 | 删掉 `check_phase7_gate_reports.py` 里那句 `Currency was **not** checked` 的输出 | `test_phase7_gate_report_currency.py::test_the_graded_revision_is_printed_beside_the_verdict` **1 条红** |
+| U6（CI 范围半） | 关掉 `tests/conftest.py` 的 `_postgres_tenants` fixture | 裸库上 `-m "docker and postgres" --run-docker` **14 failed, 1 passed**——**修复前的原始基线被逐字复现** |
+
+**本轮全部改动均已还原到修复态后复跑**（`repository.py` 与 `outbox.py` 的变异实验均以 `diff -q` 确认逐字节还原，并 grep 确认两把咨询锁与 `==` 比较都在）。
+
+**全量回归（本轮实测）**：
+
+| 命令 | 结果 |
+| --- | --- |
+| `ruff format --check .` | 356 files already formatted |
+| `ruff check .` | All checks passed |
+| `pyrefly check` | **0 errors** |
+| `pytest tests -q`（全仓，不带 docker，含本轮新增 4 条） | **1146 passed, 26 skipped** |
+| `pytest tests/servicemind tests/core tests/service -q --run-docker` | **1075 passed, 0 skipped** |
+| `pytest tests -q --run-docker -m "docker and not deployed_stack"` | **22 passed, 0 skipped, 0 failed** |
+| `pytest tests -q --run-docker`（全仓，含 `deployed_stack`） | **1162 passed, 4 failed** —— 4 条全部是 `deployed_stack` 测试，本机 `:8080` 上没有服务，连接被拒 |
+| `pytest tests -m "docker and postgres" --run-docker`（本机真栈） | **15 passed, 0 skipped** |
+| 同上，在**只跑过迁移**的临时库上（模拟 CI） | **15 passed, 0 skipped**（删掉 fixture 则回到 **14 failed, 1 passed**） |
+| `scripts/check_phase7_gate_reports.py` | **exit 0**，且输出含 `What this run graded` 与 `Currency was **not** checked`（U10） |
+| `scripts/check_phase7_gate_reports.py --expect-revision cf08ac8…+dirty(26 files)` | **exit 0**；换成任一别的版本 → **exit 1** 并指出报告写 `PASS`、而该版本下 gate 拒判 |
+| CI 的 markdown lint（`git -c core.quotePath=false ls-files 'docs/*.md'` 去四份豁免文档后 `pymarkdown scan README.md $docs`） | **exit 0**——**但这一行是本轮唯一一处「先红后绿」**：按 CI 的原命令手工跑时，本文件里三处我早前加入的证据代码块没有标注语言（MD040），**CI 的 lint 步骤会直接失败**。三处已补上 `text` 标注。这条同时是 U6 的旁证：门禁脚本在 CI 里存在与否，决定了这类问题是在本地被发现，还是在合并后才被发现 |
+
+**「0 skipped」是本轮最重要的一个数字。** 修复前，`--run-docker` 下那 26 条里的 5 条（2 条 Neo4j ACL + 3 条 Redis 消费者）会**绿着跳过**；现在这个模式下**没有任何一条测试是靠跳过获得绿色的**。
+
+**最后一行那 4 个失败必须如实读，它是本轮改动的**预期**行为，不是回归**：`deployed_stack` 的四条测试需要一个跑在 `:8080` 的 ServiceMind 服务（`tests/integration/test_docker_e2e.py` 两条、`tests/smoke/test_persistence.py` 两条），而本机没有起它，于是 `httpx.ConnectError: [Errno 111] Connection refused`。**修复前这四条在本机是「跳过」，现在它们是「失败」**——这正是那条钩子要的效果：`--run-docker` 是一次「我声明我有这些容器」的声明，一个在此声明下什么都没验证的测试，不应该和通过长得一样。**同时也必须能被绕开，否则这条钩子会逼工程师去造假声明**：服务标记正是为此而设，`-m "docker and not deployed_stack"` 给出**22 passed / 0 skipped / 0 failed**，即「我确实有 Postgres、Neo4j、OpenSearch、Redis，但没有整套部署栈」这句话现在**可以被准确地说出来**，而在此之前只能靠跳过表达，而跳过看不出区别。
 
 ### v3.4 的根因修复（R4 / R5）
 
@@ -885,13 +1096,123 @@ running mutation experiment scripts/mutate_outbox_retention.py ...
 
 **三次拒绝的报错文案都指名了要重跑哪个驱动**（`Re-run scripts/verify_phase7_*.py on the deployment you mean to describe`）。这句文案在 R5 之前是**不可执行**的（重跑必然产生新版本号），R5 之后它是一条**真指令**。
 
+### 十二、端到端在线走查（真实栈，2026-10-01）
+
+对**正在运行的部署**做一次完整的「用户提问 → agent/工具调用 → 审批 → 写回 → 读回」走查。这不是回放，也不是夹具进程内调用：全部 HTTP 打到 `servicemind-api` 的监听端口，全部证据从运行中的 Postgres / GLPI / Keycloak 读出。
+
+**为什么要做这一节。** 前面十一个子节的证据全是**离线回放**或**固定夹具**。回放只证明判定器可重放，不证明当前代码在线通过——这句话在本文件里已经写了三遍，这一节是第一次给出**在线**的对照观测。
+
+#### 用什么
+
+| 项 | 值（实测） |
+| --- | --- |
+| API 监听 | `127.0.0.1:18080`（`ss -lntp` 取到 `users:(("servicemind-api",pid=2095085,fd=17))`）。**不是 `:8080`**——`:8080` 上没有任何本项目进程，`core.settings` 的 `PORT` 默认值只是默认值 |
+| API 进程 | PID 2095085，`systemctl --user is-active servicemind-api` → `active`，启动于 `2026-10-01 00:08:15 CST` |
+| 前端控制台 | `servicemind-frontend.service`（即 `127.0.0.1:3000` 上那个容器，镜像构建于 `2026-09-22T14:55:58+08:00`）。该镜像烧入的默认 API 基址是 `frontend/src/lib/config.ts` 的 `?? "http://127.0.0.1:18080"`，与在跑的 API 一致，无需额外环境变量 |
+| 身份 | Keycloak `http://127.0.0.1:8090/realms/servicemind`，password grant，`client_id=servicemind-api`；主体 `acme-analyst`（读）与 `acme-approver`（审批） |
+| 租户 / 工单 | `1111…`（Acme）/ 工单 2 |
+| 模型 | `deepseek-v4-flash`（`agent_invocations[].model_name` 实测） |
+
+#### 干了什么
+
+**读链路**（`request_write=false`）：`POST /v1/servicemind/runs` → `202 pending` → 每 2s 轮询 `GET /v1/servicemind/runs/{id}` → 19s 到 `succeeded`。
+
+用户提问原文：`用户反馈：更换手机后 VPN 拨号失败，密码认证通过但多因素认证不通过，请给出处置建议`
+
+run 事件日志（18 条，按序）：
+
+```text
+run.created → route(complex_workflow / ambiguous_request_requires_review)
+→ supervisor.plan → plan.created(T1..T4) → supervisor.dispatch(T1,T2)
+→ agent.finished(knowledge/T2) → agent.finished(data/T1) → supervisor.join_evidence
+→ evidence.gathered(count=9, dropped=0) → supervisor.analyze(T3)
+→ agent.finished(analysis/T3) → supervisor.review(T4) → agent.finished(reviewer/T4)
+→ review.decided(passed) → supervisor.finalize → run.finished(succeeded, decision=null)
+→ memory.recorded(record_count=1) → run.settled
+```
+
+**工具调用**（实测，非声明）：
+
+| agent | tool | 状态 | 模型调用 / 工具调用 | 延迟 |
+| --- | --- | --- | --- | --- |
+| `data` (T1) | `glpi.read.ticket`、`glpi.read.groups`、`glpi.read.ticket_followups` | 三条全 `succeeded`，各 `attempts=1` | 1 / 3 | 2059 ms |
+| `analysis` (T3) | —（纯推理） | `succeeded` | 1 / 0 | 7134 ms |
+| `reviewer` (T4) | —（纯推理） | `succeeded` | 1 / 0 | 2130 ms |
+
+**写链路**（`request_write=true`）：新增 run `3aec295b-ccde-4517-a22f-533d38817e4a` → 28s 停在 `waiting_approval`（**没有直接写库**）→ 先投一个错误 hash → 再投真 hash → 2s 内 `succeeded`。
+
+```text
+篡改 hash  -> HTTP 409  {"detail": "Action changed after it was reviewed"}
+真实 hash  -> HTTP 200  status=succeeded
+execution  = {"tool_name": "glpi.append_ticket_followup", "followup_id": 144,
+              "ticket_id": 2, "verified": true, "duplicate_suppressed": false}
+```
+
+#### 结果怎么样
+
+| 断言 | 期望 | 实际 | 判定 |
+| --- | --- | --- | --- |
+| 读 run 走到终态 | `succeeded` | `succeeded`，19s | PASS |
+| 证据总量 | 工单 + 组 + 跟进 + 知识，非空 | 9 条，`dropped=0` | PASS |
+| 检索命中了本租户 runbook | `runbook://rb-vpn-mfa` 在 evidence 内 | 命中，且分析正文 C4 逐条引用了它 | PASS |
+| 审批门禁存在 | 写 run 不得越过审批 | 停在 `waiting_approval`，`action_intent.status="proposed"` | PASS |
+| 篡改拒绝 | 409 且零副作用 | `409 Action changed after it was reviewed` | PASS |
+| 恰好写一次 | 1 条新 followup | 工单 2 的 followup id 从 `[1, 102]` 变为 `[1, 102, 144]` | PASS |
+| 写回正文 | 与 `intent.arguments["content"]` 一致 | **见下** | PASS（需说明） |
+| 记忆与运行可关联 | `memory_records.source_run_id = run.id` | 两个 run 各产出 1 条，`subject_key='ticket:2:verified_outcome'`，`version` 4 与 5 | PASS |
+
+**两条必须交代的观测。**
+
+**（1）回读正文与 intent 正文不是逐字相等，差的是平台自己追加的标记——`verified=True` 是对的。**
+
+第一次比对得到 `readback 1807 字符 ≠ intent 1728 字符`，而 `execution.verified` 仍为 `true`。这正是本文件「已知未关闭缺陷」里那条「执行器回读只验标记」的怀疑形状，所以按规则不能放过。逐行 diff 的结果是：**两段正文完全相同，唯一差异是一行 `[ServiceMind run=3aec295b-… action=485a706fd1f752d5]`**，即 `domain/evidence.py:55 self_authored_marker()` 的产物——平台每次写回都会追加它，用来让证据构建器把租户自己的工单记录和平台自己的散文区分开。因此：
+
+- 正文一致性**成立**，`verified=True` 不是假阳性；
+- 但本文件里 ACC-11 的正文断言**不能写成「回读 == intent 内容」**，必须写成「回读 == intent 内容 + 标记行」。写成前者会把一个正确的实现判成失败。这一条已按此口径记录。
+
+**（2）Postgres 上的记忆版本链在真实栈上走到了 v5——这是 U1 的第三次、也是唯一一次在线证伪。**
+
+`memory_records` 中 `subject_key='ticket:2:verified_outcome'` 的实际链路（`tenant_id=1111…`，查询经 `tenant_session`，因为该表强制 RLS）：
+
+```text
+v1  quarantine  scope_type=tenant  scope_id=NULL  hash=c60c708833f7
+v2  quarantine  scope_type=tenant  scope_id=NULL  hash=702a5f42105c
+v3  quarantine  scope_type=tenant  scope_id=NULL  hash=dabd23508017
+v4  quarantine  scope_type=tenant  scope_id=NULL  hash=e4fab51812da
+v5  quarantine  scope_type=tenant  scope_id=NULL  hash=05d0f85792c4
+```
+
+注意 `scope_type=tenant` 且 `scope_id=NULL`——正是 U1 声称「`NULL = NULL` 永不成立、前驱恒为 `None`、版本链静默退化成每次都是第一版」的那个坐标。实际结果是版本号**单调递增到 5**，且五条 `content_hash` 互不相同。若 U1 成立，这五行会全是 `v1`。
+
+（前两次证伪分别是：静态的——SQLAlchemy 把 `Column == None` 编译成 `IS NULL` 而非绑定参数；以及变异测试——按报告描述的字面形状改回 `literal(None)` 后，7 条 Postgres 测试全红。这次是运行中的部署自己写出来的数据。）
+
+**写回 GLPI 的正文（截断）**：`ServiceMind reviewed analysis: 工单 2 记录用户自今早开始无法通过公司 VPN 接入内网，客户端报"无法建立隧道"……` 其后是 `Classification` / `Recommended priority: 4` / `Recommended group: Network Team` / `Evidence: ev-…` / `Reviewer: …` 五段结构化尾注。
+
+#### 复核者如何自己重跑
+
+```bash
+# 1 确认 API 在哪个端口（不要假设 8080）
+ss -lntp | grep servicemind-api
+
+# 2 读链路：一次只读 run，19s 左右到终态
+uv run --no-sync python /tmp/smwalk/walkthrough.py
+
+# 3 写链路：提交 → 停在 waiting_approval → 错误 hash 得 409 → 真 hash 批准 → 回读
+uv run --no-sync python /tmp/smwalk/writepath.py
+
+# 4 回读工单正文 + 版本链
+uv run --no-sync python /tmp/smwalk/verify.py
+```
+
+走查脚本放在 `/tmp/smwalk/`（**不在仓库内**），因为它们依赖本机特定的端口与 `deploy/glpi/.env` 中的主体口令变量名，进仓库会变成又一份会漂移的硬编码。
+
 ## 已知未关闭缺陷
 
 每条含复现路径。**「已知未关闭缺陷」与「未评估」分列，不得互相替代。**
 
 ### 发布阻断
 
-**v3.4 没有发布阻断缺陷。** 历史上出现过三条发布阻断（D1、D14、D15），一条跨版本记录的产品缺陷（D3），两条「是否阻断需裁定」项（D16、D17），以及 **v3.3 新确认并关闭的三条（R1 路由分叉、R3 失败原因不入 run 行、G1 判定器不校验证据同源性）**，加上 **v3.4 新确认并关闭的两条（R4 规划器在语料外问句上产出残缺计划、R5 版本号自指）**——**十一条现已全部关闭**，关闭证据分别见「本阶段已修复并锁定」表。
+**v3.4 没有发布阻断缺陷。** 历史上出现过三条发布阻断（D1、D14、D15），一条跨版本记录的产品缺陷（D3），两条「是否阻断需裁定」项（D16、D17），以及 **v3.3 新确认并关闭的三条（R1 路由分叉、R3 失败原因不入 run 行、G1 判定器不校验证据同源性）**，加上 **v3.4 新确认并关闭的两条（R4 规划器在语料外问句上产出残缺计划、R5 版本号自指）**——**十一条现已全部关闭**，关闭证据分别见「本阶段已修复并锁定」表。**v3.5 新增一次外部审计（U1–U9）的处置**：其中 **U1（记忆版本链在 Postgres 上失效）经实测推翻**——它是一条被指向发布阻断级别的指控，因此必须逐字记录它为什么不成立（见「v3.5 的根因修复」U1）；U2、U3、U5、U6、U7、U8、U9 **确认并修复**；U4 **推翻其推论但发现并修复了它没看见的真实代码缺陷**。**v3.5 不新增发布阻断缺陷，也不解除任何一条既有缺陷的阻断判定**——U1 被推翻意味着它**从来不是**发布阻断，而不是「曾经是、现在关了」。
 
 **另有十条于 v3.4 移出缺陷清单，但它们一条都不是本轮修的（D4–D13）**：v3.4 把「其他已知未关闭缺陷」表里的十条**逐条拿回代码里核对**，结果是**八条早已修复**（D4、D5、D6、D9、D10、D11、D12、D13，各有锁定测试）、**两条的「影响」描述本身不成立**（D7 的顺序耦合被断言词汇证伪、D8 的投递半已部署且有 98 条 `published` 数据）。其中 D5 的两半**在 `688dd90`（2026-09-24）就已实现**，本文件从 v3.0 起连续三个版本把它抄成「仍未做」。**这条与上一条必须分开陈述**：R4/R5 是「本轮修好并验证」，D4–D13 是「本轮核对并确认早已修好或本就不是缺陷」——**把后者说成前者，等于虚报了一轮工作量，也正是这份文档一直在防的那种失真。**逐条证据见「其他已知未关闭缺陷（v3.4 逐条回读后重写）」。
 
@@ -954,7 +1275,7 @@ running mutation experiment scripts/mutate_outbox_retention.py ...
 | **D12** | `set_document_active`（知识版本废止/恢复）**无任何 HTTP 入口** | **已修（非本轮）**。新增 `POST /knowledge/documents:activation`，按 `source_record_id` 寻址，要求 `operator`/`tenant_admin` 角色，找不到时返回 **404 而非 200+0**（注释写明：在租户会话内查，所以「查不到」对调用者不可见的每一个 id 都成立，而不只是真的不存在的那些） | `interfaces/http/knowledge.py:55-80`；`tests/servicemind/test_knowledge_lifecycle.py` |
 | **D13** | `scripts/verify_phase2_concurrency.py` 已失效（硬编码 `:8080`、断言返回体为 `waiting_approval`，实际必为 `pending`） | **已修（非本轮）**，且脚本自己把这件事写进了 docstring：旧版「posted to a fixed `127.0.0.1:8080`（**不是本 API 的端口**——8080 是宿主机上另一个服务，请求整个离开了平台）」，并且从 create 响应里读 `action_intent.action_hash`，而那个字段由工作流在 create **返回之后**才写、当时必为 `None`。现在 base URL 取自 `core.settings`，action hash 取自一个**真的走到 `waiting_approval` 的运行** | `scripts/verify_phase2_concurrency.py:1-15`（自述）、`:46`。**注意：本轮只读了源码，没有活体重跑它**——「脚本已被修好」这一点是**从代码读出来的**，见「未评估」 |
 | **D7** | **验收套件不可重复**：写案例自增工单 followup，**污染后续只读案例的基线**，案例之间存在**顺序耦合** | **「影响」不成立。** 全部 107 条断言里，与 followup 有关的 14 条**全部是相对增量**——`no_new_followups`、`exactly_one_new_followup`、`followup_body_is_the_approved_content`——**没有一条依赖绝对计数**，每条都在本案例开始时取一次基线。因此重复执行**不会**改变任何一条判定的结果，「顺序耦合」在断言词汇层面就不存在。**残留的是一件事实而非缺陷**：4 条写案例（ACC-10b / ACC-11 / ACC-22 / ACC-23）会在共享工单上累积 followup，这是「对着活体 ITSM 系统做验收」的固有属性，不是可修的错误——**要「根治」就得在跑之前重置 GLPI 状态，而那会让套件变成破坏性的** | `evaluation/acceptance/cases.v1.json` 的断言词汇（本轮实测统计）；`scripts/verify_phase7_acceptance_live.py:896-905` 的 `take_baseline` |
-| **D8** | **`tool_outbox` 的 `action.approved` 无消费者**（`RedisStreamConsumer` 全仓零引用）→ 暗示「入队行不被消费」 | **前半句字面为真，后半句的推论为假。** ①**投递半是完整的、已部署、正在运行**：`OutboxRelay(RedisStreamPublisher)` 由 `servicemind-outbox` 入口运行，systemd unit `servicemind-outbox.service` **自 2026-09-24 01:28:13 CST 起一直 active**，每秒 claim 一次、投递成功后标记 `published`、并按 30 天保留期清理。②**没有累积**：实测 `tool_outbox` 在租户上下文下共 **98 行，全部 `published`**（2026-09-23 00:25 → 2026-09-30 15:24），**`pending` / `failed` 各 0 行**。③**真正的残留是范围而非缺陷**：`RedisStreamConsumer`（at-least-once + PEL 恢复）在仓库里**没有订阅者**——下游没有消费者，而核心闭环走同步续跑、**不需要**它。**因此正确的记法是「不得宣称异步消费与恢复已通过」，而不是「有一个待修的消费缺陷」**；为此写一个没人需要的消费者，正是「为了修复而修复」 | `src/servicemind/reliability/worker.py`、`pyproject.toml:86`（`servicemind-outbox`）、`systemctl --user is-active servicemind-outbox`、`tool_outbox` 按 `status` 分组的实测计数、`reliability/outbox.py:24,30`（`STREAM_MAXLEN=100_000` / 保留 30 天，故 Redis 侧亦有界） |
+| **D8** | **`tool_outbox` 的 `action.approved` 无消费者**（`RedisStreamConsumer` 全仓零引用）→ 暗示「入队行不被消费」 | **前半句字面为真，后半句的推论为假。** ①**投递半是完整的、已部署、正在运行**：`OutboxRelay(RedisStreamPublisher)` 由 `servicemind-outbox` 入口运行，systemd unit `servicemind-outbox.service` **自 2026-09-24 01:28:13 CST 起一直 active**，每秒 claim 一次、投递成功后标记 `published`、并按 30 天保留期清理。②**没有累积**：实测 `tool_outbox` 在租户上下文下共 **98 行，全部 `published`**（2026-09-23 00:25 → 2026-09-30 15:24），**`pending` / `failed` 各 0 行**。③**真正的残留是范围而非缺陷**：`RedisStreamConsumer`（at-least-once + PEL 恢复）在仓库里**没有订阅者**——下游没有消费者，而核心闭环走同步续跑、**不需要**它。**因此正确的记法是「不得宣称异步消费与恢复已通过」，而不是「有一个待修的消费缺陷」**；为此写一个没人需要的消费者，正是「为了修复而修复」。**v3.5 更正**：这一行把该类描述为「at-least-once + PEL 恢复」，**是引用了一份当时并未核对过的自述**——v3.5 打开代码后发现 `reclaim()` 不收 handler、只把别人认领未 ACK 的消息搬进自己的 pending 列表并返回条数，**既不投递也不 ACK**，即最需要恢复的那批消息上 at-least-once 事实上退化为 at-most-once。该代码缺陷**已在 v3.5 修复并锁定**（活体 Redis 回归 3 条 + 变异验证 1 次），详见「v3.5 的根因修复」U4。**「没有订阅者」这一结论不变**：它是集成决定，不是平台缺口；变的只是「那一半代码是可用的」这个隐含前提——它当时不成立 | `src/servicemind/reliability/worker.py`、`pyproject.toml:86`（`servicemind-outbox`）、`systemctl --user is-active servicemind-outbox`、`tool_outbox` 按 `status` 分组的实测计数、`reliability/outbox.py:24,30`（`STREAM_MAXLEN=100_000` / 保留 30 天，故 Redis 侧亦有界） |
 
 **D5 这条缺陷在修复之后是否又真实发生过——本文档累计观测了三次，三次都是「没有」，而这三次都不能被读成「限流问题已解决」**：v3.1 窗口（服务起始 `12:48:36Z` 之后的全部调用，含批次外 8 次单例重复运行）`succeeded` **558** 条、非 succeeded **1** 条，且那 1 条是 `MODEL_SCHEMA_INVALID`（`data` agent、`T7`、run `0740213d`），`MODEL_RATE_LIMITED` 为 **0**；v3.2 窗口（起点 `2026-09-23T14:19:00Z`）模型调用 **620** 条全部 `succeeded`；v3.3 窗口（`2026-09-30T15:09:54Z`–`15:24:11Z`）**370** 条全部 `succeeded`。**这几组数据只说明「这些窗口内没有再次限流」，不能证明「限流发生时重试一定成功」**——退避分档至今在真实流量中**未被触发过**。而**反面证据就在同一个部署上**：负载 gate 那四条失败运行里 `MODEL_RATE_LIMITED` 是**真实出现**的（见「八」），由并发档位触发。**「零限流」是窗口的性质，不是平台的性质**——把它写成后者，就是拿一段安静的时间冒充一个被证明的修复。
 
@@ -986,6 +1307,7 @@ running mutation experiment scripts/mutate_outbox_retention.py ...
 | 中文知识类问句被「是什么」劫持到数据快路径 | 词表修复 | `test_phase3_router_planner.py` 3 个锁定测试 |
 | `RequiredFact` 判定「措辞」而非「命题」 | `all_of` 概念组 + grader `states()` | `test_a_concept_group_fact_survives_word_order` 等 5 个测试 |
 | gate 报告的表格渲染吞掉退出码；gate 脚本改 `sys.path` 破坏结构契约 | 两处修复 | `test_enterprise_structure_contract_is_closed` |
+| **R6.（v3.6 关闭）单来源租户的提示被一条「来源之间公平」的护栏压成绝对上限**——`SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE = 4` 上方的注释写明它是「no single source may drown **every other source**」，却按 `hit.source` 无条件生效；而 `source` 是**采集器**的属性（租户只有一个连接器时全部文档同名），护栏于是成了整份提示的上限。实测：TechQA 全量跑四个臂的装入上界**一律是 4**、三列召回 `R@5 = R@10 = R@20` 一位不差，而 8000 token 预算在 p90 父块那一侧**还剩 1996** | 判据抽成 `rag/service.py::source_ceiling_applies(distinct_sources) -> bool`（`> 1`），选择循环按**候选池实际命名的来源数**求值后才决定是否生效。**设置值仍是 4、`configuration_change_approved` 仍是 false、`retrieval_quality_improved_by_current_measurement_work` 仍是 false**——改的是适用条件，不是值 | 配对测试两条：`test_phase4_rag.py::test_the_per_source_ceiling_does_not_cap_a_single_source_tenant` 与 `::test_context_packer_enforces_per_source_ceiling_between_competing_sources`（同一组输入，只差来源数），另有 `::test_context_packer_enforces_per_document_ceiling` 证明旁边那条反拥挤上限没被顺手废掉。**变异验证**：`mutate_phase4_source_ceiling.py` **7/7 被杀**、`mutate_phase4_source_ceiling_effect.py` **11/11**、`mutate_recall_cutoffs.py` **14/14**、`mutate_phase4_packing_ceiling.py` **22/22**。**实测关闭**：修复前那一轮逐字保存（`phase4_techqa_production_before_source_ceiling_fix.json`，当前代码造不出它），修复后同语料同模型重跑，装入上界 4 → **16 / 19 / 17 / 16**，R@10 由 0.6643 / 0.5607 / 0.6179 / 0.6536 变为 0.7000 / 0.6071 / 0.6786 / 0.7214。**明确不声称**：这不是检索质量提升；提示变长对 Reviewer 判定的影响**未评估**（P7.6.6） |
 
 ## 未评估
 
@@ -1079,9 +1401,662 @@ running mutation experiment scripts/mutate_outbox_retention.py ...
 2. 「案例通过即链路健康」——BLOCKED 与 FAIL 必须分开记录；v3.2 的 **28** 条 PASS 中，`frontend`/`mcp`/`outbox`/`index-lifecycle` 四行只由探针记分，且各只有 1 条断言。**PASS 28 与「链路健康」之间的距离，并没有因为本轮从 26 涨到 28 而缩短。**
 3. 「离线重放通过即当前代码通过」——见「术语纪律」第 2 条。
 
+## RAG 度量缺口：订正六条事实，落地第 0 / 1 / 3 / 2 步
+
+用户于 2026-10-01 提交了一份自查，把「RAG 效果测不出来」拆成两半：**检索那半**补数据加一点代码就能测，**可答率那半**补多少数据都测不了——因为它压根不是在测检索。这个拆分成立。但它依赖若干代码事实，而按本文件第八条口径，这些事实**不得凭记忆复述**，下面每一条都本轮重核过，并附落点。
+
+### 一、订正六条（重核后）
+
+| # | 此前的说法 | 重核结果与证据 |
+|---|---|---|
+| 1 | 代理用「生产 420-token 天花板」分块 | **420 是代理自己的近似，不是生产值。** 生产是 `child_min_tokens=120 / child_target_tokens=320 / child_max_tokens=480`，`child_overlap_tokens=48`（`src/servicemind/rag/chunking.py:33,67-73`）。该错误此前被写进代理自己的 `limitations` 字符串（`scripts/evaluate_phase4_proxy_release.py:1249`）与 `_passages` 的 docstring（`:382`），并**被提交进** `evaluation/reports/phase4_proxy_release_latest.{json,md}`。本轮已改正这两处代码与那份已提交报告 |
+| 2 | 生产父块扩展发生在 OpenSearch 侧 | **发生在 PostgreSQL RLS。** `rag/service.py:412-413` 调 `repository.authorized_parents`（`rag/repository.py:371`）。故「让代理同构于生产」在这里不是加一个 OpenSearch 参数，而是**换一层数据源** |
+| 3 | 「生产形态臂」复现了生产检索 | **只复现了后一半。** 生产融合是两段：集群侧 RRF（`rank_constant: 60`，`rag/opensearch.py:284`），再在 Python 侧 `0.85 × rerank + 0.15 × normalized_retrieval`（`rag/service.py:438-445`，默认值 `core/settings.py:253`）。代理复现的是第二段与池深（`dense_k = bm25_k = candidate_k = 100`，`core/settings.py:246-248`），**没有**集群侧那一段。全仓 `ef_search` 零命中，HNSW 为 `lucene/cosinesimil`（`rag/opensearch.py:232-234`） |
+| 4 | 第 3 步是「让代理同构于生产」 | **脚本已经能驱动真栈。** `scripts/evaluate_phase4_retrieval.py:89-96` 已接受 `--gold / --corpus / --top-k` 并构建真 `OpenSearchKnowledgeIndex` + `EnterpriseRAG`。第 3 步因此是**停止用代理代表生产**，而不是改造代理 |
+| 5 | 两边的 Recall@k 是同一个量 | **不是。** 代理在**排序**上切 top-k，没有预算；生产返回的是**装好的提示上下文**——`EnterpriseRAG.retrieve` 同时受 `final_k=24`、`SERVICEMIND_RAG_CONTEXT_TOKENS=8000`、每文档 2 父块、每来源 4 父块四道限制（`rag/service.py:451-492`，`core/settings.py:226,230-231`）。于是生产的 R@10 与 R@20 **可能压根是同一个测量**，而「与代理的差」里混进了「数的不是同一件东西」。**本轮实测证实并比它说的更宽（连 R@5 也一样，见 4.1 节），根因已定位并修复（4.1.1），修复后这一恒等式在本次运行上不再成立** |
+
+| 6 | 那 0.7643 的 R@10 说明检索差这么多 | **不全是，而且其中一部分不可能靠改检索补上。** 候选池深 100（= `SERVICEMIND_RAG_CANDIDATE_K`）时金标在池内的比例是 **244/280 = 0.8714**，在这 **400 条转储**上这是排名再准也跨不过的上界，`recall_at_10 ≥ 0.90` 在它之上。而池外那 36 条里，**31 条（86.11%）**的首条命中标题比被标注的文档更贴近问句，28 篇金标文档在 280 条查询里**一次都没被检索到过**。证据：`evaluation/reports/phase4_label_diagnostic_latest.json`，方法与边界见第五节。**这条上界不外推**：同一管道在一份与这 400 条**完全不相交**的预注册留出集上，depth-100 天花板是 **0.9182**，**高于** 0.90——见 5.5 |
+
+订正 1 有一处**故意不改**：嵌入缓存文件名 `techqa_bge_m3_{revision}_passages420.npy`（`evaluate_phase4_proxy_release.py:449-452`）。它是缓存键，不是断言；改名等于让已落盘的 921M 语料重算一遍嵌入。名字留在那里是历史，说明写在代码里。
+
+### 二、第 1 步（已完成）：金标 schema 扩展
+
+`src/servicemind/evaluation/gold.py` 此前只能用 `relevant: list[str]` 描述一次判断。两个后果：判断无法记录它是在哪个租户／组／版本下作出的，于是 §4.1 那条「可见证据里错误租户／ACL／过期版本条数为 0」的门禁**没有可计算的输入**；集合也无法记录是否有人签核，于是「本门禁在此不适用」只能由代码断言。
+
+本轮为纯增量扩展（既有字段一律保留，`test_phase4_evaluation.py` 未改语义即可通过）：
+
+- 新增 `QueryCategory`（§3.2 四分层）、`RefusalReason`（证据不足／版本冲突／必须拒绝访问）、`Split`（tune/hold-out）、`LabelTier`；
+- 新增 `AnnotationProvenance`（标注者数、Cohen's kappa、双标比例，`meets_tenant_protocol` 要求 `DOUBLE_ANNOTATOR` + ≥2 人 + kappa ≥ 0.80）；
+- 新增 `JudgedItem`（`parent_chunk_id` + 0–4 分 + 租户／组／实体／版本／权威条件，`applies_to` 空组一律按「无权限」解释，与 `KnowledgeACL.allows` 同读法）、`Nugget` / `NuggetSupport`；
+- `GoldQuery` 增 `category / refusal_reason / split / graded / nuggets / asker_*`，并加两条校验：**不可答必须说明是哪一类**、**二进制视图必须与分级视图一致**；
+- 新增模块级 `ReleaseSetShape` + `release_gate_blockers(shape)`，以及 `ANSWERING_GRADE = 2`。
+
+**回填**：已提交的 `evaluation/gold/gold_set.v1.json` 有 3 条不可答查询没有 `refusal_reason`，新的必填校验使两个测试变红。处理方式是**回填而不是放宽校验**——secrets 与 personal 两条记为 `must_refuse_access`，future-prediction 记为 `insufficient_evidence`；两个测试里的内联构造同步补字段。子类型是 §3.2 里真实的区分，把它设为可选等于允许「我们不知道该不该拒」被记录成合法数据。
+
+**锁定测试**：`tests/servicemind/test_phase4_release_set_schema.py`（8 条）。其中一条直接断言**已提交的 Phase 4 金标不是 release set**——这正是先前由硬编码 `applicable: false` 承担的性质，现在由数据承担。
+
+### 三、第 0 步（已完成）：门禁适用性改由数据算出
+
+**此前**：`evaluate_phase4_proxy_release.py:_reference_gates` 把 `applicable: False`、`passed: None` 写进六个门的字面量，`audit_rag_quality_state.py` 则断言「六个门必须全部 `applicable is False`」。两处合起来构成一个**两个方向都不可证伪**的结论：它对一个够格的集合与一个不够格的集合给出同一句话，且没有任何数据能区分二者——只有改代码能。
+
+**现在**：`applicable` 是 `release_gate_blockers` 对**记录下来的集合**求值的结果（`ReleaseSetShape`，默认值全部是「缺失」），`blockers` 逐门记录，`reason` 由 blocker 拼成；够格时 `passed` 才做真实比较。`label_tier` 这个字符串字面量（`:175` 与 `:1139` 各一处，此前没有任何消费方）改为经 `label_tier_from_recorded` 单点翻译，未知 tier 直接抛错——默认成 `SILVER` 会把「没见过」渲染成「已判定」。
+
+**audit 的护栏同时改写**：不再是「必须全为 False」，而是**从同一份 selection 重新求值**再逐门比对，两个方向都管——门擅自变成 applicable 会被拒（`while the selection blocks`），门给出 selection 不支持的 blocker 也会被拒（`the selection supports`）。
+
+**已提交报告的迁移**：`phase4_proxy_release_latest.json` 缺新字段，audit 会拒绝它（这是正确行为）。重跑完整代理流程需要 GPU 且 selection 由固定 seed 决定、门禁数值不会变，故做了一次**字段迁移**：调用 harness 自己的 `_reference_gates`，输入取该报告自己记录的 `production` / `held_out_abstention`，逐门**逐字段断言**——`actual / operator / threshold / gate_definition / required_input` 有任何一个变动迁移即中止。实际结果：**只有 `blockers` 新增、`reason` 改写，没有一处测量值移动**。`limitations` 只改了订正 1 涉及的那一条（7 条中第 5 条）。
+
+**变异验证**（按本阶段惯例）：把 `release_gate_blockers` 改成恒返回 `[]` → 8 failed；把 `_reference_gates` 的 `applicable` 改回字面量 `False` → 1 failed。两次变异后源文件均**逐字节还原**（sha256 比对）。
+
+**这一步的边界**，如实记下：audit 读取的 selection 是一份 id + 文件名的清单，它**无法表达** §3.2 的任何分层，所以 `ReleaseSetShape` 由它构造出来恒有 7 个 blocker。该护栏因此证明的是「这份代理报告确实不该适用 §4.1，原因如下且与数据一致」，**不是**「这个门能开」。「门能开」这一方向由 `test_the_derivation_is_not_a_constant` 与 `test_reference_gates_decide_once_a_set_qualifies` 覆盖——它们喂入一个够格的 shape／空 blocker 列表，断言门确实做出裁定。
+
+### 四、第 3 步（已完成）：停止用代理代表生产——并在此过程中定位并修复了一处根因
+
+**这一步不是改造代理，是换一条执行路径。** 新增 `scripts/evaluate_phase4_retrieval_techqa.py`：同一份语料（`data/phase4/raw/eval/techqa-rag-eval`，28481 篇）、同一份 selection（`phase4_proxy_release_v1.2.json`）、同一份标签、同一对模型 revision（嵌入 `5617a9f6…` / 重排 `953dc6f6…`，由本机 TEI 供给，与代理报告 pin 的是同一对），**只有管道是另一条**：真 `OpenSearchKnowledgeIndex` + 真 `EnterpriseRAG`。模型不动，动的就是管道，于是两者的差就是管道的差。
+
+管道参数逐项写进报告，不留白：
+
+| 项 | 生产路径的值 | 与代理的差别 |
+|---|---|---|
+| 子块 | 480 max / 320 target / 120 min，48 overlap | 代理是 420 单档（订正 1）|
+| 融合 | **两段**：集群侧 RRF（`rank_constant: 60`）→ Python `0.85×rerank + 0.15×retrieval` | 代理只有第二段（订正 3）|
+| 父块展开 | `repository.authorized_parents` 按 id 取 | 代理自行拼装（订正 2）|
+
+四个可比臂由 `COMPARABLE_ARMS` 固定：`bm25→bm25`、`dense→dense`、`hybrid→hybrid_rrf`、`hybrid_rerank→production`。代理的另两臂没有对应物，理由写在常量旁：`hybrid_rrf` 是没有重排的 RRF（生产总是重排），`hybrid_bge_rerank_depth100` 是**代理对生产池深的近似**——而这次跑的正是那个近似所近似的东西。
+
+**它明确不测什么**（写在模块 docstring 里，不是只塞进 `limitations`）：可答率与弃答率。生产的弃答走 Reviewer 的语义 ABSTAIN，本脚本从不调用那个模型；它能报的只是「不可答查询是否**返回了任何上下文**」，那是检索事实，不是答案。报告里的 `abstention_rate` 因此一律带同一句限制。
+
+**两条路径的 Recall@k 数的不是同一件东西（订正 5：结构上最重要的一条）**。代理在**排序**上切 top-k：它自己排 passages，无预算、无上限。生产返回的**不是排序，是装好的提示上下文**——`EnterpriseRAG.retrieve` 在 `final_k`、`SERVICEMIND_RAG_CONTEXT_TOKENS`、每文档父块数、每来源父块数四道限制下挑完，才把 `items` 交出来，而 harness 的 `result_keys` 读的正是这串 `items`（`harness.py:60-70`）。所以生产侧的 R@10 与 R@20 **可能没有任何区别**，它们都在数「装进 8000 token 的几个文档里有没有金标」。这不会让比较失效——比的仍然是两条路径——但它意味着**报告里那一列 `delta` 不能单独读成「检索变差了」**。**这一条已在 4.1 节被实测证实（修复前四个臂的三列召回一位不差），成因与修复见 4.1.1–4.1.3；4.1.3 同时给出这条恒等式现在由哪个字段算出来。**
+
+为此脚本把上限**变成观测**而不是断言：报告新增 `packing` 段与「What the recall figures are actually counting」表，逐臂给出每条可答查询**实际装进提示的文档数**（mean/min/max）。判据很简单：装在截止位以下的臂，它的 Recall@k 报的是预算，不是检索器。
+
+**两条路径的分块器数的是不同的单位**（本轮核对源码时发现，已写进脚本的 `limitations`）。代理用 **bge-m3 自己的 tokenizer** 切 420（`evaluate_phase4_proxy_release.py:367,381-396` 的 `AutoTokenizer`），生产用 `ConservativeOfflineEncoding`——只要 tiktoken 词表没缓存就用它，而**本机就没有缓存**（`rag/chunking.py:98-100`、`foundation/tokenization.py:27-34`）。所以「480」与「420」不是同一个量纲。这不使比较失效（比的仍然是生产路径与代理路径，报告里也如实记了 `child_tokenizer` 实际取到哪一个），但它意味着**这个差**不能拆成「RRF 贡献多少、分块器贡献多少」。
+
+**§4.1 的零计数在这一条路径上也接了输入**：`coordinates` 由 loader 建好的 `KnowledgeDocument` 生成（不是从管道回读——回读等于让过滤器给自己打分），报告带 `visible_evidence_violations.by_baseline` 与 `corpus_strata`。当前语料是**单租户、零组限制、零废止、零有效期终点**，所以这里的 0 是**语料的性质**，报告自己写着这句话；真正有分层的是租户域夹具（见下节）。
+
+**一次截断跑留下的假信号，记在这里**：验证脚本时跑过 `--limit 60`（先建 60 篇的索引）。四个臂的 Recall@5/10/20 与 MRR 全部 **0.000**。这不是「生产比代理差 0.68」，而是**索引里只有 60 篇，280 条可答查询的相关文档几乎都不在这 60 篇里**。报告自己带 `truncated_to: 60` 字段，所以事后可辨；但只看 `delta` 那一列的人会把它读成「生产管道灾难性地差」。**这正是本文件反复记的那一类错：数字是真的，读法是错的。**
+
+#### 4.1 结果：订正 5 被实测证实 → 根因定位 → 修复 → 前后对比
+
+全量实跑跑了**两轮，两轮之间只差一处改动**：28481 篇语料、400 查询 × 4 臂、同一对模型 revision（嵌入 `5617a9f6…` / 重排 `953dc6f6…`）、同一份 selection 与标签。**修复前**那一轮索引耗时 3349.6s，**修复后**那一轮 3217.1s，两轮均退出 0。修复前那一轮被**逐字保存**在 `evaluation/reports/phase4_techqa_production_before_source_ceiling_fix.json`——当前代码**造不出**它（判据已改），所以它只能靠保存而不是靠重跑；效应报告把它与当前报告一起登记为输入，两者都带 sha256 与 `"tracked": false`。
+
+这一节的数字来自三份机器生成的报告：`phase4_techqa_production_latest.{json,md}`（修复后那一轮）、`phase4_source_ceiling_effect_latest.{json,md}`（两轮的逐臂对照，带 `--check`）、`phase4_packing_ceiling_latest.{json,md}`（token 侧的重建，带 `--check`）。
+
+**修复前那一轮的四个臂，三列召回完全相同**：
+
+| 臂 | R@5 | R@10 | R@20 | MRR@10 | nDCG@10 | 每查询装入文档数（均值 / 最小 / 最大） |
+|---|---:|---:|---:|---:|---:|---|
+| dense | 0.6643 | **0.6643** | **0.6643** | 0.5622 | 0.5879 | 3.76 / 2 / 4 |
+| bm25 | 0.5607 | **0.5607** | **0.5607** | 0.4845 | 0.5038 | 3.94 / 3 / 4 |
+| hybrid | 0.6143 | **0.6143** | **0.6143** | 0.5378 | 0.5573 | 3.90 / 2 / 4 |
+| hybrid_rerank | 0.6536 | **0.6536** | **0.6536** | 0.5679 | 0.5895 | 3.86 / 2 / 4 |
+
+**这不是巧合，是恒等式。** 装进提示的文档数**均值 3.76–3.94、上界恰好 4**，**低于 5**。所以 `recall_at_5`、`recall_at_10`、`recall_at_20` 在这条路径上量的是**同一件事**：「金标在不在那几个装进提示的文档里」。订正 5 只说了「R@10 与 R@20 **可能**没有区别」；实测是**R@5 也没有区别**，三列一位不差。
+
+**那个 4 是哪来的：不是 token 预算，是「每来源父块数」。** `EnterpriseRAG.retrieve` 的选择循环按 `hit.source` 计数（`rag/service.py:455,458,473-477`），而 `source` 是 `KnowledgeProvenance.source`——**文档的来源，不是文档本身**。本次语料的 28481 篇**全部**声明同一个来源 `techqa-support-corpus`（`evaluate_phase4_retrieval_techqa.py:208`），于是 `SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE = 4`（`core/settings.py:231`）**成了整个提示的上限**。它上方的注释块写着它**本来**的用途——「A single document must not crowd the context, and no single source may drown every other source」——一条**多样性**护栏：当所有文档同一个 `source` 时，它约束的不再是「来源之间」，而是「全部」。一个 8000 token 的预算配一个 4 父块的全语料上限，**先撞上的是后者**。
+
+**「先撞上的是后者」是量出来的，不是推出来的。** 用生产 chunker 重建 400 篇文档的父块并统计 token（`scripts/diagnose_phase4_packing_ceiling.py` → `evaluation/reports/phase4_packing_ceiling_latest.{json,md}`，带 `--check`）：
+
+| 父块 token | p50 | p90 | p99 | max |
+|---|---:|---:|---:|---:|
+| 值 | 1107 | 1501 | 1778 | 3114 |
+
+预算 8000。四个 **p50** 父块 = 4428，**还剩 3572 token**——比一个典型父块（1107）大得多；四个 **p90** 父块 = 6004，仍剩 **1996**。也就是说：**在第 90 百分位这一侧，预算本来就装得下第五篇**，而四个臂的实测上界一律是 4。判定条件写死在脚本里（`who_stops_the_pack`）：预算够装一篇典型父块 **且** 装入数正好触到上限 → 归因「每来源上限」；预算不够 → 归因「token 预算」；两者都不是 → 归因「候选列表本身用完了」。本报告的结果是**第一种**，`final_k = 24` 也还远没到。
+
+这个脚本的 22 条变异全部被检出（`scripts/mutate_phase4_packing_ceiling.py`；含「headroom 用固定 4 而不是实测上界」「预算够不够用 `> 0` 判」「触到上限用 `>` 判」等）。`_packing` 的 docstring 与 `arms_at_the_per_source_ceiling`／`ceiling_note` 两个字段是同一结论的另一个出口，机器可读形式则在 `rag_quality_status_latest.json` 的 `packing_ceiling` 一节。
+
+**与代理的差随 k 单调放大，这是「被切掉」的指纹，不是「变差了」的指纹**（下表算的是**修复前**那一轮的生产侧——修复后生产那一列不再停在 4，同一张表的 ΔR@10 会变小）：
+
+| 臂对 | ΔR@5 | ΔR@10 | ΔR@20 |
+|---|---:|---:|---:|
+| bm25 ↔ bm25 | **+0.0321** | −0.0036 | −0.0893 |
+| dense ↔ dense | −0.0500 | −0.0893 | −0.1036 |
+| hybrid ↔ hybrid_rrf | −0.0321 | −0.1214 | −0.1750 |
+| hybrid_rerank ↔ production | −0.0321 | −0.1107 | −0.1535 |
+
+代理侧的 R@10→R@20 还在涨（0.7357→0.7893），生产侧的三个数**是同一个数**。**差距不是被排名吃掉的，是被截止位吃掉的**：k 一旦超过 4，生产这一列就没有第六、第七个位置可用来记一次命中。所以**这一列 `delta` 不能读成「生产管道比代理差 0.15」**——它在 0.15 里混进了「数的不是同一件东西」。
+
+**这条比较仍然成立，而且仍然有用**：它比的是两条路径，模型 revision 两侧 pin 的是同一对（`5617a9f6…`／`953dc6f6…`），语料、查询、标签全同。它证明的是**生产路径不会比代理的排序差**（R@5 上 dense 差 0.05、其余差 0.03，而这 0.03 是在「4 个位置」里量的，代理量的是「5 个」），**不能**证明的是「生产的检索质量是 0.65」。
+
+#### 4.1.1 根因：一条**多样性**护栏在单来源语料上变成了整份提示的上限——改的是判据，不是值
+
+上面查出的不是「配置值太大」，而是**判据的语义**。`SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE` 上方的注释写明了它的用途——「A single document must not crowd the context, and no single source may drown **every other source**」：一条**来源之间**的公平护栏。它却对每一个 `hit.source` 无条件生效，而 `source` 是 `KnowledgeProvenance.source`，属于**采集器**而不是文档（`rag/sources.py` 的每个 ingester 产出的东西）：租户只有一个连接器时，全部文档同名，这条护栏于是变成了「整份提示最多 4 个父块」。**把一个阈值调大不是修复**——判据仍然是错的，换一个只有单一采集器的租户就会再次触发，而且触发时不会有任何提示。
+
+**修法**：判据抽成 `src/servicemind/rag/service.py::source_ceiling_applies(distinct_sources) -> bool`（`return distinct_sources > 1`），选择循环先对**候选池实际命名的来源数**求值，再决定这条护栏是否生效（`rag/service.py:473-495`）。
+
+**设置值一个字没动**：`SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE` 仍是 **4**，`production_change.configuration_change_approved` 仍是 **false**，`retrieval_quality_improved_by_current_measurement_work` 仍是 **false**。改的是这条护栏**什么时候适用**：有多个来源竞争时它照旧在 4 处封顶，只有单一来源时它不再生效。
+
+**两条测试是同一组输入上的配对**：`test_phase4_rag.py::test_context_packer_enforces_per_source_ceiling_between_competing_sources` 与 `::test_the_per_source_ceiling_does_not_cap_a_single_source_tenant`——**同样的上限、同样的分数，只有来源数不同**，所以任何一个把这两种情形压成一种行为的改动，都会让其中**恰好一条**变红。
+
+**没有顺手废掉它旁边那条**：每文档 2 父块的**反拥挤**上限是同一段注释的前半句，`::test_context_packer_enforces_per_document_ceiling` 仍然锁着它，变异脚本里另有两条专门回退它（M06 / M07）。
+
+**锁定与举证**：`scripts/mutate_phase4_source_ceiling.py` **7 条变异全部被杀**（无条件生效 / 判据放行 0 个来源 / 判据取反 / 永不生效 / 池子按文档数而不是来源数计 / 每文档上限回退两次）；`scripts/mutate_phase4_source_ceiling_effect.py` **11 条**（下面 4.1.2 那张对照表自身的每一条判据，含「两轮可比性」检查的两半）；`scripts/mutate_recall_cutoffs.py` **14 条**（4.1.3 的推导）；`scripts/mutate_phase4_packing_ceiling.py` **22 条**。
+
+#### 4.1.2 修复前后：唯一差别是那一处改动，而**召回列不可跨列对读**
+
+| 臂 | 装入文档数（前，均值 / 最大） | 装入文档数（后，均值 / 最大） | R@5 前 → 后 | R@10 前 → 后 |
+| --- | --- | --- | --- | --- |
+| bm25 | 3.943 / **4** | 8.104 / **19** | 0.5607 → 0.5786 | 0.5607 → **0.6071** |
+| dense | 3.761 / **4** | 7.439 / **16** | 0.6643 → 0.6714 | 0.6643 → **0.7000** |
+| hybrid | 3.907 / **4** | 7.857 / **17** | 0.6179 → 0.6321 | 0.6179 → **0.6786** |
+| hybrid_rerank | 3.875 / **4** | 7.496 / **16** | 0.6536 → 0.6571 | 0.6536 → **0.7214** |
+
+数字来自 `evaluation/reports/phase4_source_ceiling_effect_latest.md`（机器生成）。**修复前四个臂的装入上界一律是 4；修复后这批包的深度由 8000 token 的预算决定**——中位父块 1107 token、p90 1501，上面「四个 p90 父块只用 6004 / 8000」的那 1996 token 余量，正是当时被这条护栏拒绝掉的空间。**这句只在评测的尺子下成立**：本节的评测脚本给的是 `final_k = max(top_ks) + 4 = 24`，所以预算真的成了唯一的闸门；生产首轮的交付视图是 `final_k = 8`（`agents/knowledge.py:90`），那一轮里**先撞上的仍然是 `final_k`，不是预算**。表中 7.4–8.1 的均值与 16–19 的上界都是 24 这份尺子的读数，**不能读成生产首轮装了这么多**。
+
+**这张表的 Δ 不能读成「检索变好了」。** 修复前 `R@5 = R@10 = R@20`，因为打包从不超过 4；修复后 `R@10` 与 `R@20` 才第一次成为两个可能的数。报告把这句话**算出来**而不是写死：`headline.before_cutoffs_are_one_measurement = True`、`headline.after_cutoffs_are_one_measurement = False`，逐臂同样两个字段。也就是说，**这条改动同时修好了「提示太短」与「一个数被当成三个数用」两件事**——而后者正是订正 5 当初只说「可能」的那一条。
+
+#### 4.1.3 阈值重新推导：召回条是**排序**上的条，只有装入深度够得到截止位时才量得到
+
+`recall_at_k` 数的是金标在**前 `k` 项**里的比例，而在这条路径上「前 k 项」就是**装进提示的那几篇**（`harness.py:60-70` 读的是 `EnterpriseRAG.retrieve` 交出的 `items`）。于是**一个最多装 `n` 篇的包，在所有 `k ≥ n` 的截止位上必然报同一个数**。这条恒等式现在由 `scripts/audit_rag_quality_state.py::check_the_recall_cutoffs_match_the_pack()` 逐臂**算出来**并写进质量状态报告，机器可读字段三个：
+
+- `cutoffs_the_pack_cannot_tell_apart` —— 该臂装不满、因而在此处量不出差别的截止位；
+- `metrics_the_pack_is_too_short_for` —— 该臂的 `max` 够不到、因而**根本没被量到**的 §4.1 指标；
+- `arms_where_the_cutoffs_are_one_measurement` 与 `thresholds_no_arm_can_distinguish` —— 同一结论的全局出口。
+
+**修复后这一节的读数**（`rag_quality_status_latest.md` 的 `## The recall cutoffs the production path can be measured at`）：四个臂的装入上界为 **16 / 19 / 17 / 16**、均值为 7.4–8.1，于是**只有 `recall_at_20` 在这一次运行上仍然量不出差别**（20 > 19），§4.1 的四个指标**没有一个**落进「装不够」的名单。**修复前这一幕恰好相反**：上界一律是 4，`cutoffs_the_pack_cannot_tell_apart` 是 5 / 10 / 20 **三个全部**，`recall_at_5`、`recall_at_10`、`recall_at_20` 一条都量不出来。**所以订正 5 的字面（「生产的 R@10 与 R@20 可能压根是同一个测量」）在修复前是对的，而且比它说的更宽——实测连 R@5 也一样**；修复后它不再对**这一次运行**成立。但要紧的是它是**被算出来的性质**，不是被保证的性质：任何一次包变短（预算下调、候选不足）都会让它重新成立，而 `--check` 会当场报出来。
+
+**订正 5 的骨架仍然成立，必须继续写在这里**：
+
+1. **§4.1 的召回条是排序上的条。** 生产返回的从来不是排序，而是**装好的提示上下文**——`final_k`、8000 token、每文档 2 父块、每来源 4 父块（多条来源时）四道限制一起决定交付多少。
+2. **代理的 top-k 是排序切分，生产的 top-k 是装载切分。** 两者的 Δ 里永远混着「数的不是同一件东西」这份成分；正是它让 4.1.2 的 Δ 不能被读成质量提升。
+3. **交付深度由另一段代码决定**：`agents/knowledge.py:90` 的 `final_k = 10 if retrieval_round else 8`。本节的评测脚本给的尺子是 `final_k = max(top_ks) + 4 = 24`，而**生产首轮的交付视图只有 8**——`recall_at_10` 在**评测的尺子**上可读，不等于在**生产的交付视图**上也可读。这两个数必须分开引用，引用时必须说明是哪一个。
+4. **0.8714 的天花板是另一回事，仍然挡着**（见第五节）：depth-100 候选池（= `SERVICEMIND_RAG_CANDIDATE_K`）含金标 244/280 = 0.8714，低于 `recall_at_10 ≥ 0.90`。**修复装载深度一个字都没有动到它**——天花板在**候选生成与标签**那一侧，不在「从池子里挑几篇进提示」这一侧；它需要的是人工签核的 qrels（第 4 / 5 步），不是再改一次检索。**这个 0.8714 是这 400 条转储的天花板，不是管道的天花板**：同一管道在与它不相交的预注册留出集上天花板是 0.9182，高于 0.90（5.5）。质量状态报告因此把 `metrics_no_arm_reaches`（尺子够不够）与 `thresholds_above_the_ceiling`（天花板高不高）**分成两个字段**，谁也不许遮住谁。
+
+#### 4.1.4 这道口子开到哪里为止
+
+- **开了的**：单来源租户的提示不再被一条**为来源之间公平而设**的护栏压到 4 个父块；改的是判据的适用条件，**配置值未动，也没有批准任何配置变更**。
+- **没开的，也明说不开的**：**这不构成「检索质量提升」的结论。** 报告里 `retrieval_quality_improved_by_current_measurement_work` 仍是 **false**：装得更长**不等于**排得更准，修复后最好的臂 `hybrid_rerank` 的 R@10 是 0.7214，仍低于 §4.1 的 0.90；而 0.8714 的天花板依旧横在下一节里。
+- **本轮没测、也不许由本节代答的**：提示变长之后 **Reviewer 的判定会不会变差**。那是 P7.6.6 的活（真实模型端到端），检索脚本回答不了；本节只报告**进入提示的内容变了**，不报告**结论变好了**。
+- **v3.6 的这一处改动落在 28 条验收案例的检索路径上**，因此「v3.6 没有重跑那 28 条案例」必须在版本沿革里写明——这一节不构成任何新的通过声明。
+
+**截断跑的假信号**与**真实的「被切掉」**长得像，这是本节的另一个要点：`--limit 60` 那次四个臂全是 0.000（索引里没有金标），而修复前那一轮是四个臂的 R@10 与 R@20 **完全相等**（索引里有金标，但只有 4 个位置）。两次都有人会读成「生产很差」；正确的读法两次都不同——第一次是**数据没进去**，第二次是**数对了但数的不是同一件东西**。
+
+### 五、根因诊断：0.8714 的天花板，以及天花板下面的 36 条
+
+**这一步回答的是「代理那 0.7643 的 R@10 是怎么来的」，而不是「怎么把它调高」。** 它不动任何管道，只读代理跑出来的候选转储（`evaluate_phase4_proxy_release.py:1098-1134` 写下的 depth-100 候选 id 列表 + 分数），换一个脚本问三个问题。
+
+脚本：`scripts/diagnose_phase4_label_diagnostic.py`，输出 `evaluation/reports/phase4_label_diagnostic_latest.{json,md}`，带 `--check`（与仓库其余机器生成报告同一惯例）。它把两份 **gitignore 掉**的输入（`data/phase4/...` 下的语料与转储）的 sha256 与 `"tracked": false` 一起记进报告——否则一份可复现的报告会看起来像能从仓库里重建，而实际上不能。输入缺失时**抛 `FileNotFoundError`**，不静默跳过。
+
+#### 5.1 问题一：金标到底在不在候选池里（`candidate_funnel`）
+
+候选生成之后的一切（RRF、cross-encoder、`0.85/0.15` 混合）都只是在**重排池子里已有的东西**。所以「可答查询中金标出现在 depth-100 池里的比例」是**这个标签集上任何 Recall@k 的上界**，与排序器好坏无关：
+
+| 臂 | 池深 | 含金标 | 含金标率 | 金标进 top-5 | 中位名次 |
+|---|---:|---:|---:|---:|---:|
+| bm25 | 100 | 221/280 | 0.7893 | 0.5286 | 2 |
+| dense | 100 | 239/280 | 0.8536 | 0.7143 | 1 |
+| hybrid | 30 | 222/280 | 0.7929 | 0.6464 | 1 |
+| hybrid_reranked | 30 | 222/280 | 0.7929 | 0.6786 | 1 |
+| **production_blend** | **100** | **244/280** | **0.8714** | **0.6857** | **1** |
+
+`depth` 取 100 是因为那**就是** `SERVICEMIND_RAG_CANDIDATE_K`（`core/settings.py:246-248`），所以这张表是**生产漏斗本身**的头条事实，不是代理的产物。
+
+把它对准 §4.1 的阈值，结论只有一句：**`recall_at_10 ≥ 0.90` 高于 0.8714，因此在**这份**标签集上不可能靠把排序调好来达到**——缺的 0.0357 不在排序器手里，在候选生成或者标签里。这条判断由 `scripts/audit_rag_quality_state.py` 的 `check_the_thresholds_can_be_reached()` **从两个数算出来**（阈值表 vs 报告里的 `contains_gold_rate`），不是写在文档里的断言；质量状态报告因此多出一节 `## What the external-silver figures are counting`，并在 `label_diagnostic.thresholds_above_the_ceiling` 里带机器可读的同一结论。
+
+`recall_at_5 ≥ 0.85` **低于**天花板（现测 0.6857），所以 R@5 是一个**真的排序问题**——这条不能被拿去当借口。两个阈值的性质不同，必须分开读，这正是把它们一次算出来而不是逐条手写的原因。
+
+#### 5.2 问题二：天花板漏掉的那 36 条，是不是标签的错（`loss_split`）
+
+按「金标在不在池里」把 280 条切开，各组内比较**问题问句**与**金标标题**、以及与**第一条 dense 命中标题**的词面重合（内容词 Jaccard）：
+
+| 组 | 查询 | 问句 vs 金标标题 | 问句 vs 首条命中标题 | 首条命中更近 |
+|---|---:|---:|---:|---:|
+| 金标在池内 | 244 | 0.2372 | 0.2404 | 49/244 = **0.2008** |
+| 金标在池外 | 36 | 0.0636 | 0.1325 | 31/36 = **0.8611** |
+
+两半的形状完全不同：
+
+- **池内那一半**：标签与首条命中在词面上**等价**（0.2372 vs 0.2404，差 −0.0031）。一个能用的检索器看起来就是这样——首条通常就是被标注的那条，或者与它同样切题。这半边是**检索在正常工作**的证据。
+- **池外那一半**：被标为正确的文档平均只与问句重合 **0.0636**，而实际排第一的那条重合 **0.1325**——是它的两倍。**86.11%** 的查询里，检索器给出的首条比标签说的那条更贴近问句。
+
+进一步：这 36 条**同时**也不在 bm25 的池子里（36/36），并且有 **28 篇**金标文档在**整个 280 条查询里一次都没被检索到过**。所以池外这一组的构成不是「排序排错了」，而是**这批标签里有一批文档，语料自身的标题就在反驳它**。
+
+规则选取的实例（每条按「首条命中的标题比金标更贴近问句」的差值降序取 top-10，全文见报告 `examples`）：
+
+| 查询 | 问句 | 标签说正确的文档 | 实际排第一的文档 |
+|---|---|---|---|
+| `DEV_Q149` | SSH 在 7.5.2 之后连不上，同一配置在 7.2 可以 | 7.5 文档的 late breaking updates | 「打上 5733SC1 的 PTF 后，SSH/SFTP/SCP 连接可能因 cipher 报错失败」 |
+| `TRAIN_Q016` | DASH 的 systemOut 里 "Too many open files" 怎么办 | WAS 的 ulimit 设置指南 | 「DASH 服务几小时后自动停止：Too many open files」 |
+| `TRAIN_Q283` | Alcatel 5620 SAM 探针最新是哪版 | Nokia NFMP 的探针发布通知 | 「Netcool 的 Alcatel-Lucent 5620 SAM 探针，支持 SAM 12.0」 |
+
+三条的第一行是**症状**、第二行是**标签说正确的文档**、第三行是**检索器实际选中的**。`TRAIN_Q283` 那条尤其直白：标签指向一篇讲 **Nokia** 探针的通知，而检索器给了讲 **Alcatel 5620 SAM** 探针的那篇——按问句读，检索器是对的。
+
+#### 5.3 这一步确立了什么，没有确立什么
+
+**确立的**：`0.7643` 这个数不是一个单一的量。把它拆开，缺口分成性质不同的两块——**排序缺口**（池内那一半，R@5 的 0.6857 vs 天花板 0.8714 之间）与**候选/标签缺口**（池外那 12.86%）。第一块是工程问题，第二块在相当程度上不是，而这个「相当程度」这次有了数字（0.8611 的首条更近率、28 篇零命中）。**两块的比例是这份转储的性质**：在不相交的留出集上天花板是 0.9182、条件 R@10 是 0.8548，缺口几乎整个落在排序那一侧（5.5）。
+
+**没有确立的**：
+
+- 标题重合是**词面 Jaccard**，是「话题接近」的启发式，不是人判断；对**标题比正文更含糊**的文档它就是错的。
+- **n=36**。这是对这份集合的描述，不是对总体的估计，不能外推成「TechQA 有 13% 的标签是错的」。
+- 转储是**代理**的臂。它说的是那个漏斗返回什么，**不是 OpenSearch 返回什么**——所以「生产也一样」这句话本轮**没有**被证明，只有第 4 节那条生产实跑能回答。
+- 无论标签是否可疑，`label_tier` 仍是 external silver、无租户签核。**指出标签有问题是允许的，用它替代签核是不允许的**——它不改变第 2/4/5 步中任何一条「需要用户数据」的结论。
+
+#### 5.4 变异验证：第一次跑出 4 个没牙的测试，补完第二轮才 18/18
+
+**测试用合成输入，不依赖那两份 gitignore 的数据**：`tests/servicemind/test_phase4_label_diagnostic.py`（26 例）驱动 `_words` / `_jaccard` / `_rank_of` / `_arm_summary` / `_title_overlap_breakdown` / `_examples` 的规则选取 / `_corpus_titles`（后者喂合成 zip）；`test_rag_quality_state.py` 增 4 例覆盖 audit 侧的新推导。一棵不能跑的检查不算检查，所以这两处必须能在 CI 里红。
+
+**变异验证（`scripts/mutate_phase4_label_diagnostic.py`，复用 `mutation_harness`，18 处）**。第一轮的结果值得记下来，因为它演示了变异验证到底在测什么：
+
+| 变异 | 第一轮 | 为什么没牙 |
+|---|---|---|
+| M03 保留单字符 token | **GREEN** | 测试只断言了 `a`／`I`，而这两个**本来就在停用表里**，长度过滤器没有可做的事 |
+| M12 例子按升序取 | **GREEN** | 夹具里只有**一个**正例，一个例子分不出「降序取最大」和「随便取」 |
+| M13 池标记读 dense 臂 | **GREEN** | 夹具里金标在**两条臂上都不在**，读哪条臂都得 `False` |
+| M15 把 mrr／ndcg 也算进天花板比较 | **GREEN** | 真实天花板 0.8714 下这两个比值本来就低于它，比不比都看不出来 |
+
+四处都是同一个形态：**断言写得对，但输入没有让实现产生分歧**。补法各自不同——M03 改用不在停用表里的单字母、M12 加第二个更小的正例并要求 `limit=1` 取到大的那个、M13 让金标在 dense 臂上**存在但不在首位**、M15 另加一例把天花板压到 0.0（此时每个阈值都在其上，只要实现多比了一类就报出来）。第二轮 **18/18 全部被杀**，两个源文件 sha256 逐字节还原（`133ac366…`／`ee9996e7…`），`--check` 两份报告保持 `PASS`。
+
+这四条不是「测试写得糙」，而是**变异验证存在的理由**：一个断言在它设计的输入上通过，说明不了它对实现有约束。同样的道理，M15 第一次还出过一次**UNRUN**——测试 id 以空格分隔传进去，pytest 按单个 id 找不到，于是报「没跑」而不是「没杀」。`mutation_harness` 把「跳过／没跑」判成失败而不是检测，正是为了不让这种情形读成通过。
+
+#### 5.5 本节那个 0.8714 是**这份转储**的天花板，不是管道的天花板——预注册留出集上它是 0.9182
+
+§5.1 那句「`recall_at_10 ≥ 0.90` 高于 0.8714，所以在这份标签集上不可能靠把排序调好来达到」是本轮从**代理那份 400 条转储**算出来的。仓库里还有**另一份独立的、预注册的、一次性消费的**留出集，本节的推导此前没有读过它，而它给出的是相反的结论方向。这一节把它补上。
+
+**它是什么。** `docs/PHASE4_THIRD_ARM_PREREGISTRATION_2026-09-15.md`（sha256 `038d74114cbac0a9…`），冻结于 2026-09-15T16:01:21Z，留出集指纹 `7d59475988f54fb3…`：**330 条可答 + 180 条不可答 = 510 条**，结果落在 `evaluation/reports/phase4_holdout_prereg_2026-09-15.{json,md}`（**判定 `FAIL`**，`holdout.consumed = true`——它是一次性的，已经用掉了）。两个臂：`C0` = 在任的生产混合（同 §5.1 那个 `production_blend`；报告里写的是「BM25 + BGE-M3 dense、等权 RRF、`rank_constant=60`、depth-100」），`C1` = `C0` + Qwen3-Embedding-0.6B 稠密臂。
+
+**它与本节那份转储不相交，合起来是整个数据集。** 本轮直接核对：510 条的 id 集合与 400 条转储的 id 集合**交集为 0**，并集 **910 条**，逐字等于 `train.json` 的 id 全集。所以留出集上的每一个数都不在本节任何一条推导的输入里。
+
+**锚点先过（留出集被动之前跑的）。** 冻结报告记录了 C0 在 dev（即本节这 400 条）上的复算：`R@5 0.6857 / R@10 0.7643 / MRR@10 0.5848 / NDCG@10 0.6279`，与已提交值**逐位相同**。也就是说这两份集合量的是同一个管道、同一套标签口径，差别只在**它们是哪些查询**。
+
+| 量 | 400 条转储 | 510 条留出集 C0 | 510 条留出集 C1 |
+|---|---:|---:|---:|
+| depth-100 池内含金标（**天花板**） | **0.8714** | **0.9182** | **0.9455** |
+| R@5 | 0.6857 | 0.7364 | 0.7364 |
+| R@10 | **0.7643** | **0.7848** | **0.8000** |
+| R@20 | 0.8071 | 0.8394 | 0.8636 |
+| MRR@10 | 0.5848 | 0.6105 | 0.6240 |
+| 池内条件 R@10 | 0.8770 | **0.8548** | 0.8462 |
+| 达到 `R@10 ≥ 0.90` 还缺多少条 | 不可达 | 259 → 297，**缺 38** | 264 → 297，缺 33 |
+
+数字由本轮从留出集的归档排名文件（`data/phase4/raw/eval/techqa-rag-eval/phase4_holdout_prereg_2026-09-15_rankings.json`，510 条并列数组）**独立重算**，并与冻结报告逐位相符。
+
+**这三件事因此确立。**
+
+1. **0.8714 不是管道的属性。** 同一管道、同一对模型 revision、同一套 silver 口径，换一批查询，天花板从 0.8714 变成 **0.9182**——**高于** 0.90 那条条。所以 §5.1 的「不可达」是**这 400 条**的性质，**不是**「`recall_at_10 ≥ 0.90` 对这条管道不可达」。前一节把它当成通用上界来写是不准确的，本处更正。
+2. **在留出集上真正卡住的是排序，不是漏斗。** 天花板 0.9182 > 0.90 只留下 1.8pp 余量，而要把无条件 R@10 从 0.7848 抬到 0.90，池内条件 R@10 得从 **0.8548 抬到 0.9802**（297/303）。也就是说：**留出集上缺的 38 条，几乎全部要靠把已经在池内的金标排进前 10**。这与 §5.1 的「缺口在候选生成或标签」方向相反，而与 §4.1.3 的「召回条是排序上的条」一致。
+3. **那个唯一的「新臂」已经被消费掉了，而且失败了。** `C1`（Qwen3-Embedding-0.6B 稠密）在留出集上 `R@10 +0.0152`、`MRR@10 +0.0135`、`NDCG@10 +0.0136` 都过了非劣门，但**门一（增益）没过**：`R@5` 的位移是 **+0.0000**（1 条进 1 条出）。冻结判定因此是 `FAIL`。**这是一次性消费掉的预注册留出集**：不能重跑它来「再试一次」，也不能把这个臂当成本轮的新发现重新提出——它已经被测过，答案是没赚到 R@5。
+
+**边界（不得越过）。**
+
+- 留出集上的数是**那份冻结运行**的数：本轮从它的归档排名重算，**没有重新跑检索**，所以它是「那份产物确实说了这个」，不是「今天再跑一遍还是这个」。
+- 留出集与转储的标签层级相同，都是 external silver、无人签核。它**不能**替代签核，也不改变第 2/4/5 步中任何一条「需要用户数据」的结论。
+- 「0.9182 高于 0.90」**不**等于阈值可达：上面第 2 条已经说明，可达所需的条件召回率是 0.98。它改变的是**约束在哪一环**，不是**是否够得着**。
+
+#### 5.6 反证轮：四个「看起来能开的杠杆」，被证伪的那几个
+
+本轮另起一组**只读探针**，去量几条「改一下就能涨」的候选杠杆；每个结论都由**第二次独立实现**重算一遍才写进来（`verify:*`）。记在这里的原因是：**没开的口子也要有数字，否则「还没试」和「试过不行」在文档里长得一样。**
+
+| 候选杠杆 | 假设 | 实测 | 判定 |
+|---|---|---|---|
+| 调 `rerank_weight` 往纯重排靠 | 「0.15 的检索项在拖后腿」 | 权重取 1.0（纯重排）时 R@5 **0.6821**、R@10 **0.7357**、R@20 **0.7786**，**在 k=1…25 的每一个整数 k 上都低于**现行 0.85 混合（0.6857 / 0.7643 / 0.8071）；R@10 上 6 条进、**14 条出** | **证伪**——那个 0.15 项是有用的，它在 R@10 上净赚 8 条。这个方向的余量是**负的**（−0.0286） |
+| 靠调权重抬高池顶 | 「重新加权能越过 0.8714」 | 两种排序的 `R@100` **完全相同**：0.8714（同一个 100 条池子） | **证伪**——重加权动不了池顶，它只能重排池内 |
+| 语料近似重复吞掉了那 36 条 | 「同一篇文档多个副本把金标挤掉了」 | 28481 篇里按归一化标题看，≥2 的簇只有 **125 个、覆盖 326 篇（1.14%）**；36 条里 **0 条**的首条命中落在金标的标题簇内，**0 条**召回了同簇的兄弟文档，只有 **1 条**标题 Jaccard ≥ 0.5（均值 0.139） | **证伪**——重复既不是这 36 条的原因，也不足以在池内制造干扰（池内对照仅 7/244 = 2.9%） |
+| 那 36 条只是没排上来 | 「再深一点就能捞到」 | 36 条里 **33 条在任何一条臂里都不存在**（`bm25` 0、`dense` 3（位次 65/77/86）、`hybrid` 0、`hybrid_reranked` 0） | **证伪**——对其中 33 条而言，问题不在排序，在候选生成或标签 |
+
+联合读数：**这 36 条不是一种东西**。33 条是池外（候选/标签侧），3 条是池内但排得很深（位次 65–86，排序侧）；而池内那 244 条本身中位位次是 **1**、p90 是 15、最深 75——**池内大头早就排在第一位**，可动的空间集中在尾部。这与 §5.5 在独立留出集上得到的「缺的几乎都在排序侧」是同一件事的两面：**一旦池子够宽，瓶颈就从候选挪到排序**。
+
+**这一轮明确没有去碰的**：中间权重（0.0 / 0.70 / 0.90）**算不出来**——转储里只有混合之后的顺序，没有融合 RRF 分数，所以只能比较 0.85 与 1.0 两个端点，本表**没有**对中间取值做任何估计；`candidate_k` 的扫描也不在这里，它需要真索引（第 4 节的实跑）。
+
+#### 5.7 这一轮在**冻结方案**里的位置：它就是 R0，而且是这套方案里第一个产出产物的阶段
+
+仓库里有一份**已冻结**的提升方案 `docs/PHASE4_RAG_QUALITY_IMPROVEMENT_PLAN_V2_0.md`（六个阶段 R0–R6，每阶段写明必须交付什么、退出条件是什么，并规定「报告从原始 artifact 自动生成，不得人工改数字」）。本文件此前没有引用过它，读者因此看不出上面这些工作是**按预注册的路线**在做、还是随手在调参。补齐：
+
+| 阶段 | 方案里写的必须交付 | 退出条件 | 现状 |
+|---|---|---|---|
+| **R0 生产口径闭合** | **rewrite cache、C0-SQ / C0-MQ 报告、模型/提示/cache 指纹** | 当前 multi-query 的净影响被量化 | **本轮正在做**——`scripts/measure_phase4_production_query_arms.py` 产出的正是这三样：改写缓存（带 sha256）、`c0_off / c0_sq / c0_mq` 逐臂报告、模型与 cache 指纹 |
+| R1 数据冻结 | LoTTE / BRIGHT manifest、license、hash、dev/test 隔离 | test 无法被调参脚本读取 | **无产物** |
+| R2 候选召回 | late-interaction 独立索引、池覆盖/成本报告 | 覆盖率准入门通过 | **无产物** |
+| R3 重排训练 | hard-negative 构建、训练配置、checkpoint | K1 或 J1 达开发门 | **无产物** |
+| R4 预注册 | 协议、代码、候选与数据清单 SHA-256 | 评测前冻结且 sidecar MATCH | **无产物** |
+| R5 一次性确认 | 逐 query 排名、bootstrap、成本、安全、三态结论 | PASS 才允许只读 shadow | **无产物** |
+| R6 部署准备 | feature flag、独立 alias、回退演练、运行手册 | 人工批准后才改生产流量 | **无产物** |
+
+「无产物」是**核对出来的**，不是推断：`evaluation/experiments/` 下只有第三方臂那次预注册（`phase4_third_arm_2026-09-15`，即 5.5 那个 **FAIL** 的 C1）与留出集那次的记录；全仓搜不到任何 LoTTE / BRIGHT 的 manifest、hash 或隔离测试，也没有 late-interaction 索引、重排训练或部署回退演练的脚本。**所以 R0 是这套方案里第一个真正产出产物的阶段**，R1–R6 一行都还没开始。
+
+**两件必须一起写的事。**
+
+- **方案自己规定了什么不许做**：不得再扫 `candidate_k` / `rerank_weight` 当作「改进」，不得把 512→8192 / top-30→top-100 之类的口径变化算成收益，不得重跑已归档的第三方臂。§5.6 那张表里的 `rerank_weight` 与 `candidate_k` 因此是**诊断**（它们回答「余量在哪」），**不是**「调一下就好了」的候选。
+- **方案的合法终局只有四句话**：`EXTERNAL_PROXY_IMPROVED` / `ENGINEERING_GATES_PASSED` / `PRODUCTION_SHADOW_ELIGIBLE` / `DOMAIN_QUALITY_NOT_CERTIFIED`，且前三句要以 LoTTE 一次性确认通过为前提，最后一句在缺少租户域 qrels / Reviewer 不可答结果 / 专家签署时**必须保留**。本文件此前的结论口径与它一致。
+
+#### 5.8 第三个差：改写阶段的**输入**——它是信封，不是提问（5.7 之后新查出的）
+
+第 4 步把「测量口径 vs 部署口径」的差按**两个开关**结了账：`use_query_model`、
+`use_rewrites`。核对生产调用点时发现还有**第三个差，而且它不是开关**。
+
+**事实（代码级，逐行可核）**：生产把改写阶段的**输入**换成了上下文信封——
+
+```python
+# src/servicemind/orchestration/supervisor_workflow.py:1000（knowledge 任务节点）
+# src/servicemind/orchestration/supervisor_workflow.py:443（fast knowledge 节点）
+kwargs["model_query"] = json.dumps(context_envelope.model_payload(), ensure_ascii=False)
+
+# src/servicemind/rag/query.py:72 —— 送给模型的就是 model_query 优先
+normalized_model_query = " ".join(redact_for_model(model_query or query).text.split())
+```
+
+于是当信封存在时，模型被要求改写的**是一个 JSON 数组**（信封里的条目），提问只是其中
+一项的内层字段。`ContextEnvelope.model_payload()`（`context/contracts.py:154`）返回的是
+**被选中的上下文条目**，knowledge 角色的信封由 `ROLE_SOURCES[KNOWLEDGE]`
+（`context/builder.py:28`）限定为 `TASK` / `STATE` / `POLICY` 三类：
+
+| 条目 | 内容（`phase5_governance.py`） |
+|---|---|
+| `task` | `{"goal", "task_id", "task_type", "objective", "ticket_id", "request_write"}`（`:397`） |
+| `state` | `{"query": state["goal"], "entity_ids", "group_ids", "profile_ids"}`（`:693-699`） |
+| `policy` | 策略版本、允许的能力、deadline、模型/工具预算（`:418`） |
+
+`SERVICEMIND_CONTEXT_ENABLED` **默认 `False`**（`core/settings.py:297`），但部署把它设成
+**`true`**（`deploy/glpi/.env:70`、`.env.example:159`）——**所以部署管道走的是这一支**。
+
+**这一支把什么丢掉了。** `_knowledge_query`（`supervisor_workflow.py:144`）按信号强弱
+拼出检索 query：`goal` + 任务 objective + **上一轮 Reviewer 的 feedback** + 已持证据的
+有界摘要（`_KNOWLEDGE_QUERY_EVIDENCE_MAX = 1200`，超限带截断标记），并在注释里写明它
+**是因为「第二轮把已检索内容塞进 query 会超 `raw_query` 上限而 ValidationError」**才这样
+有界化的。这个 `query` 进 `rag.retrieve(query=...)`，在 `QueryProcessor` 里成为
+**`raw_query`**。而检索用的是 `normalized_query` 与 `rewritten_queries`
+（`rag/opensearch.py:769-772`：dense 走 `embed_query(query.normalized_query)`，词法臂由
+`_fan_out_texts(query.normalized_query, query.rewritten_queries, ...)` 生成）。
+
+**没有任何检索路径读 `raw_query`**（全仓 grep：只有 `query.py` 在构造它、`supervisor_workflow.py`
+在注释里提到它的长度上限）。所以只要模型改写成功，`normalized_query` 就是**模型对信封的
+改写**，而不是那条被精心拼出来、又被精心有界化的 query。具体地：
+
+- 第二轮 retrieval（`retrieve_more_knowledge`）特地为它保留的
+  **Reviewer feedback 与已持证据摘要，进不了索引**——信封的 `state` 条目带的是
+  `state["goal"]`，不是这条合成 query；`task` 条目带 objective，但不带 feedback 与证据；
+- 这些内容的唯一去处是 `identifiers`（供 GraphRAG 侧通道 `graphrag/retrieval.py:230` 用）
+  以及模型改写**失败/被注入判定拦下**时的确定性回退（那时 `normalized_query = query`）。
+  也就是说：**改写越成功，合成 query 越不起作用**；改写失败，它才被搜。
+
+这一条与「口径差」不同：它不是「测的口径和生产不一样」，而是**生产里有一段计算量不小、
+且有明确注释说明其存在理由的 query 合成，在部署的默认配置下不参与检索**。是否因此变差，
+由下面的臂实测回答；但「它不参与」本身是代码事实，不需要测量。
+
+**测出来的输入差有多大（受控）。** 改写阶段是**采样**的，所以「信封 vs 裸提问」的差异必须先
+扣掉「同一输入重跑」的噪声。三份捕获，同一轮重采（2026-10-02 11:04–11:08）：
+
+| 捕获 | 文件（`evaluation/gold/`） | sha256 | 同输入重跑？ |
+|---|---|---|---|
+| 裸提问 | `techqa_rewrites.v1.json` | `314cdb58d5f2b05b…` | 第一次 |
+| **信封输入** | `techqa_rewrites_envelope.v1.json` | `59a535260754395e…` | 否，输入不同 |
+| **噪声对照** | `techqa_rewrites_repeat.v1.json` | `e2d02f03dea030a4…` | **是，输入完全相同** |
+
+信封由**平台自己的代码**构造（`Phase5Governance.build_fast_knowledge_context` +
+真实 `ContextBuilder` + `NullContextArtifactSink`，不写任何东西），不是手搓形状。
+
+**这一列比的是什么，必须先说清。** 比的是**模型自己的两个字段**——
+`model_normalized_query` 与 `rewritten_queries`，也就是词法臂真正拿去搜的文本——**不是**
+`normalized_query`。因为 §5.9 的锚点修复之后，`normalized_query` 恒等于用户原话，两列比较它
+必然得到 0；而修复之前那一版探针正是这么比的，它报出的 70.00% / 28.25% 因此**已被本表取代**
+（`evaluation/reports/phase4_envelope_query_arm_latest.{json,md}`，`--check` 绑定三份捕获与
+生产脚本的 sha256）。同时，**未作答（回退到确定性处理）的条目被剔除而不是参与比较**：回退时
+没有模型答案可比，把它当作「输出改变」是拿回退冒充模型。
+
+| 指标（400 条） | 信封 vs 裸提问 | **噪声对照**（同输入重跑） |
+|---|---|---|
+| 模型未作答（回退，已剔除） | 0 | 0 |
+| **模型输出改变**（归一化 + 改写列表） | **275 / 400 = 68.75%** | 78 / 400 = 19.50% |
+| 其中仅改写列表改变 | 121（30.25%） | 114（28.50%） |
+| 完全不变 | 4（**1.00%**） | 208（**52.00%**） |
+
+**读法**：同输入重跑会改写掉 19.5% 的检索文本（要扣掉）；换成信封后是 **68.75%**，是噪声的
+**3.5 倍**，且「一字未动」从 52% 掉到 1%。也就是说**信封确实送到了模型手里，而且显著改变了
+模型的输出**。这是**输入差**，不是**质量结论**——改了输出不等于改坏了检索，两种可能都必须由
+臂来回答，见 §5.10（结论是：**这一次没有量出召回代价**）。
+
+**这一步没有确立什么**：没有确立「信封输入使召回变差」——§5.10 量到的是一条臂之差、且落在
+噪声内；没有确立「合成 query 的 feedback/证据本会有用」（那是另一个实验）；也没有说
+`model_query` 这个设计是错的——把上下文给模型本就是它的目的，被查出的是**它取代了合成 query，
+而没有任何地方说明这个取代是有意的**。
+
+#### 5.9 锚点修复：生产那条臂在搜索前把**用户原话**丢了，修好之后值多少（七臂 × 两样本）
+
+**根因是代码事实，不需要测量就能确立：**
+
+1. `QueryProcessor.process` 在模型改写成功时 `return KnowledgeQuery(normalized_query=proposal.normalized_query, ...)`
+   （`rag/query.py`）——用户原话只留在 `raw_query` 里。
+2. 全仓 grep：**`raw_query` 没有任何检索读取者**。只有字段定义（`domain/knowledge.py:189`）、两处注释
+   （`query.py:133`、`supervisor_workflow.py:127/151`）和变异脚本的描述提到它。检索路径读的是
+   `normalized_query`（dense 嵌入 `opensearch.py:774`、BM25 主臂 `:854`、重排输入 `service.py:440`）
+   与 `rewritten_queries`（fan-out `:772`）。
+3. 所以「模型改写成功」与「用户原话在搜索前被丢弃」在部署配置下是**同一件事**；再叠加 §5.8 的信封输入，
+   被改写的是上下文信封，不是提问。
+
+**修复（已合入源码，逐处可核）**：`KnowledgeQuery.model_normalized_query` 把模型的归一化**存在提问旁边**
+而不是顶替它；`lexical_variants()` 给出词法臂可以搜的文本（锚点恒为用户原话，模型归一化排第一）；
+预算花在**搜索边界**（`_fan_out_texts`，`HYBRID_MAX_SUBQUERIES = 5`：1 个 dense + 4 个 BM25 臂）。
+不变量是**模型只能加一条臂，不能换掉那条臂**。
+
+**两样本七臂实测（R@10，280 条可答）**：
+
+| arm | 是什么 | 样本 A R@10 | 样本 B R@10 | 样本 B R@5 | 样本 B MRR@10 |
+|---|---|---|---|---|---|
+| `c0_off` | 确定性处理、无 fan-out（已提交数字的口径） | **72.86%** | **72.86%** | 66.43% | 0.5797 |
+| `c0_sq` | 生产归一化、fan-out 关 | 68.21% | 68.93% | 66.07% | 0.5748 |
+| `c0_mq` | **部署臂**：生产归一化 + multi-query fan-out | 67.86% | 67.50% | 65.71% | 0.5650 |
+| `c0_sq_ck200` | 同上，漏斗加宽到 200 | 68.57% | 68.57% | 65.36% | 0.5707 |
+| `c0_sq_ck400` | 同上，漏斗加宽到 400 | 68.21% | 68.21% | 65.71% | 0.5711 |
+| `c0_mq_ck200` | 部署臂 + 漏斗加宽到 200 | 68.57% | 68.93% | 65.71% | 0.5696 |
+| `c0_anchor` | **修复后的形态**：锚定用户原话，模型归一化作为额外一条臂 | **70.00%** | **68.93%** | 66.79% | 0.5600 |
+
+**读法（两样本方向一致，这是它值得信的原因）：**
+
+- **部署臂比确定性锚点少 14–15 条**（样本 A：190 vs 204；样本 B：189 vs 204，各 280 条）。
+  即：让模型改写检索文本，在这份语料上是**净负面**。
+- **锚点修复把其中 4–6 条还回来**（样本 A +6、样本 B +4），两样本都为正，且都**尚未恢复到 `c0_off`**。
+- 因此这一项**不是**「RAG 效果修好了」，而是：**一处可测量的、方向确定的改进**，加上一条被证伪的
+  常见做法（用模型改写顶替检索文本）。
+
+**这张表能分辨到多小？——由控制臂自己量出来，不是声明出来的。** 同一个进程、同一索引、同一捕获、
+同一主体，把控制臂再跑一遍，逐 query 比较（`--repeat-control`，见报告「控制臂自身的可复现度」）：
+
+| 逐 query 对比（280 条） | 条数 |
+|---|---|
+| 参与比较 | 280 |
+| **R@10 变化** | **0** |
+| R@5 变化 | 1 |
+| 排名（MRR@10）变化 | 1 |
+| 只出现在其中一遍 | 0 |
+
+**这直接决定了两件事**：① 所有以 **R@10** 记的结论都站得住——同一进程重跑，R@10 一条不差；
+② **R@5 与 MRR 上小于一条的差不是发现**（本轮实测：同进程重跑控制臂，R@10 移动 **0 条**、R@5 移动 **1 条**（0.36pp）、有 **1 条**查询的倒数排名移动（MRR 合计 0.5797 → 0.5798，差 **0.0001**）；没有任何查询只出现在两遍中的一遍）。表里 `c0_anchor` 与 `c0_mq` 的 R@5
+（66.79% vs 65.71%）相差 3 条，在噪声之上；而样本 A/B 的 `c0_off` R@5 差 1 条（66.79% vs 66.43%），
+在噪声之内——两者都是同一份代码、同一份输入，**差的那 1 条是排序抖动，不是版本差异**。
+
+**funnel 宽度这条杠杆已经用尽**：ck100→200→400 在两个样本上都落在 ±1 条内（样本 A
+190/192/191，样本 B 189/192/191），而单臂耗时从 ~300s 涨到 ~880s。加宽漏斗是**已测量并关闭**的选项，
+不是待调参数。
+
+**这一轮从根源修掉、并锁在回归里的缺陷**（每条都有测试与变异）：
+
+| 缺陷 | 为什么是缺陷 | 现状 |
+|---|---|---|
+| 模型改写顶替检索文本 | 用户原话被丢弃，且无任何检索路径读 `raw_query` | **已修**，锚点恒为用户原话 |
+| 模型改写**越多越坏**（多查询 fan-out） | 净负面 14–15 条，却一直是生产默认 | **已量化**；`use_rewrites` 的默认与调用点已在报告中点名 |
+| 捕获把模型输出记在 `normalized_query` 上 | 锚点修复后该字段恒等于用户原话，捕获会在下一次重采时静默重放成确定性臂 | **已修**：新增 `model_normalized_query`，捕获与重放都要求两个字段齐备 |
+| 报告声称「控制臂重跑原样复现自己那一行」 | 实测 R@5 会移动 1 条 | **已修**：改为报告自己实测的可复现度（上表），措辞不再自称精确 |
+
+**生产者绑定**：本节的数字由 `scripts/measure_phase4_production_query_arms.py`
+（sha256 `fe360f79c1fff6c8…`）产出，写入 `evaluation/reports/phase4_query_arm_funnel_latest.{json,md}`；
+`--check` 绑定生产者、释放集 loader、选择集、语料、生产报告与**改写缓存**六项 sha256 以及 markdown
+与 JSON 的一致性（退 0 通过）。捕获为 `evaluation/gold/techqa_rewrites.v1.json`
+（`314cdb58d5f2b05b…`，400 条，0 条回退）。样本 A 的表产出于同一脚本的**更早版本**
+（`1772fc12…`，锚点臂当时用 `rewritten_queries` 携带模型归一化）；两样本因此不能逐格对读，
+**能对读的是各自同一轮内的 `c0_mq` vs `c0_anchor` vs `c0_off`**，这也正是上面结论的读法。
+
+**这批证据对着哪棵树取的**：锚点修复只落在三个平台源文件上——`src/servicemind/rag/query.py`、
+`src/servicemind/domain/knowledge.py`、`src/servicemind/rag/opensearch.py`（落盘 11:01–11:02，此后未再改动，
+故其当前内容即测量时的内容）；随后改动的是**测量脚本与测试**（13:0x 加入控制臂复跑块）。因此
+**报告绑定的生产者 sha256 是测量脚本的摘要**，源码树摘要（本轮写作时为
+`b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(8280a495c7b4)`，80 条改动路径）在本会话内移动过多次，
+只用于**标识这批证据的来处**，不声称等于任一时刻的运行时快照。
+
+#### 5.10 信封臂：第三个差是真实的输入差，但量不到召回代价
+
+§5.8 已证明信封**改变了模型的输出**（68.75% vs 噪声对照 19.50%）。剩下的是那个必须用臂回答的
+问题：**它改变了召回吗？** 三条臂，同一索引、同一代际、同一轮对照：
+
+| arm | 改写输入 | fan-out | R@10 | 对 `c0_off` |
+|---|---|---|---|---|
+| `c0_env` | **信封** | 关 | 68.57% | −4.29pp |
+| `c0_mq_env` | **信封** | 开（部署输入口径 + 部署 fan-out） | **67.50%** | −5.36pp |
+| `c0_mq` | 裸提问 | 开 | **67.50%** | −5.36pp |
+
+**读法**：换成信封之后，部署那条臂的 R@10 **一条不差**（0.6750 = 0.6750，189/280）；
+单查询臂差 1 条（0.6857 vs 0.6893），落在 §5.9 实测的噪声下界之内。所以三个差里，
+**只有「锚点」那一个有可测的召回影响**——信封是一个真实的输入差（模型确实换了输出），
+但在本语料、本臂宽上**量不到代价**。这条结论同样只说这一次测量：它没有确立信封在别的语料、
+别的臂宽上无害。
+
+**跨脚本交叉核对（这是两份报告互为对照的地方）**：探针自己跑的那条 `c0_mq`（裸提问、fan-out 开）
+与 §5.9 表里的 `c0_mq` 是**同一条臂、同一索引、同一捕获**，由**两个独立脚本**各自测出
+**0.6750**——一致到条数。两份报告任一读错（读错捕获、读错代际、读错臂宽），这里就会现形。
+探针同时把 funnel 报告的 sha256 绑进自己的 `inputs`（本轮为 `0512064a51d88c3a…`），
+因此 funnel 一侧重新生成后，探针的 `--check` 会**拒判**而不是静默沿用旧数——本轮就是这么发现的
+（`stale_inputs=['funnel_report']`）。
+
+**生产者绑定**：`evaluation/reports/phase4_envelope_query_arm_latest.{json,md}`，生产者
+`scripts/probe_phase4_envelope_query_arm.py`（sha256 `ad5455732ff2e5aa…`），`--check` 绑定
+三份捕获 + funnel 报告 + 生产报告的 sha256。**重跑之后两份报告的最终状态**：
+`funnel` → `PASS QUERY_ARM_MEASUREMENT stale_inputs=[] markdown_matches=True`（退 0）；
+`envelope` → `PASS ENVELOPE_QUERY_ARM_MEASUREMENT stale_inputs=[] markdown_matches=True`（退 0）。
+上面那张信封臂表的三个数与重跑后的 `evaluation/reports/phase4_envelope_query_arm_latest.json` 的
+`arms` 逐位相同（`c0_env` R@5 0.6536 / R@10 0.6857 / R@20 0.6857，另两条 R@10 均为 0.6750）。
+
+#### 5.11 本节修复的锁定测试与变异验证
+
+§5.8–§5.10 的结论建立在三份产物与一条代码改动之上；这一节把它们各自的**锁定测试**与**变异验证**、
+以及过程中查出的两件**必须如实记**的事写全。计数为 2026-10-02 实际 `--collect-only` 与实跑所得。
+
+| 目标 | 锁定测试 | 例数 | 变异脚本 | 处数 | 结果 |
+|---|---|---:|---|---:|---|
+| 锚点修复（平台源文件） | `tests/servicemind/test_phase4_rag.py` | 28 | `scripts/mutate_phase4_query_anchor.py` | 11 | **11/11 全部被杀** |
+| funnel 七臂表与其 `--check` | `tests/servicemind/test_phase4_query_arm_funnel.py` | 44 | 同上（预算与 wire 断言） | — | — |
+| 信封臂表与其 `--check` | `tests/servicemind/test_phase4_envelope_query_arm.py` | 24 | `scripts/mutate_phase4_envelope_query_arm.py` | 15 | **15/15 全部被杀** |
+| 合计 | 三个文件 | **96** | 两个脚本 | **26** | 26/26 |
+
+**变异验证怎么读**：每个变异把生产实现改回一个**具体的错误形态**（不是随机改字符），然后跑**指定给它的那一例**——
+被杀才算这条断言真的有约束。`mutation_harness` 把「跳过／UNRUN」判成失败而不是检测（理由是 §5.4 那次教训），
+所以「全部被杀」里不含没跑成的。本轮两串脚本的收尾行分别是
+`11 mutations; all detected` 与 `15 mutations; all detected`。
+
+**两件必须如实记的事。**
+
+1. **M09（把 fan-out 从 `lexical_variants()` 换回 `rewritten_queries`）第一轮是 GREEN。**
+   原因是 `test_the_hybrid_request_anchors_on_the_question_and_arms_the_paraphrase` 当时在**测试体里自己重算一遍
+   fan-out**，再对自己算出来的东西断言——实现被改坏，测试跟着一起改坏，于是照绿。改法是**把断言下到 wire**：
+   真实调用 `retrieve()`，从一个只记不答的假集群客户端里取回**实际发出的请求体**
+   （`body["query"]["hybrid"]["queries"]`），再断言第一条的 dense 向量等于**用户原话**的嵌入、且**不等于**模型归一化文本的嵌入。
+   这同时是 §5.9 那条不变量（「模型只能加一条臂，不能换掉那条臂」）在测试里的落点。它与 §5.4 那四条同属一个形态：
+   **断言写得对，但取数取在实现的下游，实现一改它跟着改。**
+2. **有一条测试从未运行过。** `test_an_arm_that_does_not_anchor_still_searches_the_models_normalisation`
+   在文件里被**定义了两次**（同名函数），后定义**遮蔽**先定义——先写的那一版自始至终没有被 pytest 收集过，
+   是 `ruff` 的 **F811**（重复定义）把它报出来的。处置：删掉被遮蔽的那一版，保留断言更强的一版
+   （多一条 `query.model_normalized_query is None`）。含义：**上面那个 96 是修完之后的计数**，
+   修之前它在这份文件里是 95——**「测试数」本身不是证据，被收集到并跑过的才算**。
+
+**静态检查与全仓回归（同一时点）**：`ruff format --check .` → `384 files already formatted`；
+`ruff check .` → `All checks passed!`；`pyrefly check` → `0 errors`；
+`pytest tests/servicemind tests/service -q` → **1215 passed, 22 skipped**；
+`pytest tests -q` → **1344 passed, 26 skipped**。无失败、无错误。
+
+**边界**：变异验证证明的是「这 26 处实现各自被至少一条断言约束住」，**不**证明实现无缺陷，
+也**不**覆盖本节的测量口径本身——「锚点臂比部署臂多召回 4–6 条」这句话的约束力来自 §5.9 的**实测噪声下界**
+（R@10 移动 0 条），不是来自变异验证。
+
+### 六、第 2 步（已完成）：租户域释放集
+
+**这一步交付的是门禁的输入，不是门禁的结论。**
+
+#### 6.1 §4.1 那条零计数此前没有输入
+
+门禁写着「可见证据里错误租户／ACL／过期版本条数为 0」。`Citation` 带 document／parent／version／hash，**唯独不带租户和组**——所以一次事后审计**无法区分**一次合法命中与一次越权披露。零计数的阈值先于它的输入存在。
+
+输入补在 `src/servicemind/evaluation/leakage.py`：
+
+- `EvidenceCoordinates`（冻结 dataclass）持六个坐标；`admits(...)` **故意重述** `KnowledgeACL.allows` 而不是 import 它——一个用来抓 ACL 漏洞的检查如果复用了被检查的那段代码，那个漏洞对它就是不可见的；
+- `classify(...)` 先判租户，再判 `is_active`，再判组，最后判钟的两端；半开区间（`effective_to` 是它消失的第一个瞬间）；
+- `visible_evidence_violations(...)`：**未知键报 `WRONG_TENANT` 而不是跳过**——跳过会让一个没有坐标的文档被静默当作干净；
+- `summarize(...)` 分三类计数。
+
+harness 侧接的是 `EvalQueryOutcome.violations`、`BaselineMetrics.visible_evidence_violations()`、`evaluate(..., coordinates=...)`。**coordinates 缺席时 violations 保持为空**——这与「检查了且没发现」是两句不同的话，所以审计侧另有护栏（6.6）。
+
+#### 6.2 租户域 loader 与合成夹具
+
+`src/servicemind/evaluation/tenant_domain.py` 读 `evaluation/gold/tenant-domain-release/`：`manifest.json`（**扩展**已有格式，而不是另立一套——`evaluation/acceptance/fixtures/globex/manifest.json` 早就在声明每篇的组与废止标志，两套格式会让两边各自自洽地互相矛盾）+ `corpus/*.md` + `qrels.json`。
+
+三条 fail-closed 规则，每条都对应一种「分层静默消失」：
+
+| 规则 | 不这么写会怎样 |
+|---|---|
+| **ACL 必须声明，不得默认** | 未列出的文件被当作租户公共：它被索引、可被检索，且因为没人说过它受限，而被报告成「正确受限」 |
+| **每条声明必须指到一个文件** | 文件改名后，报告的分层出自一份已经不存在的文档集 |
+| **每条判断必须关于本语料** | recall 在一个从未被索引的键上测的是 join，却被报成检索未命中 |
+
+夹具（14 篇 / 16 查询）**刻意做成同构于门禁问到的每一条**：2 个租户、3 篇组限制、1 篇废止、1 篇 `effective_to` 已过、1 篇 `effective_from` 未到、2 条 hard negative、5 条不可答且**三种 `RefusalReason` 齐全**、3 条 development split。三种不可答要分开是有理由的：一种不可答只有一个弃答率，就分不出是版本冲突还是拒绝访问，而这两件要修的东西毫无共同点。
+
+**时钟是承重的，所以写死**：`FIXTURE_QUERY_TIME = 2026-05-01`。`RetrievalPrincipal` 与审计两侧的查询时刻都默认取**构造那一刻**；一个任其默认的探针，是在**今天**问一个**为 5 月 1 日**写的夹具，于是「未生效」那篇变成普通在效文档，审计报 0 违规，整段跑读起来像「窗口过滤生效了」。
+
+#### 6.3 同一个夹具，两个方向都出得来
+
+判据能力来自**能被证伪**，所以两处都做了双向：
+
+- `test_the_audit_comes_out_both_ways_on_this_corpus`：同一篇组 {3} 限制文档，持有组 3 的调用方审计为空，持有组 4 或空组的调用方得到 `UNAUTHORIZED_GROUP`；
+- `test_the_audit_catches_the_other_three_strata_on_this_corpus`：租户、废止标志、钟的两端各自出各自的 kind，而**在效的同位文档保持干净**（否则就是「对所有文档都报警」）；
+- 探针脚本 6 条 ACL 探针：**6/6 隔离成立，3/3 对照成立**（对照 = 必须看得见的调用方确实看得见），所以前一个数字不是「管道返回空」造成的。
+
+**探针自身的两个缺陷，是本轮找出来并修掉的**，两个都是同一形态（结果是真的，读法是错的）：
+
+1. **钟默认成当下。** 第一次跑报 `KB-ACME-VPN-MFA-Q3 surfaced: true, violations: 0`——两句都真，说的是两个不同的时刻。修法是把 `query_time` 改成**必填参数**，并把这次事故写进函数 docstring；`test_the_fixture_clock_is_load_bearing` 钉住它（同一篇文档，在夹具时钟下是 `EXPIRED_VERSION`，在**今天**下是干净）。
+2. **对照双方在两个轴上都不同。** 租户探针的 denied/allowed 两侧原本连组也不同，于是「组过滤被整个忽略」的实现照样能通过它。这是**为它写的测试**（`test_every_probe_caller_is_actually_a_different_caller`）抓到的；修法是让两侧持相同的组。
+
+#### 6.4 六条 blocker → 一条，且那一条没有任何夹具能提供
+
+同一套判定器喂给两份集合，结果必须不同——这是「由数据算出的适用性」与「硬编码 `applicable: false`」唯一可区分的性质：
+
+| 集合 | `release_gate_blockers` |
+|---|---|
+| TechQA silver（`phase4_proxy_release_v1.2.json`） | **6 条**：标注层级、无 0–4 分、无 hard negative、缺 `version_conflict`、缺 `must_refuse_access`、无 development split |
+| 租户域夹具 | **1 条**：`labels are tier silver with 0 annotator(s) and kappa None; §3.3 requires two domain annotators…` |
+
+夹具把能供的都供上了，于是剩下的**恰好是唯一一件夹具供不出的东西**：人工签核。断言写在**整张列表**上而不是「是否为空」上——列表里多出任何一条，就意味着夹具停止覆盖门禁问到的某个分层。
+
+#### 6.5 这个零不许在没分层的语料上被报出来
+
+`scripts/audit_rag_quality_state.py` 新增 `check_the_strata_can_carry_the_count()`：读租户域报告的分层，低于底线（2 租户、1 组限制）就**抛错**而不是加注——「加了注的 0」正是读者会直接跳过、直奔数字的那一行。同一句话也写进了 TechQA 报告的 `reading` 字段。质量状态报告因此多出第四份输入，以及一节 `## §4.1 visible evidence, over a corpus that has strata`。
+
+#### 6.6 变异验证与回归
+
+| 对象 | 变异 | 结果 |
+|---|---|---|
+| `leakage.py` / `harness.py`（§4.1 的输入） | 8 处逐一回退 | **8/8 被杀**，源文件 sha256 逐字节还原 |
+| `tenant_domain.py` + 探针脚本（第 2 步） | 9 处逐一回退 | **9/9 被杀**，同上 |
+
+全仓 **1265 passed / 26 skipped**（第 2 步时为 1192 / 26；本节那轮为 1237 / 26；RAG 收尾这一轮再 **+28**，落在四处：`test_phase4_rag.py` 的配对测试、新建的 `tests/servicemind/test_phase4_source_ceiling_effect.py`、以及 `test_rag_quality_state.py` 与 `test_phase4_packing_ceiling.py` 的追加）。`ruff format --check` 375 文件、`ruff check` 全过、`pyrefly check` 0 错、pymarkdown（CI 原命令）退出 0、`audit_rag_quality_state.py --check` → `PASS DOMAIN_QUALITY_NOT_CERTIFIED` 退出 0、`diagnose_phase4_label_diagnostic.py --check`、`diagnose_phase4_packing_ceiling.py --check` 与 `report_phase4_source_ceiling_effect.py --check` → `PASS MEASUREMENT_DIAGNOSTIC` 退出 0、`export_frontend_release_status.py --check` 退出 0、`audit_project_structure.py --check` 退出 0。
+
+#### 6.7 这一步的边界
+
+- 夹具的标签是**合成的且自称合成**（`test_the_fixture_records_itself_as_synthetic`）。它能自称 silver，不能自称协议——否则门禁会在没人读过的标签上解锁，而且是**静默**解锁，因为会发现这件事的字段正是被伪造的那一个。
+- 分层**存在但不够大**：14 篇语料里没有任何一层的样本量足以估计分层比率。所以报告状态是 `STRATA_PRESENT_NOT_POWERED`，而四个臂的 Recall@5 在这里是 **1.000 饱和**的——那是夹具的性质（每篇文档的标题与它那条查询共享词汇，语料只有 14 篇），不是质量测量。
+- 判断记在**文档级**（`<record>#document`）：`parent_chunk_id` 由分块器在索引时铸出、随分块配置变化，夹具写死一个就是在写某次特定运行的 id，而且会在分块器下次变动时**静默**失配。
+- 父块展开在内存里，而不是 PostgreSQL RLS 下——这条跑的是展开**调用**，不是授权它的那条策略。
+- **用户自己的 qrels 到货后要替换的正是这套合成标签。** 第 2 步交付的是管道与输入形状，不是数字。
+
+### 七、仍待做（按信息量排序）
+
+| 步 | 内容 | 需要用户的数据 |
+|---|---|---|
+| 3 | **停止用代理代表生产**：全量实跑已完成（修复前后各一轮），落地方式与边界见第四节。**过程中查出一条根因并已从根源修复**：生产提示最多装 4 篇文档，卡在 `SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE`——一条**为来源之间公平而设**、却在单来源语料上变成绝对上限的护栏，**不是 token 预算**（4.1.1）。修复只改判据的适用条件，**设置值与审批状态一字未动**（4.1.4）| **否** |
+| 2 | 租户域 loader 与合成夹具：已完成；**真正接入 harness 的方式与计划里写的不同**——没有给 harness 加 `--corpus --qrels`，而是独立模块 + `coordinates=` 参数，理由见 6.1（门禁的输入属于 harness，语料的形状属于 loader）| 否（真 qrels 到货前） |
+| 4 | 人工签核 qrels（§3.3 两名标注者、分层 20% 复标、kappa ≥ 0.80）。**再补一份 silver/LLM 数据集上去，门照样不开** | **是**（labor，省不掉） |
+| 3b | **R0 生产口径闭合**（冻结方案 R0，5.7）：把生产**真正在跑**的那条 query 臂——模型改写 + multi-query fan-out——在 TechQA 上量化，并测 `candidate_k` 的漏斗深度。方案规定的交付物就是**改写 cache + C0-SQ / C0-MQ 报告 + 模型/cache 指纹**这三样，脚本 `scripts/measure_phase4_production_query_arms.py` 逐样产出。**已完成（2026-10-02）**：七臂 × 两样本、第三个差（信封输入）单独成臂、以及控制臂自身的可复现度全部实测，见 **5.8 / 5.9 / 5.10**；过程中查出一条根因（**部署臂在搜索前丢弃用户原话**）并已从根源修复。**R0 的三样交付物齐了，但 R0 的退出条件只到「当前 multi-query 的净影响被量化」——本轮把它量化成负的，并且量化了漏斗深度这条杠杆已经用尽（5.9）**；R1–R6 仍无产物 | **否** |
+| 5 | 跑第一批真数字，并回头审阈值。**审法已经变了**：不是「跑一遍看差多少」，而是先问「这个上界是被什么钉住的」。本节 5.1 实测的 0.8714 只是**那 400 条转储**的天花板——`recall_at_10 ≥ 0.90` 高于它，在这份标签集上不可达；但在**与之不相交**的预注册留出集上同一管道的天花板是 **0.9182**，**高于** 0.90，那里卡住的是**排序**（条件 R@10 0.8548，要抬到 0.98 才够，5.5）。所以阈值该定在哪，取决于钉住它的**是哪一份标签集**，而这两份都不是租户域的——第 4 步因此排在第 5 步之前 | 是 |
+
+补数据集**永远解决不了**的那一条（用户判断正确，此处记录结论）：`answerable_answer_rate`（现 0.275）与 `impossible_abstention_rate`（现 0.87）目前是**检索分数阈值代理**，而报告自己证明该代理不成立——ROC-AUC 0.6035、最佳平衡准确率 0.5979；生产的弃答走 **Reviewer 的语义 ABSTAIN**。要测这两条必须把 Reviewer 放进回路跑端到端，那是 P7.6.6，与「补数据集」是两条独立的活。在此之前 `answerability_signal.is_end_to_end_reviewer_measurement` 保持 `false`，不得以代理值代替。
+
 ## 边界与下一阶段
 
-- 本阶段结论限于「核心业务闭环验收」，**结论为通过**——且**该结论的适用范围是 `cf08ac8a7b731054e492ed81ba5f3164dc381863+patch(0ce86f5d19bc)` 这一棵源码树**（v3.3 记的是同一棵树的 `+dirty(55)`；**2026-10-01 冻结时提交为 `5fea7ca60b4ca71df5495c80ce38751e01f4647f`，内容一字未改**——三个名字，一棵树，见「被测版本绑定」与 R5）。不声明生产容量已认证，不替代 Phase 8 的并发、长稳与灾备演练。
+- 本阶段结论限于「核心业务闭环验收」，**结论为通过**——且**该结论的适用范围是 `cf08ac8a7b731054e492ed81ba5f3164dc381863+patch(0ce86f5d19bc)` 这一棵源码树**（v3.3 记的是同一棵树的 `+dirty(55)`；**2026-10-01 冻结时提交为 `9d1f70e35aa0bdce578b1882e242d65e3a801219`，内容一字未改**——三个名字，一棵树，见「被测版本绑定」与 R5）。不声明生产容量已认证，不替代 Phase 8 的并发、长稳与灾备演练。
 
 ```text
 【当前状态：本阶段无未决裁定项；存在一个已批准但未执行的支出动作】
@@ -1118,7 +2093,7 @@ v3.4 整表回读旧缺陷清单（10 条），没有为任何一条改动源码
      | --- | --- |
      | **R5 已生效**（四端共用 `source_revision`） | 否则重录本身移动版本号，一条语料录到一半就与自己的前半段不同源 |
      | **录制期间不改 `src/` 与 `tests/`** | 指纹覆盖 `tests/`（故意如此：一个版本同时覆盖平台与其配套套件），改测试就等于换了版本 |
-     | **录制期间不做任何提交**（2026-10-01 冻结时补，**此前漏了**） | 工作树干净时版本号取的是 **HEAD**，而**任何提交都会移动 HEAD——包括只改 `docs/` 的提交**。实测：`5fea7ca` 与 `16ba55c` 之间**源码零差异**（`git diff 5fea7ca 16ba55c -- src/ tests/ scripts/` 为空），后者只改本文件，而 `deployed_revision` 由 `5fea7ca…` 变成了 `16ba55c…`。因此「不改 `src/`/`tests/`」这条**不足以**保证一批录制同源：**在中途改进度笔记也会把批次劈成两半**。危害有界——四门会把这种批次判为异质并**拒判**（fail-closed，不是静默通过）——但代价是一整晚的录制作废 |
+     | **录制期间不做任何提交**（2026-10-01 冻结时补，**此前漏了**） | 工作树干净时版本号取的是 **HEAD**，而**任何提交都会移动 HEAD——包括只改 `docs/` 的提交**。实测：`9d1f70e` 与 `a73627a` 之间**源码零差异**（`git diff 9d1f70e a73627a -- src/ tests/ scripts/` 为空），后者只改本文件，而 `deployed_revision` 由 `9d1f70e…` 变成了 `a73627a…`。因此「不改 `src/`/`tests/`」这条**不足以**保证一批录制同源：**在中途改进度笔记也会把批次劈成两半**。危害有界——四门会把这种批次判为异质并**拒判**（fail-closed，不是静默通过）——但代价是一整晚的录制作废 |
      | **`--expect-revision` 只在收尾核对时给** | 录制中途给值会把「同一份产物」判成「不是当前版本」，属误用；同源性检查不需要外部输入 |
      | **账户余额充足** | `tier-10` 的失败已查明是 **402 余额不足**并引发 85 次熔断；余额不足会污染一整批观测 |
 
@@ -1192,13 +2167,13 @@ v3.2 / v3.3 / **v3.4** 引入或依赖的、与判定直接相关的参数，**�
 - **A3 的更正推翻的是 v3.3 的归因而非数据**：v3.3 记录的失败行仍然真实存在，变的只是**对它的解释**（余额派生限额 + 402，而非并发上限 5）。因此 v3.3 那一节里的**表格**被保留、**结论句**被替换——这种改法在本文件里是第一次，故在此点明。
 - **A4 的关闭有代价，已如实记录**：安全语料由同源变为跨新旧两种格式，安全 gate 因此由 0 变 **3**。**这不是回归，也不是改善的净收益**——它是一笔写明的交换（用 1 个跨版本语料换掉 2 条没有跑过的断言），由阶段 B 收敛。
 
-**这份 PASS 是一份「有限范围内成立」的通过。** 它基于固定版本（`cf08ac8a7b731054e492ed81ba5f3164dc381863+patch(0ce86f5d19bc)`，v3.3 记作同一棵树的 `+dirty(55)`，2026-10-01 提交为 `5fea7ca60b4ca71df5495c80ce38751e01f4647f`）、真实身份服务、真实 GLPI、真实 OpenSearch 与真实模型的当前部署，不构成对未来供应商故障、未知攻击或未执行负载形态的绝对无缺陷保证。凡本文件未列出观测的模块，均按「未评估」处理。
+**这份 PASS 是一份「有限范围内成立」的通过。** 它基于固定版本（`cf08ac8a7b731054e492ed81ba5f3164dc381863+patch(0ce86f5d19bc)`，v3.3 记作同一棵树的 `+dirty(55)`，2026-10-01 提交为 `9d1f70e35aa0bdce578b1882e242d65e3a801219`）、真实身份服务、真实 GLPI、真实 OpenSearch 与真实模型的当前部署，不构成对未来供应商故障、未知攻击或未执行负载形态的绝对无缺陷保证。凡本文件未列出观测的模块，均按「未评估」处理。
 
-**冻结声明（2026-10-01）**：本文件所描述的全部改动**已提交为 `5fea7ca`**，工作树清空。**提交这个动作不改变任何结论**——它改变的是这份结论**第一次有了一个别人可以 `git checkout` 到的名字**。在此之前，本文档反复引用的 `+patch(0ce86f5d19bc)` 是一枚**只存在于一台机器的工作树里的指纹**；如果那棵树丢失，本文件的每一条证据都会指向一份无法取回的代码。
+**冻结声明（2026-10-01）**：本文件所描述的全部改动**已提交为 `9d1f70e`**，工作树清空。**提交这个动作不改变任何结论**——它改变的是这份结论**第一次有了一个别人可以 `git checkout` 到的名字**。在此之前，本文档反复引用的 `+patch(0ce86f5d19bc)` 是一枚**只存在于一台机器的工作树里的指纹**；如果那棵树丢失，本文件的每一条证据都会指向一份无法取回的代码。
 
-**这条声明要引用哪个 SHA，本身有个必须说清的细节。** `5fea7ca` 是**代码**的最后一次提交；本文件随后仍被修改（记录冻结这件事、补第四条第 5 项），每一次都产生新提交、移动 HEAD。而工作树干净时 `source_revision` 取的正是 HEAD，**所以「最终的版本号」是个追不上的目标**：写下它就需要一次提交，而那次提交又移动了它。**处理办法是把两个问题分开**——
+**这条声明要引用哪个 SHA，本身有个必须说清的细节。** `9d1f70e` 是**代码**的最后一次提交；本文件随后仍被修改（记录冻结这件事、补第四条第 5 项），每一次都产生新提交、移动 HEAD。而工作树干净时 `source_revision` 取的正是 HEAD，**所以「最终的版本号」是个追不上的目标**：写下它就需要一次提交，而那次提交又移动了它。**处理办法是把两个问题分开**——
 
-- **引代码时用 `5fea7ca`。** 自它之后 `src/`、`tests/`、`scripts/` 零差异（可用 `git diff <后来的提交> 5fea7ca -- src/ tests/ scripts/` 自行核验，输出为空），所以**它足以唯一确定这份代码**。
+- **引代码时用 `9d1f70e`。** 自它之后 `src/`、`tests/`、`scripts/` 零差异（可用 `git diff <后来的提交> 9d1f70e -- src/ tests/ scripts/` 自行核验，输出为空），所以**它足以唯一确定这份代码**。
 - **引 HEAD 时以仓库当时的 HEAD 为准**，不要引用本文件里写下的任何 HEAD 值——它在本文件写下的那一刻就已经陈旧。
 
 **同一份文档在 12 小时内的两轮结论（v3.2 → v3.3）之间的差别，最值得记住的一句是**：v3.2 的 PASS 里有三条断言（R1 那条路由、R3 那条持久化、G1 那个前提）**当时并不存在**——不是当时判错了，是**当时没有问**。本文件对每一轮都记下「问了什么、怎么问的、结果是什么」，正是为了让「没有问」这件事在下一轮能被看出来。

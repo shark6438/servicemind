@@ -1,0 +1,261 @@
+{
+  "manifest_version": "1.3",
+  "frozen_at": "2026-10-02",
+  "production_sources": [
+    {
+      "id": "glpi-knowledge-base",
+      "version": "local-glpi-11",
+      "license": "tenant-owned",
+      "authority": "internal_knowledge",
+      "production_allowed": true,
+      "download_status": "live_connector_required",
+      "notes": "Index only through the caller's GLPI Entity/Group/Profile/User ACL."
+    },
+    {
+      "id": "servicemind-internal-runbooks",
+      "version": "phase3-baseline",
+      "license": "project-owned",
+      "authority": "internal_knowledge",
+      "production_allowed": true,
+      "download_status": "already_in_repository",
+      "path": "src/servicemind/agents/knowledge.py"
+    },
+    {
+      "id": "pagerduty-incident-response-docs",
+      "source_uri": "https://github.com/PagerDuty/incident-response-docs",
+      "revision": "464fc9d3e47e19e9d8da17cec1a41dc09624e95a",
+      "license": "Apache-2.0",
+      "authority": "external_best_practice",
+      "production_allowed": true,
+      "download_status": "verified",
+      "archive_sha256": "2c72fcf83dbfe4a06fc612268e048236563fb98ec978f2d43dbc5d754f976f13",
+      "path": "data/phase4/raw/production/incident-response-docs-master",
+      "ingestion_scope": "Markdown under docs; exclude images, slide decks, build files, and external links."
+    }
+  ],
+  "reference_sources": [
+    {
+      "id": "mendeley-help-desk-tickets-v3",
+      "source_uri": "https://data.mendeley.com/datasets/btm76zndnt/3",
+      "version": "3",
+      "doi": "10.17632/btm76zndnt.3",
+      "license": "CC-BY-4.0",
+      "authority": "public_historical_case",
+      "production_allowed": false,
+      "download_status": "verified",
+      "path": "data/phase4/raw/reference/mendeley-helpdesk-v3",
+      "ingestion_scope": "Only 360 issue IDs with matched sample_utterances are text-case candidates; remaining 66,331 records are structured analytics only.",
+      "files": {
+        "db.png": "44fce9a0449d706f2ae2eb85803358c76c1ead9f9caeefcff0a6ea6ae417f84d",
+        "EXAMPLE.md": "71de05944e1f1a3240d22716b292eb0586e00423b15bdf1a7513c6f66d945696",
+        "FEATURES.md": "e9443bffac53623293274f8fc1860aec0cadde58056c9b31476d67005a60d495",
+        "holidays_by_country.csv": "f97e9df840ea5ec74f9ffeadf3956e06f315197212d0d41469c6db92b5be68b2",
+        "issues_change_history.csv": "93f6d99893bac6eb755c075dc4a3c3f655cab7c6b4e2d54a3dca0b26e4b6a3c6",
+        "issues.csv": "eab3b8857bc19bd917e0767fb9c30b7714d5468b25c5a1c1cd71a760e9602f02",
+        "issues_snapshot.csv": "89975cd7e0868408ea7b0a701758d54a439255d7814fd3aa14b198f9ea543948",
+        "issues_snapshot_sample.xlsx": "f9b4d947e231ad518d97774bc74d99f44324e472a83198ee0656c6880edb5e92",
+        "process-flow.png": "e2961ba10b7b86d5af7025d7f4917d02d641c11ee03ec2aa63c4382740e7f5bf",
+        "sample_utterances.csv": "6486067634164a8d9fc361887b9b700965e704c9b03c87ef4e19275cccf30196"
+      },
+      "main_scoring_excluded": true,
+      "storage_class": "reference",
+      "governance_role": "distractor_offline_experiment",
+      "notes": "CC-BY-4.0 public historical tickets; 360 matched-text cases are text-case candidates only. v1.2 governance: NOT part of tenant main-scoring corpus. All 360 documents were unpublished from PostgreSQL and the active OpenSearch aliases on 2026-09-08; files now live only under raw/reference."
+    },
+    {
+      "id": "uci-incident-management-498",
+      "doi": "10.24432/C57S4H",
+      "license": "CC-BY-4.0",
+      "production_allowed": false,
+      "download_status": "files_missing_since_2026-09-08_restore_pending",
+      "csv_sha256": "fd184bbfd62329cfe093e99da2ea7071905f2ead91900b448eb2635870821bef",
+      "path": "data/phase4/raw/reference/uci-incident-management-498",
+      "required_for_release_gate": false
+    },
+    {
+      "id": "ibm-enterprise-itsm-graph-rag",
+      "source_uri": "https://github.com/IBM/enterprise-itsm-graph-rag",
+      "revision": "cac6b71896612dd40a6c1bd8d989a5c973422106",
+      "license": "Apache-2.0",
+      "production_allowed": false,
+      "synthetic": true,
+      "download_status": "files_missing_since_2026-09-08_restore_pending",
+      "archive_sha256": "d1ba75c1b8cbba936db63ef5f12f0746a3ae51dd8c67f577051f4d40d57a6b18",
+      "path": "data/phase4/raw/reference/enterprise-itsm-graph-rag-main",
+      "required_for_release_gate": false
+    }
+  ],
+  "evaluation_sources": [
+    {
+      "id": "techqa-rag-eval",
+      "revision": "0b5bbc84b7f07d6d09d063130e90b716d8d4a32a",
+      "license": "Apache-2.0",
+      "production_allowed": false,
+      "download_status": "restored_verified_2026-09-08",
+      "path": "data/phase4/raw/eval/techqa-rag-eval",
+      "required_for_release_gate": true,
+      "required_for_phase4_engineering_closure": true,
+      "records": 910,
+      "answerable": 610,
+      "impossible": 300,
+      "corpus_files": 28481,
+      "train_sha256": "69d97231509482ed6bd5ec1c4bc0607acb82a88d11169eb8383592d0ca8b93c7",
+      "corpus_sha256": "c06aa287dcc1abf8db6b49b8495df095db73342d729f6451ac330785245d10be"
+    },
+    {
+      "id": "semantic-similarity-7426225",
+      "doi": "10.5281/zenodo.7426225",
+      "license": "CC-BY-4.0",
+      "production_allowed": false,
+      "download_status": "files_missing_since_2026-09-08_restore_pending",
+      "standard_qrels": false,
+      "path": "data/phase4/raw/eval/semantic-similarity-7426225",
+      "required_for_release_gate": false
+    },
+    {
+      "id": "classification-7648117",
+      "doi": "10.5281/zenodo.7648117",
+      "license": "CC-BY-4.0",
+      "production_allowed": false,
+      "download_status": "files_missing_since_2026-09-08_restore_pending",
+      "path": "data/phase4/raw/eval/classification-7648117",
+      "required_for_release_gate": false
+    },
+    {
+      "id": "enterpriseops-gym-itsm",
+      "revision": "c8e538eae8a6205294f0a86675fefdc1fac408f6",
+      "license": "Apache-2.0",
+      "production_allowed": false,
+      "download_status": "restored_verified_2026-09-08",
+      "path": "data/phase4/raw/eval/enterpriseops-gym-itsm",
+      "scope": "ITSM parquet only; 103 tasks in each of four tool-set modes.",
+      "required_for_release_gate": true,
+      "required_for_phase4_engineering_closure": false,
+      "files": {
+        "oracle/itsm-00000-of-00001.parquet": "63240f60ee8810e50267034137b811f4c06c5f2cd84fcd8b1122448e871f9f4b",
+        "plus_5_tools/itsm-00000-of-00001.parquet": "b2428d1a7fd6a374d432d3d4a262ec82f3ffa4a2611c6a0c5027f460e3cd6e1a",
+        "plus_10_tools/itsm-00000-of-00001.parquet": "235b1a5cf8fa0f17e01c07f0e8b2107d6d56bd0fecf1e46c4354beed10d3a1dc",
+        "plus_15_tools/itsm-00000-of-00001.parquet": "34c521f338e1fb9957400eda58e0ef8be32c9b021190a4f2dbafd0f7cfbebbd5"
+      }
+    },
+    {
+      "id": "agentdojo",
+      "revision": "089ed468cf3ed0322acc66b0211f26d9d90dbf60",
+      "license": "MIT",
+      "production_allowed": false,
+      "download_status": "restored_verified_2026-09-08",
+      "archive_sha256": "b1cbd20962cca3dafb9317a4117db65cd61a56c7f480ff0df2357d3f6c77849c",
+      "path": "data/phase4/raw/eval/agentdojo-main",
+      "required_for_release_gate": true,
+      "required_for_phase4_engineering_closure": false,
+      "extracted_files": 36860
+    },
+    {
+      "id": "servicenow-itsm-safety-bench",
+      "source_uri": "https://github.com/ServiceNow/ServiceNow-itsm-safety-bench",
+      "license": "NOASSERTION",
+      "production_allowed": false,
+      "upstream_confirmed": true,
+      "download_status": "files_missing_since_2026-09-08_restore_pending",
+      "required_before_ci": [
+        "download repository",
+        "record exact commit",
+        "verify repository or dataset license",
+        "run upstream 274-test suite",
+        "adapt ServiceNow fields and tools to ServiceMind Unified ITSM Schema"
+      ],
+      "required_for_release_gate": false
+    },
+    {
+      "id": "lotte-technology",
+      "source_uri": "https://huggingface.co/datasets/colbertv2/lotte_passages",
+      "mirror_uri": "https://hf-mirror.com/datasets/colbertv2/lotte_passages",
+      "revision": "3be7f857585299f1268d29d3591202d731ea84a1",
+      "license": "Apache-2.0",
+      "authority": "public_benchmark",
+      "production_allowed": false,
+      "download_status": "frozen_verified",
+      "path": "data/phase4/raw/eval/lotte-hf",
+      "ingestion_scope": "LoTTE technology topic only. dev selects and diagnoses; test is sealed for a single R5 confirmation and is guarded by the R1.2 loader.",
+      "required_for_release_gate": false,
+      "required_for_r2_admission": "dev",
+      "canonical_distribution": {
+        "uri": "https://downloads.cs.stanford.edu/nlp/data/colbert/colbertv2/lotte.tar.gz",
+        "bytes": 3576167599,
+        "last_modified": "Tue, 01 Feb 2022 21:33:35 GMT",
+        "fetched": false,
+        "note": "3.58 GB at 45 KiB/s measured from this host (~21 h); the pinned Hub copy is the authors' own upload of the same files. Kept as a cross-reference to be checked if the tarball is ever fetched."
+      },
+      "files": {
+        "technology/dev_collection.jsonl": {
+          "split": "dev",
+          "bytes": 956766750,
+          "sha256": "75c022241668f40d84d7a1207a3ffd9a1e8358bb6c36c590a66480635347be54"
+        },
+        "technology/dev/questions.search.tsv": {
+          "split": "dev",
+          "bytes": 42316,
+          "git_blob_id": "f69b7f914eef1acb0714d295d7230758aaa70e65"
+        },
+        "technology/dev/qas.search.jsonl": {
+          "split": "dev",
+          "bytes": 252078,
+          "sha256": "b224e2ca11e178454d891b1453958f7a39875fd9a3e52a3d7a7a7129ea27c623"
+        },
+        "technology/dev/questions.forum.tsv": {
+          "split": "dev",
+          "bytes": 116075,
+          "git_blob_id": "0ac5d1acb766d7141a3c23ab2844db50a8ad974e"
+        },
+        "technology/dev/qas.forum.jsonl": {
+          "split": "dev",
+          "bytes": 380956,
+          "sha256": "f3c6b9a4a56957da3c89f8ce6ce30ea8b76f1772d6b2e405b1f1e581de678ba7"
+        },
+        "technology/dev/metadata.jsonl": {
+          "split": "dev",
+          "bytes": 322609239,
+          "sha256": "57bf617c6c5e9ba1eb672cec684f56c364cd0ba71592c53c0f28e3e1e54de306"
+        },
+        "technology/test/collection.tsv": {
+          "split": "test",
+          "bytes": 557032287,
+          "sha256": "1b62fb1d0bb708cb07b01533fc71c9ba81327ba08653e37f965e9f5e2a531c4c"
+        },
+        "technology/test/questions.search.tsv": {
+          "split": "test",
+          "bytes": 27771,
+          "git_blob_id": "eac4b8d4125f62c9b4d2516f05e017e0564ae6ba"
+        },
+        "technology/test/qas.search.jsonl": {
+          "split": "test",
+          "bytes": 172318,
+          "sha256": "4f00fa3bbbc23e0575eed4ddf23f3df16ae1c3f3df4075bfb100c38c67755daf"
+        },
+        "technology/test/questions.forum.tsv": {
+          "split": "test",
+          "bytes": 118186,
+          "git_blob_id": "cc2442508ca1c87254c8c4b35377b30b30dd6175"
+        },
+        "technology/test/qas.forum.jsonl": {
+          "split": "test",
+          "bytes": 378009,
+          "sha256": "9c3530af0c9c82f2fcee994110e443e335c3935919c6387d2b89354fb35b0faf"
+        },
+        "technology/test/metadata.jsonl": {
+          "split": "test",
+          "bytes": 175021314,
+          "sha256": "23ddb8ef99cebe93c7aabd30996da00a58ad0b733286c56807260fb2deb8f185"
+        }
+      },
+      "dev_passages": 1276222,
+      "test_passages": 638509,
+      "dev_search_queries": 916,
+      "dev_forum_queries": 2003,
+      "test_search_queries": 596,
+      "test_forum_queries": 2004
+    }
+  ],
+  "revised_at": "2026-10-02",
+  "revision_notes": "v1.2 data-governance reconciliation. Mendeley V3 is non-production reference/distractor data and was removed from the tenant production index on 2026-09-08. TechQA, EnterpriseOps-Gym ITSM, and AgentDojo were restored at pinned revisions and checksums and are reproducible through scripts/fetch_phase4_eval.py. UCI, IBM, classification, and similarity data remain optional restore items and do not block the engineering release gate. v1.3 freezes LoTTE technology dev+test from the pinned ColBERT Hub upload for R2 candidate-recall admission; the Stanford tarball is recorded as an unfetched cross-reference."
+}

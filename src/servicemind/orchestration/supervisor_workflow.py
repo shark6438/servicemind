@@ -1059,8 +1059,14 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                 },
                 # Without these a degraded knowledge task reads as a bare status in the
                 # run timeline; the cause was only recoverable from the service journal.
+                # Clipped by the shared both-ends clip, not by ``str(error)[:300]``: an
+                # ``OutputParserException`` from the knowledge model opens with the whole
+                # completion and ends with the schema violation, so a head-only slice
+                # keeps the one part that says nothing about this failure. This line held
+                # the head-only form until 2026-10-01, which made it the only degradation
+                # in the graph recorded that way.
                 "failure_code": type(error).__name__ if error else None,
-                "failure_detail": str(error)[:300] if error else None,
+                "failure_detail": bounded_error_text(error) if error else None,
                 "policy_version": "servicemind-agent-policy-v2",
             },
         )

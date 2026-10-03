@@ -66,6 +66,12 @@ def model_analysis(refs: list[str]) -> AnalysisResult:
     )
 
 
+#: Every long failure message here ends with this. The clip keeps both ends and drops
+#: the middle, so a marker at the very end is exactly what a head-only slice loses.
+MARKER = "<-- cause, at the end"
+LONG_FAILURE_BODY = "filler " * 500
+
+
 class CrashAfterFirst:
     """Succeeds once (the draft), then raises on the revision call."""
 
@@ -77,7 +83,7 @@ class CrashAfterFirst:
         self.calls += 1
         if self.calls == 1:
             return self.first
-        raise RuntimeError("revision model transport crash")
+        raise RuntimeError(f"revision model transport crash: {LONG_FAILURE_BODY} {MARKER}")
 
 
 def invocation() -> AgentInvocationContext:
@@ -126,6 +132,11 @@ async def test_revision_model_crash_is_reported_as_revision_failure(monkeypatch)
     )
     assert result.status is AgentRunStatus.DEGRADED
     assert result.failure_code == "ANALYSIS_REVISION_FAILURE"
+    # The recorded detail is the shared both-ends clip, observed on the result rather than
+    # read off the source. ``str(exc)[:1000]`` keeps the completion and drops the violation.
+    assert len(result.failure_detail) <= 1000
+    assert "characters elided" in result.failure_detail
+    assert result.failure_detail.endswith(" " + MARKER)
     assert result.output.status is AnalysisStatus.DEGRADED
     assert any("RuntimeError" in item for item in result.output.validation_feedback)
     assert result.metrics.model_calls == 2  # draft + one revision attempt

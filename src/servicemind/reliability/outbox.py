@@ -86,8 +86,25 @@ class RedisStreamPublisher:
         return message_id.decode() if isinstance(message_id, bytes) else str(message_id)
 
 
+def _decode(fields: Any) -> dict[str, str]:
+    """The stream is read in binary mode, so every field arrives as bytes."""
+    return {
+        (key.decode() if isinstance(key, bytes) else str(key)): (
+            value.decode() if isinstance(value, bytes) else str(value)
+        )
+        for key, value in fields.items()
+    }
+
+
 class RedisStreamConsumer:
-    """At-least-once consumer with PEL recovery; handlers must be idempotent."""
+    """At-least-once consumer with PEL recovery; handlers must be idempotent.
+
+    Both read paths ack *after* the handler returns. A handler that raises leaves its
+    message pending under this consumer, which is what makes the delivery at-least-once:
+    the failure is retried by :meth:`reclaim` rather than lost. Acking first -- or acking
+    in a ``finally`` -- would turn a handler crash into a silently dropped event, and the
+    outbox row it came from would already read ``published``.
+    """
 
     def __init__(self, client: Any, *, stream: str, group: str, consumer: str) -> None:
         self.client, self.stream, self.group, self.consumer = client, stream, group, consumer
@@ -100,6 +117,7 @@ class RedisStreamConsumer:
                 raise
 
     async def once(self, handler: Callable[[dict[str, str]], Awaitable[None]]) -> int:
+        """Deliver messages this group has never seen, oldest first."""
         await self.ensure_group()
         batches = await self.client.xreadgroup(
             self.group, self.consumer, {self.stream: ">"}, count=10, block=1000
@@ -107,20 +125,51 @@ class RedisStreamConsumer:
         processed = 0
         for _, messages in batches:
             for message_id, fields in messages:
-                decoded = {
-                    (key.decode() if isinstance(key, bytes) else str(key)): (
-                        value.decode() if isinstance(value, bytes) else str(value)
-                    )
-                    for key, value in fields.items()
-                }
-                await handler(decoded)
+                await handler(_decode(fields))
                 await self.client.xack(self.stream, self.group, message_id)
                 processed += 1
         return processed
 
-    async def reclaim(self, min_idle_ms: int = 30_000) -> int:
+    async def reclaim(
+        self,
+        handler: Callable[[dict[str, str]], Awaitable[None]],
+        *,
+        min_idle_ms: int = 30_000,
+        count: int = 100,
+    ) -> int:
+        """Deliver messages another consumer claimed and never acknowledged.
+
+        This is the half of at-least-once that a crash makes necessary. A consumer that
+        dies between reading a message and acking it leaves that message in the group's
+        pending list, owned by nobody who will ever handle it; without this call the
+        message is delivered to no one and the guarantee is at-most-once in practice.
+
+        It used to be exactly that. The former signature took no handler and returned
+        ``len(result[1])`` -- the number of messages it had just moved into *this*
+        consumer's pending list -- so it took work away from the dead consumer and gave
+        it to a live one that filtered it out. A caller reading the count would see
+        deliveries that never happened.
+
+        The sweep always starts from ``"0-0"`` rather than resuming from the cursor
+        ``XAUTOCLAIM`` returns. Every message is acked as it is handled, so it leaves the
+        pending list and the next call finds the next batch; the loop terminates without
+        exposing a cursor, and no single call is unbounded. ``count`` is therefore the
+        page size, not a limit on how much recovery can be done.
+        """
         await self.ensure_group()
         result = await self.client.xautoclaim(
-            self.stream, self.group, self.consumer, min_idle_ms, "0-0", count=100
+            self.stream, self.group, self.consumer, min_idle_ms, "0-0", count=count
         )
-        return len(result[1]) if len(result) > 1 else 0
+        # Redis >= 7 answers with [cursor, messages, deleted_ids]; older servers omit the
+        # third element. An entry whose payload was trimmed away comes back with ``None``
+        # fields and has nothing left to hand a handler -- acking it is what clears it.
+        messages = result[1] if len(result) > 1 else []
+        processed = 0
+        for message_id, fields in messages:
+            if fields is None:
+                await self.client.xack(self.stream, self.group, message_id)
+                continue
+            await handler(_decode(fields))
+            await self.client.xack(self.stream, self.group, message_id)
+            processed += 1
+        return processed

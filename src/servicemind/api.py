@@ -432,6 +432,12 @@ async def approve_run(
 
 @phase2_router.post("/runs/{run_id}:cancel")
 async def cancel_run(run_id: UUID, context: TenantContextDependency) -> RunView:
+    # Cancelling is a mutation of a run the caller did not necessarily create, and
+    # ``list_runs`` exposes every run in the tenant. Without a floor, a read-only
+    # ``viewer`` could stop work across the whole tenant. ``analyst`` matches the
+    # floor that lets the same principal create one; approvers hold it too, so this
+    # does not narrow anyone who already had a hand in the run's lifecycle.
+    context.require_role("analyst")
     repository = ServiceMindRepository(context.tenant_id)
     run = await repository.get_run(run_id)
     if run is None:

@@ -109,6 +109,23 @@ def _bounded_evidence_content(content: str) -> str:
     return head + _EVIDENCE_TRUNCATION_SUFFIX
 
 
+def source_ceiling_applies(distinct_sources: int) -> bool:
+    """Whether ``SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE`` is in force for a candidate pool.
+
+    The ceiling is a fairness bound *between* sources -- its own comment in
+    ``core/settings.py`` reads "no single source may drown every other source". With one
+    source in the pool there is no other source to drown, and applying the bound anyway
+    turns it into an absolute ceiling on the whole prompt: a tenant fed by a single
+    connector is capped at ``per_source_cap`` parents however much of the token budget is
+    left over. That is a property of the corpus, not of the question, and it is exactly
+    what the ceiling was not written to do.
+
+    The predicate lives here, spelled once, so the packer, the production evaluation and
+    the packing diagnostic cannot drift apart on when the ceiling applies.
+    """
+    return distinct_sources > 1
+
+
 class EnterpriseRAG:
     def __init__(
         self,
@@ -453,6 +470,11 @@ class EnterpriseRAG:
         # stays relevance-ordered; caps only skip, never pad with irrelevant content.
         per_document_cap = settings.SERVICEMIND_RAG_MAX_PARENTS_PER_DOCUMENT
         per_source_cap = settings.SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE
+        # Enforced only between competing sources; see source_ceiling_applies. The
+        # per-document ceiling and the token budget still bound the pack, and those are
+        # what the anti-crowding half of that comment asks for -- this removes a rule that
+        # had nothing to balance, it does not loosen one.
+        enforce_source_ceiling = source_ceiling_applies(len({hit.source for hit in ranked}))
         seen_parents: set[UUID] = set()
         per_document: Counter[UUID] = Counter()
         per_source: Counter[str] = Counter()
@@ -470,7 +492,7 @@ class EnterpriseRAG:
                 continue
             if per_document[hit.document_id] >= per_document_cap:
                 continue
-            if per_source[hit.source] >= per_source_cap:
+            if enforce_source_ceiling and per_source[hit.source] >= per_source_cap:
                 continue
             seen_parents.add(hit.parent_chunk_id)
             per_document[hit.document_id] += 1

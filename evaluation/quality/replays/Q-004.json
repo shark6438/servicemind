@@ -4,15 +4,18 @@
   "subject": "globex-analyst-g3",
   "ticket_ref": "globex-quality-access",
   "question": "If the VPN handshake fails twice within five minutes, are further reconnects attempted automatically?",
-  "run_id": "2310e1b8-05e5-4bce-9829-3e156e14a9f3",
+  "run_id": "5f7b103f-1cae-48ba-aea3-ddcb96ecb5f0",
   "terminal_status": "succeeded",
   "reviewer_decision": "passed",
+  "human_review_decision": null,
   "citations": [
     "KB-Q-VPN-CONN",
     "KB-Q-ROLLBACK",
     "KB-Q-PASSWORD",
+    "KB-GLOBEX-VPN-MFA-G3",
+    "KB-GLOBEX-VPN-APP-REG",
     "KB-GLOBEX-VPN-MFA-REBIND",
-    "KB-GLOBEX-VPN-APP-REG"
+    "KB-Q-SEVERITY"
   ],
   "observed_username": "globex-analyst-g3",
   "unreadable_citations": 0,
@@ -22,8 +25,8 @@
   "proposed_actions": 0,
   "review_findings": 0,
   "errors": [],
-  "elapsed_seconds": 14.96,
-  "observed_at": "2026-09-24T00:38:56.037599+00:00",
-  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(121 files)",
+  "elapsed_seconds": 17.81,
+  "observed_at": "2026-10-02T14:05:00.368237+00:00",
+  "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(bb9010dda000)",
   "cases_digest": "d02040916da13337891e1c31d16ae51adb60744d5b056a653b514eacd3a931ee"
 }

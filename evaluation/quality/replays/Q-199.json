@@ -4,16 +4,18 @@
   "subject": "globex-analyst-g3",
   "ticket_ref": "globex-quality-uncovered",
   "question": "How do I set up a direct debit for the staff canteen?",
-  "run_id": "1edc403a-6603-4ead-bf4d-a594137aeab4",
+  "run_id": "66d67150-b85c-4cd6-8118-d186b1e8d122",
   "terminal_status": "succeeded",
   "reviewer_decision": "passed",
+  "human_review_decision": null,
   "citations": [
     "KB-Q-PASSWORD",
     "KB-Q-MFA-ENROL",
     "KB-Q-SPLIT-V2",
+    "KB-Q-PATCHING",
+    "KB-GLOBEX-VPN-MFA-AUDIT",
     "KB-GLOBEX-VPN-MFA-G3",
-    "KB-Q-DB-FAILOVER",
-    "KB-GLOBEX-VPN-MFA-AUDIT"
+    "KB-GLOBEX-VPN-MFA-REBIND"
   ],
   "observed_username": "globex-analyst-g3",
   "unreadable_citations": 0,
@@ -23,8 +25,8 @@
   "proposed_actions": 0,
   "review_findings": 0,
   "errors": [],
-  "elapsed_seconds": 17.46,
-  "observed_at": "2026-09-24T00:36:19.848376+00:00",
-  "deployed_revision": "7a6e6758d2e4966771546e57482e8b0a5d8b19dc+dirty(120 files)",
+  "elapsed_seconds": 35.31,
+  "observed_at": "2026-10-02T14:28:50.166025+00:00",
+  "deployed_revision": "b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(bb9010dda000)",
   "cases_digest": "d02040916da13337891e1c31d16ae51adb60744d5b056a653b514eacd3a931ee"
 }

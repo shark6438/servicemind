@@ -101,6 +101,7 @@ async def test_one_tenants_retention_failure_does_not_stop_the_others() -> None:
     assert other in relay.calls
 
 
+@pytest.mark.postgres
 @pytest.mark.docker
 async def test_the_sweep_retires_delivered_rows_and_keeps_everything_else() -> None:
     """Asserted against PostgreSQL, because the claim is about what survives a DELETE.
@@ -189,6 +190,7 @@ async def test_the_sweep_retires_delivered_rows_and_keeps_everything_else() -> N
             await session.flush()
 
 
+@pytest.mark.postgres
 @pytest.mark.docker
 async def test_the_sweep_leaves_another_tenants_rows_alone() -> None:
     """RLS is what makes a DELETE safe here, and a delete is the one operation it protects least.
