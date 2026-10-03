@@ -247,8 +247,13 @@ jobs:
       run: npm run check
     - name: Audit dependencies and generate frontend SBOM
       working-directory: frontend
+      # The gate audits the whole installed tree, dev dependencies included. It goes
+      # through scripts/audit-gate.mjs only so that a scoped, self-expiring exception
+      # (.npmauditignore.json, same contract as the root .trivyignore.yaml) can be
+      # printed in the log instead of being invisible -- a bare `npm audit
+      # --audit-level=high` cannot pass while an advisory has no released fix.
       run: |
-        npm audit --audit-level=high
+        node scripts/audit-gate.mjs
         npm sbom --sbom-format=cyclonedx > frontend-sbom.cdx.json
     - name: Upload frontend SBOM
       uses: actions/upload-artifact@v7

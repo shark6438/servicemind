@@ -497,7 +497,9 @@ class ModelGateway:
                             - (time.perf_counter() - call_started),
                         )
                     )
-            if provider_is_down(last_error):
+            # last_error is None only when the attempt loop never ran and never raised,
+            # which is not evidence about the provider -- so it must not reach the breaker.
+            if last_error is not None and provider_is_down(last_error):
                 self._failures[provider] = self._failures.get(provider, 0) + 1
                 if self._failures[provider] >= self.circuit_failure_threshold:
                     self._open_until[provider] = time.monotonic() + self.circuit_open_seconds

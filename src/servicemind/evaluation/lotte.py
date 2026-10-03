@@ -274,7 +274,11 @@ def verify_digests(topic: str, *, root: str | Path | None = None) -> list[str]:
     if not path.is_file():
         raise LotteError(f"{path} is missing; freeze the dataset before verifying it")
     entry = _manifest_entry(json.loads(path.read_text(encoding="utf-8")))
-    recorded = entry.get("files") or {}
+    files = entry.get("files")
+    # The manifest is on disk and could have been edited; narrow rather than assume, so a
+    # malformed "files" section is reported as every path being untracked instead of
+    # raising AttributeError out of a verification helper.
+    recorded: dict[str, str] = files if isinstance(files, dict) else {}
     problems = [
         name
         for name, expected in sorted(recorded.items())

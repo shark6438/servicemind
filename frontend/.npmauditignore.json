@@ -1,0 +1,13 @@
+{
+  "_comment": "作用域限定的依赖审计豁免。只覆盖通告里列出的那一条，且自己会到期。契约与仓库根的 .trivyignore.yaml 相同：例外必须在日志里可见，并且到期后自动重新生效。",
+  "_why_exemption_instead_of_upgrade": "这一条没有任何可升级到的版本。通告 GHSA-vfj7-8cjw-p6xm 的 first_patched_version 为 null，braces 在 npm 上的 latest 与上游 master 都停在 3.0.3，而 3.0.3 本身就是被标注为受影响的最新版。npm audit fix --force 给出的方案是把 eslint-config-next 从 16.3.5 降到 14.2.35 的 semver-major 降级，那既修不掉 braces，又会破坏 lint 配置。也没有更新的 electron 配置可以换：最新的 eslint-config-next@16.3.8 仍经 @next/eslint-plugin-next -> fast-glob@3.3.1 -> micromatch -> braces 拉到同一条链。所以这里没有『升级一下』这个动作可做。",
+  "_why_this_image_is_not_exposed": "整条链是 devDependency：npm ls --omit=dev 为空，npm audit --omit=dev --audit-level=high 报 0 vulnerabilities，所以它不进运行时镜像，不在生产路径上。该通告的触发面是『用深层嵌套的 glob 模式造成栈耗尽』，即需要攻击者能控制传给 braces 的模式；在这个仓库里，模式来自 eslint.config.mjs 里仓库自己写的静态 glob，不是任何外部输入。",
+  "advisories": [
+    {
+      "id": "GHSA-vfj7-8cjw-p6xm",
+      "package": "braces",
+      "statement": "上游无修复版本（first_patched_version 为 null，latest=3.0.3 即受影响版本）；载体是 dev-only 的 lint 工具链，且模式来自仓库静态配置而非外部输入，无到达路径。上游发布修复后应删除本条。",
+      "expired_at": "2026-11-15"
+    }
+  ]
+}

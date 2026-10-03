@@ -136,9 +136,14 @@ class BgeM3MultiVectorEncoder:
 
         from transformers import AutoTokenizer
 
-        self.tokenizer = AutoTokenizer.from_pretrained(
+        tokenizer = AutoTokenizer.from_pretrained(
             str(self.snapshot_dir), trust_remote_code=False, local_files_only=True
         )
+        if tokenizer is None:
+            # Same failure as the two checks above: a snapshot that cannot yield its head
+            # or its tokenizer is not a usable snapshot, and every later call would fail.
+            raise FileNotFoundError(f"{self.snapshot_dir} yielded no tokenizer")
+        self.tokenizer = tokenizer
         self.model = _load_backbone(torch, self.snapshot_dir)
         self.model.eval()
         self.model.to(self.device)
