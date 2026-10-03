@@ -6,53 +6,72 @@
 
 > **简体中文说明见 [README.zh-CN.md](README.zh-CN.md)。**
 
-ServiceMind is an **enterprise ITSM agent platform**: an orchestrator that turns a GLPI
-ticket into a governed, auditable, multi-agent run. It layers enterprise retrieval
-(hybrid RAG over OpenSearch with cross-encoder reranking, plus structural Graph-RAG over
-Neo4j), governed long-term memory, a model gateway with cost/audit control, and human
-approval workflows on top of a LangGraph agent service.
+ServiceMind turns a GLPI ticket into a **tenant-scoped, auditable and human-governed ITSM
+run**. It is designed for the gap between an LLM that can suggest a response and an ITSM
+platform that must explain its evidence, respect access boundaries and require approval
+before changing a production ticket.
 
-The repo is a derivative of the 🧰 [AI Agent Service Toolkit](https://github.com/JoshuaC215/agent-service-toolkit)
-(MIT). The full upstream git history is preserved — see [Upstream, history and license](#upstream-history-and-license).
+## The product flow
 
-## What ServiceMind adds
+```mermaid
+flowchart LR
+    A[GLPI ticket or signed webhook] --> B[OIDC tenant and role boundary]
+    B --> C[Router and Supervisor]
+    C --> D[Data Agent]
+    C --> E[Knowledge Agent]
+    D --> F[GLPI / CMDB tools]
+    E --> G[Hybrid RAG / Graph-RAG]
+    F --> H[Analysis Agent]
+    G --> H
+    H --> I[Reviewer: evidence, risk and policy]
+    I --> J{Write requested?}
+    J -->|No| K[Audited answer]
+    J -->|Yes| L[Human-in-the-loop approval]
+    L --> M[Tool Gateway: policy, idempotency, verification]
+    M --> N[Verified GLPI follow-up]
+```
 
-- **ITSM ticket runs** — `POST /v1/servicemind/runs` starts a governed agent run bound to
-  a GLPI ticket. Each run is tenant-scoped, role-checked, and recorded in an append-only
-  audit log. Runs that plan to change state pause for **human approval** keyed to an
-  immutable action hash; runs that cannot resolve under policy pause for human review
-  instead of guessing.
-- **GLPI integration** — read/action client for GLPI 11 (High-Level API), signed webhook
-  ingestion (`/v1/servicemind/webhooks/glpi`) with idempotent dedupe, entity scoping, and a
-  health probe. Run it against the bundled local stack in `deploy/glpi/`.
-- **Hybrid enterprise RAG (Phase 4)** — document → parent → child chunking with a semantic
-  chunker, BM25 + dense retrieval fused by reciprocal rank fusion on OpenSearch, a
-  cross-encoder rerank pass, multi-query lexical fan-out, citation-carrying evidence, and a
-  context packer with per-document/source diversity ceilings. ACLs and tenant row-level
-  security are enforced at query time.
-- **Graph-RAG (Phase 4)** — a Neo4j projection of `Ticket → CI → Service → Problem →
-  Change` relationships answers structural queries (e.g. "what else depends on this
-  service?") that text retrieval alone cannot express. Graph findings are a side channel;
-  hybrid text retrieval stays the primary channel.
-- **Governed long-term memory + context (Phase 5)** — declarative, feature-gated memory
-  with confidence-thresholded auto-activation, vector retrieval, and an input context
-  packer under a token budget, so rollout never needs a schema downgrade.
-- **Model gateway governance (Phase 5)** — provider/model allowlists (global and per-tenant),
-  per-call audit persistence, retry/timeout/cost ceilings, and a semantic cache.
-- **Governed tool platform (Phase 6)** — a single Tool Gateway in front of every tool call:
-  a frozen registry with Draft 2020-12 contracts, RBAC/ABAC/capability intersection, taint
-  and injection checks, fail-closed OPA policy behind a mandatory local layer, approval
-  binding, and append-only audit that stores policy/tool/schema versions and payload hashes
-  rather than credentials or content. MCP (`2026-07-28`) is an exposure boundary over that
-  same gateway, not a second permission system; rate limiting, bulkhead, circuit breaking,
-  idempotency and durable tasks run on Redis + PostgreSQL, with PostgreSQL the only
-  authoritative store.
-- **Skills** — versioned skills (`skills/`) the agents can be equipped with for change
-  risk, incident triage, major incidents, recurring problems, and VPN/MFA recovery.
+Every stage is tenant-aware. Read access is constrained by OIDC claims, retrieval ACLs and
+PostgreSQL row-level security; a write is bound to a reviewed ActionIntent and is verified
+against GLPI after it is made.
 
-It also keeps the toolkit's runtime scaffold: a FastAPI service that serves both the
-ServiceMind API and the generic LangGraph agents, an `AgentClient`, and a Streamlit
-"ServiceMind Console" chat UI with voice input/output.
+## Core capabilities
+
+| Capability | What it provides |
+| --- | --- |
+| **Governed multi-agent orchestration** | A LangGraph Router/Supervisor plans and dispatches Data, Knowledge, Analysis, Reviewer and Action tasks as a bounded DAG. |
+| **Enterprise evidence retrieval** | Hybrid OpenSearch retrieval, reranking, citations and optional Neo4j Graph-RAG, all filtered by tenant/entity/group ACLs. |
+| **Human-controlled change execution** | Immutable action hashes, reviewer gates, HITL approval, idempotency, read-after-write verification and append-only audit records. |
+| **Model and tool governance** | Provider/model allowlists, cost and timeout limits, semantic caching, a schema-validated Tool Gateway, OPA support and MCP exposure. |
+| **Operational console** | OIDC-protected Next.js and Streamlit interfaces for runs, approvals, audit, memory review and evaluation visibility. |
+
+## Evaluation snapshot
+
+The evaluation records are versioned evidence, not marketing claims. The current delivery
+summary and known limitations are in
+[the final deliverable report](docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md).
+
+| Area | Recorded result |
+| --- | --- |
+| End-to-end business quality | **119/120 (99.17%)**, above the 0.85 release threshold |
+| Security and fault handling | **72 scenarios passed**; 252 evidence assertions and 87 mutation assertions passed |
+| Reliability | Run status and review decision were stable across 8 cases × 5 repeats; citation output remains flaky (`0.875`) |
+| Load | **Not accepted**: the gate fails on deterministic case `Q-002`; latency itself did not regress |
+| RAG quality | Experimental / not a release claim: the gold-label and corpus work remains incomplete |
+| Memory | Governance contracts pass; production business quality has not been sampled |
+
+Detailed evidence, including the non-passing gates, is linked from
+[the 18-area coverage audit](docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md). Historical
+artifacts under `evaluation/` are intentionally retained so the recorded conclusions can be
+traced to their inputs.
+
+## Architecture
+
+<img src="media/agent_architecture.png" width="700" alt="ServiceMind architecture diagram">
+
+The repository is derived from the 🧰 [AI Agent Service Toolkit](https://github.com/JoshuaC215/agent-service-toolkit)
+(MIT); the upstream history is retained. ServiceMind adds the ITSM governance, persistence,
+retrieval, approval and evaluation layers described above.
 
 ## Repository layout
 
@@ -348,6 +367,15 @@ scripts/audit_project_structure.py` (no `--check`) — and commit both together.
 linting, the architecture gate, and a docker-based integration job. For per-commit
 authoring conventions see [CLAUDE.md](CLAUDE.md).
 
+The frontend job installs with `npm ci`, runs `npm run check` (lint, type-check, unit tests,
+production build) and a dependency gate. That gate lives in
+[`frontend/scripts/audit-gate.mjs`](frontend/scripts/audit-gate.mjs) rather than being a bare
+`npm audit --audit-level=high`, because one advisory in the lint toolchain has **no released
+fix** (upstream `braces` is at its latest version, which is the affected one). The gate still
+audits the whole installed tree; only the named advisory is excused, and only until it
+expires — the same contract as the root [`.trivyignore.yaml`](.trivyignore.yaml), so an
+exception is printed in the log and re-enforced automatically.
+
 ### What the Phase-7 acceptance gate does and does not say
 
 `uv run python scripts/check_phase7_gate_reports.py` re-runs the four Phase-7 gates offline
@@ -355,7 +383,7 @@ and compares each verdict against the report committed for it. It exits 0 when t
 and that exit code is easy to read as "acceptance passes". It is not that.
 
 The verdicts come from grading replays on disk. The acceptance batch is 28 replays, all
-recorded at `cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`; HEAD is five
+recorded at `cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`; HEAD is several
 commits later. Two properties are checked over those files -- that they all describe one
 revision (homogeneity), and that the grader still reaches the verdict each committed report
 claims. Whether that revision is the *current* one (currency) is a separate question, and
@@ -368,9 +396,20 @@ acceptance"**. The script prints the revision it graded and reports `currency_ch
 false` whenever nothing compared it against an expected revision; pass `--expect-revision
 <rev>`, or re-record with `scripts/verify_phase7_acceptance_live.py` against the deployment
 you mean to describe, to turn currency into a checked fact. The other three gates carry the
-same limit, and currently refuse rather than grade.
+same limit.
 
 ## Documentation index
+
+Start here for the current, measured state:
+
+- Final deliverable report (the full execution record; Chinese):
+  [`docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md`](docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md)
+- Evaluation coverage audit, 18 categories item by item:
+  [`docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md`](docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md)
+- Remaining Phase-7 evaluation items (trajectory, coordination, reliability, semantic judge):
+  [`docs/PHASE7_REMAINING_EVALUATION_2026-10-02.md`](docs/PHASE7_REMAINING_EVALUATION_2026-10-02.md)
+
+Reference and background:
 
 - Enterprise spec (Chinese): [`docs/企业IT服务管理(ITSM)智能体平台.md`](docs/企业IT服务管理(ITSM)智能体平台.md)
 - Architecture map: [`docs/PHASE3_CURRENT_ARCHITECTURE_MAP.md`](docs/PHASE3_CURRENT_ARCHITECTURE_MAP.md)

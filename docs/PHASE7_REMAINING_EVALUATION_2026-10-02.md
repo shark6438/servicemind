@@ -25,7 +25,9 @@
 **术语纪律**（沿用 `docs/PHASE7_ACCEPTANCE_BASELINE.md`）：
 
 - **已执行** = 有可复现的观测产物，且产物里记着产生它的命令与输入摘要。
+
 - **未执行** = 尚无观测数据。**不等于「已确认无缺陷」，也不等于「有缺陷」。**
+
 - 本轮四份报告都**不是**在线验收：它们读的是**已记录**的运行（`agent_runs` / `run_events` /
   `model_invocations`），证明的是「这些记录支持什么结论」，不是「当前代码在线会这样跑」。
 
@@ -38,7 +40,9 @@
 - 质量批回放（`evaluation/quality/replays/*.json`）每个都带 `run_id`。§0–§2 初写时是
   **121 个回放**（冻结修订 `b385df7c…+patch(7ddbb7281c29)`）；10-03 重渲染后是 **200 个**
   （`+patch(bb9010dda000)`，含质量批扩展后的全部四类）。**下文两张表都给了两列。**
+
 - `agent_runs` 没有修订列，**回放才是归属依据**；`run_id` 是把回放接到库里的唯一键。
+
 - 由此可以读到 `run_events`、模型调用账本与工具调用账本，以及
   `agent_runs.result` 的全部结构（`trajectory` / `review` / `handoff` / `branch_timings` /
   `task_plan` / `control` …）：121 例语料下是 2,816 行 `run_events` / **636** 次模型调用 /
@@ -52,6 +56,7 @@
 1. **RLS**：`agent_runs` 受行级安全约束，安全上下文要靠**会话级**设置
    `select set_config('app.tenant_id', <uuid>, false)`。用事务本地（`true`）时，在自动提交下会被静默丢弃，
    查询会返回 0 行——**看起来像「数据不存在」，实际是「没设上下文」**。
+
 2. **`result` 是 `json` 不是 `jsonb`**，成员测试必须写 `result::jsonb ? 'key'`。
 
 ---
@@ -90,9 +95,11 @@
 会移动指纹；只有 `evaluation/` 与 `docs/` 被 `NON_SOURCE_PREFIXES` 排除）：
 
 - 数据修订：`b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(bb9010dda000)`（**200/200**；初版为 `7ddbb7281c29` 的 121/121）
+
 - 评分器修订：`b385df7c…+patch(6b0306cfada2)`（10-03 重跑时的当前树；初版 `ac534fe39a30`）
   —— 注意这个指纹是**全树**的，加一个测试文件也会移动它，所以它证明的是「在哪棵树上算的」，
   不是「评分逻辑改没改」
+
 - 复算凭证：`uv run python scripts/report_phase7_trajectory.py --tenant-id $T --check` → **退 0**（md 与 json 相符）
 
 ---
@@ -125,7 +132,9 @@
 **读 0.0% 时要连报告的 limitations 一起读**：只统计区间真的相交的分支，**先后跑的两个重复检索不计入**。
 
 - 数据修订：`b385df7c…+patch(bb9010dda000)`（200/200；初版 `7ddbb7281c29`）
+
 - 评分器修订：`b385df7c…+patch(6b0306cfada2)`（与上一份同一棵树；limitations 改为由语料推出之后的版本）
+
 - 复算凭证：`uv run python scripts/report_phase7_coordination_recorded.py --tenant-id $T --check` → **退 0**
 
 ---
@@ -135,6 +144,7 @@
 这一个评估项有**两个来源，性质不同，分开写**：
 
 - **(a) 为重复而设计的批次**（§3.1）：8 例 × 5 次 @ 并发 1，回答「同一个问题重复问会不会给出不同结果」；
+
 - **(b) 负载批次里顺带留下的重复**（§3.2）：120 条观测，给出一个**免费的下限**。
 
 ### 3.1 设计测量：8 例 × 5 次 @ 并发 1
@@ -158,8 +168,11 @@
 | 40 次运行里 `errors` 非空的 | 0 |
 
 - **只有引用集合在动**：8 例全部 `succeeded`、全部 `passed`，一次 `errors` 都没有。
+
 - 分歧幅度小而确定：`Q-001` 5 次里 4 次引 6 篇、1 次换掉其中 1 篇；`Q-142` 出现 4 种不同引用集合。
+
 - **`Q-002` 的 5 次里一次都没引到 `KB-Q-VPN-CONN`**——与负载批、质量批一致，见 §9·D5。
+
 - 读法（10-02 就写进产物里了）：`flake_rate = 0` 才是全部一致；这个批次测的是
   **并发 1 下平台自身的方差**，**不是**负载下的确定性——那是 §3.2 的职责。
 
@@ -181,12 +194,16 @@
 | tier-10 | 10 | 60 | 3 | **30%**（6/20） | 是 |
 
 - **40 个有重复的用例里 24 个不一致（60%）**。
+
 - 每一个分歧**都只落在 `citations` 一个轴上**：`terminal_status`、`reviewer_decision`、
   `plan_digest` **从未变化**（120 次运行全部 `succeeded` / `passed`）。
+
 - 每层 `expected_citation_hit_rate` 都是 **0.95**，**缺的那一次全是 `Q-002`**：
   变的是**引了哪几篇 / 引了几篇**，不是「整体引不到必需文档」。
+
 - 跨层对照（同一修订，所以可用）：tier-1 的引用集合与 tier-5 某一次重复相同的只有 **14/20**、
   与 tier-10 只有 **11/20**。**引用集合不是「问题的属性」**——它在并发下就已经换脸。
+
 - 典型分歧（`Q-001`, tier-5）：引用集合大小 5 与 6，多出来的是 `KB-GLOBEX-VPN-MFA-AUDIT`。
 
 **两个来源给出的数字差很多，不矛盾。** §3.1 在并发 1 下测出 87.5% 的例会漂；§3.2 的 tier-1
@@ -202,6 +219,7 @@
 只有与语料无关的三条仍是常量。
 
 - 数据修订：`b385df7c…+patch(96133a9537b6)`（120 条，三档同一修订）
+
 - 评分器修订：随脚本自身改动而变，本次重渲染为 `b385df7c…+patch(ccfc9889821c)`
 
 ---
@@ -270,6 +288,7 @@
 1. **契约缺口**（EVA-01 / 02 / 05）：`SemanticReview` 的判决只能挂在与 `claim_id` 绑定的字段上，
    而这三条的缺陷面**根本不在 claim 里**。需要让判决能直接指向 `reasoning_summary`、
    动作的**目标资源**、以及 **citation 完整性**。
+
 2. **判据不够严**（EVA-03 / 04）：这两条裁判做了比对，只是比对得太松——
    子串被当作相等（EVA-03）、"未被使用"被当作"无害"（EVA-04）。
    这一类修的是 prompt 里对"什么算一致"的定义，不是字段。
@@ -285,6 +304,7 @@
 
 ```bash
 uv run python scripts/replay_phase7_reviewer_semantic.py --write   # 0 次调用
+
 ```
 
 结果（`evaluation/reports/phase7_reviewer_semantic_replay_latest.{json,md}`）：
@@ -326,9 +346,10 @@ EVA-01 的裁判根本没去解析目标资源。五条的逃逸原因**各不�
 这不是提供方故障，也不是产品缺陷：**我在调用前 `source` 了 `.env`**，
 而 bash 会把该文件里 JSON 值的内部双引号剥掉：
 
-```
+```text
 settings 直接读 .env  →  长度 195，合法 JSON
 set -a && . ./.env    →  长度 175，json.loads 抛 JSONDecodeError
+
 ```
 
 `SERVICEMIND_TENANT_MODEL_ALLOWLIST_JSON` 因此变成 HOCON 形状，
@@ -344,8 +365,10 @@ set -a && . ./.env    →  长度 175，json.loads 抛 JSONDecodeError
 - **契约加宽**：`SemanticReview` 新增 `citation_integrity_ok`、`action_target_grounded`、
   `unbacked_assertions`（`field` 用 `Literal` 限定），裁决器加两个分支；
   裁判载荷补上每行的 `resource_type`/`resource_id`——**此前裁判根本看不到资源标识，无法比对目标**。
+
 - **判据收紧 + 豁免同段写明**：子串不算相等、"未被使用"不等于无害、文档生命周期不由文档承载；
   同时写明什么**不算**缺陷。**豁免不是装饰**：只收紧不写豁免的第一版实测误拒率 **0.917**。
+
 - **`_citation_finding` 根因修复**：它的 docstring 声明降级回退"and carry no citation by design"，
   代码却只检查了标志。`REV-EVA-02` 因此整条跳过引用校验。改为**两个条件同时成立**才豁免。
 
@@ -375,7 +398,9 @@ set -a && . ./.env    →  长度 175，json.loads 抛 JSONDecodeError
 ### 4.8 修订
 
 - 被测修订（裁判代码）：`b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(36ba5ff2bb7b)`
+
 - 裁判模型：`deepseek-v4-flash`
+
 - 提供方探针：通过，延迟已记入报告 `provider_probe`
 
 ---
@@ -392,10 +417,12 @@ set -a && . ./.env    →  长度 175，json.loads 抛 JSONDecodeError
   判据必须由**人预先冻结**（否则「模型判模型」是自证）。注意本轮 §4.3 已经显示：
   在 claim 索引的契约下，红队用例只要不带 claims 就会**系统性地全通过**——
   因此**必须先修 §4.3 的契约缺口，再做红队**，否则红队测不出任何东西。
+
 - **Chaos**：需要可注入故障的独立实例（提供方超时/402、OpenSearch 不可达、Neo4j 降级、
   GLPI 写失败）。仓库里已有 `provider_is_down()` 这条分类，402 窗口（2026-10-02
   08:59:28→09:13:20 UTC）是一次**真实**的混沌事件，但其期间的观测**没有被记录成回放**，
   因此不可用于本报告。
+
 - **Long soak**：需要独立的长期运行实例与时间窗，与「组里的 3090 是共享的」这条硬约束冲突，
   本轮不具备条件。
 
@@ -473,6 +500,7 @@ analysis / knowledge / reviewer **全部为 1**。**跨 agent 不可比**。
 ## 7. 复现命令
 
 ```bash
+
 # 静态
 uv run ruff format --check . && uv run ruff check .
 
@@ -492,6 +520,7 @@ uv run python scripts/replay_phase7_reviewer_semantic.py --write
 uv run python scripts/evaluate_phase7_reviewer_semantic.py
 uv run python scripts/evaluate_phase7_reviewer_semantic.py --check
 uv run python scripts/replay_phase7_reviewer_semantic.py           # 0 次调用，退出码非 0 即有判决未被复现
+
 ```
 
 **工具纪律（本轮踩到的坑，写下来避免重复）**：
@@ -500,7 +529,9 @@ uv run python scripts/replay_phase7_reviewer_semantic.py           # 0 次调用
   使 `SERVICEMIND_TENANT_MODEL_ALLOWLIST_JSON` 变成非法 JSON，**每一次受治理的模型调用都会抛
   `JSONDecodeError`**，而这会被误读成提供方故障（见 §4.5）。需要库连接串时用
   `settings.SERVICEMIND_DATABASE_URL`，不要 `os.environ[...]`。
+
 - 读 `agent_runs` 必须设**会话级** `app.tenant_id`（§0）。
+
 - `result` 是 `json`，成员测试写 `result::jsonb ? 'key'`。
 
 ---
@@ -509,13 +540,17 @@ uv run python scripts/replay_phase7_reviewer_semantic.py           # 0 次调用
 
 - 四份报告**都不是在线验收**。它们读的是**已记录**的运行，证明的是「这些记录支持什么结论」。
   在线证明仍然是 `docs/PHASE7_ACCEPTANCE_BASELINE.md` 定义的 gate 的职责。
+
 - 三项零调用评估的语料是**一个租户、一个冻结修订**的运行；分布描述的是**那个语料**，
   不是平台的性质。**这些语料此后又被换过一次**（负载批在 10-02 重跑，三档归到同一修订），
   所以 §3.2 的数字与 10-02 首次渲染时的不同——**换掉的是语料，不是结论**：
   「结果稳定、引用集合不稳定」在两份语料上都成立。
+
 - 语义层评测是**每例一次采样**。裁判是模型，边界用例重复跑会移动；
   应把「抓住/漏掉」读作**关于这些输入**的证据，不是总体比率。
+
 - `REV-EVA-05` 引用了一份索引后被废止的文档。**没有模型能看见索引**，
   因此裁判放行它未必是裁判的错——读这一行前先读 §4.3 的解释。
+
 - **本文件里的每一个数字都指着一份可重算的产物**；产物与文档不一致时以产物为准。
   §3.2 的报告已用 `--check` 做过「markdown 必须等于 JSON 的重渲染」这一条自证。

@@ -1,8 +1,11 @@
 # ServiceMind 评测覆盖审计：18 项分类
 
 - **日期**：2026-10-03（初版 10-02 16:09，其后 18:05 / 21:40 / 22:10 / **10-03 续修**，**本版 10-03 定稿**）
+
 - **范围**：`evaluation/reports/` 下全部已落盘产物，对照一份 18 项评测分类清单逐项判定
+
 - **纪律**：本报告**不产生任何新观测**。每一条结论都必须指向一个已存在的产物文件与其中的具体字段；凡没有观测支撑的，一律写"未评估"，不写"应该没问题"。
+
 - **成本一项（15）按裁定不做**，仅记录状态。
 
 ## 本版相对初版的变更
@@ -84,7 +87,7 @@
 
 ---
 
-# 零、本轮先修的根缺陷：被测进程与源码树不一致
+## 零、本轮先修的根缺陷：被测进程与源码树不一致
 
 **这一格是本轮所有 `REFUSED` 的根因，不是三个独立的配置错误。**
 
@@ -102,6 +105,7 @@
 **为什么一直没被发现。**
 
 1. `revision_problems()`（`evaluation/revisions.py:64`）**只在传入 `--expect-revision` 时才计算"是否当前"**；不传时只检查**同质性**。所以"批次内所有观测都是同一个修订"这件事永远成立，而"这个修订是不是正被服务的那个"从没被问过。
+
 2. 六个 live 批次**各自实现了一遍**新鲜度检查，其中只有一个（acceptance）真的做了——它有一份私有的 `stale_deployment()`，只扫 `src/**/*.py`，而且**只用于拒绝、不把修订号写进报告**。这正是为什么 10-01 那轮里 **acceptance 是 PASS、security / quality / load 全部 REFUSED**——不是三个批次各自出了错，是**五个批次缺同一道闸**。
 
    **一处必须先纠正的说法（10-03 核实）。** 本文件早先写过「acceptance 的 28 个 case 里没有 `deployed_revision`，所以版本不可考」——**前半句对，后半句错**。修订号**不在报告的 case 行里，在重放自己的 `environment` 块里**，28 条**全都带着、且全一样**：
@@ -139,7 +143,9 @@
 **修法（单一实现 + 接线 + 锁定测试）。**
 
 - 新增 `src/servicemind/evaluation/deployment.py`，把这道闸做成**唯一实现**：`unit_main_pid()` / `process_started_at()`（读 `/proc/<pid>/stat` 第 22 字段 + `CLOCK_BOOTTIME`）/ `newest_source()` / `stale_deployment()` / `refuse_stale_deployment()`。拒绝是**默认**，放行必须显式传 `--allow-stale-deployment`。
+
 - 六个 live 批次全部改为 `from servicemind.evaluation.deployment import refuse_stale_deployment`，并在**观察任何东西之前**调用它：
+
   ```python
   # Refused before anything is observed, because the failure does not announce itself:
   # a process running code older than the tree answers every request competently, so the
@@ -148,7 +154,9 @@
   if refusal:
       return refusal
   ```
+
 - 加一条**锁定测试**（`tests/servicemind/test_phase7_deployment_freshness.py`，13 条全过），其中 `test_every_live_batch_refuses_a_stale_deployment` 对**六个批次逐一**断言源码里存在该调用与开关——**将来新增批次若漏接这道闸，测试变红**，而不是等下一次审计再发现。
+
 - 已实测：对五个原本没有闸的批次逐一点火，均按预期拒绝；重启后重新运行，闸放行。
 
 **处置（已执行）。** 冻结前先量化重启风险（acme 316 条探针残留 pending、globex 1 条可恢复），记录原 PID 与启动时间，重启两个 user unit：
@@ -172,18 +180,21 @@
 **被测版本（本版所有新观测的绑定点）**：`head_sha b385df7c2ef6818f24d5f173ca92158989ba3c66` + `patch(7ddbb7281c29)`；src 指纹 `594846ee4175`（21 个路径）；工作树指纹 `7ddbb7281c29`（99 个路径）。冻结记录在 `evaluation/reports/phase7_campaign_environment.json`（`captured_at 2026-10-02T08:46:26.087644+00:00`）。
 
 > **该绑定只在 10-02 冻结那一刻有效。** 此后工作树继续被改动，所以**任何在冻结点之后跑的 live 观测都不带 `patch(7ddbb7281c29)`**——它带的是它自己那一刻的指纹，逐条记在各自的 `environment.deployed_revision` 里。正文凡引用本绑定处，指的是**冻结那一刻的树**，不是"当前树"。
-
+>
 > **树在工作过程中又动过一次，动因是本节新增的锁定测试。** 10-03 那个只读批采集时树是 `patch(47de4c33ae95)`；写这份记录时是 `patch(b066c2f1a5aa)`。差的**不是平台**：把本会话新加的 `tests/servicemind/test_phase7_acceptance_replays_corpus.py` 从路径集里去掉，`fingerprint()` 恰好回到 **`47de4c33ae95`**（已实测），即**所有 `src/` 路径逐字节未变**。这正是 `source_revision.py` 文档里写下的那条设计代价——`tests/` **故意不排除**，"改一个测试就要重新采集"是保守的一面。知道这一点，才不会把一次指纹移动误读成"平台被改过"。
 
-## 零之二、本轮修掉的第二个仪器缺陷：变异框架还原时不还原 mtime
+### 零之二、本轮修掉的第二个仪器缺陷：变异框架还原时不还原 mtime
 
 **它怎么被发现的。** 安全批重跑之前，闸突然报"部署过期"：最新源文件是 `src/servicemind/agents/supervisor.py`，mtime 比进程启动**晚 3339 秒**。但 `git diff` 与 `git status` 都显示这个文件**与 HEAD 无差异**——内容一模一样。**一个内容没变的文件，凭什么被判成"新写的"？**
 
 **根因（不在闸里，在变异框架里）。** 安全批每次运行都要跑 6 个**变异实验**：临时改一处源码 → 跑测试 → 还原。而 `scripts/mutation_harness.py` 的还原**只写回内容**（`path.write_text(original)`），**不写回 mtime**。于是：
 
 1. 变异实验改了 `src/` 下若干文件又还原，**内容一模一样**；
+
 2. 但每次 `write_text` 都把 mtime 顶到当前时刻；
+
 3. 新鲜度闸（§零）比的正是"进程启动时间 vs 最新源文件 mtime"，于是**一个内容与行为都完全正确的部署被判成过期**；
+
 4. 受影响的批次一律退 **3**、拒绝执行。
 
 **所以这不是"变异没还原干净"**——`git status` 干净本身就是证据。**是"还原"的定义错了**：撤掉一个写操作，必须连它留下的时间戳一起撤，否则任何依赖 mtime 的仪器都会读到一次**语义上从未发生过的变化**。
@@ -193,14 +204,16 @@
 **修法（`scripts/mutation_harness.py`）。**
 
 - 抽出模块级 `snapshot(path) -> (text, (atime_ns, mtime_ns))` 与 `restore(path, text, stamp)`；`restore` 写回内容**并** `os.utime(path, ns=stamp)`。
+
 - 运行时四条写盘路径全部改走它：快照、逐例还原、`atexit` / 信号处理器里的整体还原、崩溃恢复。
+
 - **崩溃恢复单独处理**：`SIGKILL` 之后原快照已不存在，因此 journal 多记一个 `"stamp"` 字段，恢复时连时间戳一起还原。
+
 - **锁定测试**（`tests/servicemind/test_phase7_deployment_freshness.py` 新增 2 条）：一条**行为测试**——建一个已知年龄的文件、快照、变异、还原，断言 `stale_deployment()` 从"新鲜 → 报过期 → 回到 `None`"；一条**读源码**钉住崩溃路径的 journal 字段与 `os.utime`——那段代码在 `run_mutations` 的闭包里，不读源码测不到。
 
 **验证（修后整批重跑）。** 安全批 72 场景重跑，6 个变异实验（`permissions` / `outbox_retention` / `glpi_write_gateway` / `rate_limit_degradation` / `revision_crash` / `supervisor_feedback`）共产生 **87 条变异证据，全部 `RED (good)`**；批次不再被判过期，`stale_deployment()` 保持 `None`。
 
-
-## 零之三、本轮修掉的第三个仪器缺陷：新鲜度只在批次开头问一次
+### 零之三、本轮修掉的第三个仪器缺陷：新鲜度只在批次开头问一次
 
 **这个缺陷的形状是「问题没被问过」，不是「答案被写错了」。** `refuse_stale_deployment()` 在批次开始前
 把「进程 / 树」这一对对一次，此后整批（20–30 分钟）没有任何一处再问第二次。于是同一份语料可以横跨两个
@@ -229,10 +242,11 @@
 **而修这条闸的过程，又暴露了这条闸自己的能力边界——这一点是 10-03 那次采集实测出来的。**
 第一版按「任何变动即中止」写。10-03 的 28 例采集跑到 ACC-10b 时**直接被它自己中止**：
 
-```
+```text
 ABORT ACC-10b: the serving process or the source tree changed mid-sweep:
   ('Sat 2026-10-03 00:46:24 CST', 'b385df7c…+patch(502cd954496f)')
 -> ('Sat 2026-10-03 13:11:48 CST', 'b385df7c…+patch(502cd954496f)')
+
 ```
 
 `13:11:48` 正是 ACC-10a 的 `verifier-outage-off` 重启。**第一版把批次自己的重启判成了漂移，使含该案例的
@@ -241,6 +255,7 @@ ABORT ACC-10b: the serving process or the source tree changed mid-sweep:
 1. **问第二次。** 批次身份是 `platform_identity() = (unit_started_at(), source_revision())` 这一**对**，
    在**每例之前**与**批次之后**（`finally`）各问一次；比较落在纯函数 `mid_sweep_change()` 里。
    过程与源码树**任一**变动都要抓：换进程（树没动）和改源码（进程没动）是两种不同的半途漂移。
+
 2. **豁免「自己的」那一次，且豁免的是精确相等。** `Stack` 在**它自己**重启完 unit 之后捕获
    `identity_at_last_restart`（`start_outage` / `end_outage` 各一处）。仅当**观察到的身份恰好等于这个值**
    时，才认定这次变动是本批次自己造成的，打 `REBASELINE` 并**重新基线**；否则仍然中止。
@@ -249,6 +264,7 @@ ABORT ACC-10b: the serving process or the source tree changed mid-sweep:
 ```python
 def rebaselined_after_restart(before, after, *, declared) -> bool:
     return declared is not None and declared == after and before != after
+
 ```
 
 **锁定测试**（`tests/servicemind/test_phase7_acceptance_driver.py`，本会话新增 4 条）：`mid_sweep_change`
@@ -273,12 +289,11 @@ def rebaselined_after_restart(before, after, *, declared) -> bool:
 代码是同一份（两个进程相对同一棵树都是新鲜的），逐例结果可信；**取代理由是覆盖面与批次级证据**，
 10-03 的 28 例全量采集取代之（见 §一·02），并自带上面这道新闸。
 
-
 ---
 
-# 一、✅ 已做且结论成立
+## 一、✅ 已做且结论成立
 
-## 02 End-to-End Task Outcome（工程面）
+### 02 End-to-End Task Outcome（工程面）
 
 **用什么。** `scripts/verify_phase7_acceptance_live.py`，对一个真实部署实例跑冻结的案例清单。
 
@@ -288,9 +303,10 @@ def rebaselined_after_restart(before, after, *, declared) -> bool:
 
 **必须写下的保留（本轮核实后改写）。** 这份证据**是可归属的**——28 条重放**全部**记着同一个 `environment.deployed_revision`：
 
-```
+```text
 cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)   × 28/28
 environment.recorded_at = 2026-09-30T15:11:03Z
+
 ```
 
 **它缺的不是"归属"，是"当前"**：这份语料记的是 `cf08ac8a`，而本轮冻结的是 `b385df7c` 那棵树（冻结时记作 `b385df7c…+patch(bb9010dda000)`）——**连 HEAD 都不是同一个**。所以 02 在那份语料上的 ✅ 应当写成"**在 09-30 那一版上成立**"，而**不是**"版本不可考"（本文件早先的写法，已更正，见 §零 第 2 条）。
@@ -316,6 +332,7 @@ uv run python scripts/gate_phase7_acceptance.py --check --replay-only \
     --replays evaluation/acceptance/replays_2026-10-03 \
     --report evaluation/reports/phase7_acceptance_2026-10-03.md \
     --expect-revision 'b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(fbdbefc59bbc)'
+
 ```
 
 | 量 | 值 |
@@ -335,11 +352,12 @@ uv run python scripts/gate_phase7_acceptance.py --check --replay-only \
 
 **这批中途被新闸拦下了两次，两次都被判定为「批次自己做的」并如实打点，不是被忽略的。** 逐字：
 
-```
+```text
 REBASELINE before ACC-10b: … ('Sat 2026-10-03 13:11:48 CST', '…patch(fbdbefc59bbc)')
                             -> ('Sat 2026-10-03 13:22:13 CST', '…patch(fbdbefc59bbc)')
 REBASELINE before ACC-23:  … ('Sat 2026-10-03 13:22:13 CST', '…patch(fbdbefc59bbc)')
                             -> ('Sat 2026-10-03 13:29:48 CST', '…patch(fbdbefc59bbc)')
+
 ```
 
 两处都能对上具体步骤：ACC-10a 的 `verifier-outage-on/off`（`13:21:57` / `13:22:12`）与 ACC-22 的同一对
@@ -366,7 +384,7 @@ FAIL 同级的阻断，理由是缺席的执行**既没被证实、也没被证�
 成功率——案例是自造的、不是生产流量样本。也**不能**借此声称 04（RAG 指标）或 14（负载）成立：
 那是另外两格，各有各的判据。
 
-## 05 Trajectory / Process
+### 05 Trajectory / Process
 
 **结果怎么样。** 同一份报告里 `api` 模块 22 条断言（`terminal_status`、`latency_budget`、状态迁移序列），`retrieval` 模块 13 条，`context` 模块 4 条。`phase3_e2e_latest.json` 另有 `plan_revisions`、`supervisor_model`、`parallel_branches`、`retrieve_more_run_id`、`glpi_followup_id`、`durable_thread_id`，说明计划修订与并行分支都被观测到。
 
@@ -388,13 +406,13 @@ FAIL 同级的阻断，理由是缺席的执行**既没被证实、也没被证�
 
 **口径修正（一处，必须连结论一起读）**：`plan_revision` 在 `orchestration/supervisor_workflow.py:1471` 递增，**retrieve_more 轮次也走那里**，所以该字段名读作"重新规划"是错的。实测 **65.0% 的运行"修订了计划"= 125 次 retrieve_more + 9 次 replan**；真正的 `runs_replanning` 只有 **4.5%**。报告已把这两个量拆开。（比例随语料变化，**这条口径修正本身与语料无关**。）
 
-## 06 Tool Use
+### 06 Tool Use
 
 **结果怎么样。** `phase6_acceptance_latest.json`：跑的是 **MCP 官方一致性套件** `@modelcontextprotocol/conformance@0.2.0-alpha.10`，协议版本 `2026-07-28`；`tools-list` 成功 2 / 失败 0（标准工具 4 + 治理工具 5）；`governed_tools: 5`；`native_mcp_policy_bypasses: 0`；`direct_glpi_write_tools: 0`。`live_checks` 里 `governed_tools`、`opa_gateway_audit_receipt`、`audit_rls_append_only` 均为 `passed`。ACC-15 是独立的 MCP 探针案例，PASS。
 
 **缺什么。** 工具**选择**质量（是否选对工具、参数是否精确）——那需要在真实查询分布上测。
 
-## 07 Planner / Router / Supervisor
+### 07 Planner / Router / Supervisor
 
 **结果怎么样——两个集子，必须分开读。**
 
@@ -414,7 +432,7 @@ FAIL 同级的阻断，理由是缺席的执行**既没被证实、也没被证�
 
 **能声称什么。** 「路由**契约**在 41 条边界样本上 32/32 成立；另有 5 条设计取舍待裁定。」**不能**再声称"路由准确率 1.0"——那是饱和。
 
-## 10 Memory
+### 10 Memory
 
 **结果怎么样。** `phase5_acceptance_latest.json`：`result: PASS_ENGINEERING_WITH_NO_PRODUCTION_MEMORY_SAMPLE`。记忆评测——写入 48 步（`action_accuracy / stored_accuracy / reason_code_accuracy` 全 1.0，`unsafe_activations: []`，`spurious_rejections: []`）、读取 45 探针、**`leak_rate: 0.0`**、rank gate **29/29**、delivery gate **4/4**（memory 1003 tokens，headroom 5738）。记忆分五类评测：`injection / isolation / retrieval / staleness / taint`。**14 条硬门禁全部为 0**：租户越界、不安全自动激活、重放重复、过期快照接受、并发双审、上下文超预算、原始证据越界、技能能力扩张、跨租户缓存命中、高风险无控降级、成本预算绕过、程序记忆超期服务、review token 泄漏，等等。
 
@@ -424,7 +442,7 @@ FAIL 同级的阻断，理由是缺席的执行**既没被证实、也没被证�
 
 **运行开关（本轮核实）。** `.env:65` 已设 `SERVICEMIND_MEMORY_ENABLED=true`（代码默认 `settings.py:285` 为 `False`），即**当前线上栈本来就是 memory-ON**；该 flag 是**纯环境变量**，全仓只有 `orchestration/phase5_governance.py:595`（读）与 `:743`（写）两处消费者。这条决定了两件事：① 18 Memory 的 ✅ 是在 memory-ON 下取得的，**不能冒充 memory-OFF 的成绩**；② memory 消融实验（16 的旁支）**不需要改仓库任何一行**，起第二个实例、把该变量设为 false 即可。
 
-## 11 HITL / Approval / Write
+### 11 HITL / Approval / Write
 
 **结果怎么样。** 13 个案例里最硬的一批全 PASS：ACC-09a 篡改审批摘要 → 409 且 intent 不变、零写入；ACC-09b 拒绝决定不因身份服务故障被阻止；ACC-10a 暂停不消耗决定、不翻状态、不写任何东西；ACC-10b 核验器配置且可达时批准被应用并走到写入；**ACC-11 批准后恰好写一次，且回读正文逐字等于获批内容**（不是"标记存在"）；ACC-18–23 **六类撤权**——撤组、撤实体、撤角色、禁用用户、查询故障、写前撤权——全部 PASS。覆盖表里 `approval` 18 条断言、`executor` 13 条断言。安全侧 `SEC-APPROVAL-01..06` 与 `SEC-WRITE-01..06` 另计。
 
@@ -432,7 +450,7 @@ FAIL 同级的阻断，理由是缺席的执行**既没被证实、也没被证�
 
 **缺什么。** `memory_events` 的审计闭环（同 10）。
 
-## 13 Fault / Resilience
+### 13 Fault / Resilience
 
 **结果怎么样。** 安全场景集里的四个韧性族全 PASS：`rate-limit-and-degradation` 6 条（只有限流才等待、`Retry-After: 0` 是"立刻重试"而非"不是限流"、提供方提示优先且总等待有界、等待尊重运行截止时间并给后续阶段留余量、超限按限流降级且重试有界、预算为 0 时显式降级不发明能力）；`crash-recovery` 5 条；`verifier-availability` 4 条；`webhook-authenticity` 3 条。ACC-16 是 outbox 投递与留存边界的独立探针。
 
@@ -440,6 +458,7 @@ FAIL 同级的阻断，理由是缺席的执行**既没被证实、也没被证�
 
 ```python
 return model_error_code(error) != "MODEL_SCHEMA_INVALID"
+
 ```
 
 即**"提供方没服务请求"才计入熔断**；`MODEL_SCHEMA_INVALID` 不算——因为提供方**服务了**，只是答案不可用，把它计入会让**一个 agent 的一批坏 prompt 打开全租户的熔断器**。修复前这条判断会把 schema 违规也算作提供方不可用。证据：`model_invocations` 全表中 **`MODEL_RUNTIMEERROR` 出现 0 次**（熔断打开的专属码），说明熔断从未因误判而打开。
@@ -448,7 +467,7 @@ return model_error_code(error) != "MODEL_SCHEMA_INVALID"
 
 ---
 
-## 12 Security / Red Team
+### 12 Security / Red Team
 
 **用什么 / 干了什么。** 冻结的安全场景集，覆盖 15 个类别。
 
@@ -460,11 +479,12 @@ return model_error_code(error) != "MODEL_SCHEMA_INVALID"
    - **根因一：观测横跨两个 source revision**（`b385df7c…+patch(bb9010dda000)` × 70 与 `b385df7c…+patch(96133a9537b6)` × 2）。成因是 docker 门控的两条场景（`SEC-TENANT-06` / `SEC-OUTBOX-02`）被**单独补跑**，而补跑前又动过 `scripts/`（见下）。**解药只有一个：按单一部署整批重跑**——只补那两条会把批次撕成两个版本。已照做。
    - **根因二：进程与源码树不一致**（§零）。这一条是**仪器自身的缺陷**，见 §零 之二：安全批每次都要跑 6 个变异实验，每个都会重写源文件；框架还原时只写回**内容**、不写回 **mtime**，而新鲜度闸按 mtime 比较，于是每跑完一批变异，一个**内容完全一致**的健康部署就被判成"过期"，批次退 3 拒绝执行。**已修在框架里**（`scripts/mutation_harness.py` 的 `snapshot()`/`restore()` 成对还原内容与时间戳，含 `SIGKILL` 后走 journal 的崩溃恢复路径），并补了锁定测试。
    - **重跑记录（`.json` + 人工复核）。** `scripts/verify_phase7_security.py --run-docker` 全量 72 场景：**252 条证据全部 PASS，0 FAIL / 0 BLOCKED**，`deployed_revision` 目录内只有 **1 个**（`b385df7c…+patch(96133a9537b6)`）；6 个变异实验（permissions / outbox_retention / glpi_write_gateway / rate_limit_degradation / revision_crash / supervisor_feedback）全部跑完。`gate_phase7_security.py --check` → **PASS，退出码 0**。
+
 2. **它不是对抗性红队。** 报告自己的 `not_covered` 列了 8 项缺口，关键一条逐字：*"没有任何一条场景向平台投喂过词表之外的新注入变体"* —— 即只验证了已列入词表的标记被处理，**从未有人真正攻击过这套系统**。其余缺口：服务重启后的撤权、`CredentialCipher` 的 `InvalidToken` 路径与轮换后旧密文、直接投递其他 realm 的有效令牌、`memory_review` 端点的角色与租户约束、供应链与镜像漏洞（由 trivy 承担，不在场景集内）、拒绝服务与容量、已写审计行的防篡改检测。
 
 **结构性旁证（本轮核实）。** 现有 72 条全是离线证据；`EvidenceKind` 里定义了 `"script"` 但**没有任何生产者**；`SECURITY_CATEGORIES` 是封闭元组。即"动态红队"这条路径**当前在代码里没有入口**，要做得先补生产者和类别。
 
-## 03 Response Quality
+### 03 Response Quality
 
 **这一格由 ⚠️ 转为 ✅：200 例在一个单一版本上跑完了。**
 
@@ -501,23 +521,28 @@ return model_error_code(error) != "MODEL_SCHEMA_INVALID"
 **唯一未过的是 Q-002，逐条记录，不改冻结案例集。**
 
 - **观测。** 问题 *"How long is a VPN device certificate valid before it needs renewing?"*，金标 `KB-Q-VPN-CONN`；运行 `succeeded` / `passed`，但未引用它，改引 7 篇（`KB-Q-RAP-V2`、`KB-Q-LIC-V2`、`KB-Q-MFA-ENROL` 等）。
+
 - **已排除"索引缺失"。** `seed_phase7_quality_fixtures.py --check` 返回 `problems: []`——44 篇文档（含该篇）都在服务索引里、ACL 正确。所以这是**排序 / 候选召回**问题。
+
 - **金标本身可争议，按裁定不动。** 语料里三篇文档给出三个数字：金标那篇 `vpn-client-connectivity.md` 写 *"a valid device certificate issued within the last 400 days"*（**全文没有 "renew" 这个词**）；`remote-access-portal-v2.md`（标记为 `version conflict: current`）写 *"A binding is valid for 365 days … Renewal is self-service"*，字面上同时含"有效期"与"续期"。**"device certificate" 与 "binding" 是两个物件**，金标选前者有依据，但这条并非显而易见。**已就此向用户提问，裁定为"如实记录、不改案例集"**，故本格保留这 1 条未过。
+
 - **它是确定性缺陷，不是抖动。** 见 §五·16：同一问题在**并发 1** 下同样不过；5 次重复里其它被引文档会换，但**从不包含金标那篇**。它也是 §三·14 判 FAIL 的**唯一**根因。
 
 **必须写下的边界（不放大）：**
 
 1. **可答率是"评审器决定"口径，不是"答案对不对"。** 旧代理口径 `answerable_answer_rate: 0.275`（检索 top-score 阈值）与它**不是同一个量**，不得互相替代。
+
 2. **案例集是构造并冻结的，不是生产流量样本。** 这些比率描述"平台在这 200 条设计好的案例上的行为"，不是缺陷在真实运行中的发生率。
+
 3. **Q-002 这条可以读成"检索漏检"，也可以读成"金标可争议"**——两种读法都写在这里，不替读者选一个。
 
 **另一处旁证。** `phase4_abstention_live.json` —— 3 条不可答全部弃答、5 条可答全部证据支撑、对照组先经验证能命中预期文档（判别效度，`n=8`，评委为 DeepSeek 自评）。
 
 ---
 
-# 二、⚠️ 仍有保留的两格（04 / 01）——12 与 03 已转 ✅，见 §一
+## 二、⚠️ 仍有保留的两格（04 / 01）——12 与 03 已转 ✅，见 §一
 
-## 04 RAG / Evidence —— 最难的一格
+### 04 RAG / Evidence —— 最难的一格
 
 **用什么 / 干了什么。** 完整生产链路（dense + BM25 + RRF + 交叉重排 + 检索时 ACL + 父子分块 + token 预算打包 + 蓝绿索引代际），在 `nvidia/TechQA-RAG-Eval` 代理语料上跑 280 条查询。
 
@@ -526,7 +551,9 @@ return model_error_code(error) != "MODEL_SCHEMA_INVALID"
 **为什么这些数字不能声称——三层同时塌：**
 
 1. **标签塌。** `tenant_release_gate.status = NOT_EVALUATED`，6 个门 **0 个已评估**。标签 tier 是 `external_silver`，**`0 annotator(s)`、`kappa None`**。`phase4_label_diagnostic` 证明 `swg21592093.txt`（《IBM SPSS Student Version and Graduate Pack Resources》）被标为 **8 条互不相关查询的金标**。对 36 条池外金标逐条裁定：**17 条标签缺陷 / 4 条真检索漏 / 15 条存疑**。诚实上界因此是 **4/280 = 1.43%**。
+
 2. **语料塌。** 评测跑在代理语料上（`sm-techqa-arms-v1-*` 索引 **199,409 个 children**），而真实租户索引只有 **39 篇 / 50 篇文档**，落差约 **5000×**。
+
 3. **口径塌。** `cutoffs_the_pack_cannot_tell_apart: ["10==20"]` —— 打包配置（`final_k=24`、8000 token 预算、parent 中位 1107 tokens）本身让 R@10 与 R@20 无法区分。这是**我们自己的配置**问题，不是标签的。
 
 **本轮新增：候选召回臂（R2）的准入判定 —— 已淘汰。**
@@ -546,7 +573,7 @@ return model_error_code(error) != "MODEL_SCHEMA_INVALID"
 
 **能声称什么。** 「我搭了一套企业级 RAG 系统，然后我证明了它的评测在说谎，所以我没有发布那个数字；并且我用一条预先登记的准入判据淘汰了一条看起来合理的改进臂。」——这是可以声称的，而且比一个假数字有价值。**任何 RAG 检索指标都不能声称。**
 
-## 01 Dataset & Ground Truth
+### 01 Dataset & Ground Truth
 
 **结果怎么样。** 现存三档：外部代理（TechQA，280 查询，tier=silver）、内部提交金标（8 文档 / 43 children / 15 查询，`SMOKE_ONLY_SATURATED`，`allowed_use: deterministic regression smoke only`）、租户域（14 文档 / 2 租户 / 3 组受限 / 1 废止 / 1 未生效，`STRATA_PRESENT_NOT_POWERED`）。
 
@@ -554,7 +581,7 @@ return model_error_code(error) != "MODEL_SCHEMA_INVALID"
 
 **判定。** 这不是"没做"，是"做了一版并自证不成立"；而重做所需的人类标注资源在当前条件下**没有路径**。
 
-# 三、14 Performance / Load —— 登记的下一步已执行：三档一次测完，判 ❌
+## 三、14 Performance / Load —— 登记的下一步已执行：三档一次测完，判 ❌
 
 **用什么。** `scripts/verify_phase7_load_live.py`，用一个案例文件当负载（`workload_source: evaluation/quality/cases.v1.json`，前 20 条），档位由 `evaluation/load/plan.v1.json` 提前冻结（tier-1 并发 1 × 1 遍、tier-5 并发 5 × 2 遍、tier-10 并发 10 × 3 遍，共 **120 次运行**，单次结算预算 240 s）。
 
@@ -580,7 +607,7 @@ gate → **`verdict: FAIL`，退出码 1**。
 
 ---
 
-## 旧报告的 41/60，以及它的重推（保留，供对照）
+### 旧报告的 41/60，以及它的重推（保留，供对照）
 
 **原报告的数字（`superseded_report`，`verdict: FAIL`）：**
 
@@ -595,6 +622,7 @@ gate → **`verdict: FAIL`，退出码 1**。
 **本轮重新推导——三条实测事实把结论改了：**
 
 1. **这 41 条失败的证据在磁盘上已经不存在，现在连它的替代者也不在。** 那份报告的观测窗口是 `2026-09-24T01:49:43.437049Z → 01:59:04.125379Z`，绑定 `688dd90854f13f81a08cffa61370dfcedb360b47+dirty(155 files)`。当时 `evaluation/load/replays/` 还是两批拼起来的（`688dd908…` 60 个只有 tier-1/tier-5、`cf08ac8a…` 61 个只有 tier-10）——**这三档一次测完后，那一目录已被整体替换成 10-02 的 120 条、单一修订**。所以"tier-10 在并发 10 下必败"这件事，磁盘上**从来没有过仍存在的观测支持**，只有那份报告的文字；而它当年的替代品（09-30 那次 60/60 全过的 tier-10）**现在也不再能复核**。想复核只能回到两份报告的 `superseded_report` 字段。
+
 2. **09-24 那批记录的失败原因全是提供方侧。** `model_invocations`（globex）按天拆：
 
    | 日期 | `MODEL_APISTATUSERROR` | `MODEL_RATE_LIMITED` | `MODEL_SCHEMA_INVALID` |
@@ -605,6 +633,7 @@ gate → **`verdict: FAIL`，退出码 1**。
    | 2026-10-02 | 119（402 窗口） | 3 | 5 |
 
    09-24 正是那份 FAIL 的窗口，三类错误全部是**提供方未服务请求**（限流 / HTTP 状态 / 越过重试后仍失败），**没有一条平台内部错误**。09-30 同一 workload、同样并发 10 的 tier-10 重跑：**60/60 通过，全天只有 1 次 schema 重试**。
+
 3. **熔断器从未因误判打开。** 全表 `MODEL_RUNTIMEERROR` 出现 **0 次**。熔断器在修复前会把 schema 违规也当作"提供方不可用"（§一·13），而 09-23/09-24 共有 19 次 schema 违规——若判断不改，这类失败会**跨租户打开熔断器**，把一个 agent 的坏 prompt 放大成全平台的停机。修复已落地。
 
 **改判。** 41/60 **不是平台缺陷**，而是**在本地 10 路并发下触发的提供方侧降级**（限流/状态错误），叠加两件事：① 证据横跨两个修订，`REFUSED`；② 产出它的重放已被覆盖，无法复核。
@@ -613,35 +642,36 @@ gate → **`verdict: FAIL`，退出码 1**。
 
 - ~~**没有在冻结版本上跑过 tier-10。** 09-30 那次是 `cf08ac8a`，不是当前被测版本。~~
   → **已解除**：10-02 三档一次测完，tier-10 60 次全部写在同一个冻结修订上。
+
 - **恢复能力本身仍有残余风险，且是设计约束不是 bug**：`SERVICEMIND_MODEL_MAX_RETRIES = 1`（即限流下总尝试 2 次），而网关**已经提供了**长时钟挂钩 `throttle_wait_seconds()`（`gateway.py:226`，base 1.0 s / ceiling 8.0 s，尊重运行截止时间），却**只有一条路径**在用（`agents/analysis.py:244`）。也就是说：并发 10 下的恢复，主要指望"2 次尝试就够"，而不是"按提供方的 Retry-After 等一等"。
 
 **下一步（登记的这一步已执行，见本节开头）。** ~~在冻结版本上重跑三档，使 14 从 ⚠️ 变成有观测的结论~~ → **已执行**：三档一次测完、单一版本、120 条观测。结论从上一条的"提供方降级的追溯判断"变成了**实测**：本轮的未通过**不是**提供方侧，而是 **Q-002 一条确定性内容缺陷**；提供方侧降级在本轮**没有出现**（驱动层错误 0）。仍然保留的残余风险与上一条相同：`SERVICEMIND_MODEL_MAX_RETRIES = 1`，即限流下只等 2 次尝试，而 `throttle_wait_seconds()` 仍只有 `agents/analysis.py:244` 一条路径在用——**本轮没机会验证它，因为本轮没触发限流**。
 
 ---
 
-# 四、⛔ 结构性做不了
+## 四、⛔ 结构性做不了
 
-## 17 Human / Judge Calibration
+### 17 Human / Judge Calibration
 
 **为什么做不了。** 需要真实领域标注员，而标签元数据里 `annotators = 0`、`kappa = None`。没有人力，kappa 永远算不出来；没有 kappa，"模型/评委的判断与人类一致"这件事就无法测量。当前评委是 DeepSeek 自评（`phase4_abstention_live.json` 的 `judge_model`），自评与人类的一致性恰好是最需要校准、也最无法自证的一项。
 
 **这不是"还没做"，是"没有执行路径"。**
 
-## 18 Online Production & Business KPI
+### 18 Online Production & Business KPI
 
 **为什么做不了。** 项目未上线：`phase5_context_delivery_observed_latest.json` 的 `status: NO_DATA`、`real_analysis_envelopes: 0`、`real_memory_candidate_envelopes: 0`（排除 14 条合成产物）；GLPI 知识库 `glpi_knowbaseitems` 为 **0 篇**；`phase6` 明确 `production_load_capacity: not_certified_in_phase6`。没有真实用户、没有真实流量、没有真实知识库，就没有线上指标可言。
 
 **附带的结构性问题（同源）。** GLPI 知识链路是断的：`GlpiKnowledgeBaseSource` 在整仓**从未被实例化**，唯一的 ingest 入口只接了 internal / pagerduty / mendeley 三个源。所以即便明天上线，知识侧也没有内容可检索。
 
-## 02 / 04 的业务侧
+### 02 / 04 的业务侧
 
 同 18。工程面可测，业务面（真实任务成功率、真实检索质量）在拿到真实环境之前做不了。
 
 ---
 
-# 五、本轮补齐的专属指标（08 / 16 / 09 质量侧）与仍未做的旁支
+## 五、本轮补齐的专属指标（08 / 16 / 09 质量侧）与仍未做的旁支
 
-## 08 Multi-Agent Coordination
+### 08 Multi-Agent Coordination
 
 **现状。** 链路被走通并被断言（handoff envelope、`context` 模块 4 断言 / 16 案例、`reviewer` 2 断言 / 14 案例），但没有**协同专属指标**：handoff 正确率、并行分支冲突率、死锁 / 循环检测、Agent 间信息丢失率。
 
@@ -667,7 +697,7 @@ gate → **`verdict: FAIL`，退出码 1**。
 
 **10-03 修掉的一处自相矛盾。** 协同报告的 limitations 原是**写死的常量**，最后一条写 *"This corpus is 121 observations"*；语料扩到 200 后，**它就在一张数着 200 的表下面说 121**。已改成**由 `len(rows)` 推出**，并加锁定测试 `tests/servicemind/test_phase7_coordination_limitations.py`（3 条），两个变异（写回 121、只留数字丢掉告警语）全部变红。
 
-## 16 Stochastic Reliability
+### 16 Stochastic Reliability
 
 **初版现状（已被本轮取代）。** 单点确定性有：查询臂复跑 `moved: 0`（控制复跑逐 query 位移为零）、安全场景的确定性断言（`SEC-IDEM-*`）、ACC-12a 的确定性分组机制。**方差测量当时没有**：同输入重跑 N 次的分布、重试一致性、flaky 率。—— 本轮补上了，见下。
 
@@ -710,7 +740,7 @@ gate → **`verdict: FAIL`，退出码 1**。
 
 **另一个可零成本做的旁支（本轮确认，仍未做）：Memory 消融。** 因为 `SERVICEMIND_MEMORY_ENABLED` 是纯环境变量（§一·10），起第二个实例、设为 `false`、跑同一批案例，即可测"memory ON vs OFF 对最终任务质量差多少"，**不动仓库任何一行**、不影响已冻结版本。注意 memory-OFF **只能靠"缺失"证明**（`memory_records.source_run_id` / `memory_events.run_id` / `created_by` 在 ON 时必然出现），不能靠某个字段为 false —— 设计时要把这一点写进判据。
 
-## 09 Reviewer Evaluation 的质量侧
+### 09 Reviewer Evaluation 的质量侧
 
 **现状。** 决定正确性 ✅、并发双审 `one_winner` ✅、支撑失效路径 ✅、live HTTP review 队列 `passed`（但 `real_items: 0`）。
 
@@ -727,7 +757,9 @@ gate → **`verdict: FAIL`，退出码 1**。
 **必须写下的保留（报告自己声明的，逐条采纳）：**
 
 1. **没有调用任何模型。** 测的是 `ReviewerAgent._deterministic_gate` —— 一个关于 analysis、joined evidence 与轮次计数器的纯函数。**FAR 0 的意思是"确定性层没有漏放"，不是"平台不会输出错答案"。**
+
 2. **5 条 evasion 案例是 `deferred` 给语义评审器的**，而本 harness **不跑语义层**（`semantic_defer_rate: 1.0`）。所以这个 FAR 是**下界**。
+
 3. **案例是构造的，不是从生产流量采样的**——它们**按设计覆盖每一条分支**，所以这些比率描述的是"gate 在它命名的那些缺陷上的行为"，不是这些缺陷在真实运行中的发生率。
 
 **本轮已测、已定位、已修：语义裁判层（`scripts/evaluate_phase7_reviewer_semantic.py`，`phase7_reviewer_semantic_latest.json`）。**
@@ -763,9 +795,9 @@ gate → **`verdict: FAIL`，退出码 1**。
 
 ---
 
-# 六、— 按裁定不做
+## 六、— 按裁定不做
 
-## 15 Cost
+### 15 Cost
 
 现有产物里只有**门控断言**（`phase5` 的 `model_cost_budget_bypasses: 0`、`phase6` 的 `model_cost_budget_bypasses` 硬门禁、R2.0 spike 的 `cost_budget_ms: 204`——但那是**延迟**预算不是钱）。没有 token→USD 计量、每 run 成本、成本回归。
 
@@ -775,21 +807,28 @@ gate → **`verdict: FAIL`，退出码 1**。
 
 ---
 
-# 七、冻结的含义
+## 七、冻结的含义
 
 冻结不是把 18 格一起盖章，而是**把它们分开放**：
 
 - ✅ **11 格**（02 工程面 / 03 / 05 / 06 / 07 / 08 / 09 / 10 / 11 / 12 工程面 / 13 / 16）进简历与文档可以照写——每一格都有能扛住追问、且**绑定单一被测版本**的证据。**02 的版本绑定 10-03 已补齐：28 例全部在 `patch(fbdbefc59bbc)` 上重跑，28/28 PASS、107/107 断言、`--expect-revision` 断言通过、gate 退 0（详见 §一·02 (b)）**；07 要写成"契约 32/32 + 强化集 36/41"，不再写"准确率 1.0"。
+
 - ❌ **1 格**（14）如实写"做了、判 FAIL、根因已定位到单条"：三档 120 运行跑完，FAIL 的**唯一**根因是 Q-002 一条确定性引用漏检（并发 1 下同样失败），**不是并发退化**（p95 比值 1.00 / 1.04 / 1.06）。**不得写成"通过"，也不得写成"平台在负载下有问题"。**
+
 - ⚠️ **2 格**（01 / 04）只能写成"我做了、并发现了它为什么不成立"——两者都卡在标签与语料，需要外部资源。
+
 - ⛔ **3 格**（17 / 18，以及 01、02 的业务侧）写明"受环境 / 人力约束，未评估"，与"已知无缺陷"严格区分。
+
 - ⬜ **2 格**（12 的非对抗红队侧、16 的 memory 消融旁支）写作"有执行路径，未执行"。
+
 - **1 格**（15）按裁定不做。
 
 三条必须在所有对外文本里保持的纪律：
 
 1. **"未评估" ≠ "无缺陷"**。⛔ 与 ⬜ 合计 5 项，它们是"没有观测"，不是"观测到没有"。**同理，"FAIL" ≠ "已知缺陷在平台侧"**：14 的 FAIL 已逐条归因到 Q-002 这条内容观测。
+
 2. **证据必须绑定单一被测版本——本轮已满足。** security / quality / load / reliability 四批现在**各自**都只含一个 source revision，四份 gate 都不再因"跨版本"被拒。这条纪律没有放松：它是**重跑出来**的，不是放宽出来的。
+
 3. **（本轮新增）"批次记的修订号"不等于"被测版本"。** 一条记录的修订字段是从**源码树**算的；它只在**同时证明了服务进程跑的就是那棵树**之后，才可以当作被测版本的证据。这条现在有机制保障（§零）。
 
    **但它要分成两个问题问，别混成一个**（10-03 更正）：
@@ -801,16 +840,21 @@ gate → **`verdict: FAIL`，退出码 1**。
 解冻条件（按优先级，本轮更新）：
 
 1. ~~修 `REFUSED`~~ → **已修且已重跑**：机制（§零 + §零 之二）+ 四批在单一冻结版本上的整批重跑都已完成。quality → PASS、security → PASS、load → FAIL（归因见 §三·14）、reliability → 已测。
+
 2. ~~在冻结版本上重跑 tier-10~~ → **已执行**（§三·14）。**仍未解的残余**：`SERVICEMIND_MODEL_MAX_RETRIES = 1` 之下，并发下的恢复仍主要指望"2 次尝试就够"，而网关已提供的 `throttle_wait_seconds()` 只有 `agents/analysis.py:244` 一条路径在用。**本轮没有触发限流，所以这条既没被证伪也没被验证**——它需要一次**故意注入限流**的批次，属于"故障注入"，本轮未做。
+
 3. **Q-002 需要一次决定**：是修这条检索漏检（属候选召回的 R2 方向，用户已暂停），还是修订/移除这条冻结案例（会改 `cases_digest`，需整批重跑）。**当前裁定是如实记录，不动。**
 3b. ~~acceptance 的 8 个写入案例仍要在「当前版本」上执行一次~~ → **已执行（10-03 裁定补跑）**。28 例在单一部署上整批跑完：**28/28 当前（`patch(fbdbefc59bbc)`）、107/107 断言、gate 退 0**（§一·02 (b)）。版本绑定状态从「20/28 当前 + 8/28 停在 `cf08ac8a…`」更新为 **28/28 当前**。
+
 4. 取得真实环境与真实知识库（解 18 / 01 / 04）。
+
 5. 取得领域标注资源（解 17）。
+
 6. 补 08 / 16 / 09 质量侧的专属指标（**可在冻结版本上做**，产物落 `evaluation/` 即可，见 §五·08）。
 
 ---
 
-# 八、本轮环境事件：提供方 402 欠费窗口（记录在案，归因清楚）
+## 八、本轮环境事件：提供方 402 欠费窗口（记录在案，归因清楚）
 
 **事件（第二次，10-03 补记）。** 2026-10-03（CST 13:08–13:12），同一条 402 再次出现。**窗口的两端是测出来的、
 不是估出来的**：最早一条 402 是 `05:08:02Z` 提交的那次运行（`ACC-07`），最晚一条是 `05:12:01Z` 那次复读
@@ -828,14 +872,16 @@ gate → **`verdict: FAIL`，退出码 1**。
 **证据。**
 
 - `agent_runs.error` 94 条，逐字：`supervisor_decision_failure: APIStatusError: Error code: 402 - {'error': {'message': 'Insufficient Balance', ...}}`。
+
 - `model_invocations`（globex）：`MODEL_APISTATUSERROR` **119** 次，窗口 `08:59:28.594344 → 09:13:20.059696`。
+
 - 当日（10-02）总调用 2567 次，成功 2440 次；`retries>0` 的成功仅 8 次。
 
 **影响。** quality 第一轮 94 例作废，其中 15 例在第二轮补回，**净损 79 例**（已移出被测语料，见 §二·03）。**这是外部账号事件，不是平台缺陷**；但它是**本轮最贵的教训**：一个跑在外部模型上的评测批次，**没有把"提供方整体不可用"与"被测平台失败"分开的机制**——94 条 "failed" 看起来像平台的失败，直到逐条读回 `agent_runs.error`。**这是 03 那格在下一版必须补的判据**：批次结束时若存在提供方级错误，应把它从"平台行为观测"里**显式剔除并计数**，而不是留给读者去发现。
 
 ---
 
-# 九、本轮新发现的缺陷（D1–D5）：D4 已修并复测，D1 / D2 / D3 / D5 未关闭
+## 九、本轮新发现的缺陷（D1–D5）：D4 已修并复测，D1 / D2 / D3 / D5 未关闭
 
 按 §判定口径：以下都是**已确认缺陷**（有观测）。**D4 已修并复测**（见其条目与 §五·09），
 **D1 / D2 / D3 / D5 未关闭**。它们不影响 §一 那些结论的成立，但每一条都限制某个结论能被推广到多远。
@@ -848,7 +894,7 @@ quality（200）、load（120）、security（72）、reliability（8×5）**全
 所以按「先冻结、把代价写清楚」处置，而不是按「顺手一起改」。D4 不同：它是一条**安全漏洞**
 （5/5 evasion 全被放行），所以当轮就修、当轮就复测。
 
-## D1 — `agent_invocations` 系统性遗漏 knowledge agent
+### D1 — `agent_invocations` 系统性遗漏 knowledge agent
 
 **观测。** `agent_runs.result["agent_invocations"]` 在**每一个**运行都缺 knowledge agent 条目（200 例语料下 **200/200**），
 共 **318 条缺失**（121 例语料时为 187 条）；data / analysis / reviewer 一条不缺。
@@ -865,7 +911,7 @@ quality（200）、load（120）、security（72）、reliability（8×5）**全
 `agent_runs.result->'agent_invocations'`，与 `run_events` 中 `agent.completed` 的
 `agent_role` 集合对照。
 
-## D2 — agent envelope 的 `attempts` 不是重试次数
+### D2 — agent envelope 的 `attempts` 不是重试次数
 
 **观测。** `agents/data.py:319`：`"attempts": max(sum(attempts for _, _, attempts, _ in results), 1)`
 ——DataAgent 把自己的**工具调用次数**累加进去。实测分布：data `{2: 41, 3: 90}`，
@@ -874,12 +920,12 @@ analysis / knowledge / reviewer **全部为 1**。
 **影响。** 该字段**跨 agent 不可比**，任何按 `attempts` 算重试率的读数都是错的。
 **本轮处置。** 重试一律读 `model_invocations.retries`。**字段语义未修。**
 
-## D3 — `plan_revision` 混淆 retrieve_more 与 replan
+### D3 — `plan_revision` 混淆 retrieve_more 与 replan
 
 **观测与根因**见 §一·05。**本轮处置。** 只在评分口径上拆成
 `runs_revising_the_plan`（65.0%）与 `runs_replanning`（4.5%）。**字段语义未修。**
 
-## D4 — 语义裁判的 claim 索引契约缺口（本轮新增，优先级最高）
+### D4 — 语义裁判的 claim 索引契约缺口（本轮新增，优先级最高）
 
 **观测。** §五·09 的 19 例实测：**5/5 evasion 类缺陷被语义层放行**（FAR 0.714）。
 
@@ -904,8 +950,10 @@ EVA-03/04 的裁判确实做了比对，只是判松了，扩字段对它们无�
 ① **契约。** `SemanticReview` 新增三个判据，让判决不必再挂在 `claim_id` 上：
 
 - `citation_integrity_ok` —— 被引用的知识行，其 citation 对象必须真的锚定它；
+
 - `action_target_grounded` —— 动作的目标资源必须与某条 evidence 行的 `resource_type`/`resource_id` 相等
   （为此把这两个字段一并放进裁判载荷，此前裁判根本看不到资源标识，无法比对）；
+
 - `unbacked_assertions: list[UnbackedAssertion]` —— `field` 用 `Literal` 限定到
   `reasoning_summary` / `recommended_group` / `classification` / `problem_recommendation` /
   `change_recommendation` / `other`，外加 `detail`。
@@ -951,7 +999,7 @@ design**"，但代码**只检查了 `degraded_rag` 标志**。于是"带降级�
 不带 claims 就会系统性全通过。现在这道障碍没有了，**但该批次本轮仍未执行**（它需要先冻结人工判据、
 再用活模型生成对抗输入，是新建工作而非重跑），按术语纪律记为**未执行**，**不得因为 D4 已修就记为已覆盖**。
 
-## D5 — Q-002：一条确定性引用漏检，且金标本身可争议（未关闭）
+### D5 — Q-002：一条确定性引用漏检，且金标本身可争议（未关闭）
 
 **观测（`evaluation/quality/replays/Q-002.json`、`evaluation/load/replays/`、`evaluation/reliability/replays/`）。** 问题 *"How long is a VPN device certificate valid before it needs renewing?"*，预期引用 `KB-Q-VPN-CONN`。质量批里运行 `succeeded` / `passed` 但**未引用它**；负载批**三档的 5 条未通过全部是它**，且**并发 1 的基线档自己就不过**；可靠性批 5 次重复里该篇**一次都没出现**。
 
@@ -966,7 +1014,7 @@ design**"，但代码**只检查了 `degraded_rag` 标志**。于是"带降级�
 ---
 ---
 
-# 附录：本报告引用的产物清单
+## 附录：本报告引用的产物清单
 
 | 产物 | 用途 |
 |---|---|

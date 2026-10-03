@@ -50,6 +50,7 @@
 **最重要的两句话**（它们比上面任何一行都重要）：
 
 1. **本轮的多数失败不是「平台坏了」，而是「测量平台的东西坏了」。** 见 §三·B。
+
 2. **剩下的失败是小样本上的、被单独定位到一条的。** `Q-002` 一条同时出现在质量批、负载批、可靠性批，
    是**同一条确定性缺陷**，不是三处独立问题。
 
@@ -171,9 +172,12 @@
 
 - **修复前，部署臂比确定性锚点少 14–15 条**（两样本方向一致）——让模型改写检索文本，
   在这份语料上是**净负面**。
+
 - **修复把其中 4–6 条还回来**（A +6、B +4），两样本都为正，**但都尚未恢复到 `c0_off`**。
+
 - 因此这一项的定性是：**一处方向确定的、可测量的改进**，加上**一条被证伪的常见做法**；
   **不是「RAG 效果修好了」**。
+
 - **噪声下界由控制臂自己量出来**：同一进程重跑控制臂，280 条查询里 **R@10 移动 0 条**、R@5 移动 1 条。
   所以**小于一条的差不是发现**，这条下界被后续所有读数沿用。
 
@@ -278,12 +282,16 @@ MaxSim 扫描成本，然后**外推**到全量，与预先冻结的成本门（
 不是三个批次各自出错，是**五个批次缺同一道闸**）。
 
 **修法（单一实现 + 接线 + 锁定测试）。**
+
 - 新增 `src/servicemind/evaluation/deployment.py` 作为**唯一实现**：
   `stale_deployment()` 比较进程启动时间（`/proc/<pid>/stat` + `CLOCK_BOOTTIME`）与
   最新源文件 mtime；**拒绝是默认**，放行必须显式传 `--allow-stale-deployment`。
+
 - 六个 live 批次全部改为在**观察任何东西之前**调用 `refuse_stale_deployment(...)`。
+
 - `tests/servicemind/test_phase7_deployment_freshness.py` 对**六个批次逐一**断言源码里存在该调用
   ——**将来新增批次若漏接这道闸，测试变红**，而不是等下一次审计再发现。
+
 - **处置**：先量化重启风险（acme 316 条探针残留 pending、globex 1 条可恢复），
   记录原 PID 与启动时间，重启两个 **user unit**（不碰容器）：
   API `2095085 → 1623492`（`2026-10-02 16:46:29 CST`），outbox `937420 → 1624495`。
@@ -324,7 +332,8 @@ B1 那种**不会自我暴露**的失败。**一个经常误报的闸，等于�
 而**缺陷面比 claim 宽**——不落在 claim 上的缺陷，裁判结构性地看不见。
 
 **修法**：契约加宽 3 个判据（`action_target_grounded` / `citation_integrity_ok` / `unbacked_assertions`）
-+ 判据收紧（豁免须同段写明）+ `_citation_finding` 根因修复；`REVIEW_POLICY_VERSION` **v5 → v6**。
+
+- 判据收紧（豁免须同段写明）+ `_citation_finding` 根因修复；`REVIEW_POLICY_VERSION` **v5 → v6**。
 
 **结果怎么样**：**误纳 0.714 → 0.0，误拒保持 0.0**（18 次模型调用，契约填充率 1.0）。
 裁定逻辑的**零调用重放探针**作为常驻锁定测试留在仓库。
@@ -354,10 +363,13 @@ B1 那种**不会自我暴露**的失败。**一个经常误报的闸，等于�
 | must-refuse-access | 20 | 20 | 0 | 绝对：必须不出现受组限制的文档 |
 
 - 端到端 Reviewer 可答率 **119/120 = 0.9917**，95% Wilson 区间 **[0.9543, 0.9985]**。
+
 - 它**取代**的是 `0.275`——那是**检索 top-score 阈值代理**，里面没有模型、没有复核器、没有答案
   （`answerability_signal.is_end_to_end_reviewer_measurement = false`）。
   两者**不是同一个测量**，代理值也**不是**本值的下界。
+
 - **gate `verdict: PASS`，退出码 0**（本报告写作时重跑复核过）。
+
 - 唯一未通过的是 `Q-002`，见 §四。
 
 **这份报告自己声明了它不证明什么**（原文在 `phase7_quality_latest.md`）：语料是自建 44 篇而非租户真实知识库；
@@ -392,7 +404,7 @@ B1 那种**不会自我暴露**的失败。**一个经常误报的闸，等于�
 其余 30 个**只由通过的测试背书**。「测试是绿的」与「删掉这段行为测试会变红」不是同一个强度的结论。
 
 **报告同样自己列出了 8 项 `not_covered`**，其中最关键的一条逐字是：
-> *「没有任何一条场景向平台投喂过词表之外的新注入变体」*
+> 「没有任何一条场景向平台投喂过词表之外的新注入变体」
 
 即：**只验证了已列入词表的标记被处理，从未有人真正攻击过这套系统**。其余缺口：
 服务重启后的撤权、`CredentialCipher` 的 `InvalidToken` 路径与轮换后旧密文、直接投递其他 realm 的
@@ -416,14 +428,19 @@ tier-10 并发 10 × 3 遍，共 **120 次运行**，单次结算预算 240 s）
 | tier-10 | 10 | 60 | 60 | 57 | **3** | 19.9 s | 35.7 s | 1.06× |
 
 - 120 条观测全部落盘，**驱动层错误 0**，未观测 0，`deployed_revision` **单一**。
+
 - **gate `verdict: FAIL`，退出码 1**（本报告写作时重跑复核过）。
+
 - **FAIL 的根因是单独一条，不是并发**：三档的 **6 次未通过全部是 `Q-002`**
   （tier-1 的 1 次记为 **blocker**，其余 5 次记为 finding），文案逐字
   *"the run succeeded without citing ['KB-Q-VPN-CONN']"*。
+
 - 关键是**并发 1 的基线档自己就不过**，于是 gate 按第 3 条判据写下 blocker：
   *"the unloaded tier is not a usable baseline (1 run(s) did not behave), so nothing observed under
   load can be attributed to load"*。**这句话是对的，而且正是本批次存在的意义。**
+
 - **延迟本身就是反证**：p95 相对基线 1.00 → 1.04 → 1.06，**三档之间没有可辨退化**。
+
 - **没有为让它变绿去放宽判据，也没有改冻结案例集。**
 
 **这一步同时解除了历史遗留的一条判断。** 旧报告曾记 tier-10 在并发 10 下「60 中失败 41」。
@@ -479,6 +496,7 @@ tier-10 并发 10 × 3 遍，共 **120 次运行**，单次结算预算 240 s）
 
 - **40 个有重复的用例里 24 个不一致（60%）**，且**每一个分歧都只落在 `citations` 一个轴上**；
   `terminal_status`、`reviewer_decision`、`plan_digest` **从未变化**。
+
 - 三档现在**同处一个修订**（10-02 重跑之后），所以档间差异**不再被修订变化混淆**——
   但仍不能只归因于并发：**重复次数与并发是绑在一起的**。
 
@@ -544,9 +562,11 @@ PASS_ENGINEERING_WITH_NO_PRODUCTION_MEMORY_SAMPLE`）与 `evaluation/reports/pha
 1. **生产观测 `NO_DATA`**：真实 analysis envelope 数为 **0**（排除 14 条合成产物）。
    上面每一个数字都来自**本项目自己编写的回归契约语料**，**不是任何租户真实记忆分布的度量**，
    也不能替代生产记忆流量回放。
+
 2. **审计闭环只闭了一半**：记忆 → 运行可经 `memory_records.source_run_id → agent_runs.id` 闭合；
    **`memory_events`（撤销事件）缺 `run_id`/`trace_id`**，因此**撤销事件的关联无法闭合**——
    按术语纪律，这一项记为**审计闭环不通过**。
+
 3. **缺一次消融实验**：`SERVICEMIND_MEMORY_ENABLED` 是**纯环境变量**（全仓只有
    `orchestration/phase5_governance.py:595` 读、`:743` 写两处消费者；`.env:65` 当前为 `true`，
    而代码默认 `settings.py:285` 为 `False`）。因此**起第二个实例、设为 `false`、跑同一批案例**
@@ -575,13 +595,17 @@ PASS_ENGINEERING_WITH_NO_PRODUCTION_MEMORY_SAMPLE`）与 `evaluation/reports/pha
 **它同时出现在三个批次的证据里，这是它值得单列的原因。**
 
 - **问题**：*"How long is a VPN device certificate valid before it needs renewing?"*
+
 - **期望**：引用 `KB-Q-VPN-CONN`。**实测**：质量批未通过、负载批三档（含并发 1 的基线）未通过、
   可靠性批 5 次重复里**一次都没引到**（被引文档会换，但**从不包含**这一篇）。
 
 **已排除的原因**：
+
 - **不是索引缺失**——`scripts/seed_phase7_quality_fixtures.py --check` 返回 `problems: []`，
   该文档在服务索引里、`group_ids` 与 `is_active` 正确。
+
 - **不是抖动**——并发 1 下**稳定地**不过；5 次重复从不包含它。
+
 - **不是负载**——见 §C3。
 
 **为什么它同时是「缺陷」和「争议」。** 语料里三篇文档给出三个数字：金标那篇
@@ -610,20 +634,29 @@ PASS_ENGINEERING_WITH_NO_PRODUCTION_MEMORY_SAMPLE`）与 `evaluation/reports/pha
 | — | GLPI 写入未经 ToolGateway 统一策略与调用审计 | `glpi.append_ticket_followup` 不在注册表 | 统一治理不成立 |
 | — | `set_document_active` 无 HTTP 入口 | 知识版本废止无自助能力 | 运维面 |
 | — | `tool_outbox` 的 `action.approved` 无消费者 | `RedisStreamConsumer` 零引用 | **不得宣称异步消费与崩溃恢复已通过** |
-| — | **静态检查残留：`pyrefly check` 报 4 条错**（`evaluation/lotte.py:280`、`:285`、`model_gateway/gateway.py:500`、`rag/late_interaction_torch.py:161`） | `uv run pyrefly check` | 见下方说明；**附录 B 的静态那条命令当前不是 0 错** |
+| — | ~~静态检查残留：`pyrefly check` 报 4 条错~~（`evaluation/lotte.py:280`、`:285`、`model_gateway/gateway.py:500`、`rag/late_interaction_torch.py:161`）**——已于同日 CI 收尾修掉，见 §5.2 与下方补记** | `uv run pyrefly check` | 采集时刻为未关闭；收尾后为 0 错 |
 
-> **这 4 条没有修，理由是明说的。** 四条**都不是运行时缺陷**，是类型收窄不足：
-> `lotte.py` 两处对 `json.loads` 回来的 `dict[str, object]` 直接取 `.items()` / `set(...)`；
-> `gateway.py:500` 把 `BaseException | None` 传给只收 `BaseException` 的 `provider_is_down`（该分支只有
-> 出错时才到达，运行时是安全的）；`late_interaction_torch.py:161` 的 `self.tokenizer` 被推断为可能为 `None`，
-> 而它在调用前已被赋值。**不修的两条理由**：①它们要改 `src/**/*.py`，而那会让**正在服务的 API 进程变成
-> "比树旧"**（`§三·B1` 的那道闸），此后任何 live 批次都会被拒，直到重启一次——为 4 条纯提示性报错付这个代价
-> 不划算；②其中 `gateway.py:500` 正落在本轮修过的 `provider_is_down` 附近，仓促加 `cast` **有把刚刻画清楚的
-> 降级行为改回去的风险**。
+> **采集时刻的状态，以及收尾时的处置（10-03 补记，先记原状，再记处置）。**
 >
-> **披露而不是掩盖**：本报告 `§三·B1` 的静态门禁只声称 `ruff format --check` 与 `ruff check` 通过
-> （407 文件、全过），**没有**声称 `pyrefly` 0 错。`docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md`
-> 与 `docs/PHASE7_ACCEPTANCE_BASELINE.md` 里"`pyrefly` 0 errors"是**各自采集时刻**的快照，那四个文件是之后才加的。
+> **采集时刻为什么不修。** 四条**都不是运行时缺陷**，是类型收窄不足：`lotte.py` 两处对 `json.loads`
+> 回来的 `dict[str, object]` 直接取 `.items()` / `set(...)`；`gateway.py:500` 把 `BaseException | None`
+> 传给只收 `BaseException` 的 `provider_is_down`；`late_interaction_torch.py:161` 的 `self.tokenizer`
+> 被推断为可能为 `None`，而它在调用前已被赋值。当时不修有两条明说的理由：①改 `src/**/*.py` 会让
+> **正在服务的 API 进程变成"比树旧"**（`§三·B1` 的那道闸），此后任何 live 批次都会被拒，直到重启一次；
+> ②`gateway.py:500` 正落在本轮修过的 `provider_is_down` 附近，仓促加 `cast` 有把刚刻画清楚的降级行为
+> 改回去的风险。**所以本报告正文只声称 `ruff format --check` 与 `ruff check` 通过（407 文件、全过），
+> 从未声称 `pyrefly` 0 错**——`docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md` 与
+> `docs/PHASE7_ACCEPTANCE_BASELINE.md` 里的 "`pyrefly` 0 errors" 是**各自采集时刻**的快照。
+>
+> **收尾时为什么改判。** 上面第 ① 条代价是**为 live 批次付的**；live 批次已经跑完并冻结，这个代价不再存在。
+> 而它换来的是 **CI 的 `test-python` 全矩阵持续变红**——那才是长期成本。于是四条都按**收窄**（而不是
+> `cast` 压制）修掉：`lotte.py` 对 `entry.get("files")` 做 `isinstance(..., dict)` 收窄，畸形 manifest 报
+> "全部未跟踪"而不是抛 `AttributeError`；`gateway.py` 在进入断路器判定前加 `last_error is not None` 守卫，
+> 让"尝试循环从未运行"不再被当成提供方故障的证据；`late_interaction_torch.py` 对 `AutoTokenizer` 的返回值
+> 显式检查并在为空时抛 `FileNotFoundError`。**没有一处放宽断言、没有一处用 `cast` 掩盖。**
+>
+> **代价与边界照记。** 这三处都在 `src/**`，所以 `source_revision` 随之移动；本报告 §2.2 各批次的版本绑定是
+> **采集时刻**的快照，因此不受影响，但也**不能**把收尾后的树说成"就是那些批次跑的那棵树"。
 
 ### 5.2 本轮修掉的（每条都有锁定测试）
 
@@ -635,6 +668,7 @@ PASS_ENGINEERING_WITH_NO_PRODUCTION_MEMORY_SAMPLE`）与 `evaluation/reports/pha
 | 重放探针按旧字段重建判决（B3 支线） | **仪器** | 「字段不全即退 3 拒绝」+ 锁定测试；修前渲染冻结不删 |
 | 部署臂在搜索前丢弃用户原话（A1） | **产品** | 七臂 × 两样本；控制臂噪声下界 R@10 移动 0 条 |
 | 可靠性报告的 limitation 与自己的表格矛盾 | **报告** | 改为由语料推出；3 个变异全部变红 |
+| `pyrefly` 4 条类型收窄缺口（CI 收尾） | **静态** | `uv run pyrefly check` → **0 errors**；全仓 `pytest` 1398 passed / 26 skipped；三处均为收窄，非 `cast` |
 
 ---
 
@@ -679,17 +713,24 @@ PASS_ENGINEERING_WITH_NO_PRODUCTION_MEMORY_SAMPLE`）与 `evaluation/reports/pha
 
 1. **所有 live 结论都是「在这批语料 + 这个冻结版本 + 这个租户上」。** 语料是自建的 44 篇文档，
    不是租户真实知识库。**换语料会得到另一个数字。**
+
 2. **四份「已记录」报告不是在线验收。** 轨迹 / 协同 / 可靠性(b) / 语义层读的是**已记录**的运行，
    证明的是「这些记录支持什么结论」，不是「当前代码在线会这样跑」。
    在线证明是 gate 的职责，见 §C。
+
 3. **安全批不是对抗性红队**（见 §C2 的 8 项 `not_covered`，关键一条：
    **从未有人真正攻击过这套系统**）。
+
 4. **70% 的安全场景"只由通过的测试背书"**，与有变异背书的 42 个不是同一个强度。
+
 5. **可靠性 (a) 只有 8 个案例**——样本小是有意的代价（换来并发固定为 1），
    但结论的适用范围就是这 8 个案例。
+
 6. **语义层是每例一次采样**，边界用例重复跑会移动；应把「抓住 / 漏掉」读作**关于这些输入**的证据，
    不是总体比率。
+
 7. **`Q-002` 这种"金标可争议"的情况，本文不替读者选一种读法。**
+
 8. **本文不产生任何新观测，也不改任何已冻结的判据。**
 
 ---
@@ -723,11 +764,14 @@ PASS_ENGINEERING_WITH_NO_PRODUCTION_MEMORY_SAMPLE`）与 `evaluation/reports/pha
 ## 附录 B：复现命令
 
 ```bash
+
 # 静态（每步都应先跑）
-# ruff 两条例行通过（407 文件）。pyrefly 当前报 4 条，全在 R1/R2 遗留文件里，
-# 不是运行时缺陷，已在 §5.1 逐条列明——见那里的说明，别把它读成回归。
+
+# 静态三条例行通过（407 文件）。§5.1 采集时刻的 4 条 pyrefly 报错已在同日 CI 收尾中
+
+# 按"收窄"修掉（见 §5.1 补记与 §5.2），此处期望 0 errors。
 uv run ruff format --check . && uv run ruff check .   # 期望：0 文件待格式化、All checks passed
-uv run pyrefly check                                   # 期望：4 errors（见 §5.1）
+uv run pyrefly check                                   # 期望：0 errors
 
 # 仪器：部署新鲜度 + 变异框架还原
 uv run pytest tests/servicemind/test_phase7_deployment_freshness.py \
@@ -750,6 +794,7 @@ uv run python scripts/gate_phase7_acceptance.py --check --replay-only \
     --replays evaluation/acceptance/replays_2026-10-03 \
     --report evaluation/reports/phase7_acceptance_2026-10-03.md \
     --expect-revision 'b385df7c2ef6818f24d5f173ca92158989ba3c66+patch(fbdbefc59bbc)'
+
 # 期望：退 0，PASS 28 / FAIL 0 / BLOCKED 0，107 条断言，blockers: []
 uv run python scripts/report_phase7_reliability_recorded.py --check               # 期望 0
 
@@ -757,6 +802,7 @@ uv run python scripts/report_phase7_reliability_recorded.py --check             
 uv run python scripts/verify_phase7_quality_live.py --tenant-id 22222222-2222-4222-8222-222222222222
 uv run python scripts/verify_phase7_security.py
 uv run python scripts/verify_phase7_load_live.py --tenant-id 22222222-2222-4222-8222-222222222222
+
 ```
 
 **纪律**：不 `source .env`；不打印任何密钥值；不重启 / 停止 / 重建任何在跑的容器；

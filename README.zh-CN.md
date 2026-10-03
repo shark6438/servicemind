@@ -6,6 +6,29 @@ ServiceMind 是一个**企业级 ITSM(IT 服务管理)智能体平台**:它把�
 
 本仓库衍生自 🧰 [AI Agent Service Toolkit](https://github.com/JoshuaC215/agent-service-toolkit)(MIT 许可),完整保留了上游 git 历史。详见[「上游、历史与许可」](#上游历史与许可)。
 
+## 项目当前的真实状态
+
+这份 README 最该告诉你的是:**哪些结论是测出来的,哪些不是。** 下表全部测于 2026-10-03 的同一个冻结版本;完整执行记录见
+[docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md](docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md),18 项分类的逐项判定见
+[docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md](docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md)。
+
+| 项 | 结果 |
+| --- | --- |
+| **业务质量(端到端)** | ✅ **119/120 = 0.9917**(门槛 0.85);三个负向整层 40/40、20/20、20/20 全过;gate 退出码 0 |
+| **安全与故障** | ✅ **72 场景全 PASS**;252 条证据全部通过;87 条变异证据全部 `RED (good)`;gate 退出码 0 |
+| **可靠性** | ✅ **结果稳定、引用不稳定**:并发 1 下 8 例 × 5 次,状态与评审决定 **100% 稳定**,方差**全在 `citations` 轴**(`flake_rate 0.875`) |
+| **负载** | ❌ **gate FAIL(退出码 1)**,而**根因不是并发**:6 次未通过**全部是同一条 `Q-002`**,且**并发 1 的基线档自己就不过**;延迟无退化(p95 比值 1.00 / 1.04 / 1.06) |
+| **RAG 检索质量** | ❌ **未达标,且原因是标签而不是检索器**:找到并修掉了一条真实根因缺陷(部署臂在搜索前丢弃用户原话);候选召回臂(R2)被它**自己预设的准入判据**淘汰;标签集**已自证损坏** |
+| **Memory 模块** | ✅ **契约与治理面通过**(14 条硬门禁全 0、泄漏率 0.0、写侧 48 步精确率 1.0);⬜ **业务面未取样**(生产观测 `NO_DATA`),因此**不**声称企业前沿级 |
+| **评测可信度** | ✅ **已修复**:三处仪器缺陷与一处语义裁判契约缺口已从根源修掉并加锁定测试;语义层误纳 **0.714 → 0.0** |
+
+**比上面任何一行都重要的两句话。**
+
+1. **本轮的多数失败不是「平台坏了」,而是「测量平台的东西坏了」。** 三处仪器缺陷在被发现并修好之前,一直在静默地给出好看结论。
+2. **剩下的失败是小样本上的、被单独定位到一条的。** `Q-002` 同时出现在质量批、负载批、可靠性批,是**同一条确定性缺陷**,不是三处独立问题。
+
+未关闭缺陷(D1、`D2`、`D3`、`D5` 及若干架构项)连同复现路径列在交付报告里。有两类**结构性做不了**,如实标注而不是跳过:**人机/评委校准**(标签元数据 `annotators = 0`,算不出 kappa)与**线上生产 KPI**(项目未上线,`production_observation.status = NO_DATA`)。还有一条与其同源、且在采信任何检索数字之前都该知道:**GLPI 知识链路是断的** —— `GlpiKnowledgeBaseSource` 在整仓**从未被实例化**,所以即便明天上线,知识侧也没有内容可检索。
+
 ## ServiceMind 在做什么(产品特性)
 
 - **ITSM 工单运行** —— `POST /v1/servicemind/runs` 启动一个与 GLPI 工单绑定的受治理 agent 运行。每次运行都按租户隔离、按角色鉴权,并写入 append-only 审计日志。计划写操作的运行会**暂停等待人工审批**(审批以不可变 action hash 为锚);策略内无法解决的运行会暂停等待人工复核,而不是自行臆断。
@@ -282,13 +305,20 @@ python scripts/audit_project_structure.py`(不带 `--check`)——再与代码�
 `.github/workflows/test.yml` 运行 ruff、pyrefly、pytest(Python 3.12/3.13/3.14)、Markdown
 lint、架构门禁以及 docker 集成 job。提交/撰写约定见 [CLAUDE.md](CLAUDE.md)。
 
+前端 job 用 `npm ci` 安装,跑 `npm run check`(lint、类型检查、单测、生产构建)与一道依赖门禁。
+这道门禁落在 [`frontend/scripts/audit-gate.mjs`](frontend/scripts/audit-gate.mjs),而不是裸的
+`npm audit --audit-level=high` —— 因为 lint 工具链里有一条通告**上游没有修复版本**(`braces`
+在 npm 上的最新版就是受影响的那个版本)。门禁仍然审计**整棵已安装依赖树**,只豁免被点名的
+那一条,且**到期自动重新生效** —— 与根目录 [`.trivyignore.yaml`](.trivyignore.yaml) 是同一份
+契约:例外必须在日志里可见,并且会自己过期。
+
 ### Phase 7 验收门禁说了什么、没说什么
 
 `uv run python scripts/check_phase7_gate_reports.py` 会**离线**把四门 Phase-7 gate 各跑一次,再
 与各自已提交的报告逐门比对,一致则退出 0。这个退出码很容易被读成「验收通过」。它不是。
 
 判定来自对磁盘上回放的评分。验收批次是 28 条回放,全部录于
-`cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`,而 HEAD 已是其**后 5 个提交**。
+`cf08ac8a7b731054e492ed81ba5f3164dc381863+dirty(26 files)`,而 HEAD 已是其**后若干提交**。
 对这些文件只检验两件事:它们是否描述**同一个**版本(同源性),以及判定器今天是否仍然给出各份
 报告声称的判定。至于那个版本**是不是当前版本**(时新性),是另一个问题,离线跑在裸检出上无从
 回答:文件里没有任何东西说明它们出自哪棵树。
@@ -297,14 +327,24 @@ lint、架构门禁以及 docker 集成 job。提交/撰写约定见 [CLAUDE.md]
 「**当前代码树通过验收**」。脚本会打印它实际评分的版本,并在没有任何比对对象时报出
 `currency_checked: false`;传入 `--expect-revision <rev>`,或用
 `scripts/verify_phase7_acceptance_live.py` 针对你要描述的那套部署重新录制,才能把时新性变成
-**被检验过的事实**。另外三门 gate 有同样的边界,且目前是**拒判**而非评分。
+**被检验过的事实**。另外三门 gate 有同样的边界。
 
 ## 文档索引
+
+先读这三份,它们描述的是**当前被测出来的状态**:
+
+- 最终交付报告(完整执行记录,中文):[`docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md`](docs/SERVICEMIND_FINAL_DELIVERABLE_REPORT_2026-10-03.md)
+- 18 项评测分类的逐项判定:[`docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md`](docs/EVALUATION_18_COVERAGE_AUDIT_2026-10-02.md)
+- Phase 7 剩余评估项(轨迹 / 协同 / 可靠性 / 语义裁判):[`docs/PHASE7_REMAINING_EVALUATION_2026-10-02.md`](docs/PHASE7_REMAINING_EVALUATION_2026-10-02.md)
+
+参考与背景:
 
 - 企业级主规格(中文):[`docs/企业IT服务管理(ITSM)智能体平台.md`](docs/企业IT服务管理(ITSM)智能体平台.md)
 - 架构图景:[`docs/PHASE3_CURRENT_ARCHITECTURE_MAP.md`](docs/PHASE3_CURRENT_ARCHITECTURE_MAP.md)
 - Phase 4 RAG 技术基线:[`docs/PHASE4_RAG_TECHNICAL_BASELINE.md`](docs/PHASE4_RAG_TECHNICAL_BASELINE.md)
+- Phase 4 RAG 质量根因:[`docs/PHASE4_RAG_QUALITY_ROOT_CAUSE_2026-09-15.md`](docs/PHASE4_RAG_QUALITY_ROOT_CAUSE_2026-09-15.md)
 - Phase 5 架构与验收:[`docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md`](docs/PHASE5_FINAL_ARCHITECTURE_AND_ACCEPTANCE.md)
+- Phase 5 记忆质量评测:[`docs/PHASE5_MEMORY_QUALITY_EVALUATION.md`](docs/PHASE5_MEMORY_QUALITY_EVALUATION.md)
 - Phase 7 验收基线:[`docs/PHASE7_ACCEPTANCE_BASELINE.md`](docs/PHASE7_ACCEPTANCE_BASELINE.md)
 - 各阶段验收报告:`docs/PHASE*_ACCEPTANCE.md`;实时报告见 `evaluation/reports/`
 - 本地部署说明:[`LOCAL_DEPLOYMENT.md`](LOCAL_DEPLOYMENT.md)
