@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/providers/auth-provider";
 
 const navigation = [
@@ -38,12 +38,13 @@ function LoginScreen() {
       <section className="login-brand" aria-labelledby="login-title">
         <div className="login-product"><ShieldCheck aria-hidden="true" /><strong>ServiceMind 运维控制台</strong></div>
         <h1 id="login-title">企业 IT 服务管理</h1>
-        <p className="login-lead">统一查看工单调查、证据、审批决定和审计记录。</p>
-        <ul className="login-capabilities">
-          <li>租户与数据范围隔离</li>
-          <li>高风险操作人工审批</li>
-          <li>全过程审计追踪</li>
-        </ul>
+        <p className="login-lead">让每一次工单处理都有证据、有边界，也有明确的责任人。</p>
+        <ol className="login-flow" aria-label="受治理的工单处理流程">
+          <li><span>01</span><strong>接收工单</strong></li>
+          <li><span>02</span><strong>汇集证据</strong></li>
+          <li><span>03</span><strong>人工把关</strong></li>
+          <li><span>04</span><strong>审计留痕</strong></li>
+        </ol>
       </section>
       <section className="login-action" aria-label="登录">
         <h2>登录</h2>
@@ -61,6 +62,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") { setOpen(false); menuButton.current?.focus(); } };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
   if (!auth.ready || !auth.authenticated) return <LoginScreen />;
   const visible = navigation
     .filter((item) => !("role" in item) || auth.roles.has(item.role))
@@ -71,11 +79,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <a className="skip-link" href="#main-content">跳到主要内容</a>
       <header className="mobile-header">
         <Link href="/" className="mobile-brand">ServiceMind</Link>
-        <button className="icon-button" aria-label={open ? "关闭导航" : "打开导航"} onClick={() => setOpen((value) => !value)}>
+        <button ref={menuButton} className="icon-button" aria-label={open ? "关闭导航" : "打开导航"} aria-expanded={open} aria-controls="primary-navigation" onClick={() => setOpen((value) => !value)}>
           {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
         </button>
       </header>
-      <aside className={`sidebar ${open ? "sidebar--open" : ""}`}>
+      <aside id="primary-navigation" className={`sidebar ${open ? "sidebar--open" : ""}`}>
         <div className="brand">
           <ShieldCheck aria-hidden="true" />
           <div><strong>ServiceMind</strong><small>运维控制台</small></div>

@@ -29,15 +29,15 @@ export default function EvaluationPage() {
   return (
     <section className="page">
       <PageHeader eyebrow="发布管理" title="质量与发布状态" description={`展示仓库验收产物的脱敏快照，生成于 ${formatDate(data.generated_at)}；不代表实时生产遥测。`} actions={<GateBadge status={data.release_decision} />} />
+      <section className="caveats" aria-labelledby="release-caveats-title"><div className="caveats-heading"><div><p className="section-kicker">先看限制，再看数字</p><h2 id="release-caveats-title">发布前待关闭事项</h2></div><span>{data.caveats.length} 项</span></div><ul>{data.caveats.map((item) => <li key={item}>{item}</li>)}</ul></section>
       <section className="data-section">
         <div className="section-title"><div><h2>工程门禁</h2><p>当前冻结快照</p></div></div>
-        <div className="table-wrap"><table className="gate-table"><thead><tr><th>范围</th><th>验收数据</th><th>结论</th></tr></thead><tbody>{gates.map(([name, evidence, gateStatus]) => <tr key={name}><td>{name}</td><td>{evidence}</td><td><GateBadge status={gateStatus} /></td></tr>)}</tbody></table></div>
+        <div className="table-wrap" role="region" aria-label="工程门禁表，窄屏可横向滚动" tabIndex={0}><table className="gate-table"><thead><tr><th>范围</th><th>验收数据</th><th>结论</th></tr></thead><tbody>{gates.map(([name, evidence, gateStatus]) => <tr key={name}><td>{name}</td><td>{evidence}</td><td><GateBadge status={gateStatus} /></td></tr>)}</tbody></table></div>
       </section>
       <section className="data-section">
-        <div className="section-title"><div><h2>知识检索质量</h2><p>{data.rag.scope}</p></div><GateBadge status={data.rag.status} /></div>
-        <div className="table-wrap"><table className="metric-table"><thead><tr><th>指标</th><th>当前值</th><th>参考门槛</th><th>差距</th></tr></thead><tbody>{ragMetrics.map(([label, value, target]) => <tr key={label}><td>{label}</td><td className="mono">{formatPercent(value)}</td><td className="mono">{formatPercent(target, 0)}</td><td className="mono text-danger">{value === null ? "未测" : `${((value - target) * 100).toFixed(1)} 个百分点`}</td></tr>)}</tbody></table></div>
+        <div className="section-title"><div><h2>知识检索质量</h2><p>{data.rag.scope} · 下列为诊断值，不作为检索性能承诺</p></div><GateBadge status={data.rag.status} /></div>
+        <div className="table-wrap" role="region" aria-label="知识检索质量表，窄屏可横向滚动" tabIndex={0}><table className="metric-table"><thead><tr><th>指标</th><th>当前值</th><th>参考门槛</th><th>差距</th></tr></thead><tbody>{ragMetrics.map(([label, value, target]) => <tr key={label}><td>{label}</td><td className="mono">{formatPercent(value)}</td><td className="mono">{formatPercent(target, 0)}</td><td className="mono text-danger">{value === null ? "未测" : `${((value - target) * 100).toFixed(1)} 个百分点`}</td></tr>)}</tbody></table></div>
       </section>
-      <section className="caveats"><h2>发布前待关闭事项</h2><ul>{data.caveats.map((item) => <li key={item}>{item}</li>)}</ul></section>
     </section>
   );
 }

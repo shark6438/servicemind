@@ -21,6 +21,7 @@ export function formatPercent(value: number | null, digits = 1): string {
 
 export function readableLabel(value: string): string {
   const labels: Record<string, string> = {
+    abstain: "证据不足，明确弃答",
     analysis: "分析",
     action: "动作生成",
     approved: "已批准",
@@ -49,6 +50,7 @@ export function readableLabel(value: string): string {
     procedural: "程序记忆",
     reject: "拒绝",
     rejected: "已拒绝",
+    replan: "重新规划",
     retrieve_more: "补充检索",
     research: "资料检索",
     review: "复核",
@@ -58,6 +60,7 @@ export function readableLabel(value: string): string {
     stop: "停止执行",
     supervisor: "调度",
     succeeded: "已完成",
+    success: "已完成",
     vpn: "虚拟专用网络",
     working: "工作记忆",
     waiting_approval: "等待审批",

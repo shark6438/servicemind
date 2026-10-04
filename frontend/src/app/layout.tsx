@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export const viewport: Viewport = { themeColor: "#0b3049", colorScheme: "light" };
+export const viewport: Viewport = { themeColor: "#0d2b3a", colorScheme: "light" };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   await connection();
