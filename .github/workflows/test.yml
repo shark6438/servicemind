@@ -426,6 +426,11 @@ jobs:
         version: "0.11.32"
     - name: Export the frozen default runtime dependencies
       run: uv export --frozen --no-dev --no-hashes --no-emit-project --no-header --output-file /tmp/security-requirements.txt
+    # The vulnerability DB comes from ghcr.io -- the same source the console
+    # image scan below already pulls successfully on hosted runners. The
+    # public.ecr.aws mirror is not a fallback: trivy aborts on the first
+    # repository it cannot download from, before any scan runs, and then
+    # exits 1 with no SBOM written (which is how this job failed twice).
     - name: Scan runtime dependencies and save SBOM
       run: |
         docker run --rm \
@@ -433,7 +438,7 @@ jobs:
           -v "$PWD:/output" \
           ghcr.io/aquasecurity/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
           fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 \
-          --db-repository public.ecr.aws/aquasecurity/trivy-db:2 \
+          --db-repository ghcr.io/aquasecurity/trivy-db:2 \
           --format cyclonedx --output /output/python-runtime-sbom.cdx.json /requirements.txt
     - uses: actions/upload-artifact@v7
       if: always()
