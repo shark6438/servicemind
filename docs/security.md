@@ -23,8 +23,6 @@ OWASP Gen AI Security Project
 
 +1
 
-
-
 最终交付目标不是一个安全排行榜，而是一套能回答以下问题的工程系统：Agent 为什么不安全、风险在哪里、控制是否生效、修复是否有效，以及现有证据是否足以支持上线。
 
 ## 1. 总体架构与评估边界
@@ -104,8 +102,6 @@ aiuc-1.com
 
 +1
 
-
-
 OpenAI 的 Agent Evals 文档明确采用轨迹、评分器、数据集和重复评估的思路，适合作为工程实现参考；它不是一套可以替代所有 Agent 安全基准的统一安全认证。
 
 [image](https://www.google.com/s2/favicons?domain=https://developers.openai.com\&sz=32)
@@ -113,8 +109,6 @@ OpenAI 的 Agent Evals 文档明确采用轨迹、评分器、数据集和重复
 OpenAI API
 
 +1
-
-
 
 ### 2.1 前沿资料的使用规则
 
@@ -191,23 +185,17 @@ AgentLAB 已在 ICML 2026 发表，公开资料说明其覆盖 28 个 Agent 环�
 
 Proceedings of Machine Learning Research
 
-
-
 MT-AgentRisk 对多轮工具使用中的安全退化进行研究；其论文报告在所测设置中，多轮场景的攻击成功率平均增加约 16%。这个数值属于特定实验结果，不应外推为所有 Agent 的风险增幅。
 
 [image](https://www.google.com/s2/favicons?domain=https://proceedings.mlr.press\&sz=32)
 
 Proceedings of Machine Learning Research
 
-
-
 MCP-SafetyBench 已在 ICLR 2026 发表，使用真实 MCP Server，覆盖浏览器自动化、金融分析、位置导航、仓库管理和网页搜索等领域，并研究多轮及跨服务器协作中的风险。
 
 [image](https://www.google.com/s2/favicons?domain=https://proceedings.iclr.cc\&sz=32)
 
 ICLR 会议录
-
-
 
 AgentHarm 的公开基准包含 110 个恶意 Agent 任务，增强后为 440 个实例，覆盖 11 类危害；ASB 则提供多场景、多工具的攻击与防御评测。
 
@@ -216,8 +204,6 @@ AgentHarm 的公开基准包含 110 个恶意 Agent 任务，增强后为 440 �
 ICLR 会议录
 
 +1
-
-
 
 ### 4.1 基准选择的正式规则
 
@@ -295,7 +281,7 @@ ICLR 会议录
 
 ### 6.2 标准化测试案例 Schema
 
-```
+```json
 {
   "case_id": "PI-EMAIL-001",
   "risk_domain": "indirect_prompt_injection",
@@ -464,7 +450,7 @@ Grader / Reporter / Regression Store
 
 至少记录：
 
-```
+```text
 run_id
 case_id
 dataset_version
@@ -524,8 +510,6 @@ MCP 官方授权安全说明强调令牌受众绑定和服务端校验；OWASP �
 GitHub
 
 +1
-
-
 
 工具描述的哈希固定可以检测定义变更，但不能证明服务端代码和运行行为没有变化。因此，还需要来源验证、依赖审查和实际行为测试。
 
@@ -725,22 +709,22 @@ OWASP、MITRE ATLAS、业务风险和合规要求
 
 ### Agent 安全研究基准
 
-5. [AgentDojo — 动态提示注入基准](https://arxiv.org/abs/2406.13352?utm_source=chatgpt.com)
-6. [Agent Security Bench (ASB)](https://proceedings.iclr.cc/paper_files/paper/2025/hash/5750f91d8fb9d5c02bd8ad2c3b44456b-Abstract-Conference.html?utm_source=chatgpt.com)
-7. [AgentHarm](https://proceedings.iclr.cc/paper_files/paper/2025/hash/c493d23af93118975cdbc32cbe7323f5-Abstract-Conference.html?utm_source=chatgpt.com)
-8. [AgentLAB](https://proceedings.mlr.press/v306/jiang26as.html?utm_source=chatgpt.com)
-9. [MT-AgentRisk / Unsafer in Many Turns](https://proceedings.mlr.press/v306/li26is.html?utm_source=chatgpt.com)
-10. [MCP-SafetyBench](https://proceedings.iclr.cc/paper_files/paper/2026/hash/d46f127a80dc58cbc0732a717285c43a-Abstract-Conference.html?utm_source=chatgpt.com)
-11. [AgentDyn](https://arxiv.org/abs/2602.03117?utm_source=chatgpt.com)
-12. [AgentSecBench](https://arxiv.org/abs/2605.26269?utm_source=chatgpt.com)
+1. [AgentDojo — 动态提示注入基准](https://arxiv.org/abs/2406.13352?utm_source=chatgpt.com)
+2. [Agent Security Bench (ASB)](https://proceedings.iclr.cc/paper_files/paper/2025/hash/5750f91d8fb9d5c02bd8ad2c3b44456b-Abstract-Conference.html?utm_source=chatgpt.com)
+3. [AgentHarm](https://proceedings.iclr.cc/paper_files/paper/2025/hash/c493d23af93118975cdbc32cbe7323f5-Abstract-Conference.html?utm_source=chatgpt.com)
+4. [AgentLAB](https://proceedings.mlr.press/v306/jiang26as.html?utm_source=chatgpt.com)
+5. [MT-AgentRisk / Unsafer in Many Turns](https://proceedings.mlr.press/v306/li26is.html?utm_source=chatgpt.com)
+6. [MCP-SafetyBench](https://proceedings.iclr.cc/paper_files/paper/2026/hash/d46f127a80dc58cbc0732a717285c43a-Abstract-Conference.html?utm_source=chatgpt.com)
+7. [AgentDyn](https://arxiv.org/abs/2602.03117?utm_source=chatgpt.com)
+8. [AgentSecBench](https://arxiv.org/abs/2605.26269?utm_source=chatgpt.com)
 
 ### 评测工程与 MCP 安全
 
-13. [OpenAI Agent Evals](https://developers.openai.com/api/docs/guides/agent-evals?utm_source=chatgpt.com)
-14. [OpenAI Trace Grading](https://developers.openai.com/api/docs/guides/trace-grading?utm_source=chatgpt.com)
-15. [Inspect](https://inspect.aisi.org.uk/?utm_source=chatgpt.com)
-16. [MCP 官方授权安全说明](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/docs/specification/2026-07-28/basic/authorization/security-considerations.mdx?utm_source=chatgpt.com)
-17. [OWASP MCP Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/MCP_Security_Cheat_Sheet.html?utm_source=chatgpt.com)
+1. [OpenAI Agent Evals](https://developers.openai.com/api/docs/guides/agent-evals?utm_source=chatgpt.com)
+2. [OpenAI Trace Grading](https://developers.openai.com/api/docs/guides/trace-grading?utm_source=chatgpt.com)
+3. [Inspect](https://inspect.aisi.org.uk/?utm_source=chatgpt.com)
+4. [MCP 官方授权安全说明](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/docs/specification/2026-07-28/basic/authorization/security-considerations.mdx?utm_source=chatgpt.com)
+5. [OWASP MCP Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/MCP_Security_Cheat_Sheet.html?utm_source=chatgpt.com)
 
 研究和标准仍可能更新。正式立项或审计时，应再次确认资料的当前版本、发表状态、代码可用性及适用范围。上面列出的资料不是对所有 Agent 安全研究的穷尽式罗列。
 

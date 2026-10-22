@@ -194,3 +194,22 @@ def test_something_that_is_not_a_checkout_has_no_revision(tmp_path: Path) -> Non
     """``None``, not a string, so a gate refuses the batch rather than reading a name that
     describes nothing."""
     assert source_revision(tmp_path) is None
+
+
+def test_a_runtime_without_a_git_binary_has_no_revision(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The container images ship no ``git``, and this function runs while they boot.
+
+    ``_git`` promises "``""`` if git could not answer", but a missing binary makes
+    ``subprocess.run`` raise ``FileNotFoundError`` rather than return non-zero, so the
+    promise did not hold. ``capture_build_identity`` calls this at startup, so the service
+    image exited before serving ``/health`` and every image test behind it went red. Patched
+    here because the alternative -- a machine without git -- is the thing under test.
+    """
+
+    def missing(*arguments: object, **keywords: object) -> None:
+        raise FileNotFoundError(2, "No such file or directory", "git")
+
+    monkeypatch.setattr(subprocess, "run", missing)
+    assert source_revision(tmp_path) is None

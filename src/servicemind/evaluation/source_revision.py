@@ -130,11 +130,19 @@ def _git(repo_root: Path, *arguments: str) -> str:
     short string are both handled by the gates, which refuse a batch whose revision they
     cannot read.
     """
-    completed = subprocess.run(
-        ["git", *arguments],
-        cwd=repo_root,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    try:
+        completed = subprocess.run(
+            ["git", *arguments],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        # The runtime images carry no ``git``. A missing binary is the same answer as a
+        # failing one -- "this is not a checkout" -- and the docstring above promises not
+        # to raise. It did raise: ``capture_build_identity`` runs at import/boot time
+        # (``service/service.py``), so the container died with ``FileNotFoundError: git``
+        # before it could serve /health, and every downstream image test went red.
+        return ""
     return completed.stdout if completed.returncode == 0 else ""
