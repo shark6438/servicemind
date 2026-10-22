@@ -1,0 +1,22 @@
+{
+  "scenario_id": "SEC-CRED-01",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_tool_gateway_rejects_cross_tenant_before_resolving_credentials",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_tool_gateway_rejects_cross_tenant_before_resolving_credentials\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_tool_gateway_rejects_cross_tenant_before_resolving_credentials\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_tool_gateway_rejects_cross_tenant_before_resolving_credentials\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"17 passed, 1 warning in 11.76s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase3_agents.py::test_action_agent_is_credential_free_and_requires_passed_handoff",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase3_agents.py::test_action_agent_is_credential_free_and_requires_passed_handoff\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase3_agents.py::test_action_agent_is_credential_free_and_requires_passed_handoff\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase3_agents.py::test_action_agent_is_credential_free_and_requires_passed_handoff\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"1 passed, 1 warning in 11.46s\"}"
+    }
+  ]
+}

@@ -7,6 +7,12 @@ require '/var/www/glpi/vendor/autoload.php';
 $kernel = new \Glpi\Kernel\Kernel('production');
 $kernel->boot();
 
+$targetUrl = getenv('SERVICEMIND_WEBHOOK_TARGET_URL');
+if (!is_string($targetUrl) || !filter_var($targetUrl, FILTER_VALIDATE_URL)) {
+    fwrite(STDERR, "SERVICEMIND_WEBHOOK_TARGET_URL must name the reachable private webhook ingress.\n");
+    exit(1);
+}
+
 $definitions = [
     [
         'name' => 'ServiceMind Acme Ticket Created',
@@ -51,7 +57,8 @@ foreach ($definitions as $definition) {
         'payload' => $payload,
         'use_default_payload' => 0,
         'custom_headers' => [],
-        'url' => 'http://host.docker.internal:8080/v1/servicemind/webhooks/glpi',
+        'url' => rtrim($targetUrl, '/') . '/' . $definition['tenant_id'],
+        'use_cra_challenge' => 1,
         'secret' => $definition['secret'],
         'http_method' => 'post',
         'sent_try' => 3,

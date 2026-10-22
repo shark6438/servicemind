@@ -1,0 +1,43 @@
+{
+  "scenario_id": "SEC-WRITE-05",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase3_security.py::test_the_raw_glpi_write_exists_in_exactly_one_module",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase3_security.py::test_the_raw_glpi_write_exists_in_exactly_one_module\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase3_security.py::test_the_raw_glpi_write_exists_in_exactly_one_module\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase3_security.py::test_the_raw_glpi_write_exists_in_exactly_one_module\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase3_security.py::test_the_harness_reaches_glpi_only_through_the_gateway",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase3_security.py::test_the_harness_reaches_glpi_only_through_the_gateway\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase3_security.py::test_the_harness_reaches_glpi_only_through_the_gateway\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase3_security.py::test_the_harness_reaches_glpi_only_through_the_gateway\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase3_security.py::test_only_phase2_harness_imports_glpi_write_method",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase3_security.py::test_only_phase2_harness_imports_glpi_write_method\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase3_security.py::test_only_phase2_harness_imports_glpi_write_method\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase3_security.py::test_only_phase2_harness_imports_glpi_write_method\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_write_leaves_a_policy_decision_and_an_invocation_behind",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_write_leaves_a_policy_decision_and_an_invocation_behind\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_write_leaves_a_policy_decision_and_an_invocation_behind\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_write_leaves_a_policy_decision_and_an_invocation_behind\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_glpi_write_gateway.py",
+      "mutation": "M01 the gateway stops recording the policy decision",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_glpi_write_gateway.evidence.json\", \"sha256\": \"2831e45d8f564c372b2c433882f1f9a58e8345fe406bd170cc385f7774f43050\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    }
+  ]
+}

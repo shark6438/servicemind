@@ -1,0 +1,71 @@
+{
+  "scenario_id": "SEC-OUTBOX-03",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_outbox_retention.py",
+      "mutation": "M07 one sweep takes a single page however much has aged out",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_outbox_retention.evidence.json\", \"sha256\": \"0201bbb8c6ea95df3f3aa566a87edfb7dd4593362d5932c83de91bd8343cde48\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_outbox_retention.py",
+      "mutation": "M08 one sweep has no ceiling, so it can outlast the publishing it interrupts",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_outbox_retention.evidence.json\", \"sha256\": \"0201bbb8c6ea95df3f3aa566a87edfb7dd4593362d5932c83de91bd8343cde48\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_outbox_retention.py",
+      "mutation": "M10 shutting the worker down is treated as a retention failure to stop on",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_outbox_retention.evidence.json\", \"sha256\": \"0201bbb8c6ea95df3f3aa566a87edfb7dd4593362d5932c83de91bd8343cde48\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_outbox_retention.py",
+      "mutation": "M11 the sweep is never reached from the delivery loop",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_outbox_retention.evidence.json\", \"sha256\": \"0201bbb8c6ea95df3f3aa566a87edfb7dd4593362d5932c83de91bd8343cde48\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_outbox_retention.py",
+      "mutation": "M12 the sweep is un-scheduled and would run on every delivery",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_outbox_retention.evidence.json\", \"sha256\": \"0201bbb8c6ea95df3f3aa566a87edfb7dd4593362d5932c83de91bd8343cde48\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    }
+  ]
+}

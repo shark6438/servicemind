@@ -1,0 +1,22 @@
+{
+  "scenario_id": "SEC-WRITE-01",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_grant_revoked_after_approval_stops_the_write",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_grant_revoked_after_approval_stops_the_write\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_grant_revoked_after_approval_stops_the_write\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_grant_revoked_after_approval_stops_the_write\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"12 passed, 1 warning in 14.18s\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M21 execute_node stops re-checking before the write",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_phase7_permissions_20_30.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    }
+  ]
+}

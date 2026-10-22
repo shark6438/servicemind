@@ -111,6 +111,12 @@ class ProductionGlpiBackend:
         return stored
 
     async def _append_followup(self, arguments: dict[str, Any], call: ToolCall) -> dict[str, Any]:
+        async with ServiceMindRepository(call.tenant_id).run_submission(call.run_id):
+            return await self._append_approved_followup(arguments, call)
+
+    async def _append_approved_followup(
+        self, arguments: dict[str, Any], call: ToolCall
+    ) -> dict[str, Any]:
         """Write one approved followup, or recognise the one a crash already wrote.
 
         The bytes are pinned to the approved intent rather than trusted from the caller:

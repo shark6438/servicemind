@@ -29,7 +29,17 @@ function suppressionMap() {
   const spec = JSON.parse(readFileSync(join(root, ".npmauditignore.json"), "utf8"));
   const today = new Date().toISOString().slice(0, 10);
   const live = new Map();
+  const declared = new Set();
   for (const entry of spec.advisories ?? []) {
+    if (!entry || typeof entry.id !== "string" || !entry.id ||
+        typeof entry.statement !== "string" || !entry.statement ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(entry.expired_at ?? "") ||
+        !Number.isFinite(Date.parse(`${entry.expired_at}T00:00:00Z`)) ||
+        new Date(`${entry.expired_at}T00:00:00Z`).toISOString().slice(0, 10) !== entry.expired_at ||
+        declared.has(entry.id)) {
+      throw new Error("Invalid or duplicate dependency audit exception");
+    }
+    declared.add(entry.id);
     // ISO dates compare lexicographically, so no Date parsing is needed here.
     if (entry.expired_at < today) {
       console.log(`[expired] ${entry.id} -- suppressed until ${entry.expired_at}; enforced again as of ${today}.`);
@@ -41,12 +51,35 @@ function suppressionMap() {
 }
 
 const run = spawnSync("npm", ["audit", "--json"], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+if (run.error || run.signal || ![0, 1].includes(run.status)) {
+  console.error("npm audit did not complete successfully; refusing to report a pass.");
+  process.exit(1);
+}
 let report;
 try {
   report = JSON.parse(run.stdout);
 } catch {
   console.error("npm audit produced no readable JSON report; refusing to report a pass.");
   console.error(run.stderr || run.stdout || "(no output)");
+  process.exit(1);
+}
+
+if (
+  !report || report.error || report.auditReportVersion !== 2 ||
+  !report.metadata?.vulnerabilities || !report.vulnerabilities ||
+  !["info", "low", "moderate", "high", "critical", "total"].every(
+    (key) => Number.isInteger(report.metadata.vulnerabilities[key]) && report.metadata.vulnerabilities[key] >= 0
+  ) ||
+  Object.values(report.vulnerabilities).some(
+    (pkg) => !pkg || !Array.isArray(pkg.via) || !["info", "low", "moderate", "high", "critical"].includes(pkg.severity)
+  ) ||
+  (run.status === 1 && report.metadata.vulnerabilities.total === 0)
+  || (report.metadata.vulnerabilities.total !== Object.keys(report.vulnerabilities).length)
+  || !["info", "low", "moderate", "high", "critical"].every(
+    (severity) => Object.values(report.vulnerabilities).filter(pkg => pkg.severity === severity).length === report.metadata.vulnerabilities[severity]
+  )
+) {
+  console.error("npm audit returned an error or incomplete report; refusing to report a pass.");
   process.exit(1);
 }
 
@@ -62,6 +95,19 @@ for (const pkg of Object.values(report.vulnerabilities ?? {})) {
 }
 
 const blocking = [];
+function hasGatingAdvisory(name, visiting = new Set()) {
+  if (visiting.has(name)) return false;
+  visiting.add(name);
+  return (report.vulnerabilities[name]?.via ?? []).some(via =>
+    typeof via === "string" ? hasGatingAdvisory(via, new Set(visiting)) : GATING.has(via.severity)
+  );
+}
+for (const [name, pkg] of Object.entries(report.vulnerabilities)) {
+  if (GATING.has(pkg.severity) && !hasGatingAdvisory(name)) {
+    console.error(`Incomplete dependency audit graph for ${name}; refusing to report a pass.`);
+    process.exit(1);
+  }
+}
 for (const advisory of advisories.values()) {
   const entry = suppressions.get(advisory.id);
   if (entry && GATING.has(advisory.severity)) {

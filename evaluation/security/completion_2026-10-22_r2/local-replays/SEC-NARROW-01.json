@@ -1,0 +1,22 @@
+{
+  "scenario_id": "SEC-NARROW-01",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_approving_does_not_lend_the_approver_scope",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_approving_does_not_lend_the_approver_scope\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_approving_does_not_lend_the_approver_scope\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_approving_does_not_lend_the_approver_scope\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M03 the resume runs as the caller again (the original escalation)",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_0_10.evidence.json\", \"sha256\": \"2b17bf519d75b49c3d9dcb59dee9fed396a2bbee86048c80c0bc8e0f6d0cebcd\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    }
+  ]
+}

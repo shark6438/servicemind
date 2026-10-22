@@ -1,0 +1,36 @@
+{
+  "scenario_id": "SEC-NARROW-05",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[not_configured]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[not_configured]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[not_configured]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[unavailable]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[unavailable]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[unavailable]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_unknown]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_unknown]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_unknown]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_disabled]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_disabled]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_disabled]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M11 an unestablished authority narrows and continues instead of pausing",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_10_20.evidence.json\", \"sha256\": \"8ee1d50d8be6fbde0889c9bddcfddebe5df7b1cf211934b2418c8e23d29e11a9\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M14 the resume boundary stops auditing why it paused",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_10_20.evidence.json\", \"sha256\": \"8ee1d50d8be6fbde0889c9bddcfddebe5df7b1cf211934b2418c8e23d29e11a9\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "acceptance",
+      "ref": "ACC-21",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\", \"case\": \"ACC-21\", \"verdict\": \"PASS\", \"report_sha256\": \"84d6e2c4c8387f232bc24cb1f71f0fbeabda874e4c1d7ae29cbd84c067f377c1\", \"replay_sha256\": \"c30b594654dd8aaab88a20fe04cc194451325bb8f8f44639976db278e538b02e\"}"
+    }
+  ]
+}

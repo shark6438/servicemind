@@ -1,0 +1,36 @@
+{
+  "scenario_id": "SEC-WRITE-03",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_glpi_write_gateway.py",
+      "mutation": "M07 the provider writes whatever body the caller sent",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_glpi_write_gateway.evidence.json\", \"sha256\": \"2831e45d8f564c372b2c433882f1f9a58e8345fe406bd170cc385f7774f43050\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_glpi_write_gateway.py",
+      "mutation": "M08 the provider trusts a marker the caller chose",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_glpi_write_gateway.evidence.json\", \"sha256\": \"2831e45d8f564c372b2c433882f1f9a58e8345fe406bd170cc385f7774f43050\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    }
+  ]
+}

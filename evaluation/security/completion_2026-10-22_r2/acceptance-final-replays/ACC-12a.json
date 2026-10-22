@@ -1,0 +1,75 @@
+{
+  "case_id": "ACC-12a",
+  "cases_digest": "63a3a71fd0a6caedb9041dffa0094cabe80a84afe91bdbf11f13c6334d67356c",
+  "environment": {
+    "entitlement_verifier_configured": true,
+    "base_url": "http://127.0.0.1:18080",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "recorded_at": "2026-10-22T11:09:55.465624Z",
+    "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+    "notes": [
+      "runtime_build_identity={\"boot_id\": \"b5be54c0-7dcc-44d1-bb5a-72acce578055\", \"captured_at\": \"2026-10-22T11:09:37.896212+00:00\", \"configuration\": {\"compatible_model\": \"security-simulator-v1\", \"default_model\": \"openai-compatible\", \"generic_api_enabled\": false, \"model_allowed_models\": \"security-simulator-v1\", \"model_allowed_providers\": \"openai\", \"oidc_audience\": \"servicemind-api\", \"ollama_model\": \"qwen3:30b-a3b\", \"tool_platform_enabled\": true, \"tool_provider\": \"native_glpi\"}, \"configuration_sha256\": \"9de15e8dd2d4a26dfe18f343941fa24d6d5894ba4de9c2a57d9a1796955160a7\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}",
+      "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
+      "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
+    ]
+  },
+  "subject": {
+    "username": "globex-analyst-g3",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "roles": [
+      "viewer",
+      "analyst"
+    ],
+    "entity_ids": [
+      2
+    ],
+    "group_ids": [
+      3
+    ]
+  },
+  "steps": [
+    {
+      "id": "produce-same",
+      "description": "对三条同根因的固定输入求 pattern_key（大小写/空白差异、换词重写、recurring_incident 取反），三条必须得到同一个 key",
+      "action": "procedural memory pattern_key producer",
+      "started_at": "2026-10-22T11:11:32.010710Z",
+      "elapsed_seconds": 0.00020063389092683792,
+      "http_status": null,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "{\"step\": \"produce-same\", \"expectation\": \"one key for one root cause, across spellings and rewrites\", \"classification\": [\"mfa_device_binding\", \"  MFA_Device_Binding \", \"MFA_Device_Binding\"], \"recommended_group\": [\"Identity Team\", \"identity   team\", \"Identity Team\"], \"pattern_keys\": [\"f692c5e0b878013f7f088d744ba5d91da691f4a7153a0d00bb3075e3d98e8a9f\", \"f692c5e0b878013f7f088d744ba5d91da691f4a7153a0d00bb3075e3d98e8a9f\", \"f692c5e0b878013f7f088d744ba5d91da691f4a7153a0d00bb3075e3d98e8a9f\"], \"inputs\": [{\"recurring_incident\": true, \"classification\": \"mfa_device_binding\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}, {\"recurring_incident\": true, \"classification\": \"  MFA_Device_Binding \", \"recommended_group\": \"identity   team\", \"problem_recommendation\": \"Rebind\\t the authentication\\n  device.\"}, {\"recurring_incident\": false, \"classification\": \"MFA_Device_Binding\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Re-register the second factor and confirm the binding holds before the ticket is closed.\"}]}"
+    },
+    {
+      "id": "produce-different",
+      "description": "对两条不同根因的固定输入各求一次 pattern_key（只改 classification / 只改 recommended_group），两条都必须与基准不同",
+      "action": "procedural memory pattern_key producer",
+      "started_at": "2026-10-22T11:11:32.010972Z",
+      "elapsed_seconds": 0.00008825678378343582,
+      "http_status": null,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "{\"step\": \"produce-different\", \"expectation\": \"a different root cause produces a different key\", \"classification\": [\"mfa_device_binding\", \"gateway_connectivity\", \"mfa_device_binding\"], \"recommended_group\": [\"Identity Team\", \"Identity Team\", \"Network Team\"], \"pattern_keys\": [\"f692c5e0b878013f7f088d744ba5d91da691f4a7153a0d00bb3075e3d98e8a9f\", \"50258579b06a1ae85ff684949c6cf27651b7b46c60efd82bbe2e6bb2e3bffa30\", \"fa71c4b056df6c7054c9a6cd666acda1d626c771de2f699adec553e7679922de\"], \"inputs\": [{\"recurring_incident\": true, \"classification\": \"mfa_device_binding\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}, {\"recurring_incident\": true, \"classification\": \"gateway_connectivity\", \"recommended_group\": \"Identity Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}, {\"recurring_incident\": true, \"classification\": \"mfa_device_binding\", \"recommended_group\": \"Network Team\", \"problem_recommendation\": \"Rebind the authentication device.\"}]}"
+    }
+  ],
+  "run_id": null,
+  "case_run_ids": [],
+  "terminal_status": null,
+  "total_seconds": null,
+  "action_intent": null,
+  "citations": [],
+  "evidence": [],
+  "analysis": null,
+  "review": null,
+  "selection_manifest": [],
+  "followups_before": [],
+  "followups_after": [],
+  "timeline_events": [],
+  "audit_events": [],
+  "memory_records": [],
+  "graph_readings": [],
+  "foreign_run_status": null,
+  "listed_for_own_tenant": null,
+  "errors": []
+}

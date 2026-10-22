@@ -1,0 +1,36 @@
+{
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(fd07e4ed3fa4)",
+  "evidence": [
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"17 passed, 1 warning in 10.94s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"17 passed, 1 warning in 10.94s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M07 the provider writes whatever body the caller sent",
+      "outcome": "missing",
+      "ref": "scripts/mutate_glpi_write_gateway.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M08 the provider trusts a marker the caller chose",
+      "outcome": "missing",
+      "ref": "scripts/mutate_glpi_write_gateway.py"
+    }
+  ],
+  "observed_at": "2026-10-22T10:12:54.644702Z",
+  "scenario_id": "SEC-WRITE-03",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea"
+}

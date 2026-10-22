@@ -1,0 +1,192 @@
+[
+  {
+    "name": "baseline",
+    "exit_code": 0,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "2 passed, 1 warning in 12.13s"
+  },
+  {
+    "name": "M01 the crashed revision leaves the draft it was repairing in place",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.74s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M02 the crashed revision is relabeled as a grounding failure",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.25s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M03 the crash is recorded without saying what crashed",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.86s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M04 the crashed revision still counts against the model budget it never spent",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.88s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "restored baseline",
+    "exit_code": 0,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "2 passed, 1 warning in 10.76s"
+  }
+]

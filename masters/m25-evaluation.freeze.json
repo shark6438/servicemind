@@ -1,0 +1,81 @@
+{
+  "schema": "servicemind-master-freeze-v1",
+  "frozen_at_utc": "2026-10-14T04:48:51Z",
+  "source": {
+    "path": "masters/m25-evaluation.md",
+    "sha256": "b750dafa11285ae7b3cd660d0ece947633f58821797888b03fe197a326648d51",
+    "bytes": 278107,
+    "lines": 3148
+  },
+  "git": {
+    "head": "19d9a377fb98e1c3f56edc59be40b374013bc08b",
+    "tree_dirty": false,
+    "note": "tree_dirty describes TRACKED files only. This document is the sole deliverable and lives under the untracked masters/ directory, so no tracked file was modified to produce it."
+  },
+  "state": {
+    "freeze_state": "FREEZE-READY",
+    "not_equal_to": "FROZEN",
+    "why": "House convention (m6.md:26, m9.md:15, m15.md:16): a master is FREEZE-READY when its material has passed this round's source spot-check and freeze audit. It becomes FROZEN only on the user's explicit confirmation. This sidecar records readiness, not sign-off."
+  },
+  "scope": {
+    "document_is": "M25 + M26 merged into one evaluation master (user ruling, 2026-10-14).",
+    "sections": "B01-B21, delivered in three batches, all three delivered.",
+    "course_ids": [
+      "M25",
+      "M26"
+    ],
+    "repository_modified": false,
+    "coverage_gap_admitted": "evaluation/** holds 831 tracked files; this document audits by directory and batch structure, not line by line. This is the one coverage gap the document states about itself.",
+    "evidence_vocabulary": {
+      "self": "E1-E6 plus UNKNOWN",
+      "siblings": "SOURCE FACT / WIRED FACT / TEST DEFINITION / HISTORICAL REPORT / RUNTIME OBSERVED / TO VERIFY",
+      "mapping_frozen_in": "Section 4 of the FREEZE-READY declaration (masters/m25-evaluation.md:58)",
+      "runtime_observed_new": "none - no platform, pytest, GPU, container or database was run this round. The only new execution was read-only recomputation from already-frozen artifacts."
+    },
+    "verdict_vocabulary": [
+      "PASS",
+      "FAIL",
+      "INSUFFICIENT",
+      "CONFIGURATION",
+      "REFUSED"
+    ],
+    "exit_codes": {
+      "0": "PASS",
+      "1": "FAIL",
+      "2": "INSUFFICIENT",
+      "3": "CONFIGURATION"
+    }
+  },
+  "audit": {
+    "round": "freeze-readiness audit",
+    "checks_run": 6,
+    "checks_passed": 5,
+    "checks_failed": 1,
+    "failures": [
+      {
+        "id": "A-1",
+        "claim": "The document claimed wilson_interval was the repository's ONLY confidence interval / the ONLY statistical inference in the repo.",
+        "why_wrong": "The claim was checked against src/servicemind/evaluation/ only. Widening the search to all of src/ and scripts/ surfaces two more: _ci() at scripts/evaluate_phase4_proxy_release.py:215-225 (inline bootstrap, seed=42, emitting the 20 <metric>_ci95 fields in phase4_proxy_release_latest.json) and _paired() at scripts/evaluate_phase4_holdout.py:305-317 (seed=20260915).",
+        "what_survives": "wilson_interval is the only NAMED interval function inside the library.",
+        "corrected_in": "7 places; the original wording and the reason it was wrong are preserved in place rather than silently replaced.",
+        "side_effect": "Named the preregistration document's unnamed 'existing script SEED=42' as scripts/evaluate_phase4_proxy_release.py:215."
+      }
+    ],
+    "passed": {
+      "A-2": "scripts/mutate_*.py count = 16",
+      "A-3": "lotte.py importers = 0 (five spellings, across src/ scripts/ tests/)",
+      "A-4": "scripts/ or src/ or tests/ referencing the phase4_r2_decision report name = 0",
+      "A-5": "all four scripts/gate_phase7_*.py define EXIT_PASS=0 / EXIT_FAIL=1 / EXIT_INSUFFICIENT=2 / EXIT_CONFIGURATION=3 identically",
+      "A-6": "*.freeze.json in repo = 1 AT AUDIT TIME. It is 2 as of this record, and the second one is this sidecar. The freeze act changed the count its own justification rested on. The document keeps the audit-time reading and marks it with its timestamp rather than rewriting it to the post-freeze number."
+    }
+  },
+  "retractions": [
+    "R-1",
+    "R-2",
+    "R-3",
+    "R-4",
+    "R-5",
+    "R-6"
+  ],
+  "note": "The sha256 lives here rather than inside the document because a hash cannot be written into the file it hashes - the same ordering discipline the document itself teaches in B18.4, and the same one this record was produced under (edit -> hash -> write sidecar, never the reverse). Any later edit to masters/m25-evaluation.md invalidates this record; that is the point. Per the preregistration protocol's rule that this document cites, a superseded version must be replaced by a NEW version declaring the old one void, never edited in place. This record does not assert that the production runtime was verified, that the reader has passed the whiteboard review, or that the document is free of error; it asserts only that this revision passed the checks above."
+}

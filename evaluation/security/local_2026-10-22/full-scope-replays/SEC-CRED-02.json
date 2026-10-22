@@ -1,0 +1,22 @@
+{
+  "scenario_id": "SEC-CRED-02",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase6_tool_platform.py::test_gateway_rejects_schema_capability_role_entity_taint_and_secret",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase6_tool_platform.py::test_gateway_rejects_schema_capability_role_entity_taint_and_secret\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase6_tool_platform.py::test_gateway_rejects_schema_capability_role_entity_taint_and_secret\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase6_tool_platform.py::test_gateway_rejects_schema_capability_role_entity_taint_and_secret\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"8 passed, 1 warning in 10.31s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase5_governance.py::test_memory_hard_gates_block_secrets_and_quarantine_unverified_evidence",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase5_governance.py::test_memory_hard_gates_block_secrets_and_quarantine_unverified_evidence\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase5_governance.py::test_memory_hard_gates_block_secrets_and_quarantine_unverified_evidence\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase5_governance.py::test_memory_hard_gates_block_secrets_and_quarantine_unverified_evidence\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"39 passed, 1 warning in 9.75s\"}"
+    }
+  ]
+}

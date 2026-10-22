@@ -1,0 +1,36 @@
+{
+  "scenario_id": "SEC-APPROVAL-01",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_paused_resume_records_no_approval",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_paused_resume_records_no_approval\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_paused_resume_records_no_approval\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_paused_resume_records_no_approval\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"42 passed, 1 warning in 12.84s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_paused_review_resolution_writes_nothing",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_paused_review_resolution_writes_nothing\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_paused_review_resolution_writes_nothing\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_paused_review_resolution_writes_nothing\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"42 passed, 1 warning in 12.84s\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M29 the approval is recorded before the resume that can refuse it",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_phase7_permissions_20_30.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M30 the escalation audit and status flip land before the scope is resolved",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_phase7_permissions_20_30.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    }
+  ]
+}

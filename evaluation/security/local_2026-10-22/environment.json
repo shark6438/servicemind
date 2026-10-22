@@ -1,0 +1,85 @@
+{
+  "scope": "local-and-simulated-models-only",
+  "live_model_calls_authorized": false,
+  "python": "3.14.7",
+  "packages": {
+    "pytest": "9.1.1",
+    "fastapi": "0.139.2",
+    "SQLAlchemy": "2.0.51",
+    "langgraph": "1.2.9",
+    "pydantic": "2.13.4",
+    "pyrefly": "1.1.1",
+    "ruff": "0.15.22"
+  },
+  "containers": [
+    {
+      "name": "servicemind-security-postgres-20261022",
+      "image_id": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2",
+      "image_tag": "postgres:16",
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "32768"
+          }
+        ]
+      }
+    },
+    {
+      "name": "servicemind-security-redis-20261022",
+      "image_id": "sha256:9b9bc2eb5b8859235a68b8d72b81977748d243badee819a91c18280612c3495c",
+      "image_tag": "redis:8.2-alpine",
+      "ports": {
+        "6379/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "32771"
+          }
+        ]
+      }
+    },
+    {
+      "name": "servicemind-security-neo4j-20261022",
+      "image_id": "sha256:18a62aa37d5d6786cb1310c646c4824cf4f14c423a1224e5227cb41dc7447875",
+      "image_tag": "neo4j:5.26",
+      "ports": {
+        "7473/tcp": null,
+        "7474/tcp": null,
+        "7687/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "32769"
+          }
+        ]
+      }
+    },
+    {
+      "name": "servicemind-security-opensearch-20261022",
+      "image_id": "sha256:d1df36acebbe9404e158fbdcc35084883469d754ee6e191621c5f3a75ad685f5",
+      "image_tag": "opensearchproject/opensearch:3.8.0",
+      "ports": {
+        "9200/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "32770"
+          }
+        ],
+        "9300/tcp": null,
+        "9600/tcp": null,
+        "9650/tcp": null
+      }
+    }
+  ],
+  "database_role": {
+    "name": "security_app",
+    "superuser": false,
+    "bypassrls": false,
+    "createdb": false,
+    "createrole": false
+  },
+  "deployed_services_modified": false,
+  "temporary_containers_removed": true,
+  "temporary_worktrees_removed": true,
+  "existing_api_pid_before": 2384467,
+  "existing_api_pid_after": 2384467
+}

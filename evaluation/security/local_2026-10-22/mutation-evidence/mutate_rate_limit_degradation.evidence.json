@@ -1,0 +1,936 @@
+[
+  {
+    "name": "baseline",
+    "exit_code": 0,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_failure_with_no_timing_in_it_is_not_waited_for",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_failure_with_no_timing_in_it_is_not_waited_for",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_failure_with_no_timing_in_it_is_not_waited_for",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_a_degraded_analysis_reaches_a_person_once_the_replans_are_spent",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_a_degraded_analysis_reaches_a_person_once_the_replans_are_spent",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_a_degraded_analysis_reaches_a_person_once_the_replans_are_spent",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "14 passed, 1 warning in 12.46s"
+  },
+  {
+    "name": "M01 every failure is waited for, not just a throttle",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_failure_with_no_timing_in_it_is_not_waited_for",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_failure_with_no_timing_in_it_is_not_waited_for",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_failure_with_no_timing_in_it_is_not_waited_for",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.00s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M02 a nil hint is read as 'not a throttle'",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.89s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M03 a nil hint is collapsed into the not-a-throttle answer",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.17s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M04 the provider's own hint is ignored in favour of the schedule",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 11.08s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M05 a header that is not a delay is parsed as one",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.63s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M06 the schedule has no ceiling",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.59s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M07 the throttle is never re-asked at all -- the old behaviour",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.82s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M08 a nil hint is refused at the call site",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.28s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M09 the wait is unbounded in total",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.82s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M10 the wait ignores the run's deadline",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.25s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M11 the deadline is spent down to zero instead of leaving the later stages room",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.32s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M12 a throttle is re-asked indefinitely instead of a bounded number of times",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 8.84s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M13 a throttle that survived the wait is reported as a model defect",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.55s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M14 the revision call gives up on a throttle the draft path would have waited out",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.52s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M15 a runtime failure is handed to a person even though a replan is owed",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 11.93s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M16 the re-derivation is not bounded by the replan budget",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_a_degraded_analysis_reaches_a_person_once_the_replans_are_spent",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_a_degraded_analysis_reaches_a_person_once_the_replans_are_spent",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_a_degraded_analysis_reaches_a_person_once_the_replans_are_spent",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 12.18s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "restored baseline",
+    "exit_code": 0,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_failure_with_no_timing_in_it_is_not_waited_for",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_failure_with_no_timing_in_it_is_not_waited_for",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_failure_with_no_timing_in_it_is_not_waited_for",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_reviewer_reports_a_degraded_analysis_as_a_runtime_failure",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_a_degraded_analysis_reaches_a_person_once_the_replans_are_spent",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_a_degraded_analysis_reaches_a_person_once_the_replans_are_spent",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_reviewer_citations.py::test_a_degraded_analysis_reaches_a_person_once_the_replans_are_spent",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "14 passed, 1 warning in 11.25s"
+  }
+]

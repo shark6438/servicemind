@@ -1,0 +1,17 @@
+[Unit]
+Description=ServiceMind GLPI webhook ingress on a private Docker network
+After=network-online.target servicemind-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/data1/servicemind
+EnvironmentFile=%h/.config/servicemind/webhook-proxy.env
+ExecStart=%h/data1/servicemind/.venv/bin/servicemind-webhook-proxy
+Restart=on-failure
+RestartSec=2s
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

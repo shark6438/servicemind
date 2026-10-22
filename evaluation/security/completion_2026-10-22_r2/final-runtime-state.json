@@ -1,0 +1,83 @@
+{
+  "verdict": "PASS",
+  "recorded_at": "2026-10-22T11:54:48.987289+00:00",
+  "runtime_build_identity": {
+    "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+    "boot_id": "6cfde614-8fa5-4efd-bda2-226aef17ed27",
+    "captured_at": "2026-10-22T11:34:28.899581+00:00",
+    "configuration": {
+      "default_model": "openai-compatible",
+      "ollama_model": null,
+      "compatible_model": "security-local-qwen-instruct",
+      "model_allowed_providers": "openai",
+      "model_allowed_models": "security-local-qwen-instruct",
+      "generic_api_enabled": false,
+      "oidc_audience": "servicemind-api",
+      "tool_platform_enabled": true,
+      "tool_provider": "native_glpi"
+    },
+    "configuration_sha256": "cd85c49e7b0a6819e12688c20f33088e386f0e02bd4d879b60bdede05be9d90e"
+  },
+  "closed_generic_routes": {
+    "/invoke": 404,
+    "/history": 404,
+    "/threads": 404
+  },
+  "unauthenticated_product_status": 401,
+  "service_units": {
+    "servicemind-api.service": "active",
+    "servicemind-outbox.service": "active",
+    "servicemind-frontend.service": "active",
+    "servicemind-webhook-proxy.service": "active"
+  },
+  "model_runtime": {
+    "image": "ghcr.io/ggml-org/llama.cpp@sha256:8c74db29f1a2bef3f0a331b52c4d6214601dfceed4bee0b94cc48b3b23ff257d",
+    "image_id": "sha256:433c4af64d0e6218182ca6650fc5c4451afaa8aa0355b1c006f7474f8a1f6a92",
+    "mode": "CPU llama.cpp, local GGUF, no cloud-provider credentials",
+    "read_only_root_and_model_mount": true,
+    "api_key_authentication": true,
+    "built_in_tools_and_proxy_disabled": true,
+    "restart_policy": "unless-stopped",
+    "ports": {
+      "8080/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "11440"
+        }
+      ]
+    }
+  },
+  "database": {
+    "database_runtime_user": "servicemind_runtime",
+    "rolsuper": false,
+    "rolbypassrls": false,
+    "migration": "0015_run_access_scope",
+    "runtime_build_identity": {
+      "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+      "boot_id": "8baadc0a-21e7-410b-872d-16ca45044dbd",
+      "captured_at": "2026-10-22T11:13:06.134469+00:00",
+      "configuration": {
+        "default_model": "openai-compatible",
+        "ollama_model": "qwen3:30b-a3b",
+        "compatible_model": "security-simulator-v1",
+        "model_allowed_providers": "openai",
+        "model_allowed_models": "security-simulator-v1",
+        "generic_api_enabled": false,
+        "oidc_audience": "servicemind-api",
+        "tool_platform_enabled": true,
+        "tool_provider": "native_glpi"
+      },
+      "configuration_sha256": "9de15e8dd2d4a26dfe18f343941fa24d6d5894ba4de9c2a57d9a1796955160a7"
+    }
+  },
+  "api_fee": 0,
+  "temporary_model_ports_closed": [
+    11435,
+    11436,
+    11437,
+    11439,
+    11441,
+    18083
+  ],
+  "interpretation": "Main API uses an actual free open model. Full control acceptance used the explicit simulator profile; final normal-model control is separate. No general business or all-model release certification."
+}

@@ -1,0 +1,22 @@
+{
+  "scenario_id": "SEC-IDEM-03",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase6_tool_platform.py::test_a_retry_of_a_live_request_still_resolves_to_its_task",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase6_tool_platform.py::test_a_retry_of_a_live_request_still_resolves_to_its_task\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase6_tool_platform.py::test_a_retry_of_a_live_request_still_resolves_to_its_task\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase6_tool_platform.py::test_a_retry_of_a_live_request_still_resolves_to_its_task\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"8 passed, 1 warning in 10.31s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase6_tool_platform.py::test_a_task_inside_its_ttl_is_untouched",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase6_tool_platform.py::test_a_task_inside_its_ttl_is_untouched\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase6_tool_platform.py::test_a_task_inside_its_ttl_is_untouched\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase6_tool_platform.py::test_a_task_inside_its_ttl_is_untouched\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"8 passed, 1 warning in 10.31s\"}"
+    }
+  ]
+}

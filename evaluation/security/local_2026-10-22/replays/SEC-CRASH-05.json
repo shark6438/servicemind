@@ -1,0 +1,50 @@
+{
+  "scenario_id": "SEC-CRASH-05",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"12 passed, 1 warning in 14.18s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"12 passed, 1 warning in 14.18s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_two_rejections_in_a_row_are_still_correctable",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_two_rejections_in_a_row_are_still_correctable\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_two_rejections_in_a_row_are_still_correctable\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_two_rejections_in_a_row_are_still_correctable\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"12 passed, 1 warning in 14.18s\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_supervisor_feedback.py",
+      "mutation": "M01 a rejection is spent by the rejection that follows it",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_supervisor_feedback.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_supervisor_feedback.py",
+      "mutation": "M02 the prompt lists the rejections without saying they still hold",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_supervisor_feedback.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_supervisor_feedback.py",
+      "mutation": "M03 the prompt keeps only the newest rejection",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_supervisor_feedback.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    }
+  ]
+}

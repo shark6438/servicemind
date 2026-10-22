@@ -131,10 +131,15 @@ def get_model(model_name: AllModelEnum, /) -> ModelT:
             raise ValueError("Ollama model must be configured")
         if settings.OLLAMA_BASE_URL:
             chat_ollama = ChatOllama(
-                model=settings.OLLAMA_MODEL, temperature=0.5, base_url=settings.OLLAMA_BASE_URL
+                model=settings.OLLAMA_MODEL,
+                temperature=0.5,
+                base_url=settings.OLLAMA_BASE_URL,
+                reasoning=settings.OLLAMA_REASONING,
             )
         else:
-            chat_ollama = ChatOllama(model=settings.OLLAMA_MODEL, temperature=0.5)
+            chat_ollama = ChatOllama(
+                model=settings.OLLAMA_MODEL, temperature=0.5, reasoning=settings.OLLAMA_REASONING
+            )
         return chat_ollama
     if model_name in OpenRouterModelName:
         # Without an explicit key the openai SDK falls back to OPENAI_API_KEY,

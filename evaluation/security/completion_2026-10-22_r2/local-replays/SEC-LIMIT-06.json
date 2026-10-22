@@ -1,0 +1,43 @@
+{
+  "scenario_id": "SEC-LIMIT-06",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_data_bounds.py::test_zero_model_budget_is_an_explicit_degraded",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_zero_model_budget_is_an_explicit_degraded\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_zero_model_budget_is_an_explicit_degraded\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_zero_model_budget_is_an_explicit_degraded\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_data_bounds.py::test_zero_tool_budget_performs_no_convenience_read",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_zero_tool_budget_performs_no_convenience_read\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_zero_tool_budget_performs_no_convenience_read\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_zero_tool_budget_performs_no_convenience_read\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_data_bounds.py::test_degraded_plan_never_invents_a_missing_capability",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_degraded_plan_never_invents_a_missing_capability\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_degraded_plan_never_invents_a_missing_capability\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_degraded_plan_never_invents_a_missing_capability\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_data_bounds.py::test_plan_degrade_drops_followups_when_tool_budget_is_two",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_plan_degrade_drops_followups_when_tool_budget_is_two\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_plan_degrade_drops_followups_when_tool_budget_is_two\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_plan_degrade_drops_followups_when_tool_budget_is_two\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_data_bounds.py::test_plan_degrade_keeps_single_ticket_read_at_budget_one",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_plan_degrade_keeps_single_ticket_read_at_budget_one\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_plan_degrade_keeps_single_ticket_read_at_budget_one\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_plan_degrade_keeps_single_ticket_read_at_budget_one\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    }
+  ]
+}

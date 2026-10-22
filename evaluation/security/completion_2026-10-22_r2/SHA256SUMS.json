@@ -1,0 +1,2208 @@
+{
+  "sealed_at": "2026-10-22T11:57:24.830200+00:00",
+  "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "private_value_checks": 34,
+  "private_value_hits": 0,
+  "files": [
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/Dockerfile.llama-cuda-secure",
+      "sha256": "5ecaffb772d0ab1c125b8c4b88da11e881d7750ec40202a5283ee62b05e0686b",
+      "bytes": 417
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/README.md",
+      "sha256": "674a508ae544af8eccb7d463f497fe06c537c603880bfa817431228d0badf73a",
+      "bytes": 7638
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-01.json",
+      "sha256": "044585ebfff9a3b1bf2fa6000d2d1f1040906c86fe013c0b9314d61d4eb4c057",
+      "bytes": 450652
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-02.json",
+      "sha256": "52d0dd014bf59669de0b0bec58532ada6d3d2b814397c289e0095dd12f8c6619",
+      "bytes": 229898
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-03.json",
+      "sha256": "d5284c2ebeddd66e524da878263c05d32884021bfdabb2e184adc7211b0c8b2c",
+      "bytes": 248800
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-04a.json",
+      "sha256": "891147f289ae3f8c7a4a6d5820443328f41c7303716987730e7ae5c7692fd3db",
+      "bytes": 229006
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-04b.json",
+      "sha256": "aa2d995a00773cec1c6dc14abd0d75bc9b0b990e39e8210a1966628952ec0786",
+      "bytes": 204297
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-04c.json",
+      "sha256": "47458f1a4cb70a271eaa31565ba237edfdb06a4ee717184065309491d00b857d",
+      "bytes": 225586
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-05.json",
+      "sha256": "9bc146abd7cd2096d6277fa8eb9837d1a1ec1dfeb7761b4866b9a056f162888b",
+      "bytes": 247798
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-06.json",
+      "sha256": "e270fd31afa4d9d750751eab21bc7a4b3ebd9873733ec4d9831545ab36f93c12",
+      "bytes": 226122
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-07.json",
+      "sha256": "7aa7864f62560c2218df734b93f2cdbcdca15158ec57fd99c426bcac00d7c0b7",
+      "bytes": 250348
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-08.json",
+      "sha256": "b97dfd8914645179407d1e975b2abf59032df9ad8e7b4d5b473260ea896d5428",
+      "bytes": 250443
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-09a.json",
+      "sha256": "f8023feac41b0a79eee928d6ea4fcbc6341c947b70c1c05857641ea4308f24df",
+      "bytes": 419280
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-09b.json",
+      "sha256": "8c06aa0b3d3dfe7f7564f7f4cf316ac3fab3698553345e40e80471cc7b141e34",
+      "bytes": 403391
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-10a.json",
+      "sha256": "7547ed80d4b24ee3bd5b8033e148e3b2db2a41984bd3b949bcc7da08b303ab86",
+      "bytes": 421767
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-10b.json",
+      "sha256": "c4d2040092137f8779e2eeb9ecae8168595378722238830e275cc2bde23f92a7",
+      "bytes": 191238
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-11.json",
+      "sha256": "7c37922d53ae1be3c41bb76de7db1cb33901f58285bc3b61ead7936e144ede04",
+      "bytes": 188175
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-12a.json",
+      "sha256": "1208df40b58ef59682fddbe0caec6c707c542b81d4ac911eb326ebe76bbbc019",
+      "bytes": 5558
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-12b.json",
+      "sha256": "f2c6bf409e5b15daa2a6c48ab332926a38ae9b89937336b6342764253e720c73",
+      "bytes": 425004
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-13.json",
+      "sha256": "b82791438e11836e51a75ecc36a2c071723152b07ac876e220054fb19b7ef696",
+      "bytes": 251301
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-14.json",
+      "sha256": "ba4ca49e90965f6a0907127ed0235d01c129bdffa171882ce27d08929db28aea",
+      "bytes": 4802
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-15.json",
+      "sha256": "e808e6a6f53ba0fa34000777a5ff00cf37aee11eaa960c2a8e87d7ae29502e16",
+      "bytes": 5765
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-16.json",
+      "sha256": "59a2977af8429d5e9bd0bee644f5fec347e540e91d95528ed17f4162ac11ad0e",
+      "bytes": 3477
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-17.json",
+      "sha256": "66c94ea06569400a99c48dda6c8f77aed0086df8cac4f0a43b481f9b8977d6ee",
+      "bytes": 4437
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-18.json",
+      "sha256": "f118d742de8041857749d09d549cd028f56cc5760fcb4b64cbd3864a9b949658",
+      "bytes": 433795
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-19.json",
+      "sha256": "62ded832b0f8d1d6c9a0aead9e6d24a362d1d196deb4e6d3464f3b3de768546b",
+      "bytes": 421077
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-20.json",
+      "sha256": "1a0b13ba0f54cbd105c60e9350e2ae83b825201371d49ba0fde93b7fcfd42beb",
+      "bytes": 421059
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-21.json",
+      "sha256": "c30b594654dd8aaab88a20fe04cc194451325bb8f8f44639976db278e538b02e",
+      "bytes": 421014
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-22.json",
+      "sha256": "1eb4ec8f4318575d626972b84f9040e44462510c2197e0ef1764132d74fa7da4",
+      "bytes": 170874
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final-replays/ACC-23.json",
+      "sha256": "b8bdc92b3afd06d6732e139a9e093be7372c667ea5f7e6d44a6940a74ac94ce0",
+      "bytes": 205172
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-final.log",
+      "sha256": "498e414a363a7b1d6ab67c71ff0453f5533d87df909653cfa4feb30c8f80ede3",
+      "bytes": 5092
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-gate.log",
+      "sha256": "2f7c9b18e426d07747bf06ab3dcafd1f2cd764a21797a694f9025c3b2aad2d66",
+      "bytes": 1900
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-report.json",
+      "sha256": "84d6e2c4c8387f232bc24cb1f71f0fbeabda874e4c1d7ae29cbd84c067f377c1",
+      "bytes": 136337
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/acceptance-report.md",
+      "sha256": "9c25a1ad1f50510f4448dcf047036e3f780e801ebd9449eb5d3a8fc886557e19",
+      "bytes": 384887
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/artifact-ruff-check.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "bytes": 19
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/assemble_completion.py",
+      "sha256": "4c1bc7e60e71860b6b1f8c38915ba34aa411dc4e46f118c36a608f71b3a57407",
+      "bytes": 7018
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/assembly.log",
+      "sha256": "2d4eaf93ded93331a6619d6b92f1afa750a87db340bdda496378c862eb5731bc",
+      "bytes": 833
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/browser-deployed-fixed.log",
+      "sha256": "ade90d14fc839a6a9382071371c33079dd60cc6198d6fc874529edaf30f68e34",
+      "bytes": 575
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/cancel-regression-phases.json",
+      "sha256": "fee54b0ace45a9b560ebf40c38510fab2c0d48d37919182e9a24d3e9e7f30307",
+      "bytes": 2282
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/cancel-regression.log",
+      "sha256": "4dd73a78f17e4a59f3d9f06ceacec634e2fe0932705ed7d823ce6d261356ae18",
+      "bytes": 629
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/case-matrix-grade.log",
+      "sha256": "98323667abe7e46771af78f5fc7864ed54af46ec3c4ecdd3c9c3e5863a74a21f",
+      "bytes": 100
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/case-matrix.json",
+      "sha256": "fd4b9ac13bd91f91f63497c9ff15982dbda4b21882e17ab4e0ab98c92642a13c",
+      "bytes": 88514
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/case-matrix.md",
+      "sha256": "6fc3b8f66107eb0025d054e948c0b7587e04ccf4b661e64ed86aaf306afac590",
+      "bytes": 4730
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/cleanup_pending_cases.py",
+      "sha256": "7130feaedf5b4dd9523a49c99dbebd5aeeff09e39e6d30051186e142166a80f1",
+      "bytes": 2890
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/concurrent-identity-observation.json",
+      "sha256": "0bfbd5d3516da1a898502f4297458e260c62af8eab0b262ed4bf8d5900e2e847",
+      "bytes": 257
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/cpu-local-model-control-summary.json",
+      "sha256": "46908aec09a8b36f906d9a8cceab269ea0abca42c68e624b1da4418aec226d9c",
+      "bytes": 1313
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/current-cpu-model-smoke.json",
+      "sha256": "50b27dbcae17e07999457569e2a736195e1b4a9a175470d6c1a5dc0380a20644",
+      "bytes": 186
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/current-local-main-control/ACC-01.json",
+      "sha256": "9535ab1f2d152fb668341cd8384099790622ccee08f7690fd7d8bd4a2e547890",
+      "bytes": 405515
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/current-local-main-control-summary.json",
+      "sha256": "8106261d4431e8ddbdb52cdee35d5464989b35bf87ab14953adc8e4e39bac216",
+      "bytes": 1256
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/current-local-main-control.log",
+      "sha256": "aeec699dc788886c933d5cd44aa54e238e4d479d7b8e039179b3de46f67e44d8",
+      "bytes": 401
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/current-local-model-api.log",
+      "sha256": "960e1828a35dca717f18fd223195d6066af6c5ffa9f414a5fdbb6547d54b041d",
+      "bytes": 3292
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/current-local-model-control/ACC-01.json",
+      "sha256": "14bf4ddd21ab8e47fa9b9bb469792e0890de990bbe20892a8130e154926eea08",
+      "bytes": 450822
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/current-local-model-control.json",
+      "sha256": "aad7563f707d93dfa83ddd985306f36c2065a220e07f6501154b21d38ed1c8d6",
+      "bytes": 1358
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/current-local-model-control.log",
+      "sha256": "ad4b6daad12e33ff218c4148f5b1bbcc69e93615a8af7f7225b47cd7cec5e193",
+      "bytes": 977
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/deployed-final-junit.xml",
+      "sha256": "8621b720042ef50e7757b5f8f17c4fe17a9895ee5a9fcf5f3aad8e69c6d792c6",
+      "bytes": 675
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/deployed-final-phases.json",
+      "sha256": "3260f94e545eb66b5c7ce819a223ef1963ec8d6476103f83a7914630c818cd9a",
+      "bytes": 1670
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/deployed-final-tests.log",
+      "sha256": "50b027a51efd2571ad9c171d98a5ccef20afaedbdcce9b2ed22bed18d22b292e",
+      "bytes": 98
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/deployed-fixture-final-api.log",
+      "sha256": "80d0bce97be96085563527fa21795ca56a6447814ad25c566d2c0465dc2c94ac",
+      "bytes": 19102
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/deployment-backup.json",
+      "sha256": "d27a87320687669793f6e050d93942e8d28f88730f02a1f8ebc4c9ae58c098c7",
+      "bytes": 126
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/deployment-migration.log",
+      "sha256": "f2e79d734668324a5d1d70fed22d112bac22eca02b27174e9f420df895502114",
+      "bytes": 284
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/deployment-security-check.json",
+      "sha256": "b2522f51443ff7fa9bd019b7de23f1b95115ff2c2c35997e705adc8dea337b98",
+      "bytes": 880
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/final-local-model-control/ACC-01.json",
+      "sha256": "d18814b9396b50d3b0250e1826efaa44e64c35c4362d0d10f2c42c4699367919",
+      "bytes": 405281
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/final-local-model-control-summary.json",
+      "sha256": "46908aec09a8b36f906d9a8cceab269ea0abca42c68e624b1da4418aec226d9c",
+      "bytes": 1313
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/final-local-model-control.log",
+      "sha256": "e115d9cc4898a1ea33f9f623e5c1a8f5c48c9d72951c2f2748b6095738453b4f",
+      "bytes": 402
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/final-model-deadline-observation.json",
+      "sha256": "0fd98374e1920c934d3503832aeca197f6a87370b9df7949871d96f2fcfb3331",
+      "bytes": 162
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/final-model-manifest.json",
+      "sha256": "f09b0989cd94ee307d0c43738ac8597eccd5d1cd654ca6c78bcfe24c334c9599",
+      "bytes": 3732
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/final-runtime-check.log",
+      "sha256": "cac44e6e0aaa2a7b3ffd33196d18779f1fbc3c6f11103215bcf9f43b90b7ddab",
+      "bytes": 158
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/final-runtime-state.json",
+      "sha256": "184d74c698726008e6b3c21aee0ceab4bf91d567dae2451cde4f63389bf50cd2",
+      "bytes": 3049
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/free-runtime-profile.conf",
+      "sha256": "401555e48092ee8e3177d507f4669fe24054c13880cf507926bad969682bef0b",
+      "bytes": 636
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/frozen-components.json",
+      "sha256": "f0041eeb6942944d9ba246f37e95fdbd10f927fa03aaf93760ec6b4da552fd53",
+      "bytes": 386
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-gate.log",
+      "sha256": "057e5ba2082d156ade0001b85a8f399e80b73af1f97430c5db215df91ab47db3",
+      "bytes": 3419
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-APPROVAL-01.json",
+      "sha256": "e1486ba8ddbaecccc3e4fac9663d6aaa31725714a5f3aff401cf48db71d2c309",
+      "bytes": 3533
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-APPROVAL-02.json",
+      "sha256": "07ae8ae4e46409299ccd18d3dd0a97916f6d5e18dd2347eef3551b0a88d941d5",
+      "bytes": 2629
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-APPROVAL-03.json",
+      "sha256": "c0a6e055daadff002c238afffe2b1e8f8913101ba0dcc286137e5b83936e13d0",
+      "bytes": 730
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-APPROVAL-04.json",
+      "sha256": "6e22833be336ce3a87e93eaa441400496209a403b71b2ba236855ba89c9bf0cd",
+      "bytes": 6107
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-APPROVAL-05.json",
+      "sha256": "7e506f861264afad9aefe29d1d477d30d4e783b763acc8162cf546d216db0263",
+      "bytes": 5500
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-APPROVAL-06.json",
+      "sha256": "430f86f8f4f14abcf1728b7181cbd59c091d34de5bbdd96f4ea3927ab580ae6a",
+      "bytes": 1766
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-AUTHZ-01.json",
+      "sha256": "fd5ed3b5e3039d2b8677193d422cedf2752d96272c5914f84aab0f42bac73135",
+      "bytes": 1681
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-AUTHZ-02.json",
+      "sha256": "0b5162132f84e2563b021b999374cd1e4b458bd3e0a2f08a22049d87b7c3d5d8",
+      "bytes": 2664
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-AUTHZ-03.json",
+      "sha256": "2a8ea397443e87529dbf2fca1a8a5481103d3c6a5996067672c079e56ebb073d",
+      "bytes": 1760
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-AUTHZ-04.json",
+      "sha256": "fc4c763d50de48c62e9645d21006d5f9624d0bea988a0d6251b35c31d8a7b73d",
+      "bytes": 1766
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-AUTHZ-05.json",
+      "sha256": "a58a200bfd7b3427392d4ac5d4eecc8b4783e584e191127e36abf7b2717e16c8",
+      "bytes": 1233
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-AUTHZ-06.json",
+      "sha256": "57e26251604ee3b3227dd2af22da60c2f5e212934b3a2d7daea79c0a97f23ea1",
+      "bytes": 3121
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-AUTHZ-07.json",
+      "sha256": "e1f4bcf81e48162919ef5bba3447a99020e34047d729ba342f36e6eed9243590",
+      "bytes": 3042
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-AUTHZ-08.json",
+      "sha256": "d07ce8beec5065c70b69148764ab5fd31ca8d51e3c2a3368ebcc01be1a2089b5",
+      "bytes": 3179
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-AUTHZ-09.json",
+      "sha256": "0436681b393152fc858e8e441270bf173a2e17db9f9311be80432022304986bb",
+      "bytes": 1771
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-BOUNDS-01.json",
+      "sha256": "fa0ebe6254bd8a53d38c59a72ccbcef5962bca120f41c34500519b15777f70dd",
+      "bytes": 2890
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-BOUNDS-02.json",
+      "sha256": "1e3bbde4a14830ed36f878e7021ec3ee62fb7e45397dc59a4e7c078d55fc89a4",
+      "bytes": 1106
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-BOUNDS-03.json",
+      "sha256": "8a9a3aec4820e2018d73ce048c99ccf6cedfb87386645224f48f424d7b1c07b9",
+      "bytes": 2958
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-BOUNDS-04.json",
+      "sha256": "98cd5fa6cb96e6cef7578cc78717f0dac27ce2e42f1dcd83eb3d825b2068592e",
+      "bytes": 8114
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-CRASH-01.json",
+      "sha256": "74737bcd668e84d19662a2ea3d5a1ff575432dc01265f143d66209a9f0e1d978",
+      "bytes": 1594
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-CRASH-02.json",
+      "sha256": "221611d7c6f118a96c4fb6a174b29b1324c0dd2b3d8407eb489a171d5561d4b8",
+      "bytes": 4114
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-CRASH-03.json",
+      "sha256": "f881f9b807f65b345ffb2353e2bef0ef6628021959715d85c9cee91cc1a4aeba",
+      "bytes": 4197
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-CRASH-04.json",
+      "sha256": "e96bf59959cf4bc0748766af1ea47313f96c62a9ac061d56d547942319674f41",
+      "bytes": 2145
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-CRASH-05.json",
+      "sha256": "214b811028474268da6e62880465d2ddb4257eb72b1501090808c2fa1bb6fe51",
+      "bytes": 4510
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-CRED-01.json",
+      "sha256": "54c682f4b77531d8b0d749be80ce8e392d5431e9346c55d742da128df3540ce5",
+      "bytes": 2208
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-CRED-02.json",
+      "sha256": "f82da27d289b17661ec6b2c11ed8665b6cff6ce7af62227c187e7f205ea9b858",
+      "bytes": 2252
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-IDEM-01.json",
+      "sha256": "623f4bb3d1bae1b0ab6534600e9e7ccad7943ff858d0a54ff27e401186db7776",
+      "bytes": 2228
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-IDEM-02.json",
+      "sha256": "534045a413b2bc5caf16eab3284374e5365dd94257a6b9d2cfb4f1edb83110de",
+      "bytes": 1976
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-IDEM-03.json",
+      "sha256": "7cd020abe7557b4586b078f5f319bde94fb02cf665b2ba28f5c4e580900a1b1d",
+      "bytes": 2096
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-INJECT-01.json",
+      "sha256": "919834a6a97d2726b31a8ea71b3475e16bc08db19d4f81cfa88bf76695be1e7d",
+      "bytes": 17607
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-INJECT-02.json",
+      "sha256": "9883e197cab7c5a625011b4bb45fe85ace81a128198c432d21f73be398226398",
+      "bytes": 1202
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-INJECT-03.json",
+      "sha256": "f529b1c0092fa32dd0b2d27f14f6ddae22921e5a9b5f23aa1c509974814687fb",
+      "bytes": 3934
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-INJECT-04.json",
+      "sha256": "bdb53bc79a568b2ed0782d67a289c866523a8b3692980998f317e14ac7ebfb63",
+      "bytes": 2194
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-LIMIT-01.json",
+      "sha256": "3cdcb9da3c5f29423b623a3908131970d3e5d14f23ccf8b32518831163ff48e3",
+      "bytes": 2663
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-LIMIT-02.json",
+      "sha256": "d5030b43d91d53be2b2d88e39ba1e40d95230223abcb3f998554ff705886f7d6",
+      "bytes": 3621
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-LIMIT-03.json",
+      "sha256": "70d75fc0a9da0c7fb25ceabeb065b8cf5deb48515f3fb91edec93266209a2c2a",
+      "bytes": 5955
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-LIMIT-04.json",
+      "sha256": "66fdaea4ba7b99434a7780419820cb93e3b88e3955f0999ecca5227b43c356b2",
+      "bytes": 4147
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-LIMIT-05.json",
+      "sha256": "10fb1ab74fc68cebaef76f30bc02736cde6e3bd59b4f29e36aa60d136cb85ee2",
+      "bytes": 4739
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-LIMIT-06.json",
+      "sha256": "a12806702b9ec9682dfdee8b47f3b46d157b8b464c8b723e53de3eac07dc1270",
+      "bytes": 4729
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-NARROW-01.json",
+      "sha256": "60826da1cadeabc687c53e9180fbce9efc15a501899eb1f109c4b1cab22fa114",
+      "bytes": 1694
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-NARROW-02.json",
+      "sha256": "5ecc077c9c7cff4cd7301276bc8482653701fc37afb273cb29cbcf737461a770",
+      "bytes": 1679
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-NARROW-03.json",
+      "sha256": "abb804c51d336b34f48738df620db23408268941626231366669ad824b04d5a9",
+      "bytes": 3144
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-NARROW-04.json",
+      "sha256": "e5ae7057a6e41261e66173985a8f3d5972c0f7cb7debd4f618526b464a271777",
+      "bytes": 3561
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-NARROW-05.json",
+      "sha256": "6783abc0b5e2fe5f664d02a35b20ac8f13066b8d61e383f11a3cb60ef3281ff6",
+      "bytes": 4628
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-NARROW-06.json",
+      "sha256": "6eda14801fba9777050cfd1e9d6e4e4e5f98be7f90f0babae9fe9b2a7241244c",
+      "bytes": 2205
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-NARROW-07.json",
+      "sha256": "b7fd5769ea6edb2cf38e132005c99c2f73cbcbcb31ceaa037ad1b4d3cd48fe90",
+      "bytes": 5574
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-NARROW-08.json",
+      "sha256": "878130d056f6ec29f0d7bcbf759658f59166df354e59944dbe7a2767a0058455",
+      "bytes": 1254
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-OUTBOX-01.json",
+      "sha256": "fca608fc39f3418d8b0384b999172710a5576ce594d350e1762e8ecd83563166",
+      "bytes": 2124
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-OUTBOX-02.json",
+      "sha256": "e17781ff141ecc24d949155582cefdd2233a4d86e7ce58039b33759a2c2e61eb",
+      "bytes": 3105
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-OUTBOX-03.json",
+      "sha256": "b45d394f19a4d59399f13f5d68d290a5985f57d226b36e0076a6ec6395610a86",
+      "bytes": 6418
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-SELF-01.json",
+      "sha256": "58b03bf41ed78f250b5acdfb9e37566e82ae6e0c2a9e49e4d2411e66f45d45b9",
+      "bytes": 2144
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-SELF-02.json",
+      "sha256": "8c75079457ac007cc3c2f7664a5f59d1adc81b9de645ae96eccc58f2044eed11",
+      "bytes": 2244
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-SELF-03.json",
+      "sha256": "b39a5cd734b0f95dfa24141b2d25a9ebb9b6f2c826fb0c7b8e172f38df6bca0e",
+      "bytes": 3096
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-TENANT-01.json",
+      "sha256": "3fe3b4a9d71d53effd02037b72a051d877e7214fa06f32fcd9f34d2d3beb8370",
+      "bytes": 1709
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-TENANT-02.json",
+      "sha256": "ab004493e4bf13db96b489e4d0b3c76068e56fbdf36222f59969ce1749e0a045",
+      "bytes": 3208
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-TENANT-03.json",
+      "sha256": "980bfac7b47b6c4fbe7444d6d919eaffa62c0b76bf82342bad400ed1a31ce24e",
+      "bytes": 1254
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-TENANT-04.json",
+      "sha256": "4f6e72e0c83afd24c407277716cc98b42255c7ad8748701d128ccee19f9e8938",
+      "bytes": 1150
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-TENANT-05.json",
+      "sha256": "b3ff6ac1c6ffee0d3378f9774492ad43297cb36246da0dce0c5d10d43cedd913",
+      "bytes": 2174
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-TENANT-06.json",
+      "sha256": "de0f68ea38401e31da226b265929398cf3d78e9213ebffb9daeab856ea226b74",
+      "bytes": 2626
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-VERIFIER-01.json",
+      "sha256": "06a6da2a07c0161407d9fcb052acb73cf47208db17d018cf18873e09086a3c51",
+      "bytes": 2671
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-VERIFIER-02.json",
+      "sha256": "a7a27c6e97917942ddb050e1949adce3c67dad4bac173f4945fff57871e71f61",
+      "bytes": 2642
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-VERIFIER-03.json",
+      "sha256": "63ecd29caa7c6e7889426a9027c77764d984c944be3a77189e52641a8b77a453",
+      "bytes": 5539
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-VERIFIER-04.json",
+      "sha256": "9a33c7cdedbc4677d14080c889e58678e5519b1111d6687a27da4ce7754bd428",
+      "bytes": 3591
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-WEBHOOK-01.json",
+      "sha256": "c3157927e34d92648e9252c324675b2a4bf8645f11d0ed060ccddfe5296b4c40",
+      "bytes": 1907
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-WEBHOOK-02.json",
+      "sha256": "4ce3d52c11de97eb92b24ac3feadcb3e0a30f2fe49db992ba2e27dfa90b628a2",
+      "bytes": 6294
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-WEBHOOK-03.json",
+      "sha256": "72c6b15539893ffbf1d62b5bfaeaf66064ef132091493655c942fc3e07340cd2",
+      "bytes": 3859
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-WRITE-01.json",
+      "sha256": "0deabda571ed7f2e3b45147053f48c68b7454849a92c6d7aaf3c3ed0a08b9da7",
+      "bytes": 1660
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-WRITE-02.json",
+      "sha256": "e92c3f9868b9a7d2071dc17ad254ae01f5a9718c4dc4d1a5584e9c1e2d56fb7b",
+      "bytes": 3136
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-WRITE-03.json",
+      "sha256": "33df6407f11a36cd7d693e853af2571a2c50b6f7f4faced08ae64867204fcd7f",
+      "bytes": 3595
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-WRITE-04.json",
+      "sha256": "3b32b5968e9ad57ddffefa73315235dded08b233640479a1b10c0905fa40b82f",
+      "bytes": 4454
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-WRITE-05.json",
+      "sha256": "f0ce679a362183955d720ad6800bb1e6aed906ab905b6fd41777722b38283454",
+      "bytes": 4426
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-replays/SEC-WRITE-06.json",
+      "sha256": "92b4b5cd6d760284f4943024a708c5b46988ce7ed8c347912d9a02386752f52f",
+      "bytes": 4574
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-report.json",
+      "sha256": "48f23ff8a41f69fd6452588548c86bb23fef67a2eaceea5be050306ddf1b76f4",
+      "bytes": 19275
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/full-scope-report.md",
+      "sha256": "e26c4d3ce5e1d82f2c2c97ef6d6dbad8634f5fa4d286eb0ff35be900fd1d748c",
+      "bytes": 15976
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/glpi-cra-validation.json",
+      "sha256": "2d87bf54a2977a7f4947d80b938a47d837ba5c52671b282f0c2db76eb114f372",
+      "bytes": 617
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/gpu-candidate-disposition.json",
+      "sha256": "57d9ae568506b47aa4b7c3483a07ab722c8aa13daa2caa84222120ae65d4645a",
+      "bytes": 649
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/grade_case_matrix.py",
+      "sha256": "ac4f36ddad019c850e08766f69d88083d5799e1ca0a1bd04cb681ac3b0df825e",
+      "bytes": 6257
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/heldout_scope_probe.py",
+      "sha256": "e6faaa2407b02150498e5e9e540ccb06f6f22c29daf512a05cae308b2b025f5c",
+      "bytes": 4649
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/holdout-inputs.json",
+      "sha256": "59e37832595e2dda8378592bffa1552bda572a574a0e76738197cf6e248c1c14",
+      "bytes": 2096
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/holdout-observation.json",
+      "sha256": "d16df27a17cdd0abac62567bb62077e651f83c96efc30d195e5d7048908cdba4",
+      "bytes": 3910
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/holdout.log",
+      "sha256": "caca583dd3d1d1ceb1ea231cce8888f6cf43f4d3ae27324a7272cf755e1d9bf7",
+      "bytes": 84
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/inherited-evidence.json",
+      "sha256": "3d7ab001d8d6de5285c9df7186f0d760080f78686afe5d2f2089e6a18e0c0cc3",
+      "bytes": 1870
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/instruct-gguf.json",
+      "sha256": "38dd8d47b87fd92f77ada9d3786b954266144c6091a4eb738aacbb9614476e7b",
+      "bytes": 1658
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/instruct-local-main-control/ACC-01.json",
+      "sha256": "56ef0dd234ebeb7c0e1d1480bb7ea141af0c974c7d585a0d96fe1d4ba33b607d",
+      "bytes": 404873
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/instruct-local-main-control.log",
+      "sha256": "9a602fc255d3f13029d4af5a38f42cda280d35034764d556f8cffcb43dc9d34e",
+      "bytes": 402
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/llama-cuda-final-build.log",
+      "sha256": "21816f2f0ef813dbcb4ace13f10140331ca58259a740449b7f763457f3272a76",
+      "bytes": 2180
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/llama-cuda-pull.log",
+      "sha256": "33bc1af9bb9dd14b8defdc8b2c158439f3ce0fe5bd04a6bd571a6926abffe9f8",
+      "bytes": 1938
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/llama-cuda-security-build.log",
+      "sha256": "6be7426401497bf2f59774cd9210243bf9bc7d1c6452f4b10a9d24e2d3a2cf49",
+      "bytes": 9837
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/llama-gpu-runtime-command.json",
+      "sha256": "6b65b7e8ef4f23877e0e43ad86954de29f93186dac785992dbb768049be16672",
+      "bytes": 1529
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/llama-gpu-secure-runtime-command.json",
+      "sha256": "22437902d8faa842603392f0e096b11cdb56e27e8c4e29d870276fb61c2b3126",
+      "bytes": 1686
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/llama-runtime-command.json",
+      "sha256": "efbe4f38e023e989a83b182a542681dba42e934bfadc9cb99c09956a7ef4340d",
+      "bytes": 1412
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/llama-runtime-readiness.json",
+      "sha256": "d3eca97da1dc2f9cd2e0f87b69d117ea36c4ad4074824b8d5570068ff77b6e1c",
+      "bytes": 161
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/llama-server-help.log",
+      "sha256": "bcb795d4736d9bf3209492e0a10058adc6015ac5f8eeadb9abe9182bb9722f6b",
+      "bytes": 60469
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/llama-server-pull.log",
+      "sha256": "6e5542edea52160a5e70791870b9e309d4963eae5f07c5ac1cfb8fdc3ea0a38b",
+      "bytes": 704
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-gate.log",
+      "sha256": "ec71c17f141afce33abfb108230a3fbbd0f0219f5468245f0c7f08f0769852bc",
+      "bytes": 3870
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-instruct-model-pull.log",
+      "sha256": "f0c9d21b2a66a4bb2feacabcb54ec7d409fd95caf719d84bf3c9bb3ace23703c",
+      "bytes": 524479
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-model-attack-inputs.json",
+      "sha256": "e14ba6cc38af5287820ddde62ff545f92bffab62d4d92ac40a83d883528f5c80",
+      "bytes": 301
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-model-attacks.json",
+      "sha256": "16e6b649f815e8358bb3e67d39973879ab7960c6aa3d54af916c5c6f230c6b4a",
+      "bytes": 2690
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-model-attacks.log",
+      "sha256": "55b2290180be2ae08f75a6a19ca083e7509ce3818ebfc1757c3e52a8f3ad1a93",
+      "bytes": 1036
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-model-final-probe/ACC-01.json",
+      "sha256": "c93d10a5cda04f56c9a73e6dfb0e9a3b042c74fe7557da5bb80e5484cc7c1df4",
+      "bytes": 458764
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-model-final-probe.log",
+      "sha256": "c51f776da1a575ba16ad2fc88c4d93eb479ac4a333d52dc2f13003a397c5a079",
+      "bytes": 1295
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-model-manifest.json",
+      "sha256": "3df1dfdb31732d1f98e3c6f82732fd1e4c3f1f451d9f856a20a172206157314b",
+      "bytes": 2662
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-model-observed-api.log",
+      "sha256": "56201201bb05b5f5be66edac97658da9a621bca84769d5b0d11e781f306aa0ec",
+      "bytes": 61413
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-model-observer.jsonl",
+      "sha256": "e1bbb575c529678e9a47d4ce9956730cbb07c680a39bd371aa993398e5f9813b",
+      "bytes": 18183
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-model-qualified/ACC-01.json",
+      "sha256": "aa93b822061834699495f954d0589a2415cc00968c233fef34efc694863e3cf7",
+      "bytes": 409029
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-model-qualified.log",
+      "sha256": "d7d878a948ce6cc4bde6d2f5fd4cd466880b1a2e45df3aa2f846d1586b964439",
+      "bytes": 405
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-model-utility.json",
+      "sha256": "ca834a441150bbc9c8da84c79d5ea0396f15bfbdfa6aa3bf0ca84f369c719fea",
+      "bytes": 1006
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/LOCAL-CANCEL.json",
+      "sha256": "21c114a4c91b4615d53f7e5d6d43ef8a8cd645ad04fed868d844ba9a14bfa774",
+      "bytes": 2158
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/LOCAL-CIPHER.json",
+      "sha256": "c8f27bd77e5d8f6c8de7f4d15e722572c457a1a94f2c26bee69b5862c24d1146",
+      "bytes": 1269
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/LOCAL-GENERIC.json",
+      "sha256": "04a01c53f1ed1b09d8960ceacc44084c4f1e845f5a9b2147614f78f89ca40f8e",
+      "bytes": 1214
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/LOCAL-GRADING.json",
+      "sha256": "85c884c63a8a6ddcd054cf5d8797996bb007ff2239e8df00a7903d7d31de5988",
+      "bytes": 2174
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/LOCAL-JWT.json",
+      "sha256": "32ac4688dfb4c20a743fd386d85e068f891b53bad1fb82b1220a71f3cd2e2f92",
+      "bytes": 3992
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/LOCAL-MEMORY-REVIEW.json",
+      "sha256": "2ebeffc1ccd81245d9a5173683894ec02e327c042afa111dc0484db497a45231",
+      "bytes": 4036
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/LOCAL-PROVENANCE.json",
+      "sha256": "b3d8c6e33beff80d63f1776352d72698aea31182101df197309b86f8e71eff7b",
+      "bytes": 1233
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/LOCAL-RUN-ROLE.json",
+      "sha256": "218a77d62bc71ff6ba4682ff9abb689d366a9aa67453f7f425f432e7169979b8",
+      "bytes": 2363
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/LOCAL-RUN-SCOPE.json",
+      "sha256": "6e325d7df4f032c08593c441ec1f710024268045e4022d6e517395328b7a195c",
+      "bytes": 6987
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/LOCAL-WEBHOOK-BOUNDS.json",
+      "sha256": "e1573b46608cb05fd8dc8bcbc30f0fa14cb7c56ed46b5900fb0935a95fc2f563",
+      "bytes": 237750
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/LOCAL-WEBHOOK-RATE.json",
+      "sha256": "742765d7dfb325ec65c6f87a9dc095a025e7b04d918fbc5dcf76c0ca36f4a3a8",
+      "bytes": 1231
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-APPROVAL-01.json",
+      "sha256": "26e5ab5d0c854e904a98805fa7a828d7fccb30b9d47583a00bf098ef3214957c",
+      "bytes": 3087
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-APPROVAL-02.json",
+      "sha256": "8a650a95239ddce34dbb6e931a821bb85f28741cc1c3255c9de8560cd381bb36",
+      "bytes": 2185
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-APPROVAL-04.json",
+      "sha256": "d9da9ac4e5e752a5f7b560bf623341eeab5736bb572ef5e6c0f954cd780d822f",
+      "bytes": 6107
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-APPROVAL-05.json",
+      "sha256": "c1c4bc106bb0109d02b321a8516e5ef236b2ec352bd55c5fed3346b89ae7756d",
+      "bytes": 4610
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-APPROVAL-06.json",
+      "sha256": "3b976a0a9e9119f607989c25f9335ace0f090f5ae383e5acb337d369fed736a8",
+      "bytes": 1766
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-AUTHZ-01.json",
+      "sha256": "3dd42c619c20cedba6a7785fd22a93c5d4aef40b198b9a0b823dcf14cfafc33e",
+      "bytes": 1681
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-AUTHZ-02.json",
+      "sha256": "42d26d7b7ee0ab342ee79764559f9a4bddaa170985e1aa87d360b7c79cb55eeb",
+      "bytes": 2664
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-AUTHZ-03.json",
+      "sha256": "706c1ddc1d2ac065be0a488ceb774f524abb0356a4d3f5ada843fee7b5175663",
+      "bytes": 1760
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-AUTHZ-04.json",
+      "sha256": "fe43b44ecad345240c6e4da5a1a5df57644c58e5c897126f3181057554d392e2",
+      "bytes": 1766
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-AUTHZ-05.json",
+      "sha256": "c160c312326928828172771ab43410b132d1728704dd1976347d40682d50e159",
+      "bytes": 1233
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-AUTHZ-06.json",
+      "sha256": "cf6f34dbbc7373f7b6591736bd50656c48d73d4fb15eb40628849f192cfffe3f",
+      "bytes": 3121
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-AUTHZ-07.json",
+      "sha256": "7810ce90571bdf2b6077f63e8ee2fecf971b84130cd5ba631910c597ab90d66a",
+      "bytes": 4834
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-AUTHZ-08.json",
+      "sha256": "6959b33a76430ff046414e6889e5107d783e608c695bdf8a133f4fc7cd03bb27",
+      "bytes": 3179
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-AUTHZ-09.json",
+      "sha256": "58a65af084eac55457cd0b20ed71dbe98cc3095412fc234fa5d4043bc2fcf444",
+      "bytes": 1771
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-BOUNDS-01.json",
+      "sha256": "5eeed99bb3f4b65788e60dc74c88ed0e5e090c0f95b2dca9594454adcac8f3b8",
+      "bytes": 2890
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-BOUNDS-02.json",
+      "sha256": "cec5e9e30bab49783d9265d77ed0fefca1fae92f65787f5c05aa2a33023b522b",
+      "bytes": 1106
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-BOUNDS-03.json",
+      "sha256": "47c217a11233ea443cf5dc554fcf7dd5e242191708c8952bb7df56f6c08310fb",
+      "bytes": 2958
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-BOUNDS-04.json",
+      "sha256": "07fab7dd526f711e64079d1f7db9417ea411a3b5a7409a46dd65264be4b9e9eb",
+      "bytes": 8114
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-CRASH-01.json",
+      "sha256": "188fff6779c4d74b6a97523580f7fe7d890442d1304743e545453f55ed626bf9",
+      "bytes": 1594
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-CRASH-02.json",
+      "sha256": "f358a54a1992acb63f8eaad940ed4994709b8444b6b77825745d6d765222f831",
+      "bytes": 4114
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-CRASH-03.json",
+      "sha256": "59b3268e9eea1157f5ccee9fec71fb1662a0befb8220dc0b5c01aea27e89e056",
+      "bytes": 4197
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-CRASH-04.json",
+      "sha256": "4b327c98c2ebe8104af17527e4ecd0614398074e32b29c95b2bcaa1e10536f6c",
+      "bytes": 2145
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-CRASH-05.json",
+      "sha256": "56b61734ff7f791edbdd1f341addb90c6cde4703285b62bb62c049d33c09f65b",
+      "bytes": 4510
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-CRED-01.json",
+      "sha256": "928e41bca2b257caaa3b2a03c492345bad184e4141dcf000064812f2af8f5ad7",
+      "bytes": 2208
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-CRED-02.json",
+      "sha256": "33473e29393fdf6957c920987ed7c5a703df233442db46ebaa3d4024f0b6e43b",
+      "bytes": 2252
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-IDEM-01.json",
+      "sha256": "cad95b5648d6086f9511a371222cf0a0ee6c55a51a02c5c16c316027b163b826",
+      "bytes": 2228
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-IDEM-02.json",
+      "sha256": "20e9ed98a6f6d1cc680a4cd7a489c053a9fedf01745b6b852e254b9dedfba55c",
+      "bytes": 1976
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-IDEM-03.json",
+      "sha256": "4a26b8f165157e96ba0a85214538c9131954c65029819b46f265b4c482b89d68",
+      "bytes": 2096
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-INJECT-01.json",
+      "sha256": "b059510f6403ba66bbe7fd3902930fa1276e6d1a8a1c092eea8b717ac82287a5",
+      "bytes": 17607
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-INJECT-02.json",
+      "sha256": "c0fdb26a553692c46e8e08d5b9fc6b34ef704e27d858d4f9f9dd3cad85d76e17",
+      "bytes": 1202
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-INJECT-03.json",
+      "sha256": "60bd5e6a00d1ff25b950bcc2770bc6d42947733bb1b330849c8334fd1a4a1aea",
+      "bytes": 3934
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-INJECT-04.json",
+      "sha256": "7a94fa8aa88c9fea0ebc067fe81d64d7bfcaba4d0985c440ed39202fbfe42b1e",
+      "bytes": 2194
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-LIMIT-01.json",
+      "sha256": "4e68268a9a98d47b344fea4226e456a48965ec994afb17890910bb25e812c03a",
+      "bytes": 2663
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-LIMIT-02.json",
+      "sha256": "02525af04ee0966db88327449c99e7739bd29fcb5b3cbda5c0e55712301f0061",
+      "bytes": 3621
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-LIMIT-03.json",
+      "sha256": "7e2439f0986ac511ada32f8e22cdcf1abeaaf6b410f82187efc85fba11c6e337",
+      "bytes": 5955
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-LIMIT-04.json",
+      "sha256": "cd8ecc01241da6774628dbe0cf59f81c0421839659d2adae14042536ffc553a0",
+      "bytes": 4147
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-LIMIT-05.json",
+      "sha256": "b89c2ffba47441530f75a44e1f88f5619ebe6fd7a5fb3faa1d777187389e1ecd",
+      "bytes": 4739
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-LIMIT-06.json",
+      "sha256": "1a24b24c3cc0cb4f20fe9080503c99d5506dd56732f65d36336d15e9a4a2c895",
+      "bytes": 4729
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-NARROW-01.json",
+      "sha256": "f0a55f309f56d4c628041ad7e4c48f4efb72c2046a41cc7f10218c6eb03a5129",
+      "bytes": 1694
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-NARROW-02.json",
+      "sha256": "5a7ee286409d216b64321510ca288cf33754fe0429ed31c2b7a8fbfa77af9c67",
+      "bytes": 1679
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-NARROW-03.json",
+      "sha256": "1f2eacc15bc5c3dae20c4407ea4871907011dc1ca6cc35b1466183057bae25ed",
+      "bytes": 3144
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-NARROW-04.json",
+      "sha256": "79aaab6fe9aabb01b6e913afed42072287362e23a20ac1d568845d87609a36cb",
+      "bytes": 3561
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-NARROW-05.json",
+      "sha256": "0c26a6faff2806aa0c5f94a386515d36bfcc044e7971187864764b610214f32f",
+      "bytes": 4184
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-NARROW-06.json",
+      "sha256": "5beec1b6a547982b0384a4bd4c3b01986352feac1fcd30337d61e4a8ef40c021",
+      "bytes": 1761
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-NARROW-07.json",
+      "sha256": "9d85dd3f63bfd0b8eabd70559c97cc0c2ff3da476f035b33a52f70e9799b9844",
+      "bytes": 4686
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-NARROW-08.json",
+      "sha256": "fbf89faef9844e32a0ec8956239c4bf39fa794f2bcf31c71126fb27a11559639",
+      "bytes": 1254
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-OUTBOX-01.json",
+      "sha256": "8abfc9dd750497d4074c41ea04d09fa43ad9972234db60115432860b573bdc22",
+      "bytes": 5020
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-OUTBOX-02.json",
+      "sha256": "d6a6c6d6d01643d2ade48ea3ee129b54fddcba3b6b75960a54a576f6ef766c6e",
+      "bytes": 3105
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-OUTBOX-03.json",
+      "sha256": "fed306d17f4b3f39ad8daf9567f26452fd513e5fcb9c69337f5014a618f9afc5",
+      "bytes": 6418
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-SELF-01.json",
+      "sha256": "d872325128829873626b1898aea06fa3c49b639a48659d86aababd2f6be0871d",
+      "bytes": 2144
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-SELF-02.json",
+      "sha256": "15296b5bd4fa22c6528c2f0986a9950edd4d61398cc80afc03ef41b20b5f51b9",
+      "bytes": 2244
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-SELF-03.json",
+      "sha256": "d5bd0923dce0a7454566519049ace12a0f0484840bb1d2b639e1676b99c45049",
+      "bytes": 3096
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-TENANT-01.json",
+      "sha256": "968cd20b8393470a6d9f7d262e2d25d7417bde6b757f5016e4227b08f6872cab",
+      "bytes": 1709
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-TENANT-02.json",
+      "sha256": "c07646ccb867133dda23dca05f4b4b0746dfb5fd34a5f9a879e6a195cd3e3ddb",
+      "bytes": 4334
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-TENANT-03.json",
+      "sha256": "fc44cb174986c3e2d2317ca6ef285946b131e09a4c44fb4fec127cbd4c501b04",
+      "bytes": 1254
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-TENANT-04.json",
+      "sha256": "8a60001f2263fb414802c92963dd4a34d989144aa880964ffe134db0432d6627",
+      "bytes": 1150
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-TENANT-05.json",
+      "sha256": "48019b4f58371f7baf6c91f973858737a27a6170cd0446ea9a332451e270d9ce",
+      "bytes": 2174
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-TENANT-06.json",
+      "sha256": "886f688e70cecaace337c15452a01a1487af73892582c83560bed8aea13e9a16",
+      "bytes": 2626
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-VERIFIER-01.json",
+      "sha256": "ebe5881500b67ef8ef5db0c10737b17c1c7c6c6813fd8d45173fcf05371c689d",
+      "bytes": 2671
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-VERIFIER-02.json",
+      "sha256": "7415a043ce8741830ad29a8eb1983973e7ad2919f1bf10346fbc3fd97242e1cf",
+      "bytes": 2642
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-VERIFIER-03.json",
+      "sha256": "6bc478240d5661e3285e176975490a8bee9780db3f0e152b7aed9e23d22706be",
+      "bytes": 5539
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-VERIFIER-04.json",
+      "sha256": "d13ad93152be80c709044e0f9e11bdf3694ceba58c79039b9c9ee5775a8e769e",
+      "bytes": 3591
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-WEBHOOK-01.json",
+      "sha256": "8abe06173407b1d1c6cf6242db57daf9b570b6e9b6a5e5f54b13527b00efb192",
+      "bytes": 1907
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-WEBHOOK-02.json",
+      "sha256": "89da22c78172cd0e346eedabb5aafed0c2b13ce5cbce0b0b01515755339ecf2b",
+      "bytes": 6294
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-WEBHOOK-03.json",
+      "sha256": "53a3de7a59b109b1d321dd9a8e7c2b73cda396d158a3050295132d068362b9c5",
+      "bytes": 3859
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-WRITE-01.json",
+      "sha256": "34b75af681e612aed9e85fe2e2aae0e6ffd844958196e669800495a43bbe9071",
+      "bytes": 1660
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-WRITE-02.json",
+      "sha256": "b75adac8f33d0c8685c4325904d41b6ae74196cefe3deda657c8708c3d150924",
+      "bytes": 3136
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-WRITE-03.json",
+      "sha256": "6cc099498c9ee0c1f4465a8b3a32554459fb43176937fec4795d977da0c4bdb3",
+      "bytes": 3151
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-WRITE-04.json",
+      "sha256": "ab8f5ce158fed882cbe45aa9ce4707bb14658c45c47dec6b312bbfef1eb701ae",
+      "bytes": 4454
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-WRITE-05.json",
+      "sha256": "0db462eb0163420115079623331115b5d87694b695efb30b8e58b7a3af56b7a6",
+      "bytes": 4426
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-replays/SEC-WRITE-06.json",
+      "sha256": "268b07c072c427071b2497a49304864b421bce6b3b6d7872076ba6502fd13907",
+      "bytes": 4574
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-report.json",
+      "sha256": "1365b77ebd0833843b28d1923cd36b5fd8dee0aeb26b9d3f47384c8954c7aebc",
+      "bytes": 22750
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/local-report.md",
+      "sha256": "ab327c6e553b2719d0372569a1ff198791734ef7707564faaaa71c51eaaa4870",
+      "bytes": 19346
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/model-observer-server.log",
+      "sha256": "f776a2ec47c8953d58be0beab7cca184e3e91c08ef17d235756085802882c540",
+      "bytes": 3374
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/model-validity-correction.json",
+      "sha256": "bf1fee986617435e3a696196e9287b5f2d9077e582ebdf5a77767fd326b0168c",
+      "bytes": 662
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/model_observer.py",
+      "sha256": "2644b10e636b5b5f506381e53c7b5e131ada2e5d255f354ded8666a06924b825",
+      "bytes": 2018
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_glpi_write_gateway.evidence.json",
+      "sha256": "2831e45d8f564c372b2c433882f1f9a58e8345fe406bd170cc385f7774f43050",
+      "bytes": 39821
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_glpi_write_gateway.log",
+      "sha256": "aa61b027d98b42b360260c6a26975fe363f45557b10d6d1e6014a931ee2f75bb",
+      "bytes": 2304
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_glpi_write_gateway.result.json",
+      "sha256": "4b75da41108f87dcb6ea14bf50c6761d3bcb09a3edf704932fca3020a2251258",
+      "bytes": 257
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_outbox_retention.evidence.json",
+      "sha256": "0201bbb8c6ea95df3f3aa566a87edfb7dd4593362d5932c83de91bd8343cde48",
+      "bytes": 20239
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_outbox_retention.log",
+      "sha256": "c11ba080cfcb8e0dcd7ee4aa45322a4be2dd5366ffb71017887aaa80404bdd2a",
+      "bytes": 1850
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_outbox_retention.result.json",
+      "sha256": "ef3ba6e1b92c4c07ba6600fe3d9a108a8cef045fcdd475d4c2195c153b2919d5",
+      "bytes": 255
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_0_10.evidence.json",
+      "sha256": "2b17bf519d75b49c3d9dcb59dee9fed396a2bbee86048c80c0bc8e0f6d0cebcd",
+      "bytes": 23429
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_0_10.log",
+      "sha256": "26a6ac298ee966fe8f2cdc956df984ccced27c036e3b5178c3eaa9c6b9fc99bf",
+      "bytes": 1512
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_0_10.result.json",
+      "sha256": "94c3be816b024990077000430103f026acc543df2d17a2abe29cc83d2f7bd55f",
+      "bytes": 261
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_10_20.evidence.json",
+      "sha256": "8ee1d50d8be6fbde0889c9bddcfddebe5df7b1cf211934b2418c8e23d29e11a9",
+      "bytes": 39781
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_10_20.log",
+      "sha256": "875b369649a4bf4197fc3e22e7845476042177e6bab5f7f4b31f94bc98379d2a",
+      "bytes": 1592
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_10_20.result.json",
+      "sha256": "6d0ad9cc15738f7a515635d22fc453cea4daf23f21f7e3e7645fbb3ed27f5c9d",
+      "bytes": 262
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_20_30.evidence.json",
+      "sha256": "96ca7eba5d9e84bd3135f7de8c306f656f24a23dd5847eba8d744c20552a1d29",
+      "bytes": 27222
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_20_30.log",
+      "sha256": "fd56464feb3eb4b67ed09a1c0b76af9a8b1e340b8d9fc3296153dcd2c1114d11",
+      "bytes": 1495
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_20_30.result.json",
+      "sha256": "aca22175e03a7283e0936bc5f7038eaffeb72c2016cf970a2552579d447935a3",
+      "bytes": 262
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_30_40.evidence.json",
+      "sha256": "caa3dda2ae78d8b1b5252a91e6271069f57486a608f7a4c9416c5926ea2dfe02",
+      "bytes": 18811
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_30_40.log",
+      "sha256": "0625a709e61389cce45a0c25852d5b86a09c6dbb8b36df53119f03ccb7cea6c2",
+      "bytes": 1644
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_30_40.result.json",
+      "sha256": "2d73fffaff008dadacda375fe20acfbe99b9bc3defa1ba670f2e66e59c32e8db",
+      "bytes": 262
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_40_50.evidence.json",
+      "sha256": "43ea3348abbb178ad9d84d723c98be42c47a895ef060d0082a51ca833ecb9889",
+      "bytes": 24663
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_40_50.log",
+      "sha256": "7efe325862cebcf383647bbaf833d5665a0b89527441b145d163de70e2aaa73b",
+      "bytes": 1577
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_phase7_permissions_40_50.result.json",
+      "sha256": "ab87ee870b37d9e4c21adee0c52b0916d5a35c531d05c284793eab888272e4c9",
+      "bytes": 262
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_rate_limit_degradation.evidence.json",
+      "sha256": "054534e40f2be341221222be5a471e849daf66e0ec106ed943b84bf76371144c",
+      "bytes": 34030
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_rate_limit_degradation.log",
+      "sha256": "44771b2fb15e1709b3fe7152afb15ecc872f3bc6a92b1e3cf854b3a32ea7b4a9",
+      "bytes": 2418
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_rate_limit_degradation.result.json",
+      "sha256": "78f8a76ce52cdd91da571a747cbed28b7b5020ae63127220067b6679ea8f796d",
+      "bytes": 261
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_revision_crash.evidence.json",
+      "sha256": "2c5de5e5c6cc31c5c4fa7637e43d83faa8b6aff65398f492749b326f0664b7a4",
+      "bytes": 6664
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_revision_crash.log",
+      "sha256": "46c19cc6bc968adaa24003bbecbb48234907f2a57eec2b7cf9c5062a1aaaa790",
+      "bytes": 656
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_revision_crash.result.json",
+      "sha256": "c8ae9c0e0773b021a5053c91689ee62e4b2a9cb57eae024dad17c204e6a2cc7f",
+      "bytes": 253
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_security_remediation.evidence.json",
+      "sha256": "181269bdc1893df32cb211c092626099250017dca2019ff1956ca606e4461e70",
+      "bytes": 720209
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_security_remediation.log",
+      "sha256": "6771d2174898d36c3e6be091ed6f1ce95c63fb7b59f9a86d6b1fa9e120240e7b",
+      "bytes": 1005
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_security_remediation.result.json",
+      "sha256": "239d831b6ec7bd1aa0a028298efa21ee47efb139adb35e536c73da16645783b8",
+      "bytes": 259
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_supervisor_feedback.evidence.json",
+      "sha256": "258aafa42f0f325afc860bff5f29b16ea1cff5b02c40718f911b7e45e81cea82",
+      "bytes": 5649
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_supervisor_feedback.log",
+      "sha256": "0b1c6d914372deea8a91830384a3e917265f1ceff5df5795c432a346bfde6de2",
+      "bytes": 475
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-evidence/mutate_supervisor_feedback.result.json",
+      "sha256": "c6ce3c86d254e8ba27ff9645e6c5944a7a530cf9ba2e074e5e2e315752e27d50",
+      "bytes": 258
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutation-summary.json",
+      "sha256": "5f7ddeead3723a24a854f68b2d5682fee277049193e523773b3036647ef681da",
+      "bytes": 933
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/mutations-release.log",
+      "sha256": "5c559579acf5f763a6351c1cbad57bfb3b5002ccd5bac833ebc321bedba4592d",
+      "bytes": 2720
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/native-webhook-fixture.json",
+      "sha256": "795b5cc177aa575d910f993493959fa8cd16e0b6beb12c065ec7061ea9636da9",
+      "bytes": 313
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/native-webhook-sender.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/native-webhook-sender.stdout",
+      "sha256": "20cce65248a6384021904f6d3cf296ee584fcf22295428945bebfd0664098ecd",
+      "bytes": 2417
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/native_webhook_delivery.php",
+      "sha256": "914fc1044af13a42940e59dff77dece8e5eaf12cefeed74f3bb3a32155ca815c",
+      "bytes": 3454
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/network-final.log",
+      "sha256": "e4ffd7d3f5eb4830c568a160d6b36d00d3c1f09651f7b25474e2634d9e879d41",
+      "bytes": 292
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/network-probe.json",
+      "sha256": "37c9a125f7b31aff513045d5107c52fa7ddc13748d30d7bd9ad11f05bdc0dda8",
+      "bytes": 1268
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/network_probe.py",
+      "sha256": "512b9ceb76ea8623be1fa0eb290917b3d3bcc53532c52a31ebb60cdbe9d2eb51",
+      "bytes": 2408
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/ollama-cpu-current-container.txt",
+      "sha256": "95dee463c3cd215fcdf16ddaa112d00be2cbf6aaad38001afd0e83aa9ff72bdb",
+      "bytes": 65
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/pending-case-cleanup.json",
+      "sha256": "adcea45cbd01ff566584ed3e5320cd72a9dcb1e2a06bc8de3e9aef81c7270e5a",
+      "bytes": 3252
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/pending-case-cleanup.log",
+      "sha256": "4f43cf7e0ac9a7ba3e691e34847ab105f2228dd8078164fcb7cff2852b0b5563",
+      "bytes": 71
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/pillow-docling-compat.log",
+      "sha256": "13f3f7882e848a8bce7fbc8a85fd9cefc5f8a184fbbbfb133108693375c3df41",
+      "bytes": 119
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/pillow_docling_compat.py",
+      "sha256": "4eabf2b73143d8ea5adc6f1604dab3f26efb956fcac595ff057fead8f84228a4",
+      "bytes": 1258
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/prepare_case_matrix.py",
+      "sha256": "729daa38b372bad3bc608eeacd0039c29dce167a17997c84574d8eb543a78667",
+      "bytes": 8088
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/prior-candidate-manifest.json",
+      "sha256": "61977ea2b2ab441e58af14558e57d141a8dded46ea9055d9f7ecc4e1a32c82f3",
+      "bytes": 239
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/probe_current_normal.py",
+      "sha256": "bf77e248f2e808d97bc223e948317edc69bade4dd09789058fff41824d953210",
+      "bytes": 2882
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/probe_local_model_attacks.py",
+      "sha256": "32d0076aba8052c0997a28f48a3411d4efdd6e40e3911626281afd9fef6ac99f",
+      "bytes": 9011
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/release-architecture.log",
+      "sha256": "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431",
+      "bytes": 5
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/release-junit.xml",
+      "sha256": "6f9ee9afaa23d3b9af1d6efd8d53918f1cf0d9d45773ea9c78ae904f0cd55fb4",
+      "bytes": 292483
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/release-pyrefly.log",
+      "sha256": "782ad074c4941e9cedef6efec9df1d3004f29e0fe1a032ea508d973a3ac8e9ea",
+      "bytes": 136
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/release-pytest.log",
+      "sha256": "e5701fbc938b0d65015edbc3769002da125dd033b81144fdb2a07de5c1217a67",
+      "bytes": 7638
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/release-ruff-check.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "bytes": 19
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/release-ruff-format.log",
+      "sha256": "82261690d85271a31e84ee1f16357d1ebdca8b962dbe05f64b6855899dac2f7f",
+      "bytes": 28
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/release-test-phases.json",
+      "sha256": "46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407",
+      "bytes": 1019011
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/retention-observation.json",
+      "sha256": "eabd7e181745c53e1337d6b1e2d622cb51a5f79742361e9c3cd8de5e75508906",
+      "bytes": 2314
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/retention.log",
+      "sha256": "8e8b571a292c50bde53caed023410d2f729c7a9bdc19540cfc0d757e35f8e6d6",
+      "bytes": 67
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/seal_completion.py",
+      "sha256": "221cb158d932f4282c9dd021d891cdf4ac7fa0a670a8b985d16c4336d18b6d6f",
+      "bytes": 3955
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/serve_local_model_probe.py",
+      "sha256": "83d5e5d1aa833750985d69786a3b782dee08b31b07cee345f3c8c22de0ab2eff",
+      "bytes": 196
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/simulated-model-calls-shared.jsonl",
+      "sha256": "6ae1e4081d0c0230f45f16bedd4e9719534503e92cc9c75a59c9c8d3385926a6",
+      "bytes": 233002
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/simulated_model_server.py",
+      "sha256": "ec1a7367151fae8ecee583b186fd91fc43fefa2ee93b91b6d20dae465810c936",
+      "bytes": 13144
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/.github/workflows/test.yml",
+      "sha256": "f9db2c9bb01e8011552f10fed91bbff1a8320c0d3375d26f57c40e522d4ffe0f",
+      "bytes": 17111
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/.trivyignore.yaml",
+      "sha256": "7b2c568499a6432ebea54a453a28b1421def2f865a5f7a37d0c64166eb80123d",
+      "bytes": 99
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/compose.yaml",
+      "sha256": "21b476bf1562e413543131494cabd711527ed1c8fd33734b0f914976af1c7188",
+      "bytes": 2227
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/deploy/glpi/README.md",
+      "sha256": "268dab283291dac9aad75dc2ed2faa77ec69d705a9183b0aeed612be0dfdc0d2",
+      "bytes": 3251
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/deploy/glpi/bootstrap_webhooks.php",
+      "sha256": "72964e3a6e4652b668e816c4ef0ce3df9a1bde2a70c54e7b4a459b9a87aada9f",
+      "bytes": 2659
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/deploy/glpi/compose.yaml",
+      "sha256": "d15d96172abf612fab3718e71a14b994b22bcc159db814c5e096a3274622478b",
+      "bytes": 9367
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/deploy/glpi/local_define.php",
+      "sha256": "33126e8ed9ff83f59c3f2776aabe3b701275f4943d208307400e0ed72647b4e3",
+      "bytes": 576
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/deploy/systemd/servicemind-webhook-proxy.service",
+      "sha256": "5ddd9e22203e1f03aea6fe04bf7cbeec74b727cdb14dcb7e9be724ad002a31a2",
+      "bytes": 450
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/frontend/Dockerfile",
+      "sha256": "50f110c3ee7877b288030435b2abe74ad853d3762fe8f41f66f0f2e2e0f7b328",
+      "bytes": 1352
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/frontend/e2e/security-render.spec.ts",
+      "sha256": "53881131dff17e1d91d816b7c3c5d49db04ff01a71b4481b5d61d26aa0a90510",
+      "bytes": 3636
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/frontend/package-lock.json",
+      "sha256": "87c6e5f06c9ab14edf9f69108bf678582166271fe53b84d0c22552c3ac466edc",
+      "bytes": 266992
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/frontend/scripts/audit-gate.mjs",
+      "sha256": "29dd679f43f938893cfcb268651110fe8535d72237975b1e79c2d000f7acab9c",
+      "bytes": 6131
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/frontend/scripts/audit-gate.test.mjs",
+      "sha256": "8fdc8d76073e79e7f29b08253413cb50c225b23d8aa17c18f9527a09a93bffed",
+      "bytes": 3850
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/masters/m10.md",
+      "sha256": "d63af9cb437130fd08a78b9eb1fb1f54f085a990ccf0015b33cbb666f0357573",
+      "bytes": 175764
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/masters/m14.md",
+      "sha256": "ee66a3e2508dc7c88ad9f316758c1bf96ae70f41c4ac59d5668b88c4963d29f0",
+      "bytes": 189908
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/masters/m15.md",
+      "sha256": "6c00ab816d987e46259cb38e1cc1f84aa3fe800ec8fe77ce13690d9ed1344575",
+      "bytes": 217028
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/masters/m16.md",
+      "sha256": "0ab1ff4c76bb3dc972f98076182704e21650d751f7def309f925473db3f5aedf",
+      "bytes": 136822
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/masters/m17.md",
+      "sha256": "a72a0626f1ea34711d5b0327e5dd2e01c819611a19edb322830c01978a67bb43",
+      "bytes": 140963
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/masters/m25-evaluation.freeze.json",
+      "sha256": "0527e7a89906358fe6b1d62e1f24a5a27ed286849be6038a13824bed5e124972",
+      "bytes": 4790
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/masters/m25-evaluation.md",
+      "sha256": "0716354c17b5e03c0e33136744228fbcb7108556f068aa001df953d11753dccf",
+      "bytes": 391294
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/masters/m6.md",
+      "sha256": "4b461036e5c3ff8e9a345c864d559e633cc1782ed7c0d2fee75201dd7a09c301",
+      "bytes": 132505
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/masters/m7.md",
+      "sha256": "a9bb7c8f568defa03e066a1e68ec97abd10abf56f4adc90e38074be0ec0e6f66",
+      "bytes": 200299
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/masters/m8.md",
+      "sha256": "0a21adfbd9a6fbb9295ad0fc55717c56b8c6df403cc4157620b902048f226c7f",
+      "bytes": 100533
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/masters/m9.md",
+      "sha256": "63ceac6bc883b7a75ea8e58def88417690a2c350868840c32994103ee4ccf747",
+      "bytes": 239042
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/migrations/versions/0015_run_access_scope.py",
+      "sha256": "ac24ff87cb76541ce0255501fcec8725c959a9a40fdfe701fed78bbe7e94199d",
+      "bytes": 465
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/pyproject.toml",
+      "sha256": "d46ad67803105b4fa6f45ab2da283af7a1d6212bb358131a461fc231535b120e",
+      "bytes": 6961
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/requirements.txt",
+      "sha256": "a5d55bd659a305b12247e0738be391ae289b16de9023555e855179869ea0297b",
+      "bytes": 22925
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/scripts/gate_phase7_security.py",
+      "sha256": "19c04bdd41945a6b0f413cabef7bf4c5ff8b3d224d3ae21a0288093b85bff6c1",
+      "bytes": 8620
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/scripts/mutate_security_remediation.py",
+      "sha256": "c2be9e622cc50f4b1adf6cdf5081a0086590d816dfbfacca701997df4d2402df",
+      "bytes": 2681
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/scripts/mutation_harness.py",
+      "sha256": "883d676d98780fd9506c0d5dcfe26693c5cf13c7eb47fb3b07f06d6ee7ca9e6f",
+      "bytes": 17629
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/scripts/rotate_credentials.py",
+      "sha256": "714ad70f61193e13f82b0bee839ec65a918671f0ce87e1cbf9c4f57d9f73e333",
+      "bytes": 839
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/scripts/verify_phase7_acceptance_live.py",
+      "sha256": "1a71d1bba5c9795be0bc5dc2de6010544e2533e91b39ebe47118d57ac6d0a5d1",
+      "bytes": 118388
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/scripts/verify_phase7_security.py",
+      "sha256": "3075b584af65e1cd1046144d35f1c4cddacc63dbbececa2616763b8290e79126",
+      "bytes": 23840
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/agents/tools.py",
+      "sha256": "41e52fe9dfc08cfe03056643682233e658a99a20cab9546c48553dfa48663dec",
+      "bytes": 2658
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/core/llm.py",
+      "sha256": "704efbcc6939c627a7b0a838c6d3ee636486075e66d95fd8c280c1a1bd5148c1",
+      "bytes": 6241
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/core/settings.py",
+      "sha256": "ad9015a40b2d02109011bd1d7643bfd95c954a5c8ed8090af0cc3fe244841034",
+      "bytes": 26323
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/service/__init__.py",
+      "sha256": "9756f5a0f230217f3cb5ec037d26a581df19517a7351741b44d1a8c6b23282b4",
+      "bytes": 217
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/service/build.py",
+      "sha256": "f9c9e6f13fa88a8697d581a3fedaff40ee569bcc28ed80e1c3d8173a4cda360c",
+      "bytes": 1240
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/service/service.py",
+      "sha256": "1b03329b06c10deadcc9e904baf9e5893baf4d246ca12771c8cbdf9c8090d784",
+      "bytes": 24297
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/service/webhook_proxy.py",
+      "sha256": "8ddbf20465502804a066dce3171d4c09850738ce03d9ce17ffa9529b1d304d4d",
+      "bytes": 5012
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/agents/analysis.py",
+      "sha256": "a985f61ca7777de01bb3f69fafa8b90e941f2660b1d089247dca94d3f3142761",
+      "bytes": 30117
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/agents/data.py",
+      "sha256": "be4dbc0a760f29abe6fa81d572ff95b47872bd9bfac93ec047754417c3f60609",
+      "bytes": 21473
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/agents/reviewer.py",
+      "sha256": "346c6b1fdeaa0e7994cca6bcbc88fda07f253fb9a4fc5acc89b866b364db5b9b",
+      "bytes": 58002
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/agents/supervisor.py",
+      "sha256": "faf7e93dc936770bdfd69352f24a84f0603383865fb844784a3b65b6d69705c3",
+      "bytes": 5009
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/api.py",
+      "sha256": "66dfa8440e7dcffe94f2700504896a5aa3598ef7441353b01347f0a11dc39b86",
+      "bytes": 25020
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/evaluation/pytest_evidence.py",
+      "sha256": "c4c934068a3aa1d2a2b324bb665de1a8c7a50c85d974d9662e0a2fc74d84e741",
+      "bytes": 1365
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/harness/webhooks.py",
+      "sha256": "140e806b694df487f02d1a2b3dc56691e51b52454383d85f1834b444f5f0a3d2",
+      "bytes": 5041
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/interfaces/http/operations.py",
+      "sha256": "11b7393e64f6e3d08cfa3ad809cdd40fb42facffd909ba95d11d83a0d7a0a22f",
+      "bytes": 5645
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/interfaces/http/request_limits.py",
+      "sha256": "40f0584a4a6cd927c16d8e77ebd7cb10e8fae8679ea56057c5d8d500fc0e0d58",
+      "bytes": 798
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/interfaces/http/webhook_limits.py",
+      "sha256": "c18304e2b3f9244179bb8826c2cfd969696ef8050f87aa51b6d4325cf2c9a830",
+      "bytes": 960
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/mcp/server.py",
+      "sha256": "ebcd1e9aa14e0624ef8050f34199de83889ca4da86977d95b114da890149d4ad",
+      "bytes": 23036
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/orchestration/phase5_governance.py",
+      "sha256": "4d99388aadcfb879d5ecf2efeeb0c0a894f4ca41702b2bf11f0d77adce2afda0",
+      "bytes": 47625
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/orchestration/supervisor_workflow.py",
+      "sha256": "e13213408460c5f1d1e0b6cfc67580cccfa9cfe26c5917737a80334d92430640",
+      "bytes": 91273
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/persistence/models.py",
+      "sha256": "27af3094c5869ee7b7f622510bc648b0af8f048f8b641f5a7d5cfffc7c80f785",
+      "bytes": 37077
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/persistence/repository.py",
+      "sha256": "4651559b8c00e93fd7faeb976f5fc9dc4d154ff67f2bbe7d50058d1e30692e90",
+      "bytes": 24989
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/rag/sources.py",
+      "sha256": "a3d6b4cdbed6c3c85793645807d4e814cb5ec883dd49ab81dd8f903f47bfcc0e",
+      "bytes": 10539
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/runtime/contracts.py",
+      "sha256": "fc96abf59d06cd1abcd1be7d3296a77a01d335545ea12619155517f677433395",
+      "bytes": 2525
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/security/crypto.py",
+      "sha256": "6cd01ea7942cf848a4e60cb272f218e3d402ad5e0d3eccbf1db5b7421cb27751",
+      "bytes": 1254
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/security/rotation.py",
+      "sha256": "3f3fe1122638b208941934f0360bda60b3eccca36b226b17966e8493bd633631",
+      "bytes": 1272
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/security/run_access.py",
+      "sha256": "3865eadcac2c0a000d17083c737c7f57f10ff38ca080b7689eaa6d0ca182cdf8",
+      "bytes": 1073
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/src/servicemind/tool_platform/providers.py",
+      "sha256": "2e1f035dcb8a134329cc3a67a0d1eb8a92ce18c50514a668dbf00ab2b1357112",
+      "bytes": 19757
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/integration/test_docker_e2e.py",
+      "sha256": "7c06a1a2b934286034f415bb0e8fd49d01ac8f17d8231b9b44e36721ad36ac09",
+      "bytes": 1593
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/service/conftest.py",
+      "sha256": "2afdcfae1b5b1f8877a6651526ef983b134e291d8d2f1404b1f348330dac25a7",
+      "bytes": 2766
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/service/test_auth.py",
+      "sha256": "6e9c29609366986079298448a6bdaecd474ce2a9819819557b5deae969ce6e2c",
+      "bytes": 1519
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/servicemind/test_enterprise_subagents.py",
+      "sha256": "a408c3da29ab14a482fd0bf9a1d83ba7a861c04648ccb063d99c219ef0ffb227",
+      "bytes": 44914
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/servicemind/test_operations_api.py",
+      "sha256": "a9a505f335d75a3d231785643de513ceb47e4d7a24eeac1c5090415c6ae7b9b6",
+      "bytes": 14148
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/servicemind/test_phase5_governance.py",
+      "sha256": "5c4b4041eeeba538a5bc5c4e5e55eaaf59546f7c317207c7c5843428ab5ece03",
+      "bytes": 158864
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/servicemind/test_phase7_principal_invariants.py",
+      "sha256": "20f0c8283bf372c8ee7fe791294087fb6f4818e9c8f3b2c70f0a6f2bccc1c8c1",
+      "bytes": 63425
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/servicemind/test_phase7_security_contract.py",
+      "sha256": "c78f8f5da6ca096c26e145a6b2dc8b0087d7413282f29dc5534d2ed222904c84",
+      "bytes": 25374
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/servicemind/test_security_completion.py",
+      "sha256": "7dca3ae3338f26973bc2450953ef44a14afb4d1fde2201b765b113505c19b6ce",
+      "bytes": 22321
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/servicemind/test_security_remediation.py",
+      "sha256": "e6fe014380d765e529ea96fa5be3698b77085a82656f7185f5bf4a6ee57162d2",
+      "bytes": 18632
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/servicemind/test_supervisor_runtime.py",
+      "sha256": "42af1f18c48c0322acd2df5fef142faec73f7bdca18773af58e92634ef2a0c13",
+      "bytes": 68687
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/tests/smoke/test_persistence.py",
+      "sha256": "c1a6cbc53cf290315f665500d87dac2a658bdaf3e8a0412c4e8cb52c2d8d7180",
+      "bytes": 3366
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source/uv.lock",
+      "sha256": "a34cd3416ceb270ae416c3ba6fcc9feee46ec0aa2152d8f1b5e3e822dfde62b6",
+      "bytes": 1186547
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source-files.json",
+      "sha256": "0b8c3dae1b8ea8acb4e5ce3daec1b7b0d721680691fe1cf0cdfa0f3984eec98d",
+      "bytes": 12518
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/source.patch",
+      "sha256": "67894ac26b289e7d173b05a2dbe9feec4bf3253340a108d3572f35c42ad33618",
+      "bytes": 373442
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/audit-gate-release.log",
+      "sha256": "bb85457f9996a8d94ba96c310456b811dae9e2d42252e4d59fec96be75cd28b3",
+      "bytes": 1095
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/frontend-final.json",
+      "sha256": "1aed56a6b4614c7d8ffb84b9f51d60f968fa56eb8b44b718887560137543f88a",
+      "bytes": 212276
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/frontend-final.stderr",
+      "sha256": "9bac8b5362e721db05f2cea99ac8a5caf0602f12e101b5707ff9e3271858c53e",
+      "bytes": 718
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/frontend-sbom.cdx.json",
+      "sha256": "477c6db991aafe253d5e525471a1738202bce522eef879b01bdda0ba714ea186",
+      "bytes": 48648
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/llama-base-image-scan.log",
+      "sha256": "e1346a33d2d4e45b2b421eceb372ba3ca96a979fea3653b0532ee6cbae460399",
+      "bytes": 645
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/llama-base-image.json",
+      "sha256": "b583487064c9f3fc6486549938a034d83ac4d7b0ef9cd8cc6d94db7d537a8aa2",
+      "bytes": 3180615
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/llama-cuda-image-scan.log",
+      "sha256": "251a05d2c955b828198cbb5e6e30c9db4687f0ce23703c68f0f1298dd75a96be",
+      "bytes": 645
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/llama-cuda-image.json",
+      "sha256": "3cdd9d495fc5a5e761785b8c7bdac03648eb1166e0208073b0af73def8cc0309",
+      "bytes": 4293069
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/llama-final-image.json",
+      "sha256": "b583487064c9f3fc6486549938a034d83ac4d7b0ef9cd8cc6d94db7d537a8aa2",
+      "bytes": 3180615
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/llama-final-sbom.cdx.json",
+      "sha256": "56b2939df4241bace7ea7d0bfddcaa333f66b3db1410e1a77cce7d3a981d5693",
+      "bytes": 1299545
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/llama-final-sbom.log",
+      "sha256": "bf80781975cff931bf82052b20784095e0f009a25ed8a08e7dffe4c21bd8c2ee",
+      "bytes": 298
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/llama-gpu-secure-image-scan.log",
+      "sha256": "0a4ab3632899f225629552e5db853ad1b5049c04833ab9a019e239e436cd1ec4",
+      "bytes": 475
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/llama-gpu-secure-image.json",
+      "sha256": "de6416f6a2fc3a289a2b63e835545e8fdbdbd85ba66609bf6fc0541dcfe25216",
+      "bytes": 3739589
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/npm-audit.json",
+      "sha256": "1120b7f7ab0bc93389c526883b1e970c44c40221e070d1c912396abdf08f3936",
+      "bytes": 9688
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/ollama-current-image-scan.log",
+      "sha256": "1943903ee5ec36d597d2e19d75c98e5b128ccb26987e794909b71e7a4b44a6ab",
+      "bytes": 723
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/ollama-current-image.json",
+      "sha256": "53f7b47a4b3ce119c74b05108474d104b285ac049358acc8efad7dbd45f9c196",
+      "bytes": 930179
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/ollama-image-scan.log",
+      "sha256": "d7aaf4d02374e1f8e94c4f5c29488136205899d376a387ef3eb526823f59d050",
+      "bytes": 722
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/ollama-image.json",
+      "sha256": "c0ef2fd30fabb31c6afac419dd2a78423c329c237188c70118698bc42711116b",
+      "bytes": 1962829
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/python-final.json",
+      "sha256": "3b949cd7bfc3994e4d172ba602835c8c32d8d3cda80968e53eef27a853779a50",
+      "bytes": 164471
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/python-runtime-sbom.cdx.json",
+      "sha256": "58771677a0618a4281b73c4157994c13c5fee9a0dd28e73265d3364ef21a8a2d",
+      "bytes": 134313
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/python-runtime.json",
+      "sha256": "b4425febfd5630c0688c66e29f15dcecd675681d90dac183e0c498f11ddab496",
+      "bytes": 118267
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/python-runtime.stderr",
+      "sha256": "09f7870c98be2985b05d734eb29e3996fa7309f429f1f5b73700d36d64ae677c",
+      "bytes": 352
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/secret-scan-redacted.json",
+      "sha256": "afc3e0004ee2264408acd0fa3b05efdd2c42507480045ec6e88a3c95d6128057",
+      "bytes": 236
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/supply-chain/source-secret-scan.log",
+      "sha256": "a3dd7d96168a379e60c997b8a578ca48709a1043769dd48cf8901cf467b422cc",
+      "bytes": 859
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/verify_native_webhook.py",
+      "sha256": "d93f1b650248f9a46c005e9797dd2e2a5d3d44b15729722669a25c4e51d4c716",
+      "bytes": 4147
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/verify_retention.py",
+      "sha256": "ae2460245e593e6ea2d7c333d3d9c5f6db5c145a7ed83b430b9bd84b985fcf78",
+      "bytes": 4869
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/verify_runtime.py",
+      "sha256": "8383012a37a032338061b77582fcc5bad7dc93c3a517e8198eeb18519ed607ff",
+      "bytes": 4560
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/webhook-live-start.json",
+      "sha256": "517cfeb033c6072d3496fad8f2e27e3093c5e7ff984cb915d557f01606c7cd60",
+      "bytes": 50
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/webhook-live.json",
+      "sha256": "5d0014d600e57f39d9ece06c2c01abd5880e8c06e64d219dcf8d24232bd9b987",
+      "bytes": 4457
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/webhook-live.log",
+      "sha256": "5d6c6946d38a1275582e0c401c50416fe295b4b09f7cef88c460026eef593165",
+      "bytes": 997
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/webhook-proxy-deployment.json",
+      "sha256": "92c3876af07696938f07cbcb8debd189874c32aeebd0a42787bdd012c4fdc93f",
+      "bytes": 164
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/webhook-route-change.json",
+      "sha256": "b24c1275a4b22c4aad224bdf1fcff6e8dc9d9a26a23c14ff49ac4d5619314ed0",
+      "bytes": 799
+    },
+    {
+      "path": "evaluation/security/completion_2026-10-22_r2/write_final_reports.py",
+      "sha256": "526ab7d99cd768baa01be876a11e61353ae5ac525be92a046371a8086dd907cf",
+      "bytes": 25444
+    },
+    {
+      "path": "docs/SECURITY_ASSESSMENT_EXECUTION_PLAN_2026-10-22.md",
+      "sha256": "a13b6fd43d22e123777b768aca24d2f661bbebd94777ee5393b6b1ca6b2dfea0",
+      "bytes": 52373
+    },
+    {
+      "path": "docs/SECURITY_ASSESSMENT_RESULTS_2026-10-22.md",
+      "sha256": "b97f359dd2af9b5144f4104cf2ab4be915f984c306cdb5bd15374de570933770",
+      "bytes": 17002
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "scenario_id": "SEC-BOUNDS-04",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_foundation_errors.py::test_a_bounded_error_keeps_the_end_that_states_the_cause",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_keeps_the_end_that_states_the_cause\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_keeps_the_end_that_states_the_cause\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_keeps_the_end_that_states_the_cause\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"2 passed in 0.06s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_foundation_errors.py::test_a_bounded_error_reports_the_exception_type_and_leaves_short_text_alone",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_reports_the_exception_type_and_leaves_short_text_alone\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_reports_the_exception_type_and_leaves_short_text_alone\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_reports_the_exception_type_and_leaves_short_text_alone\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"2 passed in 0.06s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_the_graph",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_the_graph\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_the_graph\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_the_graph\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"12 passed, 1 warning in 14.18s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_graph",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_graph\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_graph\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_graph\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"12 passed, 1 warning in 14.18s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_replan_double_failure_finalizes_without_raw_runtime_error",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_replan_double_failure_finalizes_without_raw_runtime_error\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_replan_double_failure_finalizes_without_raw_runtime_error\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_replan_double_failure_finalizes_without_raw_runtime_error\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"12 passed, 1 warning in 14.18s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its_end",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its_end\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its_end\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its_end\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"12 passed, 1 warning in 14.18s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"2 passed, 1 warning in 9.29s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_broken_model_path_degrades_without_waiting",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_broken_model_path_degrades_without_waiting\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_broken_model_path_degrades_without_waiting\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_broken_model_path_degrades_without_waiting\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 9.40s\"}"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "model": {
+    "name": "qwen3:30b-a3b",
+    "model": "qwen3:30b-a3b",
+    "modified_at": "2026-10-22T10:04:15.137060312Z",
+    "size": 18556699314,
+    "digest": "ad815644918f0eaab341c12b67837cc6dd4562342cdaf118f83d5d554cb37226",
+    "details": {
+      "parent_model": "",
+      "format": "gguf",
+      "family": "qwen3moe",
+      "families": [
+        "qwen3moe"
+      ],
+      "parameter_size": "30.5B",
+      "quantization_level": "Q4_K_M"
+    }
+  },
+  "details": {
+    "parent_model": "",
+    "format": "gguf",
+    "family": "qwen3moe",
+    "families": [
+      "qwen3moe"
+    ],
+    "parameter_size": "30.5B",
+    "quantization_level": "Q4_K_M"
+  },
+  "parameters": "repeat_penalty                 1\nstop                           \"<|im_start|>\"\nstop                           \"<|im_end|>\"\ntemperature                    0.6\ntop_k                          20\ntop_p                          0.95",
+  "template_sha256": "2d54db2b9bb29ce7db54fea63a891f5859603813c555b1f88b5e0994652897f9",
+  "license_sha256": "d18a5cc71b84bc4af394a31116bd3932b42241de70c77d2b76d69a314ec8aa12",
+  "model_info": {
+    "general.architecture": "qwen3moe",
+    "general.basename": "Qwen3",
+    "general.file_type": 15,
+    "general.finetune": "Thinking",
+    "general.parameter_count": 30532122624,
+    "general.quantization_version": 2,
+    "general.size_label": "30B-A3B",
+    "general.type": "model",
+    "general.version": "2507",
+    "qwen3moe.attention.head_count": 32,
+    "qwen3moe.attention.head_count_kv": 4,
+    "qwen3moe.attention.key_length": 128,
+    "qwen3moe.attention.layer_norm_rms_epsilon": 1e-06,
+    "qwen3moe.attention.value_length": 128,
+    "qwen3moe.block_count": 48,
+    "qwen3moe.context_length": 262144,
+    "qwen3moe.embedding_length": 2048,
+    "qwen3moe.expert_count": 128,
+    "qwen3moe.expert_feed_forward_length": 768,
+    "qwen3moe.expert_used_count": 8,
+    "qwen3moe.feed_forward_length": 6144,
+    "qwen3moe.rope.freq_base": 10000000,
+    "tokenizer.ggml.add_bos_token": false,
+    "tokenizer.ggml.bos_token_id": 151643,
+    "tokenizer.ggml.eos_token_id": 151645,
+    "tokenizer.ggml.merges": null,
+    "tokenizer.ggml.model": "gpt2",
+    "tokenizer.ggml.padding_token_id": 151643,
+    "tokenizer.ggml.pre": "qwen2",
+    "tokenizer.ggml.token_type": null,
+    "tokenizer.ggml.tokens": null
+  },
+  "reasoning": false,
+  "context_length": 16384,
+  "application_temperature": 0.5,
+  "container_image": "ollama/ollama@sha256:24d41d792306fc3221de215bb6f225faf981712d1f38083d8c61301dfa2b69b3",
+  "cloud_disabled": true,
+  "api_fee": 0,
+  "gpu": [
+    "NVIDIA GeForce RTX 3090, 535.183.01",
+    "NVIDIA GeForce RTX 3090, 535.183.01"
+  ]
+}

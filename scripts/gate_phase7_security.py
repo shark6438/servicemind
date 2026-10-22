@@ -63,14 +63,16 @@ class ConfigurationError(Exception):
     """The gate cannot say anything about the platform until this is fixed."""
 
 
-def load_scenario_set() -> SecurityScenarioSet:
+def load_scenario_set(path: Path | None = None) -> SecurityScenarioSet:
     try:
-        return load_security_scenarios(SCENARIOS)
+        return load_security_scenarios(path if path is not None else SCENARIOS)
     except (OSError, json.JSONDecodeError, ValidationError) as exc:
         raise ConfigurationError(f"{SCENARIOS.relative_to(REPO_ROOT)}: {exc}") from exc
 
 
-def load_replays(scenario_set: SecurityScenarioSet) -> list[ScenarioObservation]:
+def load_replays(
+    scenario_set: SecurityScenarioSet, replays: Path | None = None
+) -> list[ScenarioObservation]:
     """Every recorded observation on disk, refusing ones from another scenario list.
 
     A replay whose ``scenarios_digest`` disagrees was recorded against a different set, and
@@ -82,13 +84,13 @@ def load_replays(scenario_set: SecurityScenarioSet) -> list[ScenarioObservation]
     known = {scenario.id for scenario in scenario_set.scenarios}
     observations: list[ScenarioObservation] = []
     stale: list[str] = []
-    for path in sorted(REPLAYS.glob("*.json")):
+    for path in sorted((replays if replays is not None else REPLAYS).glob("*.json")):
         try:
             observation = ScenarioObservation.model_validate(
                 json.loads(path.read_text(encoding="utf-8"))
             )
         except (OSError, json.JSONDecodeError, ValidationError) as exc:
-            raise ConfigurationError(f"{path.relative_to(REPO_ROOT)}: {exc}") from exc
+            raise ConfigurationError(f"{path}: {exc}") from exc
         if observation.scenario_id not in known:
             stale.append(f"{path.name}: no scenario {observation.scenario_id!r} in the set")
         elif observation.scenarios_digest != expected:
@@ -100,6 +102,8 @@ def load_replays(scenario_set: SecurityScenarioSet) -> list[ScenarioObservation]
             observations.append(observation)
     if stale:
         raise ConfigurationError("; ".join(stale))
+    if len({item.scenario_id for item in observations}) != len(observations):
+        raise ConfigurationError("Duplicate scenario observations in evidence batch")
     return observations
 
 
@@ -130,6 +134,8 @@ def check_replays_are_one_revision(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--scenarios", type=Path, default=SCENARIOS)
+    parser.add_argument("--replays", type=Path, default=REPLAYS)
     parser.add_argument("--check", action="store_true", help="judge the observations on disk")
     parser.add_argument("--replay-only", action="store_true", help="grade recorded observations")
     parser.add_argument("--format", default="markdown", choices=("markdown", "json"))
@@ -157,8 +163,8 @@ def main() -> int:
     )
 
     try:
-        scenario_set = load_scenario_set()
-        observations = load_replays(scenario_set)
+        scenario_set = load_scenario_set(args.scenarios)
+        observations = load_replays(scenario_set, args.replays)
         provenance = check_replays_are_one_revision(observations, expect=args.expect_revision)
     except ConfigurationError as exc:
         print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)

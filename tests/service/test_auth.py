@@ -2,18 +2,18 @@ from pydantic import SecretStr
 
 
 def test_no_auth_secret(mock_settings, mock_agent, test_client):
-    """Test that when AUTH_SECRET is not set, all requests are allowed"""
+    """Enabling the legacy API without a credential must fail closed."""
     mock_settings.AUTH_SECRET = None
     response = test_client.post(
         "/invoke",
         json={"message": "test"},
         headers={"Authorization": "Bearer any-token"},
     )
-    assert response.status_code == 200
+    assert response.status_code == 503
 
     # Should also work without any auth header
     response = test_client.post("/invoke", json={"message": "test"})
-    assert response.status_code == 200
+    assert response.status_code == 503
 
 
 def test_auth_secret_correct(mock_settings, mock_agent, test_client):

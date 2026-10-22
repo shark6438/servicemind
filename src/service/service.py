@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager, suppress
 from typing import Annotated, Any
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRoute
@@ -46,6 +46,7 @@ from schema import (
     UserThreadsInput,
 )
 from service.agui import router as agui_router
+from service.build import capture_build_identity
 from service.threads import list_user_threads
 from service.utils import (
     convert_message_content_to_string,
@@ -55,6 +56,7 @@ from service.utils import (
     remove_tool_calls,
 )
 from servicemind.api import phase2_router
+from servicemind.interfaces.http.request_limits import RequestLimitsMiddleware
 from servicemind.mcp.server import (
     configure_mcp_gateway,
     mcp_metadata_router,
@@ -84,11 +86,13 @@ def verify_bearer(
         Depends(HTTPBearer(description="Please provide AUTH_SECRET api key.", auto_error=False)),
     ],
 ) -> None:
+    if not settings.SERVICEMIND_GENERIC_API_ENABLED:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     if settings.AUTH_SECRET is None:
-        return
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
     auth_secret = settings.AUTH_SECRET.get_secret_value()
     if not auth_secret:
-        return
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
     if not http_auth or http_auth.credentials != auth_secret:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -138,8 +142,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
             if settings.AUTH_SECRET is None or not settings.AUTH_SECRET.get_secret_value():
                 logger.warning(
-                    "AUTH_SECRET is not configured — all API endpoints are unauthenticated. "
-                    "Set AUTH_SECRET in your environment to enable bearer token authentication."
+                    "Generic API requires explicit enablement and AUTH_SECRET; "
+                    "ServiceMind endpoints use their own OIDC or webhook authentication."
                 )
 
             # Configure agents with both memory components and async loading
@@ -534,6 +538,11 @@ async def threads(
     return UserThreads(threads=summaries)
 
 
+@health_router.get("/health/build")
+async def health_build(request: Request):
+    return request.app.state.build_identity
+
+
 @health_router.get("/health")
 async def health_check():
     """Health check endpoint."""
@@ -557,6 +566,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
         generate_unique_id_function=custom_generate_unique_id,
     )
+    application.state.build_identity = capture_build_identity()
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.SERVICEMIND_FRONTEND_ORIGINS,
@@ -571,6 +581,7 @@ def create_app() -> FastAPI:
     application.include_router(phase2_router)
     application.include_router(mcp_router)
     application.include_router(mcp_metadata_router)
+    application.add_middleware(RequestLimitsMiddleware)
     return application
 
 

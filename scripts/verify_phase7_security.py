@@ -30,15 +30,25 @@ Exit codes here are about the *run*: 0 recorded, 2 nothing to grade, 3 could not
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
-from datetime import UTC, datetime
+import tempfile
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from servicemind.evaluation.acceptance import case_set_digest, load_acceptance_cases
+from servicemind.evaluation.acceptance import (
+    CaseExecution,
+    case_set_digest,
+    execution_digest,
+    load_acceptance_cases,
+)
+from servicemind.evaluation.acceptance_grader import grade as grade_acceptance
 from servicemind.evaluation.deployment import refuse_stale_deployment
+from servicemind.evaluation.pytest_evidence import grade_test_phases
 from servicemind.evaluation.security import (
     EvidenceKind,
     SecurityScenarioSet,
@@ -60,6 +70,7 @@ SCENARIOS = REPO_ROOT / "evaluation" / "security" / "scenarios.v1.json"
 REPLAYS = REPO_ROOT / "evaluation" / "security" / "replays"
 REPORTS = REPO_ROOT / "evaluation" / "reports"
 ACCEPTANCE_REPORT = REPORTS / "phase7_acceptance_latest.json"
+ACCEPTANCE_REPLAYS = REPO_ROOT / "evaluation" / "acceptance" / "replays"
 ACCEPTANCE_CASES = REPO_ROOT / "evaluation" / "acceptance" / "cases.v1.json"
 
 #: ``mutation_harness`` prints ``{status:28} | {name}``. The status strings are its
@@ -89,7 +100,7 @@ _PYTEST_OUTCOMES = {
     "ERROR": EvidenceOutcome.FAILED,
     "SKIPPED": EvidenceOutcome.UNEXERCISED,
     "XFAIL": EvidenceOutcome.UNEXERCISED,
-    "XPASS": EvidenceOutcome.PASSED,
+    "XPASS": EvidenceOutcome.UNEXERCISED,
 }
 
 
@@ -134,73 +145,60 @@ def run_tests(node_ids: list[str], *, run_docker: bool = False) -> dict[str, Obs
 
     recorded: dict[str, ObservedEvidence] = {}
     for path, ids in by_file.items():
-        completed = subprocess.run(
-            [
-                "uv",
-                "run",
-                "pytest",
-                *ids,
-                "-v",
-                "--no-header",
-                "--tb=short",
-                "-p",
-                "no:randomly",
-                *(["--run-docker"] if run_docker else []),
-            ],
-            cwd=REPO_ROOT,
-            capture_output=True,
-            text=True,
-            timeout=3600,
-        )
-        output = completed.stdout + completed.stderr
-        # A scenario names a test, not a parametrisation of it, so one requested node id can
-        # stand for several output lines (`::test_x[verified]`, `::test_x[unknown]`, ...).
-        # Matching the printed id exactly would record every parametrised test as missing --
-        # a false BLOCKED, which is safe in direction but wrong about the platform.
-        seen: dict[str, list[tuple[str, EvidenceOutcome]]] = {node_id: [] for node_id in ids}
-        for line in output.splitlines():
-            match = _PYTEST_LINE.match(line.strip())
-            if not match:
-                continue
-            printed = match["nodeid"]
-            for node_id in ids:
-                if printed == node_id or printed.startswith(f"{node_id}["):
-                    seen[node_id].append((match["status"], _PYTEST_OUTCOMES[match["status"]]))
-                    break
-
+        with tempfile.TemporaryDirectory(prefix="security-pytest-") as directory:
+            evidence_path = Path(directory) / "phases.json"
+            try:
+                completed = subprocess.run(
+                    [
+                        sys.executable,
+                        "-m",
+                        "pytest",
+                        *ids,
+                        "-q",
+                        "--tb=short",
+                        "-p",
+                        "no:randomly",
+                        "-p",
+                        "servicemind.evaluation.pytest_evidence",
+                        *(["--run-docker"] if run_docker else []),
+                    ],
+                    cwd=REPO_ROOT,
+                    capture_output=True,
+                    text=True,
+                    timeout=3600,
+                    env={**os.environ, "SERVICEMIND_PYTEST_EVIDENCE": str(evidence_path)},
+                )
+                payload = json.loads(evidence_path.read_text()) if evidence_path.exists() else {}
+                reports = payload.get("reports", [])
+                process_ok = (
+                    completed.returncode in {0, 1}
+                    and payload.get("exitstatus") == completed.returncode
+                )
+                detail = _tail(completed.stdout + completed.stderr)
+            except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
+                reports, process_ok, detail = [], False, type(exc).__name__
         for node_id in ids:
-            ran = seen[node_id]
-            if not ran:
-                outcome = EvidenceOutcome.MISSING
-                detail = _tail(output)
-            else:
-                outcome = _aggregate(ran)
-                # Counted rather than summarised as one word: "4 passed, 1 skipped" and
-                # "5 passed" are different observations of the same node id.
-                detail = ", ".join(f"{count} {status.lower()}" for status, count in _tally(ran))
+            rows = [
+                r
+                for r in reports
+                if r["nodeid"] == node_id or r["nodeid"].startswith(node_id + "[")
+            ]
+            outcome = grade_test_phases(rows, process_ok=process_ok)
             recorded[node_id] = ObservedEvidence(
-                kind=EvidenceKind.TEST, ref=node_id, outcome=outcome, detail=detail
+                kind=EvidenceKind.TEST,
+                ref=node_id,
+                outcome=outcome,
+                detail=json.dumps({"summary": detail, "phases": rows}, sort_keys=True),
             )
     return recorded
 
 
 def _aggregate(ran: list[tuple[str, EvidenceOutcome]]) -> EvidenceOutcome:
-    """One verdict for every parametrisation of a node id.
-
-    A single red parametrisation makes the whole test red: the scenario claims a behaviour,
-    and one case where it does not hold is enough to deny that. Skips only count when
-    nothing passed -- a mixed run is reported PASSED with the skip visible in ``detail``
-    rather than promoted to BLOCKED, because BLOCKED stops the release gate and a single
-    skip-guarded parametrisation would then be able to do that on its own.
-    """
     outcomes = [outcome for _, outcome in ran]
-    if EvidenceOutcome.FAILED in outcomes:
-        return EvidenceOutcome.FAILED
-    if EvidenceOutcome.PASSED in outcomes:
-        return EvidenceOutcome.PASSED
-    if EvidenceOutcome.UNEXERCISED in outcomes:
-        return EvidenceOutcome.UNEXERCISED
-    return EvidenceOutcome.MISSING
+    for outcome in (EvidenceOutcome.FAILED, EvidenceOutcome.MISSING, EvidenceOutcome.UNEXERCISED):
+        if outcome in outcomes:
+            return outcome
+    return EvidenceOutcome.PASSED if outcomes else EvidenceOutcome.MISSING
 
 
 def _tally(ran: list[tuple[str, EvidenceOutcome]]) -> list[tuple[str, int]]:
@@ -242,29 +240,56 @@ def run_mutation_script(script: str) -> dict[str, ObservedEvidence]:
             outcome=_MUTATION_OUTCOMES[status],
             detail=status,
         )
+    if completed.returncode != 0:
+        for name, row in list(recorded.items()):
+            if row.outcome == EvidenceOutcome.PASSED:
+                recorded[name] = row.model_copy(
+                    update={
+                        "outcome": EvidenceOutcome.MISSING,
+                        "detail": "mutation experiment did not complete cleanly: " + _tail(output),
+                    }
+                )
     return recorded
 
 
 def acceptance_verdicts() -> tuple[dict[str, str], str]:
-    """Read the acceptance report's per-case verdicts, and refuse a stale one.
-
-    Returns the verdicts and a note explaining any refusal. The binding is the case-list
-    digest: an acceptance report graded against a different case list is a statement about
-    a different set of cases, and borrowing its PASS would make this report cite evidence
-    that was never about the thing it is claimed to be about.
-    """
-    if not ACCEPTANCE_REPORT.exists():
-        return {}, f"no acceptance report at {ACCEPTANCE_REPORT.relative_to(REPO_ROOT)}"
-    report = json.loads(ACCEPTANCE_REPORT.read_text(encoding="utf-8"))
-    expected = case_set_digest(load_acceptance_cases(ACCEPTANCE_CASES))
-    recorded = report.get("cases_digest")
-    if recorded != expected:
-        return (
-            {},
-            "the acceptance report is bound to a different case list "
-            f"({recorded} != {expected}); rerun scripts/gate_phase7_acceptance.py first",
-        )
-    return {case["case_id"]: case["verdict"] for case in report.get("cases", [])}, ""
+    try:
+        cases = load_acceptance_cases(ACCEPTANCE_CASES)
+        report_bytes = ACCEPTANCE_REPORT.read_bytes()
+        report = json.loads(report_bytes)
+        digest = case_set_digest(cases)
+        if report.get("cases_digest") != digest:
+            return {}, "acceptance case-list digest mismatch"
+        executions = [
+            CaseExecution.model_validate_json(path.read_text())
+            for path in sorted(ACCEPTANCE_REPLAYS.glob("*.json"))
+        ]
+        if not executions or len({e.case_id for e in executions}) != len(executions):
+            return {}, "missing or duplicate acceptance observations"
+        if {e.case_id for e in executions} != {case.id for case in cases.cases}:
+            return {}, "acceptance observations do not cover exactly the declared cases"
+        revision = source_revision()
+        now = datetime.now(UTC)
+        for execution in executions:
+            env = execution.environment
+            if env.deployed_revision != revision or revision == "unknown":
+                return {}, "acceptance observations belong to a different source revision"
+            if execution.cases_digest != digest:
+                return {}, "acceptance replay case-list digest mismatch"
+            if env.recorded_at.tzinfo is None or not timedelta(
+                0
+            ) <= now - env.recorded_at <= timedelta(hours=24):
+                return {}, "acceptance observations are stale or have invalid timestamps"
+        if report.get("observation_digest") != execution_digest(executions):
+            return {}, "acceptance report does not match its raw observations"
+        outcome = grade_acceptance(cases, executions, generated_at=now)
+        expected = {case.case_id: case.verdict.value for case in outcome.cases}
+        actual = {case["case_id"]: case["verdict"] for case in report["cases"]}
+        if actual != expected or len(actual) != len(report["cases"]):
+            return {}, "acceptance verdicts do not match independent replay grading"
+        return expected, ""
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        return {}, f"acceptance evidence unavailable: {type(exc).__name__}"
 
 
 def collect_evidence(
@@ -338,11 +363,26 @@ def collect_evidence(
                     outcome = (
                         EvidenceOutcome.PASSED
                         if recorded_verdict == "PASS"
-                        else EvidenceOutcome.BLOCKED
+                        else EvidenceOutcome.UNEXERCISED
                         if recorded_verdict == "BLOCKED"
                         else EvidenceOutcome.FAILED
                     )
-                    detail = f"acceptance case {item.ref} recorded {recorded_verdict}"
+                    replay_path = ACCEPTANCE_REPLAYS / f"{item.ref}.json"
+                    detail = json.dumps(
+                        {
+                            "case": item.ref,
+                            "verdict": recorded_verdict,
+                            "source_revision": source_revision(),
+                            "report_sha256": hashlib.sha256(
+                                ACCEPTANCE_REPORT.read_bytes()
+                            ).hexdigest(),
+                            "replay_sha256": hashlib.sha256(replay_path.read_bytes()).hexdigest(),
+                            "observed_at": json.loads(replay_path.read_text())["environment"][
+                                "recorded_at"
+                            ],
+                        },
+                        sort_keys=True,
+                    )
                 stub = ObservedEvidence(
                     kind=EvidenceKind.ACCEPTANCE,
                     ref=item.ref,
@@ -394,6 +434,16 @@ def build_observations(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--deployment-pid",
+        type=int,
+        default=None,
+        help="PID of the isolated deployment, when verifying a live service",
+    )
+    parser.add_argument("--replays", type=Path, default=REPLAYS)
+    parser.add_argument("--scenarios", type=Path, default=SCENARIOS)
+    parser.add_argument("--acceptance-replays", type=Path, default=ACCEPTANCE_REPLAYS)
+    parser.add_argument("--acceptance-report", type=Path, default=ACCEPTANCE_REPORT)
     parser.add_argument("--only", default=None, help="a comma-separated list of scenario ids")
     parser.add_argument(
         "--skip-mutations",
@@ -415,21 +465,32 @@ def main() -> int:
         ),
     )
     args = parser.parse_args()
+    globals()["ACCEPTANCE_REPLAYS"] = args.acceptance_replays
+    globals()["ACCEPTANCE_REPORT"] = args.acceptance_report
 
     # Refused before anything is observed, because the failure does not announce itself:
     # a process running code older than the tree answers every request competently, so the
     # batch completes and every record carries the revision of code the platform never ran.
-    refusal = refuse_stale_deployment(REPO_ROOT, allow=args.allow_stale_deployment, argv=sys.argv)
+    refusal = (
+        refuse_stale_deployment(
+            REPO_ROOT, pid=args.deployment_pid, allow=args.allow_stale_deployment, argv=sys.argv
+        )
+        if args.deployment_pid is not None
+        else 0
+    )
     if refusal:
         return refusal
 
-    scenario_set = load_security_scenarios(SCENARIOS)
+    scenario_set = load_security_scenarios(args.scenarios)
     only = {item.strip() for item in args.only.split(",") if item.strip()} if args.only else set()
     unknown = only - {scenario.id for scenario in scenario_set.scenarios}
     if unknown:
         print(f"unknown scenario ids: {sorted(unknown)}", file=sys.stderr)
         return 3
 
+    if args.replays.exists() and any(args.replays.glob("*.json")):
+        print("Refusing to overwrite an existing evidence batch", file=sys.stderr)
+        return 3
     observed_at = datetime.now(tz=UTC)
     revision = source_revision()
     collected = collect_evidence(
@@ -442,9 +503,12 @@ def main() -> int:
         scenario_set, collected, revision=revision, observed_at=observed_at, only=only
     )
 
-    REPLAYS.mkdir(parents=True, exist_ok=True)
+    if args.replays.exists() and any(args.replays.glob("*.json")):
+        print("Refusing to overwrite an existing evidence batch", file=sys.stderr)
+        return 3
+    args.replays.mkdir(parents=True, exist_ok=True)
     for observation in observations:
-        (REPLAYS / f"{observation.scenario_id}.json").write_text(
+        (args.replays / f"{observation.scenario_id}.json").write_text(
             json.dumps(
                 observation.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True
             )

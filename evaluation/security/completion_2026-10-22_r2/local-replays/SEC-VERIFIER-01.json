@@ -1,0 +1,29 @@
+{
+  "scenario_id": "SEC-VERIFIER-01",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_default_configuration_installs_no_verifier",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_default_configuration_installs_no_verifier\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_default_configuration_installs_no_verifier\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_default_configuration_installs_no_verifier\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_configured_deployment_installs_a_keycloak_verifier",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_configured_deployment_installs_a_keycloak_verifier\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_configured_deployment_installs_a_keycloak_verifier\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_configured_deployment_installs_a_keycloak_verifier\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M26 the deployment wiring never installs a verifier",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_20_30.evidence.json\", \"sha256\": \"96ca7eba5d9e84bd3135f7de8c306f656f24a23dd5847eba8d744c20552a1d29\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    }
+  ]
+}

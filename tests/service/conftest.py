@@ -9,9 +9,18 @@ from service import app
 
 
 @pytest.fixture(autouse=True)
-def disable_deployment_auth_by_default(monkeypatch):
+def disable_deployment_auth_by_default(monkeypatch, request):
     """Upstream contract tests are transport-agnostic unless auth is under test."""
     monkeypatch.setattr("service.service.settings.AUTH_SECRET", None)
+    monkeypatch.setattr("service.service.settings.SERVICEMIND_GENERIC_API_ENABLED", True)
+    if request.node.path.name != "test_auth.py" and request.node.name != "test_agui_auth":
+        from service.service import verify_bearer
+
+        app.dependency_overrides[verify_bearer] = lambda: None
+        yield
+        app.dependency_overrides.pop(verify_bearer, None)
+    else:
+        yield
 
 
 @pytest.fixture

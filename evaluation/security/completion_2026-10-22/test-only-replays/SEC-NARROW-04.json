@@ -1,0 +1,43 @@
+{
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(fd07e4ed3fa4)",
+  "evidence": [
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_mid_run_recovery_enforces_the_intersection_into_the_checkpoint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_mid_run_recovery_enforces_the_intersection_into_the_checkpoint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_mid_run_recovery_enforces_the_intersection_into_the_checkpoint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"42 passed, 1 warning in 14.97s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_mid_run_recovery_enforces_the_intersection_into_the_checkpoint"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_recovery.py::test_recovery_hands_over_identity_and_nothing_else\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_recovery.py::test_recovery_hands_over_identity_and_nothing_else\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_recovery.py::test_recovery_hands_over_identity_and_nothing_else\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"2 passed, 1 warning in 13.62s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_recovery.py::test_recovery_hands_over_identity_and_nothing_else"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M07 a mid-run recovery skips aupdate_state",
+      "outcome": "missing",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M23 recovery invents a service principal again",
+      "outcome": "missing",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M24 recovery always claims the checkpoint was the source",
+      "outcome": "missing",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    }
+  ],
+  "observed_at": "2026-10-22T10:12:54.644702Z",
+  "scenario_id": "SEC-NARROW-04",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea"
+}

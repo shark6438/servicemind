@@ -1,0 +1,50 @@
+{
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "evidence": [
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes0]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes0]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes0]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes1]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes1]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes1]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes2]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes2]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes2]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes3]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes3]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes3]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"38 passed, 6 warnings in 16.75s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_scope_allows_owner_and_scoped_approver_but_not_unknown_legacy_scope\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_scope_allows_owner_and_scoped_approver_but_not_unknown_legacy_scope\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_scope_allows_owner_and_scoped_approver_but_not_unknown_legacy_scope\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"38 passed, 6 warnings in 16.75s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_security_remediation.py::test_run_scope_allows_owner_and_scoped_approver_but_not_unknown_legacy_scope"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_real_database_run_scope_filters_before_pagination_and_rls\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_real_database_run_scope_filters_before_pagination_and_rls\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_real_database_run_scope_filters_before_pagination_and_rls\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"38 passed, 6 warnings in 16.75s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_security_remediation.py::test_real_database_run_scope_filters_before_pagination_and_rls"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M01 cross-tenant run access is accepted",
+      "outcome": "missing",
+      "ref": "scripts/mutate_security_remediation.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M02 cross-subject run access is accepted",
+      "outcome": "missing",
+      "ref": "scripts/mutate_security_remediation.py"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_mcp_execution_metadata_obeys_run_scope_and_new_runs_keep_scope\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_mcp_execution_metadata_obeys_run_scope_and_new_runs_keep_scope\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_mcp_execution_metadata_obeys_run_scope_and_new_runs_keep_scope\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"38 passed, 6 warnings in 16.75s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_security_remediation.py::test_mcp_execution_metadata_obeys_run_scope_and_new_runs_keep_scope"
+    }
+  ],
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "scenario_id": "LOCAL-RUN-SCOPE",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea"
+}

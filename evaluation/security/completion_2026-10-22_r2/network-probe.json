@@ -1,0 +1,42 @@
+{
+  "target": "http://127.0.0.1:18081",
+  "slow_body": {
+    "status": 408,
+    "seconds": 5.046
+  },
+  "large_body_status": 413,
+  "burst": {
+    "requests": 160,
+    "statuses": {
+      "429": 42,
+      "422": 118
+    },
+    "max_seconds": 0.291
+  },
+  "health_after_burst": {
+    "status": 200,
+    "seconds": 0.002,
+    "slo_seconds": 2
+  },
+  "verdict": "PASS",
+  "large_header_status": 431,
+  "too_many_headers_status": 431,
+  "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "runtime_build_identity": {
+    "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+    "boot_id": "ffae2f87-84a5-4d32-a602-fa99ab7b830f",
+    "captured_at": "2026-10-22T11:10:48.211706+00:00",
+    "configuration": {
+      "default_model": "fake",
+      "ollama_model": null,
+      "compatible_model": null,
+      "model_allowed_providers": "deepseek,openai,azure,anthropic,google,vertexai,groq,aws,ollama,openrouter,fake",
+      "model_allowed_models": "*",
+      "generic_api_enabled": true,
+      "oidc_audience": "servicemind-api",
+      "tool_platform_enabled": false,
+      "tool_provider": "native_glpi"
+    },
+    "configuration_sha256": "d6dde81f533875827f7d013456cbc4a831171134ca67cfedc27fb1c139099271"
+  }
+}

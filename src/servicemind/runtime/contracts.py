@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -39,6 +40,9 @@ class AgentResultEnvelope[OutputT](BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     agent_name: str = Field(min_length=1, max_length=100)
+    run_id: UUID
+    tenant_id: UUID
+    user_id: str = Field(min_length=1, max_length=255)
     task_id: str = Field(min_length=1, max_length=100)
     status: AgentRunStatus
     output: OutputT
@@ -50,3 +54,14 @@ class AgentResultEnvelope[OutputT](BaseModel):
     failure_code: str | None = Field(default=None, max_length=100)
     failure_detail: str | None = Field(default=None, max_length=1000)
     tool_invocations: list[ToolInvocationRecord] = Field(default_factory=list)
+
+    def ensure_matches(self, invocation: AgentInvocationContext, *, agent_name: str) -> None:
+        if (
+            self.agent_name != agent_name
+            or self.run_id != invocation.run_id
+            or self.tenant_id != invocation.tenant_id
+            or self.user_id != invocation.user_id
+            or self.task_id != invocation.task_id
+            or self.status is AgentRunStatus.FAILED
+        ):
+            raise PermissionError("Sub-agent result does not match its invocation")

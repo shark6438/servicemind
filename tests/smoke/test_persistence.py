@@ -26,7 +26,7 @@ def test_checkpointer_persists_history():
     graph that created the thread also reads it back — which is what makes the
     round-trip work now that each agent is a distinct graph with its own state.
     """
-    client = AgentClient("http://localhost:8080")
+    client = AgentClient(os.getenv("AGENT_URL", "http://127.0.0.1:8080"))
 
     client.invoke("Tell me a joke?", thread_id=THREAD_ID, model="fake")
     client.invoke("Tell me another?", thread_id=THREAD_ID, model="fake")
@@ -48,7 +48,7 @@ def test_threads_lists_user_threads():
     (including the step -1 head lookup) behaves the same on Postgres and Mongo.
     Requires a running service (USE_FAKE_MODEL=true) backed by a live database.
     """
-    client = AgentClient("http://localhost:8080")
+    client = AgentClient(os.getenv("AGENT_URL", "http://127.0.0.1:8080"))
     user_id = f"{THREAD_ID}-user"
     other_user_id = f"{THREAD_ID}-other"
 

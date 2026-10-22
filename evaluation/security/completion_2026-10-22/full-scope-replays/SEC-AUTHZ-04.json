@@ -1,0 +1,22 @@
+{
+  "scenario_id": "SEC-AUTHZ-04",
+  "observed_at": "2026-10-22T10:43:18.616962Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M39 an entity-bound tool is visible to a caller holding any entity at all",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_30_40.evidence.json\", \"sha256\": \"ef34d69c04bb5a2b760cf4ec4c0e613038e9d001db02ef9193c18da820fc3889\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    }
+  ]
+}

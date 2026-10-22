@@ -1,0 +1,7 @@
+FROM ghcr.io/ggml-org/llama.cpp@sha256:490d8cd8000203a3ab8fdfce14ef931e2aa85affd4dd4447bcc75f299f00fd9a
+USER 0
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --only-upgrade \
+       openssl libssl3t64 dirmngr gnupg gnupg-utils gnupg2 gpg gpg-agent gpgconf gpgsm gpgv keyboxd \
+    && rm -rf /var/lib/apt/lists/*
+RUN apt-get purge -y cuda-compat-12-8 && ldconfig

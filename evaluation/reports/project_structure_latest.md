@@ -73,7 +73,7 @@ file fails the gate rather than passing silently.
 | `rag` | `context`, `domain`, `foundation`, `graphrag`, `integrations`, `persistence`, `runtime`, `security` |
 | `reliability` | `persistence` |
 | `runtime` | `domain`, `integrations`, `model_gateway`, `security`, `tool_platform` |
-| `security` | `domain` |
+| `security` | `domain`, `persistence` |
 | `skills` | `context` |
 | `tool_platform` | `domain`, `graphrag`, `integrations`, `memory`, `persistence`, `security` |
 

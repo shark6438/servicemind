@@ -1,0 +1,166 @@
+[
+  {
+    "name": "baseline",
+    "exit_code": 0,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "2 passed, 1 warning in 11.77s"
+  },
+  {
+    "name": "M01 a rejection is spent by the rejection that follows it",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 12.20s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M02 the prompt lists the rejections without saying they still hold",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 11.62s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M03 the prompt keeps only the newest rejection",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 12.51s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "restored baseline",
+    "exit_code": 0,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_rejection_is_not_spent_by_the_rejection_after_it",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "2 passed, 1 warning in 12.15s"
+  }
+]

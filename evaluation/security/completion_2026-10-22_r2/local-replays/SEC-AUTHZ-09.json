@@ -1,0 +1,22 @@
+{
+  "scenario_id": "SEC-AUTHZ-09",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_read_gateway_carries_the_callers_group_scope_into_the_tool_call",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_read_gateway_carries_the_callers_group_scope_into_the_tool_call\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_read_gateway_carries_the_callers_group_scope_into_the_tool_call\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_read_gateway_carries_the_callers_group_scope_into_the_tool_call\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M47 the graph read is handed the tenant instead of the whole principal",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_40_50.evidence.json\", \"sha256\": \"43ea3348abbb178ad9d84d723c98be42c47a895ef060d0082a51ca833ecb9889\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    }
+  ]
+}

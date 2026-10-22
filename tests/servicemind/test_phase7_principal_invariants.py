@@ -65,6 +65,7 @@ def _run(**overrides) -> AgentRun:
         "ticket_id": 7,
         "goal": "VPN MFA rejected after a phone change",
         "request_write": False,
+        "access_scope": {"entity_ids": [2], "group_ids": [3]},
         # A run that was never persisted has no timestamps, and the endpoint's view
         # model requires them -- so the fixture carries what the row would carry.
         "created_at": datetime(2026, 1, 1, tzinfo=UTC),

@@ -1,0 +1,432 @@
+name: Build and test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test-python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+
+    # The ServiceMind suite (tests/service, tests/servicemind) imports
+    # src/servicemind/persistence at collection time, which raises unless
+    # SERVICEMIND_DATABASE_URL is set, and most of it queries an applied schema.
+    # Local runs get both from a gitignored .env; CI must supply them explicitly.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: servicemind_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      SERVICEMIND_DATABASE_URL: "postgresql+psycopg://postgres:postgres@localhost:5432/servicemind_test"
+      OPENAI_API_KEY: "sk-fake-openai-key"
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install uv
+      uses: astral-sh/setup-uv@v9.0.0
+      with:
+        version: "0.11.32"
+    - name: Install dependencies with uv
+      run: |
+        uv sync --frozen
+      env:
+        UV_SYSTEM_PYTHON: 1
+    - name: Lint and format with ruff
+      run: |
+        uv run ruff format --check
+        uv run ruff check --output-format github
+
+    - name: Type check with pyrefly
+      run: |
+        uv run pyrefly check
+
+    - name: Migrate ServiceMind test database
+      run: |
+        uv run alembic upgrade head
+
+    - name: Test with pytest
+      run: |
+        uv run pytest --cov=src/ --cov-report=xml
+
+    # Migrations install ENABLE + FORCE ROW LEVEL SECURITY on every tenant table
+    # (0001/0005/0008/0011) behind a policy that reads app.tenant_id. PostgreSQL lets a
+    # superuser bypass those policies whatever FORCE says, and this job's own
+    # SERVICEMIND_DATABASE_URL is `postgres` -- a superuser -- so a suite connecting with it
+    # never exercises the policy, only the bypass. That is invisible until the tests that
+    # assert isolation run: under the superuser URL they come back 3 failed / 12 passed,
+    # each failure a tenant reading another tenant's row. So the marked subset connects as
+    # the same kind of role production uses; deploy/glpi/postgres-init/01-runtime-role.sh
+    # provisions it NOSUPERUSER NOBYPASSRLS there. Runs after the migration, which is what
+    # makes the grants apply to the tables this run created.
+    - name: Provision the runtime role the row-level policies expect
+      env:
+        PGPASSWORD: postgres
+      run: |
+        psql -h localhost -U postgres -d servicemind_test -v ON_ERROR_STOP=1 <<'SQL'
+        SELECT format(
+          'CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS',
+          'servicemind_app', 'servicemind_app'
+        ) WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'servicemind_app') \gexec
+        SELECT format('GRANT CONNECT ON DATABASE %I TO %I', current_database(), 'servicemind_app') \gexec
+        SELECT format('GRANT USAGE ON SCHEMA public TO %I', 'servicemind_app') \gexec
+        SELECT format(
+          'GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO %I',
+          'servicemind_app'
+        ) \gexec
+        SELECT format(
+          'GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO %I', 'servicemind_app'
+        ) \gexec
+        SQL
+
+    # Without this the job had a postgres service and never queried it: `--run-docker` is
+    # what selects the live tests, and the step above does not pass it, so every
+    # PostgreSQL-marked test skipped and CI reported green having exercised sqlite only.
+    # The service is stood up, the database is migrated, and the marked subset is the one
+    # thing this job can run against it. On a database that has *only* been migrated this
+    # selection used to come back 14 failed / 1 passed -- every failure a foreign key into
+    # an empty `tenants` table; tests/conftest.py provisions those rows now. The env
+    # override is the second half of the same problem: with the job's superuser URL those
+    # 14 become 3, and the 3 are the isolation assertions that were never really testing
+    # anything.
+    - name: Test the PostgreSQL-backed paths
+      env:
+        SERVICEMIND_DATABASE_URL: "postgresql+psycopg://servicemind_app:servicemind_app@localhost:5432/servicemind_test"
+      run: |
+        uv run pytest -m "docker and postgres" --run-docker
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v7
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+  # The architecture contract from scripts/audit_project_structure.py: package cycles,
+  # domain import direction, source-tree boundaries, process manifests, and the frozen
+  # budget for scaffold imports left inside the product. --check also fails when the
+  # committed report under evaluation/reports/ no longer matches the tree, so the evidence
+  # cannot drift away from the thing it describes. Runs once: it reads files, not runtimes.
+  architecture-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version-file: "pyproject.toml"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v9.0.0
+      with:
+        version: "0.11.32"
+    - name: Install dependencies with uv
+      run: |
+        uv sync --frozen
+      env:
+        UV_SYSTEM_PYTHON: 1
+    - name: Audit project structure
+      run: |
+        uv run python scripts/audit_project_structure.py --check
+
+  # The offline half of the Phase-7 acceptance gates. Each gate grades frozen observations
+  # on disk, so this needs no stack: it answers "does the committed report still agree with
+  # the gate that wrote it?". On 2026-10-01 it did not -- phase7_quality_latest.json said
+  # PASS while the quality gate refused the same observations with exit 3, and nothing in
+  # CI could notice, because CI ran no gate at all. The rest of the live half deliberately
+  # does not exist here: it needs a stack this runner has not got. The one live selection CI
+  # can host is the postgres-marked tests, which now run in the test-python job; the roster
+  # of selections, and what makes that one runnable on a bare database, is in
+  # tests/conftest.py.
+  phase7-gates:
+    runs-on: ubuntu-latest
+
+    env:
+      # Importing the evaluation package pulls in the settings model, which raises without
+      # a database URL even though no gate opens a connection. Same two variables the
+      # test-python job sets, for the same reason.
+      SERVICEMIND_DATABASE_URL: "postgresql+psycopg://postgres:postgres@localhost:5432/servicemind_test"
+      OPENAI_API_KEY: "sk-fake-openai-key"
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version-file: "pyproject.toml"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v9.0.0
+      with:
+        version: "0.11.32"
+    - name: Install dependencies with uv
+      run: |
+        uv sync --frozen
+      env:
+        UV_SYSTEM_PYTHON: 1
+    # Exit 0 means the gates and the committed reports agree about the observations on
+    # disk. It does not mean the current tree passes: the observations name the revision
+    # that produced them, that revision is not this commit, and this script prints both
+    # facts rather than leaving the reader to supply them. See the module docstring.
+    - name: Check every gate agrees with the report it wrote
+      run: |
+        uv run python scripts/check_phase7_gate_reports.py
+
+  lint-markdown:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version-file: "pyproject.toml"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v9.0.0
+      with:
+        version: "0.11.32"
+    - name: Install dependencies with uv
+      run: |
+        uv sync --frozen --only-group dev
+      env:
+        UV_SYSTEM_PYTHON: 1
+    - name: Lint markdown with pymarkdown
+      run: |
+        # Scan README.md plus every tracked doc under docs/, EXCLUDING four
+        # documents whose authoring conventions intentionally diverge from
+        # pymarkdown's defaults and are kept as-is rather than rewritten to
+        # pass the linter:
+        #   - 企业IT服务管理(ITSM)智能体平台.md            (frozen multi-H1 master spec)
+        #   - PHASE4_ENTERPRISE_ACCEPTANCE.md            (historical, superseded)
+        #   - PHASE4_RAG_FRONTIER_GAP_ANALYSIS.md
+        #   - PHASE4_RAG_MULTI_AGENT_AUDIT_2026-09-08.md
+        # New docs committed under docs/ are still linted automatically because
+        # the file list is resolved from `git ls-files` at run time.
+        docs=$(git -c core.quotePath=false ls-files 'docs/*.md' \
+          | grep -vF -e 'docs/企业IT服务管理(ITSM)智能体平台.md' \
+                     -e 'docs/PHASE4_ENTERPRISE_ACCEPTANCE.md' \
+                     -e 'docs/PHASE4_RAG_FRONTIER_GAP_ANALYSIS.md' \
+                     -e 'docs/PHASE4_RAG_MULTI_AGENT_AUDIT_2026-09-08.md')
+        uv run pymarkdown scan README.md $docs
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-node@v6
+      with:
+        node-version: "24"
+        cache: npm
+        cache-dependency-path: frontend/package-lock.json
+    - name: Install locked frontend dependencies
+      working-directory: frontend
+      run: npm ci
+    - name: Lint, type-check, test and build operator console
+      working-directory: frontend
+      run: npm run check
+    - name: Audit dependencies and generate frontend SBOM
+      working-directory: frontend
+      # The gate audits the whole installed tree, dev dependencies included. It goes
+      # through scripts/audit-gate.mjs only so that a scoped, self-expiring exception
+      # (.npmauditignore.json, same contract as the root .trivyignore.yaml) can be
+      # printed in the log instead of being invisible -- a bare `npm audit
+      # --audit-level=high` cannot pass while an advisory has no released fix.
+      run: |
+        node --test scripts/audit-gate.test.mjs
+        node scripts/audit-gate.mjs
+        npm sbom --sbom-format=cyclonedx > frontend-sbom.cdx.json
+    - name: Upload frontend SBOM
+      uses: actions/upload-artifact@v7
+      with:
+        name: frontend-sbom
+        path: frontend/frontend-sbom.cdx.json
+
+  test-docker:
+    runs-on: ubuntu-latest
+
+    services:
+      dind:
+        image: docker:dind
+        ports:
+          - 2375:2375
+        options: >-
+          --privileged
+          --health-cmd "docker info"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+        with:
+          driver-opts: network=host
+
+      - name: Build service image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          provenance: false
+          tags: servicemind.service:${{ github.sha }}
+          file: docker/Dockerfile.service
+
+      - name: Build app image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          provenance: false
+          tags: servicemind.app:${{ github.sha }}
+          file: docker/Dockerfile.app
+
+      - name: Build operator console image
+        uses: docker/build-push-action@v7
+        with:
+          context: frontend
+          push: false
+          load: true
+          provenance: false
+          tags: servicemind.frontend:${{ github.sha }}
+          file: frontend/Dockerfile
+
+      - name: Scan operator console image
+        # The ignore file is mounted rather than left in the repo: trivy runs as its own
+        # container and scans the host daemon, so this checkout is not otherwise visible
+        # to it. --show-suppressed prints what was suppressed and why, so an exception is
+        # visible in the log instead of silently turning the gate off.
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$PWD/.trivyignore.yaml:/.trivyignore.yaml:ro" \
+            ghcr.io/aquasecurity/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 image \
+            --ignorefile /.trivyignore.yaml \
+            --show-suppressed \
+            --db-repository ghcr.io/aquasecurity/trivy-db:2 \
+            --db-repository public.ecr.aws/aquasecurity/trivy-db:2 \
+            --db-repository mirror.gcr.io/aquasec/trivy-db:2 \
+            --timeout 10m --scanners vuln --severity HIGH,CRITICAL --exit-code 1 \
+            servicemind.frontend:${{ github.sha }}
+
+      - name: Start service container
+        # Must be a literal (|) block: as a plain multi-line scalar YAML folds the
+        # line breaks into spaces, which turns the shell line-continuation "\" into
+        # a literal backslash-space and makes docker reject the reference.
+        run: |
+          docker run -d --name service-container --network host \
+            -e USE_FAKE_MODEL=true \
+            -e PORT=80 \
+            -e SERVICEMIND_DATABASE_URL='sqlite+aiosqlite:////app/sm.db' \
+            servicemind.service:${{ github.sha }}
+
+      - name: Confirm service starts correctly
+        run: |
+          # service.py imports servicemind at startup, so SERVICEMIND_DATABASE_URL
+          # above is required; boot is import-time network-free (tiktoken encoders
+          # are lazy), so a 90s budget covers a cold interpreter on a loaded runner.
+          timeout 90 bash -c '
+            while ! curl -s http://0.0.0.0/health; do
+              echo "Waiting for service to be ready..."
+              docker logs service-container
+              sleep 2
+            done
+          '
+
+      - name: Run app container
+        run: docker run -d --name app-container --network host -e AGENT_URL=http://0.0.0.0 servicemind.app:${{ github.sha }}
+
+      - name: Confirm app starts correctly
+        run: |
+          timeout 90 bash -c '
+            while ! curl -s http://localhost:8501/healthz; do
+              echo "Waiting for app to be ready..."
+              docker logs app-container
+              sleep 2
+            done
+          '
+
+      - name: Run and verify operator console container
+        run: |
+          docker run -d --name frontend-container --network host \
+            --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            -e PORT=3000 \
+            servicemind.frontend:${{ github.sha }}
+          timeout 30 bash -c '
+            while ! curl -fsS http://localhost:3000/ >/dev/null; do
+              docker logs frontend-container
+              sleep 1
+            done
+          '
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: "pyproject.toml"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          version: "0.11.32"
+      - name: Install ONLY CLIENT dependencies with uv
+        run: |
+          uv sync --frozen --only-group client --only-group dev
+        env:
+          UV_SYSTEM_PYTHON: 1
+      - name: Run integration tests
+        run: |
+          uv run pytest tests/integration -v --run-docker
+        env:
+          AGENT_URL: http://0.0.0.0
+
+      - name: Clean up containers
+        if: always()
+        run: |
+          docker stop service-container app-container frontend-container || true
+          docker rm service-container app-container frontend-container || true
+
+  python-dependency-security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - uses: astral-sh/setup-uv@v9.0.0
+      with:
+        version: "0.11.32"
+    - name: Export the frozen default runtime dependencies
+      run: uv export --frozen --no-dev --no-hashes --no-emit-project --no-header --output-file /tmp/security-requirements.txt
+    - name: Scan runtime dependencies and save SBOM
+      run: |
+        docker run --rm \
+          -v /tmp/security-requirements.txt:/requirements.txt:ro \
+          -v "$PWD:/output" \
+          ghcr.io/aquasecurity/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
+          fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 \
+          --db-repository public.ecr.aws/aquasecurity/trivy-db:2 \
+          --format cyclonedx --output /output/python-runtime-sbom.cdx.json /requirements.txt
+    - uses: actions/upload-artifact@v7
+      if: always()
+      with:
+        name: python-runtime-sbom
+        path: python-runtime-sbom.cdx.json

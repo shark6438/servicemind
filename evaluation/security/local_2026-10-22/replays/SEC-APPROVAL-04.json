@@ -1,0 +1,43 @@
+{
+  "scenario_id": "SEC-APPROVAL-04",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[proposed]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[proposed]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[proposed]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[rejected]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[rejected]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[rejected]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[failed]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[failed]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[failed]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[succeeded]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[succeeded]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[succeeded]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[withdrawn]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[withdrawn]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_call_citing_an_intent_that_is_not_approved_is_refused[withdrawn]\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"17 passed, 1 warning in 11.76s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_write_proceeds_while_the_executor_holds_the_claim",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_write_proceeds_while_the_executor_holds_the_claim\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_write_proceeds_while_the_executor_holds_the_claim\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_write_proceeds_while_the_executor_holds_the_claim\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"17 passed, 1 warning in 11.76s\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_glpi_write_gateway.py",
+      "mutation": "M13 only an unclaimed approval authorises the write the executor is performing",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_glpi_write_gateway.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_glpi_write_gateway.py",
+      "mutation": "M14 the status is never consulted, so any cited intent authorises a write",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_glpi_write_gateway.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_glpi_write_gateway.py",
+      "mutation": "M15 a terminal status is read as a standing approval",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_glpi_write_gateway.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    }
+  ]
+}

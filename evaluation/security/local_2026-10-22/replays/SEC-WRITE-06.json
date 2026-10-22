@@ -1,0 +1,50 @@
+{
+  "scenario_id": "SEC-WRITE-06",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_principal_without_the_action_role_cannot_write",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_principal_without_the_action_role_cannot_write\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_principal_without_the_action_role_cannot_write\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_principal_without_the_action_role_cannot_write\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"17 passed, 1 warning in 11.76s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_the_approved_body_is_suppressed",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_the_approved_body_is_suppressed\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_the_approved_body_is_suppressed\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_the_approved_body_is_suppressed\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"17 passed, 1 warning in 11.76s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_a_different_body_is_refused",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_a_different_body_is_refused\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_a_different_body_is_refused\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_crash_recovered_duplicate_with_a_different_body_is_refused\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"17 passed, 1 warning in 11.76s\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_glpi_write_gateway.py",
+      "mutation": "M05 a failed call leaves the action looking untried",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_glpi_write_gateway.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_glpi_write_gateway.py",
+      "mutation": "M06 a reconciled duplicate is audited as a second creation",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_glpi_write_gateway.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_glpi_write_gateway.py",
+      "mutation": "M09 the reconcile branch stops comparing the body it found",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_glpi_write_gateway.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    }
+  ]
+}

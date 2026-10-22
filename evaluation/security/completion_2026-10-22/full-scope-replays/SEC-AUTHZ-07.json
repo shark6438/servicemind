@@ -1,0 +1,36 @@
+{
+  "scenario_id": "SEC-AUTHZ-07",
+  "observed_at": "2026-10-22T10:43:18.616962Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase4_graphrag.py::test_a_restricted_node_is_not_reachable_from_a_visible_one",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_a_restricted_node_is_not_reachable_from_a_visible_one\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_a_restricted_node_is_not_reachable_from_a_visible_one\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_a_restricted_node_is_not_reachable_from_a_visible_one\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase4_graphrag.py::test_both_cypher_read_paths_filter_the_whole_path",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_both_cypher_read_paths_filter_the_whole_path\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_both_cypher_read_paths_filter_the_whole_path\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_both_cypher_read_paths_filter_the_whole_path\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M42 the traversal filters the seeds but not the path",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_40_50.evidence.json\", \"sha256\": \"b885d5b2715cca031d98f9dd092d8d3c93ce2997b7508c94b16e6ea8827223e8\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M45 the Cypher traversal stops filtering the far endpoint",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_40_50.evidence.json\", \"sha256\": \"b885d5b2715cca031d98f9dd092d8d3c93ce2997b7508c94b16e6ea8827223e8\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    }
+  ]
+}

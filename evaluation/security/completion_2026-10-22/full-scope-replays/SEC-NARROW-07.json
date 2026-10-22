@@ -1,0 +1,64 @@
+{
+  "scenario_id": "SEC-NARROW-07",
+  "observed_at": "2026-10-22T10:43:18.616962Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_withdrawal_reaches_the_row_and_not_only_the_checkpoint",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_withdrawal_reaches_the_row_and_not_only_the_checkpoint\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_withdrawal_reaches_the_row_and_not_only_the_checkpoint\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_withdrawal_reaches_the_row_and_not_only_the_checkpoint\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_survives_a_resume_that_narrows_nothing",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_survives_a_resume_that_narrows_nothing\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_survives_a_resume_that_narrows_nothing\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_survives_a_resume_that_narrows_nothing\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M31 a narrowed action is re-scoped and carried on instead of withdrawn",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_30_40.evidence.json\", \"sha256\": \"ef34d69c04bb5a2b760cf4ec4c0e613038e9d001db02ef9193c18da820fc3889\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M32 the void is announced but not carried into the resume payload",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_30_40.evidence.json\", \"sha256\": \"ef34d69c04bb5a2b760cf4ec4c0e613038e9d001db02ef9193c18da820fc3889\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M33 the conclusions drawn from the cleared evidence are left standing",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_30_40.evidence.json\", \"sha256\": \"ef34d69c04bb5a2b760cf4ec4c0e613038e9d001db02ef9193c18da820fc3889\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "acceptance",
+      "ref": "ACC-19",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\", \"case\": \"ACC-19\", \"verdict\": \"PASS\", \"report_sha256\": \"24faf2833426f2da17a95d0ba54037bcd249b0d99ec0ccc916bc3eb659d9c251\", \"replay_sha256\": \"fcc181e10fdcca5c1f5cf15eaf6e694be2bd733f1b64e6ad130cce11dc9ec0bf\"}"
+    },
+    {
+      "kind": "acceptance",
+      "ref": "ACC-20",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\", \"case\": \"ACC-20\", \"verdict\": \"PASS\", \"report_sha256\": \"24faf2833426f2da17a95d0ba54037bcd249b0d99ec0ccc916bc3eb659d9c251\", \"replay_sha256\": \"6d81c5ab185fcb8d7483cae8739985224a0d491ea0aa77349f2065429c710820\"}"
+    }
+  ]
+}

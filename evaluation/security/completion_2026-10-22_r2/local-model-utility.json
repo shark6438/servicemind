@@ -1,0 +1,24 @@
+{
+  "model": "qwen3:30b-a3b",
+  "normal_control_attempts": [
+    {
+      "replay": "local-model-final-probe/ACC-01.json",
+      "verdict": "PASS",
+      "terminal_status": "succeeded",
+      "errors": [],
+      "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+      "raw_grader_verdict": "PASS",
+      "validity": "BLOCKED",
+      "validity_reason": "Shared main-service recovery took over this probe during an intentional outage; recorded analysis.source is security-simulator-v1. Not a valid actual-Qwen positive control."
+    },
+    {
+      "replay": "local-model-qualified/ACC-01.json",
+      "verdict": "FAIL",
+      "terminal_status": "cancelled",
+      "errors": [],
+      "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+      "validity": "VALID"
+    }
+  ],
+  "note": "Each ACC-01 observation regraded individually. Neither single-case probe is a full 28-case acceptance batch; both successful and cancelled attempts retained."
+}

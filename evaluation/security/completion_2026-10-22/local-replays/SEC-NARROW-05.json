@@ -1,0 +1,29 @@
+{
+  "scenario_id": "SEC-NARROW-05",
+  "observed_at": "2026-10-22T10:43:18.616962Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[not_configured]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[not_configured]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[not_configured]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[unavailable]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[unavailable]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[unavailable]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_unknown]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_unknown]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_unknown]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_disabled]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_disabled]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unestablished_authority_pauses_rather_than_narrows[user_disabled]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M11 an unestablished authority narrows and continues instead of pausing",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_10_20.evidence.json\", \"sha256\": \"f41d5be9db2595aa189adb8570bfe6c8022750c419e6ff42043392198ecd1814\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M14 the resume boundary stops auditing why it paused",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_10_20.evidence.json\", \"sha256\": \"f41d5be9db2595aa189adb8570bfe6c8022750c419e6ff42043392198ecd1814\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    }
+  ]
+}

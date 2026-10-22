@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Header, Request, Response
+from fastapi import APIRouter, Header, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from core import settings
@@ -20,6 +20,7 @@ from servicemind.mcp.tasks import (
 )
 from servicemind.persistence.repository import ServiceMindRepository
 from servicemind.security.auth import TenantContextDependency
+from servicemind.security.run_access import require_run_access, run_scope
 from servicemind.tool_platform.contracts import ToolCall, ToolExecutionResult
 from servicemind.tool_platform.gateway import (
     ToolContractViolation,
@@ -408,6 +409,10 @@ async def _tool_call(request: JsonRpcRequest, context, mcp_name: str | None) -> 
             stored_run = await ServiceMindRepository(context.tenant_id).get_run(execution.run_id)
             if stored_run is None:
                 raise ValueError("execution run is outside the authenticated tenant")
+            try:
+                require_run_access(stored_run, context)
+            except HTTPException as exc:
+                raise ValueError("execution run is outside the authenticated scope") from exc
     else:
         definition = _gateway.registry.resolve(tool_name, "1.0.0")
         ticket_id = arguments.get("ticket_id", arguments.get("resource_id", 0))
@@ -418,6 +423,7 @@ async def _tool_call(request: JsonRpcRequest, context, mcp_name: str | None) -> 
             ticket_id=ticket_id,
             goal=f"MCP read operation: {tool_name}",
             request_write=False,
+            access_scope=run_scope(context),
         )
         execution = ServiceMindExecutionMeta(
             requestId=uuid4(),

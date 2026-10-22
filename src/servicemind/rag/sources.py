@@ -180,12 +180,14 @@ class AttachmentSource:
         revision: str = "phase4-v1",
         source: str = "file_attachment",
     ) -> None:
-        self.root, self.tenant_id = root, tenant_id
+        self.root, self.tenant_id = root.resolve(), tenant_id
         self.revision, self.source = revision, source
 
     async def load(self) -> list[KnowledgeDocument]:
         result = []
         for path in sorted(self.root.rglob("*")):
+            if path.is_symlink() or not path.resolve().is_relative_to(self.root):
+                raise ValueError("Attachment escapes its configured root")
             if not path.is_file():
                 continue
             suffix = path.suffix.casefold()

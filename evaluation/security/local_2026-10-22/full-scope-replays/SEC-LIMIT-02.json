@@ -1,0 +1,43 @@
+{
+  "scenario_id": "SEC-LIMIT-02",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 9.40s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 9.40s\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M02 a nil hint is read as 'not a throttle'",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_rate_limit_degradation.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M03 a nil hint is collapsed into the not-a-throttle answer",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_rate_limit_degradation.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M08 a nil hint is refused at the call site",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_rate_limit_degradation.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    }
+  ]
+}

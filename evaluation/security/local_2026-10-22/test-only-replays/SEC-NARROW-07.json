@@ -1,0 +1,50 @@
+{
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "evidence": [
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"42 passed, 1 warning in 12.84s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_withdrawal_reaches_the_row_and_not_only_the_checkpoint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_withdrawal_reaches_the_row_and_not_only_the_checkpoint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_withdrawal_reaches_the_row_and_not_only_the_checkpoint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"42 passed, 1 warning in 12.84s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_withdrawal_reaches_the_row_and_not_only_the_checkpoint"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_survives_a_resume_that_narrows_nothing\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_survives_a_resume_that_narrows_nothing\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_survives_a_resume_that_narrows_nothing\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"42 passed, 1 warning in 12.84s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_survives_a_resume_that_narrows_nothing"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M31 a narrowed action is re-scoped and carried on instead of withdrawn",
+      "outcome": "missing",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M32 the void is announced but not carried into the resume payload",
+      "outcome": "missing",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M33 the conclusions drawn from the cleared evidence are left standing",
+      "outcome": "missing",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    }
+  ],
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "scenario_id": "SEC-NARROW-07",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea"
+}

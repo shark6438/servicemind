@@ -1,0 +1,376 @@
+{
+  "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "note": "All changed source and user preexisting changes; excludes private configuration and historical evidence. Masters files included to reproduce revision.",
+  "files": [
+    {
+      "path": ".github/workflows/test.yml",
+      "sha256": "f9db2c9bb01e8011552f10fed91bbff1a8320c0d3375d26f57c40e522d4ffe0f",
+      "bytes": 17111
+    },
+    {
+      "path": ".trivyignore.yaml",
+      "sha256": "7b2c568499a6432ebea54a453a28b1421def2f865a5f7a37d0c64166eb80123d",
+      "bytes": 99
+    },
+    {
+      "path": "compose.yaml",
+      "sha256": "21b476bf1562e413543131494cabd711527ed1c8fd33734b0f914976af1c7188",
+      "bytes": 2227
+    },
+    {
+      "path": "deploy/glpi/README.md",
+      "sha256": "268dab283291dac9aad75dc2ed2faa77ec69d705a9183b0aeed612be0dfdc0d2",
+      "bytes": 3251
+    },
+    {
+      "path": "deploy/glpi/bootstrap_webhooks.php",
+      "sha256": "72964e3a6e4652b668e816c4ef0ce3df9a1bde2a70c54e7b4a459b9a87aada9f",
+      "bytes": 2659
+    },
+    {
+      "path": "deploy/glpi/compose.yaml",
+      "sha256": "d15d96172abf612fab3718e71a14b994b22bcc159db814c5e096a3274622478b",
+      "bytes": 9367
+    },
+    {
+      "path": "deploy/glpi/local_define.php",
+      "sha256": "33126e8ed9ff83f59c3f2776aabe3b701275f4943d208307400e0ed72647b4e3",
+      "bytes": 576
+    },
+    {
+      "path": "deploy/systemd/servicemind-webhook-proxy.service",
+      "sha256": "5ddd9e22203e1f03aea6fe04bf7cbeec74b727cdb14dcb7e9be724ad002a31a2",
+      "bytes": 450
+    },
+    {
+      "path": "frontend/Dockerfile",
+      "sha256": "50f110c3ee7877b288030435b2abe74ad853d3762fe8f41f66f0f2e2e0f7b328",
+      "bytes": 1352
+    },
+    {
+      "path": "frontend/e2e/security-render.spec.ts",
+      "sha256": "53881131dff17e1d91d816b7c3c5d49db04ff01a71b4481b5d61d26aa0a90510",
+      "bytes": 3636
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "sha256": "87c6e5f06c9ab14edf9f69108bf678582166271fe53b84d0c22552c3ac466edc",
+      "bytes": 266992
+    },
+    {
+      "path": "frontend/scripts/audit-gate.mjs",
+      "sha256": "29dd679f43f938893cfcb268651110fe8535d72237975b1e79c2d000f7acab9c",
+      "bytes": 6131
+    },
+    {
+      "path": "frontend/scripts/audit-gate.test.mjs",
+      "sha256": "8fdc8d76073e79e7f29b08253413cb50c225b23d8aa17c18f9527a09a93bffed",
+      "bytes": 3850
+    },
+    {
+      "path": "masters/m10.md",
+      "sha256": "d63af9cb437130fd08a78b9eb1fb1f54f085a990ccf0015b33cbb666f0357573",
+      "bytes": 175764
+    },
+    {
+      "path": "masters/m14.md",
+      "sha256": "ee66a3e2508dc7c88ad9f316758c1bf96ae70f41c4ac59d5668b88c4963d29f0",
+      "bytes": 189908
+    },
+    {
+      "path": "masters/m15.md",
+      "sha256": "6c00ab816d987e46259cb38e1cc1f84aa3fe800ec8fe77ce13690d9ed1344575",
+      "bytes": 217028
+    },
+    {
+      "path": "masters/m16.md",
+      "sha256": "0ab1ff4c76bb3dc972f98076182704e21650d751f7def309f925473db3f5aedf",
+      "bytes": 136822
+    },
+    {
+      "path": "masters/m17.md",
+      "sha256": "a72a0626f1ea34711d5b0327e5dd2e01c819611a19edb322830c01978a67bb43",
+      "bytes": 140963
+    },
+    {
+      "path": "masters/m25-evaluation.freeze.json",
+      "sha256": "0527e7a89906358fe6b1d62e1f24a5a27ed286849be6038a13824bed5e124972",
+      "bytes": 4790
+    },
+    {
+      "path": "masters/m25-evaluation.md",
+      "sha256": "0716354c17b5e03c0e33136744228fbcb7108556f068aa001df953d11753dccf",
+      "bytes": 391294
+    },
+    {
+      "path": "masters/m6.md",
+      "sha256": "4b461036e5c3ff8e9a345c864d559e633cc1782ed7c0d2fee75201dd7a09c301",
+      "bytes": 132505
+    },
+    {
+      "path": "masters/m7.md",
+      "sha256": "a9bb7c8f568defa03e066a1e68ec97abd10abf56f4adc90e38074be0ec0e6f66",
+      "bytes": 200299
+    },
+    {
+      "path": "masters/m8.md",
+      "sha256": "0a21adfbd9a6fbb9295ad0fc55717c56b8c6df403cc4157620b902048f226c7f",
+      "bytes": 100533
+    },
+    {
+      "path": "masters/m9.md",
+      "sha256": "63ceac6bc883b7a75ea8e58def88417690a2c350868840c32994103ee4ccf747",
+      "bytes": 239042
+    },
+    {
+      "path": "migrations/versions/0015_run_access_scope.py",
+      "sha256": "ac24ff87cb76541ce0255501fcec8725c959a9a40fdfe701fed78bbe7e94199d",
+      "bytes": 465
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "d46ad67803105b4fa6f45ab2da283af7a1d6212bb358131a461fc231535b120e",
+      "bytes": 6961
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "a5d55bd659a305b12247e0738be391ae289b16de9023555e855179869ea0297b",
+      "bytes": 22925
+    },
+    {
+      "path": "scripts/gate_phase7_security.py",
+      "sha256": "19c04bdd41945a6b0f413cabef7bf4c5ff8b3d224d3ae21a0288093b85bff6c1",
+      "bytes": 8620
+    },
+    {
+      "path": "scripts/mutate_security_remediation.py",
+      "sha256": "6f279d5a22f6fa23d088417b730ae6dcc636058877cbc06e7c9b6faa356c7e29",
+      "bytes": 2249
+    },
+    {
+      "path": "scripts/mutation_harness.py",
+      "sha256": "883d676d98780fd9506c0d5dcfe26693c5cf13c7eb47fb3b07f06d6ee7ca9e6f",
+      "bytes": 17629
+    },
+    {
+      "path": "scripts/rotate_credentials.py",
+      "sha256": "714ad70f61193e13f82b0bee839ec65a918671f0ce87e1cbf9c4f57d9f73e333",
+      "bytes": 839
+    },
+    {
+      "path": "scripts/verify_phase7_acceptance_live.py",
+      "sha256": "1a71d1bba5c9795be0bc5dc2de6010544e2533e91b39ebe47118d57ac6d0a5d1",
+      "bytes": 118388
+    },
+    {
+      "path": "scripts/verify_phase7_security.py",
+      "sha256": "3075b584af65e1cd1046144d35f1c4cddacc63dbbececa2616763b8290e79126",
+      "bytes": 23840
+    },
+    {
+      "path": "src/agents/tools.py",
+      "sha256": "41e52fe9dfc08cfe03056643682233e658a99a20cab9546c48553dfa48663dec",
+      "bytes": 2658
+    },
+    {
+      "path": "src/core/llm.py",
+      "sha256": "704efbcc6939c627a7b0a838c6d3ee636486075e66d95fd8c280c1a1bd5148c1",
+      "bytes": 6241
+    },
+    {
+      "path": "src/core/settings.py",
+      "sha256": "ad9015a40b2d02109011bd1d7643bfd95c954a5c8ed8090af0cc3fe244841034",
+      "bytes": 26323
+    },
+    {
+      "path": "src/service/__init__.py",
+      "sha256": "9756f5a0f230217f3cb5ec037d26a581df19517a7351741b44d1a8c6b23282b4",
+      "bytes": 217
+    },
+    {
+      "path": "src/service/build.py",
+      "sha256": "f9c9e6f13fa88a8697d581a3fedaff40ee569bcc28ed80e1c3d8173a4cda360c",
+      "bytes": 1240
+    },
+    {
+      "path": "src/service/service.py",
+      "sha256": "1b03329b06c10deadcc9e904baf9e5893baf4d246ca12771c8cbdf9c8090d784",
+      "bytes": 24297
+    },
+    {
+      "path": "src/service/webhook_proxy.py",
+      "sha256": "8ddbf20465502804a066dce3171d4c09850738ce03d9ce17ffa9529b1d304d4d",
+      "bytes": 5012
+    },
+    {
+      "path": "src/servicemind/agents/analysis.py",
+      "sha256": "a985f61ca7777de01bb3f69fafa8b90e941f2660b1d089247dca94d3f3142761",
+      "bytes": 30117
+    },
+    {
+      "path": "src/servicemind/agents/data.py",
+      "sha256": "be4dbc0a760f29abe6fa81d572ff95b47872bd9bfac93ec047754417c3f60609",
+      "bytes": 21473
+    },
+    {
+      "path": "src/servicemind/agents/reviewer.py",
+      "sha256": "346c6b1fdeaa0e7994cca6bcbc88fda07f253fb9a4fc5acc89b866b364db5b9b",
+      "bytes": 58002
+    },
+    {
+      "path": "src/servicemind/agents/supervisor.py",
+      "sha256": "faf7e93dc936770bdfd69352f24a84f0603383865fb844784a3b65b6d69705c3",
+      "bytes": 5009
+    },
+    {
+      "path": "src/servicemind/api.py",
+      "sha256": "66dfa8440e7dcffe94f2700504896a5aa3598ef7441353b01347f0a11dc39b86",
+      "bytes": 25020
+    },
+    {
+      "path": "src/servicemind/evaluation/pytest_evidence.py",
+      "sha256": "c4c934068a3aa1d2a2b324bb665de1a8c7a50c85d974d9662e0a2fc74d84e741",
+      "bytes": 1365
+    },
+    {
+      "path": "src/servicemind/harness/webhooks.py",
+      "sha256": "140e806b694df487f02d1a2b3dc56691e51b52454383d85f1834b444f5f0a3d2",
+      "bytes": 5041
+    },
+    {
+      "path": "src/servicemind/interfaces/http/operations.py",
+      "sha256": "11b7393e64f6e3d08cfa3ad809cdd40fb42facffd909ba95d11d83a0d7a0a22f",
+      "bytes": 5645
+    },
+    {
+      "path": "src/servicemind/interfaces/http/request_limits.py",
+      "sha256": "40f0584a4a6cd927c16d8e77ebd7cb10e8fae8679ea56057c5d8d500fc0e0d58",
+      "bytes": 798
+    },
+    {
+      "path": "src/servicemind/interfaces/http/webhook_limits.py",
+      "sha256": "c18304e2b3f9244179bb8826c2cfd969696ef8050f87aa51b6d4325cf2c9a830",
+      "bytes": 960
+    },
+    {
+      "path": "src/servicemind/mcp/server.py",
+      "sha256": "ebcd1e9aa14e0624ef8050f34199de83889ca4da86977d95b114da890149d4ad",
+      "bytes": 23036
+    },
+    {
+      "path": "src/servicemind/orchestration/phase5_governance.py",
+      "sha256": "4d99388aadcfb879d5ecf2efeeb0c0a894f4ca41702b2bf11f0d77adce2afda0",
+      "bytes": 47625
+    },
+    {
+      "path": "src/servicemind/orchestration/supervisor_workflow.py",
+      "sha256": "e13213408460c5f1d1e0b6cfc67580cccfa9cfe26c5917737a80334d92430640",
+      "bytes": 91273
+    },
+    {
+      "path": "src/servicemind/persistence/models.py",
+      "sha256": "27af3094c5869ee7b7f622510bc648b0af8f048f8b641f5a7d5cfffc7c80f785",
+      "bytes": 37077
+    },
+    {
+      "path": "src/servicemind/persistence/repository.py",
+      "sha256": "8fac59dcf97f3fc932abe4a68457b718437f8017aeb907a214d6e47a29ff7798",
+      "bytes": 24779
+    },
+    {
+      "path": "src/servicemind/rag/sources.py",
+      "sha256": "a3d6b4cdbed6c3c85793645807d4e814cb5ec883dd49ab81dd8f903f47bfcc0e",
+      "bytes": 10539
+    },
+    {
+      "path": "src/servicemind/runtime/contracts.py",
+      "sha256": "fc96abf59d06cd1abcd1be7d3296a77a01d335545ea12619155517f677433395",
+      "bytes": 2525
+    },
+    {
+      "path": "src/servicemind/security/crypto.py",
+      "sha256": "6cd01ea7942cf848a4e60cb272f218e3d402ad5e0d3eccbf1db5b7421cb27751",
+      "bytes": 1254
+    },
+    {
+      "path": "src/servicemind/security/rotation.py",
+      "sha256": "3f3fe1122638b208941934f0360bda60b3eccca36b226b17966e8493bd633631",
+      "bytes": 1272
+    },
+    {
+      "path": "src/servicemind/security/run_access.py",
+      "sha256": "3865eadcac2c0a000d17083c737c7f57f10ff38ca080b7689eaa6d0ca182cdf8",
+      "bytes": 1073
+    },
+    {
+      "path": "src/servicemind/tool_platform/providers.py",
+      "sha256": "2e1f035dcb8a134329cc3a67a0d1eb8a92ce18c50514a668dbf00ab2b1357112",
+      "bytes": 19757
+    },
+    {
+      "path": "tests/integration/test_docker_e2e.py",
+      "sha256": "7c06a1a2b934286034f415bb0e8fd49d01ac8f17d8231b9b44e36721ad36ac09",
+      "bytes": 1593
+    },
+    {
+      "path": "tests/service/conftest.py",
+      "sha256": "2afdcfae1b5b1f8877a6651526ef983b134e291d8d2f1404b1f348330dac25a7",
+      "bytes": 2766
+    },
+    {
+      "path": "tests/service/test_auth.py",
+      "sha256": "6e9c29609366986079298448a6bdaecd474ce2a9819819557b5deae969ce6e2c",
+      "bytes": 1519
+    },
+    {
+      "path": "tests/servicemind/test_enterprise_subagents.py",
+      "sha256": "a408c3da29ab14a482fd0bf9a1d83ba7a861c04648ccb063d99c219ef0ffb227",
+      "bytes": 44914
+    },
+    {
+      "path": "tests/servicemind/test_operations_api.py",
+      "sha256": "a9a505f335d75a3d231785643de513ceb47e4d7a24eeac1c5090415c6ae7b9b6",
+      "bytes": 14148
+    },
+    {
+      "path": "tests/servicemind/test_phase5_governance.py",
+      "sha256": "5c4b4041eeeba538a5bc5c4e5e55eaaf59546f7c317207c7c5843428ab5ece03",
+      "bytes": 158864
+    },
+    {
+      "path": "tests/servicemind/test_phase7_principal_invariants.py",
+      "sha256": "20f0c8283bf372c8ee7fe791294087fb6f4818e9c8f3b2c70f0a6f2bccc1c8c1",
+      "bytes": 63425
+    },
+    {
+      "path": "tests/servicemind/test_phase7_security_contract.py",
+      "sha256": "c78f8f5da6ca096c26e145a6b2dc8b0087d7413282f29dc5534d2ed222904c84",
+      "bytes": 25374
+    },
+    {
+      "path": "tests/servicemind/test_security_completion.py",
+      "sha256": "7dca3ae3338f26973bc2450953ef44a14afb4d1fde2201b765b113505c19b6ce",
+      "bytes": 22321
+    },
+    {
+      "path": "tests/servicemind/test_security_remediation.py",
+      "sha256": "e6dc64e25b799a4e065f793f302f54b993121c341462a1630c06897ba8010219",
+      "bytes": 17100
+    },
+    {
+      "path": "tests/servicemind/test_supervisor_runtime.py",
+      "sha256": "42af1f18c48c0322acd2df5fef142faec73f7bdca18773af58e92634ef2a0c13",
+      "bytes": 68687
+    },
+    {
+      "path": "tests/smoke/test_persistence.py",
+      "sha256": "c1a6cbc53cf290315f665500d87dac2a658bdaf3e8a0412c4e8cb52c2d8d7180",
+      "bytes": 3366
+    },
+    {
+      "path": "uv.lock",
+      "sha256": "a34cd3416ceb270ae416c3ba6fcc9feee46ec0aa2152d8f1b5e3e822dfde62b6",
+      "bytes": 1186547
+    }
+  ]
+}

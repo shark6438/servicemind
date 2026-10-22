@@ -466,6 +466,9 @@ class AnalysisAgent:
         degraded = result.status is AnalysisStatus.DEGRADED
         return AgentResultEnvelope[AnalysisResult](
             agent_name="analysis",
+            run_id=invocation.run_id,
+            tenant_id=invocation.tenant_id,
+            user_id=invocation.user_id,
             task_id=invocation.task_id,
             status=AgentRunStatus.DEGRADED if degraded else AgentRunStatus.SUCCEEDED,
             output=result,

@@ -1,0 +1,43 @@
+{
+  "scenario_id": "SEC-LIMIT-04",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_is_not_taken_when_the_run_is_already_at_its_deadline\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_wait_leaves_the_later_stages_their_room\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_deadline_bound_is_not_the_providers_bound",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_deadline_bound_is_not_the_providers_bound\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_deadline_bound_is_not_the_providers_bound\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_deadline_bound_is_not_the_providers_bound\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M10 the wait ignores the run's deadline",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_rate_limit_degradation.evidence.json\", \"sha256\": \"054534e40f2be341221222be5a471e849daf66e0ec106ed943b84bf76371144c\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M11 the deadline is spent down to zero instead of leaving the later stages room",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_rate_limit_degradation.evidence.json\", \"sha256\": \"054534e40f2be341221222be5a471e849daf66e0ec106ed943b84bf76371144c\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    }
+  ]
+}

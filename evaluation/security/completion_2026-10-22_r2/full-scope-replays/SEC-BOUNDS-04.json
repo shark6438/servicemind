@@ -1,0 +1,64 @@
+{
+  "scenario_id": "SEC-BOUNDS-04",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_foundation_errors.py::test_a_bounded_error_keeps_the_end_that_states_the_cause",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_keeps_the_end_that_states_the_cause\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_keeps_the_end_that_states_the_cause\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_keeps_the_end_that_states_the_cause\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_foundation_errors.py::test_a_bounded_error_reports_the_exception_type_and_leaves_short_text_alone",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_reports_the_exception_type_and_leaves_short_text_alone\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_reports_the_exception_type_and_leaves_short_text_alone\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_foundation_errors.py::test_a_bounded_error_reports_the_exception_type_and_leaves_short_text_alone\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_the_graph",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_the_graph\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_the_graph\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_the_graph\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_graph",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_graph\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_graph\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_graph\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_replan_double_failure_finalizes_without_raw_runtime_error",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_replan_double_failure_finalizes_without_raw_runtime_error\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_replan_double_failure_finalizes_without_raw_runtime_error\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_replan_double_failure_finalizes_without_raw_runtime_error\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its_end",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its_end\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its_end\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its_end\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_broken_model_path_degrades_without_waiting",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_broken_model_path_degrades_without_waiting\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_broken_model_path_degrades_without_waiting\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_broken_model_path_degrades_without_waiting\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    }
+  ]
+}

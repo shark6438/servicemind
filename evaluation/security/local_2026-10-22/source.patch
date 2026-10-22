@@ -1,0 +1,1333 @@
+diff --git a/.env.example b/.env.example
+index e331e5a..08c716e 100644
+--- a/.env.example
++++ b/.env.example
+@@ -30,8 +30,10 @@ COMPATIBLE_BASE_URL=
+ HOST=0.0.0.0
+ PORT=8080
+ 
+-# Authentication secret, HTTP bearer token header is required if set.
+-# WARNING: If unset, all API endpoints are unauthenticated. Always set this in production.
++# Generic scaffold API is disabled by default. Enable only for trusted internal use;
++# its shared secret does not provide per-user/tenant authorization.
++SERVICEMIND_GENERIC_API_ENABLED=false
++# Required when the generic API is enabled. Product endpoints use OIDC independently.
+ AUTH_SECRET=
+ 
+ # Langsmith configuration
+diff --git a/compose.yaml b/compose.yaml
+index 384ce48..c1bf212 100644
+--- a/compose.yaml
++++ b/compose.yaml
+@@ -2,10 +2,10 @@ services:
+   postgres:
+     image: postgres:16
+     ports:
+-      - "5432:5432"
++      - "127.0.0.1:5432:5432"
+     environment:
+       - POSTGRES_USER=${POSTGRES_USER:-postgres}
+-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
++      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set a database password}
+       - POSTGRES_DB=${POSTGRES_DB:-agent_service}
+     volumes:
+       - postgres_data:/var/lib/postgresql/data
+@@ -20,14 +20,14 @@ services:
+       context: .
+       dockerfile: docker/Dockerfile.service
+     ports:
+-      - "8080:8080"
++      - "127.0.0.1:8080:8080"
+     env_file:
+       - .env
+     depends_on:
+       postgres:
+         condition: service_healthy
+     healthcheck:
+-      test: ["CMD", "curl", "-f", "http://localhost:8080/info"]
++      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+       interval: 5s
+       timeout: 5s
+       retries: 5
+@@ -56,7 +56,7 @@ services:
+       context: .
+       dockerfile: docker/Dockerfile.app
+     ports:
+-      - "8501:8501"
++      - "127.0.0.1:8501:8501"
+     depends_on:
+       - agent_service
+     healthcheck:
+diff --git a/scripts/gate_phase7_security.py b/scripts/gate_phase7_security.py
+index e548e45..26486ca 100644
+--- a/scripts/gate_phase7_security.py
++++ b/scripts/gate_phase7_security.py
+@@ -63,14 +63,16 @@ class ConfigurationError(Exception):
+     """The gate cannot say anything about the platform until this is fixed."""
+ 
+ 
+-def load_scenario_set() -> SecurityScenarioSet:
++def load_scenario_set(path: Path | None = None) -> SecurityScenarioSet:
+     try:
+-        return load_security_scenarios(SCENARIOS)
++        return load_security_scenarios(path if path is not None else SCENARIOS)
+     except (OSError, json.JSONDecodeError, ValidationError) as exc:
+         raise ConfigurationError(f"{SCENARIOS.relative_to(REPO_ROOT)}: {exc}") from exc
+ 
+ 
+-def load_replays(scenario_set: SecurityScenarioSet) -> list[ScenarioObservation]:
++def load_replays(
++    scenario_set: SecurityScenarioSet, replays: Path | None = None
++) -> list[ScenarioObservation]:
+     """Every recorded observation on disk, refusing ones from another scenario list.
+ 
+     A replay whose ``scenarios_digest`` disagrees was recorded against a different set, and
+@@ -82,13 +84,13 @@ def load_replays(scenario_set: SecurityScenarioSet) -> list[ScenarioObservation]
+     known = {scenario.id for scenario in scenario_set.scenarios}
+     observations: list[ScenarioObservation] = []
+     stale: list[str] = []
+-    for path in sorted(REPLAYS.glob("*.json")):
++    for path in sorted((replays if replays is not None else REPLAYS).glob("*.json")):
+         try:
+             observation = ScenarioObservation.model_validate(
+                 json.loads(path.read_text(encoding="utf-8"))
+             )
+         except (OSError, json.JSONDecodeError, ValidationError) as exc:
+-            raise ConfigurationError(f"{path.relative_to(REPO_ROOT)}: {exc}") from exc
++            raise ConfigurationError(f"{path}: {exc}") from exc
+         if observation.scenario_id not in known:
+             stale.append(f"{path.name}: no scenario {observation.scenario_id!r} in the set")
+         elif observation.scenarios_digest != expected:
+@@ -100,6 +102,8 @@ def load_replays(scenario_set: SecurityScenarioSet) -> list[ScenarioObservation]
+             observations.append(observation)
+     if stale:
+         raise ConfigurationError("; ".join(stale))
++    if len({item.scenario_id for item in observations}) != len(observations):
++        raise ConfigurationError("Duplicate scenario observations in evidence batch")
+     return observations
+ 
+ 
+@@ -130,6 +134,8 @@ def check_replays_are_one_revision(
+ 
+ def main() -> int:
+     parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--scenarios", type=Path, default=SCENARIOS)
++    parser.add_argument("--replays", type=Path, default=REPLAYS)
+     parser.add_argument("--check", action="store_true", help="judge the observations on disk")
+     parser.add_argument("--replay-only", action="store_true", help="grade recorded observations")
+     parser.add_argument("--format", default="markdown", choices=("markdown", "json"))
+@@ -157,8 +163,8 @@ def main() -> int:
+     )
+ 
+     try:
+-        scenario_set = load_scenario_set()
+-        observations = load_replays(scenario_set)
++        scenario_set = load_scenario_set(args.scenarios)
++        observations = load_replays(scenario_set, args.replays)
+         provenance = check_replays_are_one_revision(observations, expect=args.expect_revision)
+     except ConfigurationError as exc:
+         print(json.dumps({"configuration_error": str(exc)}, ensure_ascii=False), file=sys.stderr)
+diff --git a/scripts/mutation_harness.py b/scripts/mutation_harness.py
+index 0d6e3c4..cc62b97 100644
+--- a/scripts/mutation_harness.py
++++ b/scripts/mutation_harness.py
+@@ -31,10 +31,68 @@ import os
+ import signal
+ import subprocess
+ import sys
++import tempfile
+ from collections.abc import Sequence
+ from dataclasses import dataclass
+ from pathlib import Path
+ 
++from servicemind.evaluation.pytest_evidence import grade_test_phases
++from servicemind.evaluation.security_grader import EvidenceOutcome
++
++
++def run_probe(
++    root: Path, tests: Sequence[str], pytest_args: Sequence[str]
++) -> tuple[int, list[dict], str]:
++    with tempfile.TemporaryDirectory() as temporary:
++        evidence = Path(temporary) / "phases.json"
++        try:
++            proc = subprocess.run(
++                [
++                    sys.executable,
++                    "-m",
++                    "pytest",
++                    *tests,
++                    "-q",
++                    "--no-header",
++                    "-p",
++                    "no:randomly",
++                    "-p",
++                    "servicemind.evaluation.pytest_evidence",
++                    *pytest_args,
++                ],
++                cwd=root,
++                capture_output=True,
++                text=True,
++                timeout=1800,
++                env={**os.environ, "SERVICEMIND_PYTEST_EVIDENCE": str(evidence)},
++            )
++            payload = json.loads(evidence.read_text())
++            if payload.get("exitstatus") != proc.returncode:
++                return 3, [], "evidence/process mismatch"
++            lines = (proc.stdout + proc.stderr).strip().splitlines()
++            return proc.returncode, payload.get("reports", []), lines[-1] if lines else "no output"
++        except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
++            return 3, [], type(exc).__name__
++
++
++def mutation_status(code: int, rows: list[dict]) -> str:
++    if not rows or code not in {0, 1}:
++        return "UNRUN (no test ran)"
++    if any(row.get("wasxfail") or row["outcome"] == "skipped" for row in rows):
++        return "UNEXERCISED (all skipped)"
++    if any(row["outcome"] != "passed" and row["when"] != "call" for row in rows):
++        return "UNRUN (no test ran)"
++    for nodeid in {row["nodeid"] for row in rows}:
++        if sorted(row["when"] for row in rows if row["nodeid"] == nodeid) != [
++            "call",
++            "setup",
++            "teardown",
++        ]:
++            return "UNRUN (no test ran)"
++    if code == 1 and any(row["when"] == "call" and row["outcome"] == "failed" for row in rows):
++        return "RED (good)"
++    return "GREEN (BAD - no teeth)" if code == 0 else "UNRUN (no test ran)"
++
+ 
+ @dataclass(frozen=True, slots=True)
+ class Mutation:
+@@ -241,6 +299,14 @@ def run_mutations(
+     reconcile_interrupted_run()
+     acquire_lock()
+ 
++    all_tests = tuple(dict.fromkeys(test for mutation in mutations for test in mutation.tests))
++    code, rows, tail = run_probe(root, all_tests, pytest_args)
++    evidence_rows = [{"name": "baseline", "exit_code": code, "reports": rows, "summary": tail}]
++    if code != 0 or grade_test_phases(rows, process_ok=True) != EvidenceOutcome.PASSED:
++        print(f"BASELINE BLOCKED: {tail}")
++        restore_all()
++        return 1
++
+     failures: list[str] = []
+     unrunnable_names: list[str] = []
+     for mutation in mutations:
+@@ -259,33 +325,25 @@ def run_mutations(
+         )
+         mutation.path.write_text(mutated)
+         try:
+-            proc = subprocess.run(
+-                [
+-                    "uv",
+-                    "run",
+-                    "pytest",
+-                    *mutation.tests,
+-                    "-q",
+-                    "--no-header",
+-                    "-p",
+-                    "no:randomly",
+-                    *pytest_args,
+-                ],
+-                cwd=root,
+-                capture_output=True,
+-                text=True,
+-                timeout=1800,
+-            )
+-            tail = [ln for ln in proc.stdout.strip().splitlines() if ln.strip()][-1]
++            code, rows, tail = run_probe(root, mutation.tests, pytest_args)
+         finally:
+             restore(mutation.path, original, stamps.get(mutation.path))
+             manifest.unlink(missing_ok=True)
+-        detected = proc.returncode != 0
++        status = mutation_status(code, rows)
++        evidence_rows.append(
++            {
++                "name": mutation.name,
++                "exit_code": code,
++                "reports": rows,
++                "summary": tail,
++                "status": status,
++            }
++        )
++        detected = status == "RED (good)"
+         # A green run that only skipped graded nothing: the behaviour the mutation removed
+         # was never reached, so "the suite did not notice" would be the wrong reading --
+         # there was no suite. Reported separately, because it is a defect in the invocation
+         # (usually a missing ``--run-docker``) rather than a hole in the tests.
+-        unexercised = (not detected) and " skipped" in tail and " passed" not in tail
+         # A red run in which no test ever ran is not a detection either. Removing a line
+         # can leave a block empty, which is a syntax error, and pytest then reports
+         # ``1 error`` from collection -- exit code 1, "RED", and exactly as uninformative
+@@ -294,19 +352,24 @@ def run_mutations(
+         # fails loudest without this line") while proving nothing, which is the same false
+         # sense of safety as an equivalent mutant that reads RED. The mutation has to be
+         # repaired into a semantic change; until it is, the experiment has not graded it.
+-        unrunnable = detected and " passed" not in tail and " failed" not in tail
+-        if unexercised:
+-            status = "UNEXERCISED (all skipped)"
+-        elif unrunnable:
+-            status = "UNRUN (no test ran)"
+-        else:
+-            status = "RED (good)" if detected else "GREEN (BAD - no teeth)"
++        unrunnable = status == "UNRUN (no test ran)"
+         print(f"{status:28} | {mutation.name}\n{'':28} | {tail}")
+         if not detected or unrunnable:
+             failures.append(mutation.name)
+         if unrunnable:
+             unrunnable_names.append(mutation.name)
+ 
++    code, rows, tail = run_probe(root, all_tests, pytest_args)
++    evidence_rows.append(
++        {"name": "restored baseline", "exit_code": code, "reports": rows, "summary": tail}
++    )
++    (runtime / f"mutate_{experiment}.evidence.json").write_text(
++        json.dumps(evidence_rows, indent=2) + "\n"
++    )
++    if code != 0 or grade_test_phases(rows, process_ok=True) != EvidenceOutcome.PASSED:
++        failures.append("restored baseline")
++        print(f"RESTORE BLOCKED: {tail}")
++    restore_all()
+     print()
+     verdicts = []
+     if unrunnable_names:
+diff --git a/scripts/verify_phase7_security.py b/scripts/verify_phase7_security.py
+index f34d62a..5aa307f 100644
+--- a/scripts/verify_phase7_security.py
++++ b/scripts/verify_phase7_security.py
+@@ -30,15 +30,25 @@ Exit codes here are about the *run*: 0 recorded, 2 nothing to grade, 3 could not
+ from __future__ import annotations
+ 
+ import argparse
++import hashlib
+ import json
++import os
+ import re
+ import subprocess
+ import sys
+-from datetime import UTC, datetime
++import tempfile
++from datetime import UTC, datetime, timedelta
+ from pathlib import Path
+ 
+-from servicemind.evaluation.acceptance import case_set_digest, load_acceptance_cases
++from servicemind.evaluation.acceptance import (
++    CaseExecution,
++    case_set_digest,
++    execution_digest,
++    load_acceptance_cases,
++)
++from servicemind.evaluation.acceptance_grader import grade as grade_acceptance
+ from servicemind.evaluation.deployment import refuse_stale_deployment
++from servicemind.evaluation.pytest_evidence import grade_test_phases
+ from servicemind.evaluation.security import (
+     EvidenceKind,
+     SecurityScenarioSet,
+@@ -60,6 +70,7 @@ SCENARIOS = REPO_ROOT / "evaluation" / "security" / "scenarios.v1.json"
+ REPLAYS = REPO_ROOT / "evaluation" / "security" / "replays"
+ REPORTS = REPO_ROOT / "evaluation" / "reports"
+ ACCEPTANCE_REPORT = REPORTS / "phase7_acceptance_latest.json"
++ACCEPTANCE_REPLAYS = REPO_ROOT / "evaluation" / "acceptance" / "replays"
+ ACCEPTANCE_CASES = REPO_ROOT / "evaluation" / "acceptance" / "cases.v1.json"
+ 
+ #: ``mutation_harness`` prints ``{status:28} | {name}``. The status strings are its
+@@ -89,7 +100,7 @@ _PYTEST_OUTCOMES = {
+     "ERROR": EvidenceOutcome.FAILED,
+     "SKIPPED": EvidenceOutcome.UNEXERCISED,
+     "XFAIL": EvidenceOutcome.UNEXERCISED,
+-    "XPASS": EvidenceOutcome.PASSED,
++    "XPASS": EvidenceOutcome.UNEXERCISED,
+ }
+ 
+ 
+@@ -134,73 +145,60 @@ def run_tests(node_ids: list[str], *, run_docker: bool = False) -> dict[str, Obs
+ 
+     recorded: dict[str, ObservedEvidence] = {}
+     for path, ids in by_file.items():
+-        completed = subprocess.run(
+-            [
+-                "uv",
+-                "run",
+-                "pytest",
+-                *ids,
+-                "-v",
+-                "--no-header",
+-                "--tb=short",
+-                "-p",
+-                "no:randomly",
+-                *(["--run-docker"] if run_docker else []),
+-            ],
+-            cwd=REPO_ROOT,
+-            capture_output=True,
+-            text=True,
+-            timeout=3600,
+-        )
+-        output = completed.stdout + completed.stderr
+-        # A scenario names a test, not a parametrisation of it, so one requested node id can
+-        # stand for several output lines (`::test_x[verified]`, `::test_x[unknown]`, ...).
+-        # Matching the printed id exactly would record every parametrised test as missing --
+-        # a false BLOCKED, which is safe in direction but wrong about the platform.
+-        seen: dict[str, list[tuple[str, EvidenceOutcome]]] = {node_id: [] for node_id in ids}
+-        for line in output.splitlines():
+-            match = _PYTEST_LINE.match(line.strip())
+-            if not match:
+-                continue
+-            printed = match["nodeid"]
+-            for node_id in ids:
+-                if printed == node_id or printed.startswith(f"{node_id}["):
+-                    seen[node_id].append((match["status"], _PYTEST_OUTCOMES[match["status"]]))
+-                    break
+-
++        with tempfile.TemporaryDirectory(prefix="security-pytest-") as directory:
++            evidence_path = Path(directory) / "phases.json"
++            try:
++                completed = subprocess.run(
++                    [
++                        sys.executable,
++                        "-m",
++                        "pytest",
++                        *ids,
++                        "-q",
++                        "--tb=short",
++                        "-p",
++                        "no:randomly",
++                        "-p",
++                        "servicemind.evaluation.pytest_evidence",
++                        *(["--run-docker"] if run_docker else []),
++                    ],
++                    cwd=REPO_ROOT,
++                    capture_output=True,
++                    text=True,
++                    timeout=3600,
++                    env={**os.environ, "SERVICEMIND_PYTEST_EVIDENCE": str(evidence_path)},
++                )
++                payload = json.loads(evidence_path.read_text()) if evidence_path.exists() else {}
++                reports = payload.get("reports", [])
++                process_ok = (
++                    completed.returncode in {0, 1}
++                    and payload.get("exitstatus") == completed.returncode
++                )
++                detail = _tail(completed.stdout + completed.stderr)
++            except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
++                reports, process_ok, detail = [], False, type(exc).__name__
+         for node_id in ids:
+-            ran = seen[node_id]
+-            if not ran:
+-                outcome = EvidenceOutcome.MISSING
+-                detail = _tail(output)
+-            else:
+-                outcome = _aggregate(ran)
+-                # Counted rather than summarised as one word: "4 passed, 1 skipped" and
+-                # "5 passed" are different observations of the same node id.
+-                detail = ", ".join(f"{count} {status.lower()}" for status, count in _tally(ran))
++            rows = [
++                r
++                for r in reports
++                if r["nodeid"] == node_id or r["nodeid"].startswith(node_id + "[")
++            ]
++            outcome = grade_test_phases(rows, process_ok=process_ok)
+             recorded[node_id] = ObservedEvidence(
+-                kind=EvidenceKind.TEST, ref=node_id, outcome=outcome, detail=detail
++                kind=EvidenceKind.TEST,
++                ref=node_id,
++                outcome=outcome,
++                detail=json.dumps({"summary": detail, "phases": rows}, sort_keys=True),
+             )
+     return recorded
+ 
+ 
+ def _aggregate(ran: list[tuple[str, EvidenceOutcome]]) -> EvidenceOutcome:
+-    """One verdict for every parametrisation of a node id.
+-
+-    A single red parametrisation makes the whole test red: the scenario claims a behaviour,
+-    and one case where it does not hold is enough to deny that. Skips only count when
+-    nothing passed -- a mixed run is reported PASSED with the skip visible in ``detail``
+-    rather than promoted to BLOCKED, because BLOCKED stops the release gate and a single
+-    skip-guarded parametrisation would then be able to do that on its own.
+-    """
+     outcomes = [outcome for _, outcome in ran]
+-    if EvidenceOutcome.FAILED in outcomes:
+-        return EvidenceOutcome.FAILED
+-    if EvidenceOutcome.PASSED in outcomes:
+-        return EvidenceOutcome.PASSED
+-    if EvidenceOutcome.UNEXERCISED in outcomes:
+-        return EvidenceOutcome.UNEXERCISED
+-    return EvidenceOutcome.MISSING
++    for outcome in (EvidenceOutcome.FAILED, EvidenceOutcome.MISSING, EvidenceOutcome.UNEXERCISED):
++        if outcome in outcomes:
++            return outcome
++    return EvidenceOutcome.PASSED if outcomes else EvidenceOutcome.MISSING
+ 
+ 
+ def _tally(ran: list[tuple[str, EvidenceOutcome]]) -> list[tuple[str, int]]:
+@@ -242,29 +240,56 @@ def run_mutation_script(script: str) -> dict[str, ObservedEvidence]:
+             outcome=_MUTATION_OUTCOMES[status],
+             detail=status,
+         )
++    if completed.returncode != 0:
++        for name, row in list(recorded.items()):
++            if row.outcome == EvidenceOutcome.PASSED:
++                recorded[name] = row.model_copy(
++                    update={
++                        "outcome": EvidenceOutcome.MISSING,
++                        "detail": "mutation experiment did not complete cleanly: " + _tail(output),
++                    }
++                )
+     return recorded
+ 
+ 
+ def acceptance_verdicts() -> tuple[dict[str, str], str]:
+-    """Read the acceptance report's per-case verdicts, and refuse a stale one.
+-
+-    Returns the verdicts and a note explaining any refusal. The binding is the case-list
+-    digest: an acceptance report graded against a different case list is a statement about
+-    a different set of cases, and borrowing its PASS would make this report cite evidence
+-    that was never about the thing it is claimed to be about.
+-    """
+-    if not ACCEPTANCE_REPORT.exists():
+-        return {}, f"no acceptance report at {ACCEPTANCE_REPORT.relative_to(REPO_ROOT)}"
+-    report = json.loads(ACCEPTANCE_REPORT.read_text(encoding="utf-8"))
+-    expected = case_set_digest(load_acceptance_cases(ACCEPTANCE_CASES))
+-    recorded = report.get("cases_digest")
+-    if recorded != expected:
+-        return (
+-            {},
+-            "the acceptance report is bound to a different case list "
+-            f"({recorded} != {expected}); rerun scripts/gate_phase7_acceptance.py first",
+-        )
+-    return {case["case_id"]: case["verdict"] for case in report.get("cases", [])}, ""
++    try:
++        cases = load_acceptance_cases(ACCEPTANCE_CASES)
++        report_bytes = ACCEPTANCE_REPORT.read_bytes()
++        report = json.loads(report_bytes)
++        digest = case_set_digest(cases)
++        if report.get("cases_digest") != digest:
++            return {}, "acceptance case-list digest mismatch"
++        executions = [
++            CaseExecution.model_validate_json(path.read_text())
++            for path in sorted(ACCEPTANCE_REPLAYS.glob("*.json"))
++        ]
++        if not executions or len({e.case_id for e in executions}) != len(executions):
++            return {}, "missing or duplicate acceptance observations"
++        if {e.case_id for e in executions} != {case.id for case in cases.cases}:
++            return {}, "acceptance observations do not cover exactly the declared cases"
++        revision = source_revision()
++        now = datetime.now(UTC)
++        for execution in executions:
++            env = execution.environment
++            if env.deployed_revision != revision or revision == "unknown":
++                return {}, "acceptance observations belong to a different source revision"
++            if execution.cases_digest != digest:
++                return {}, "acceptance replay case-list digest mismatch"
++            if env.recorded_at.tzinfo is None or not timedelta(
++                0
++            ) <= now - env.recorded_at <= timedelta(hours=24):
++                return {}, "acceptance observations are stale or have invalid timestamps"
++        if report.get("observation_digest") != execution_digest(executions):
++            return {}, "acceptance report does not match its raw observations"
++        outcome = grade_acceptance(cases, executions, generated_at=now)
++        expected = {case.case_id: case.verdict.value for case in outcome.cases}
++        actual = {case["case_id"]: case["verdict"] for case in report["cases"]}
++        if actual != expected or len(actual) != len(report["cases"]):
++            return {}, "acceptance verdicts do not match independent replay grading"
++        return expected, ""
++    except (OSError, ValueError, KeyError, TypeError) as exc:
++        return {}, f"acceptance evidence unavailable: {type(exc).__name__}"
+ 
+ 
+ def collect_evidence(
+@@ -338,11 +363,26 @@ def collect_evidence(
+                     outcome = (
+                         EvidenceOutcome.PASSED
+                         if recorded_verdict == "PASS"
+-                        else EvidenceOutcome.BLOCKED
++                        else EvidenceOutcome.UNEXERCISED
+                         if recorded_verdict == "BLOCKED"
+                         else EvidenceOutcome.FAILED
+                     )
+-                    detail = f"acceptance case {item.ref} recorded {recorded_verdict}"
++                    replay_path = ACCEPTANCE_REPLAYS / f"{item.ref}.json"
++                    detail = json.dumps(
++                        {
++                            "case": item.ref,
++                            "verdict": recorded_verdict,
++                            "source_revision": source_revision(),
++                            "report_sha256": hashlib.sha256(
++                                ACCEPTANCE_REPORT.read_bytes()
++                            ).hexdigest(),
++                            "replay_sha256": hashlib.sha256(replay_path.read_bytes()).hexdigest(),
++                            "observed_at": json.loads(replay_path.read_text())["environment"][
++                                "recorded_at"
++                            ],
++                        },
++                        sort_keys=True,
++                    )
+                 stub = ObservedEvidence(
+                     kind=EvidenceKind.ACCEPTANCE,
+                     ref=item.ref,
+@@ -394,6 +434,16 @@ def build_observations(
+ 
+ def main() -> int:
+     parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument(
++        "--deployment-pid",
++        type=int,
++        default=None,
++        help="PID of the isolated deployment, when verifying a live service",
++    )
++    parser.add_argument("--replays", type=Path, default=REPLAYS)
++    parser.add_argument("--scenarios", type=Path, default=SCENARIOS)
++    parser.add_argument("--acceptance-replays", type=Path, default=ACCEPTANCE_REPLAYS)
++    parser.add_argument("--acceptance-report", type=Path, default=ACCEPTANCE_REPORT)
+     parser.add_argument("--only", default=None, help="a comma-separated list of scenario ids")
+     parser.add_argument(
+         "--skip-mutations",
+@@ -415,21 +465,32 @@ def main() -> int:
+         ),
+     )
+     args = parser.parse_args()
++    globals()["ACCEPTANCE_REPLAYS"] = args.acceptance_replays
++    globals()["ACCEPTANCE_REPORT"] = args.acceptance_report
+ 
+     # Refused before anything is observed, because the failure does not announce itself:
+     # a process running code older than the tree answers every request competently, so the
+     # batch completes and every record carries the revision of code the platform never ran.
+-    refusal = refuse_stale_deployment(REPO_ROOT, allow=args.allow_stale_deployment, argv=sys.argv)
++    refusal = (
++        refuse_stale_deployment(
++            REPO_ROOT, pid=args.deployment_pid, allow=args.allow_stale_deployment, argv=sys.argv
++        )
++        if args.deployment_pid is not None
++        else 0
++    )
+     if refusal:
+         return refusal
+ 
+-    scenario_set = load_security_scenarios(SCENARIOS)
++    scenario_set = load_security_scenarios(args.scenarios)
+     only = {item.strip() for item in args.only.split(",") if item.strip()} if args.only else set()
+     unknown = only - {scenario.id for scenario in scenario_set.scenarios}
+     if unknown:
+         print(f"unknown scenario ids: {sorted(unknown)}", file=sys.stderr)
+         return 3
+ 
++    if args.replays.exists() and any(args.replays.glob("*.json")):
++        print("Refusing to overwrite an existing evidence batch", file=sys.stderr)
++        return 3
+     observed_at = datetime.now(tz=UTC)
+     revision = source_revision()
+     collected = collect_evidence(
+@@ -442,9 +503,12 @@ def main() -> int:
+         scenario_set, collected, revision=revision, observed_at=observed_at, only=only
+     )
+ 
+-    REPLAYS.mkdir(parents=True, exist_ok=True)
++    if args.replays.exists() and any(args.replays.glob("*.json")):
++        print("Refusing to overwrite an existing evidence batch", file=sys.stderr)
++        return 3
++    args.replays.mkdir(parents=True, exist_ok=True)
+     for observation in observations:
+-        (REPLAYS / f"{observation.scenario_id}.json").write_text(
++        (args.replays / f"{observation.scenario_id}.json").write_text(
+             json.dumps(
+                 observation.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True
+             )
+diff --git a/src/core/settings.py b/src/core/settings.py
+index fa8de32..6922c89 100644
+--- a/src/core/settings.py
++++ b/src/core/settings.py
+@@ -91,6 +91,7 @@ class Settings(BaseSettings):
+     LOG_LEVEL: LogLevel = LogLevel.WARNING
+ 
+     AUTH_SECRET: SecretStr | None = None
++    SERVICEMIND_GENERIC_API_ENABLED: bool = False
+ 
+     OPENAI_API_KEY: SecretStr | None = None
+     DEEPSEEK_API_KEY: SecretStr | None = None
+diff --git a/src/service/service.py b/src/service/service.py
+index 8c0e35c..c89f715 100644
+--- a/src/service/service.py
++++ b/src/service/service.py
+@@ -84,11 +84,13 @@ def verify_bearer(
+         Depends(HTTPBearer(description="Please provide AUTH_SECRET api key.", auto_error=False)),
+     ],
+ ) -> None:
++    if not settings.SERVICEMIND_GENERIC_API_ENABLED:
++        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+     if settings.AUTH_SECRET is None:
+-        return
++        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
+     auth_secret = settings.AUTH_SECRET.get_secret_value()
+     if not auth_secret:
+-        return
++        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
+     if not http_auth or http_auth.credentials != auth_secret:
+         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+ 
+@@ -138,8 +140,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+ 
+             if settings.AUTH_SECRET is None or not settings.AUTH_SECRET.get_secret_value():
+                 logger.warning(
+-                    "AUTH_SECRET is not configured — all API endpoints are unauthenticated. "
+-                    "Set AUTH_SECRET in your environment to enable bearer token authentication."
++                    "Generic API requires explicit enablement and AUTH_SECRET; "
++                    "ServiceMind endpoints use their own OIDC or webhook authentication."
+                 )
+ 
+             # Configure agents with both memory components and async loading
+diff --git a/src/servicemind/api.py b/src/servicemind/api.py
+index 0116dcd..0e8daa9 100644
+--- a/src/servicemind/api.py
++++ b/src/servicemind/api.py
+@@ -1,3 +1,4 @@
++import asyncio
+ import hashlib
+ import json
+ import logging
+@@ -7,7 +8,7 @@ from typing import Any, Literal
+ from uuid import UUID
+ 
+ import httpx
+-from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Request, status
++from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request, status
+ from fastapi.responses import StreamingResponse
+ from pydantic import BaseModel, Field
+ 
+@@ -24,6 +25,7 @@ from servicemind.harness.webhooks import (
+     WebhookValidationError,
+     glpi_webhook_goal,
+     parse_glpi_webhook,
++    validate_glpi_headers,
+     verify_glpi_signature,
+     webhook_run_id,
+ )
+@@ -32,6 +34,7 @@ from servicemind.integrations.glpi.resolver import resolve_glpi_config
+ from servicemind.interfaces.http.knowledge import router as knowledge_router
+ from servicemind.interfaces.http.memory_review import router as memory_review_router
+ from servicemind.interfaces.http.operations import router as operations_router
++from servicemind.interfaces.http.webhook_limits import webhook_admission
+ from servicemind.model_gateway.gateway import model_error_code
+ from servicemind.orchestration.runtime import (
+     ResumeBlocked,
+@@ -43,9 +46,10 @@ from servicemind.orchestration.runtime import (
+     start_run,
+ )
+ from servicemind.persistence.models import ActionIntentRecord, AgentRun, RunStatus
+-from servicemind.persistence.repository import ServiceMindRepository
++from servicemind.persistence.repository import RunCancelled, ServiceMindRepository
+ from servicemind.security.auth import TenantContext, TenantContextDependency
+ from servicemind.security.crypto import CredentialCipher
++from servicemind.security.run_access import require_run_access, run_scope
+ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -187,6 +191,8 @@ async def _process_webhook_run(run: AgentRun, context: TenantContext) -> None:
+     repository = ServiceMindRepository(run.tenant_id)
+     try:
+         await start_run(run, context)
++    except RunCancelled:
++        return
+     except Exception as exc:
+         # The workflow owns its own terminals: a run that reaches ``finalize`` writes both
+         # its result and a ``run.<status>`` event, so this branch only sees a failure that
+@@ -214,7 +220,10 @@ async def _process_webhook_run(run: AgentRun, context: TenantContext) -> None:
+ 
+ 
+ @phase2_router.post(
+-    "/webhooks/glpi", status_code=status.HTTP_202_ACCEPTED, response_model=WebhookAccepted
++    "/webhooks/glpi",
++    status_code=status.HTTP_202_ACCEPTED,
++    response_model=WebhookAccepted,
++    dependencies=[Depends(webhook_admission)],
+ )
+ async def receive_glpi_webhook(
+     request: Request,
+@@ -222,7 +231,20 @@ async def receive_glpi_webhook(
+     x_glpi_signature: str = Header(alias="X-GLPI-signature"),
+     x_glpi_timestamp: str = Header(alias="X-GLPI-timestamp"),
+ ) -> WebhookAccepted:
+-    body = await request.body()
++    try:
++        validate_glpi_headers(x_glpi_timestamp, x_glpi_signature)
++    except WebhookValidationError as exc:
++        raise HTTPException(status_code=401, detail=str(exc)) from exc
++    chunks = bytearray()
++    try:
++        async with asyncio.timeout(5):
++            async for chunk in request.stream():
++                if len(chunks) + len(chunk) > 65_536:
++                    raise HTTPException(status_code=413, detail="Webhook payload is too large")
++                chunks.extend(chunk)
++    except TimeoutError as exc:
++        raise HTTPException(status_code=408, detail="Webhook body timed out") from exc
++    body = bytes(chunks)
+     try:
+         webhook = parse_glpi_webhook(body)
+     except WebhookValidationError as exc:
+@@ -283,6 +305,7 @@ async def create_run(
+         ticket_id=request.ticket_id,
+         goal=request.goal,
+         request_write=request.request_write,
++        access_scope=run_scope(context),
+     )
+     await repository.append_event(
+         run.id,
+@@ -298,10 +321,12 @@ async def create_run(
+ 
+ @phase2_router.get("/runs/{run_id}")
+ async def get_run(run_id: UUID, context: TenantContextDependency) -> RunView:
++    context.require_role("viewer")
+     repository = ServiceMindRepository(context.tenant_id)
+     run = await repository.get_run(run_id)
+     if run is None:
+         raise HTTPException(status_code=404, detail="Run not found")
++    require_run_access(run, context)
+     action = await repository.get_action_intent(run_id)
+     return _run_view(run, action)
+ 
+@@ -315,6 +340,7 @@ async def approve_run(
+     run = await repository.get_run(run_id)
+     if run is None:
+         raise HTTPException(status_code=404, detail="Run not found")
++    require_run_access(run, context)
+     action = await repository.get_action_intent(run_id)
+     if action is None:
+         raise HTTPException(status_code=409, detail="Run has no pending action")
+@@ -401,6 +427,8 @@ async def approve_run(
+             await decline_run(run, context, decision)
+         else:
+             await resume_run(run, context, decision, scope=scope)
++    except RunCancelled as exc:
++        raise HTTPException(status_code=409, detail="Run has been cancelled") from exc
+     except ResumeBlocked as exc:
+         raise HTTPException(
+             status_code=409,
+@@ -432,23 +460,17 @@ async def approve_run(
+ 
+ @phase2_router.post("/runs/{run_id}:cancel")
+ async def cancel_run(run_id: UUID, context: TenantContextDependency) -> RunView:
+-    # Cancelling is a mutation of a run the caller did not necessarily create, and
+-    # ``list_runs`` exposes every run in the tenant. Without a floor, a read-only
+-    # ``viewer`` could stop work across the whole tenant. ``analyst`` matches the
+-    # floor that lets the same principal create one; approvers hold it too, so this
+-    # does not narrow anyone who already had a hand in the run's lifecycle.
++    # Require both a write-capable role and the run's current subject/resource scope.
+     context.require_role("analyst")
+     repository = ServiceMindRepository(context.tenant_id)
+     run = await repository.get_run(run_id)
+     if run is None:
+         raise HTTPException(status_code=404, detail="Run not found")
+-    if run.status not in {
+-        RunStatus.PENDING.value,
+-        RunStatus.WAITING_APPROVAL.value,
+-        RunStatus.WAITING_REVIEW.value,
+-    }:
+-        raise HTTPException(status_code=409, detail="Run cannot be cancelled")
+-    run = await repository.update_run(run_id, RunStatus.CANCELLED)
++    require_run_access(run, context)
++    try:
++        run = await repository.cancel_run(run_id)
++    except ValueError as exc:
++        raise HTTPException(status_code=409, detail="Run cannot be cancelled") from exc
+     await repository.audit(
+         actor_id=context.user_id,
+         event_type="run.cancelled",
+@@ -471,6 +493,7 @@ async def resolve_review_escalation(
+     run = await repository.get_run(run_id)
+     if run is None:
+         raise HTTPException(status_code=404, detail="Run not found")
++    require_run_access(run, context)
+     if run.status != RunStatus.WAITING_REVIEW.value:
+         raise HTTPException(status_code=409, detail="Run is not waiting for human review")
+     # Same ordering as the approval endpoint, for the same reason: a decision that
+@@ -537,9 +560,12 @@ async def stream_run_events(
+     context: TenantContextDependency,
+     last_event_id: str | None = Header(default=None, alias="Last-Event-ID"),
+ ) -> StreamingResponse:
++    context.require_role("viewer")
+     repository = ServiceMindRepository(context.tenant_id)
+-    if await repository.get_run(run_id) is None:
++    run = await repository.get_run(run_id)
++    if run is None:
+         raise HTTPException(status_code=404, detail="Run not found")
++    require_run_access(run, context)
+     after = _event_cursor(last_event_id)
+ 
+     async def generate() -> AsyncGenerator[str, None]:
+diff --git a/src/servicemind/harness/webhooks.py b/src/servicemind/harness/webhooks.py
+index 668ea56..8fe8062 100644
+--- a/src/servicemind/harness/webhooks.py
++++ b/src/servicemind/harness/webhooks.py
+@@ -45,13 +45,18 @@ def webhook_run_id(tenant_id: UUID, signature: str) -> UUID:
+ def parse_glpi_webhook(body: bytes) -> GlpiWebhookEvent:
+     try:
+         payload = json.loads(body)
++        ticket_id = payload["item"]["id"]
++        entity_id = payload["item"]["entity"]["id"]
++        event = payload.get("event", "updated")
++        if type(ticket_id) is not int or type(entity_id) is not int or not isinstance(event, str):
++            raise ValueError("Invalid webhook field types")
+         parsed = GlpiWebhookEvent(
+             tenant_id=UUID(str(payload["tenant_id"])),
+-            ticket_id=int(payload["item"]["id"]),
+-            entity_id=int(payload["item"]["entity"]["id"]),
+-            event=str(payload.get("event", "updated")),
++            ticket_id=ticket_id,
++            entity_id=entity_id,
++            event=event,
+         )
+-    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
++    except (KeyError, TypeError, ValueError, RecursionError, OverflowError) as exc:
+         raise WebhookValidationError("Invalid GLPI webhook payload") from exc
+     # Checked after the parse guard, not inside it: a well-formed body carrying a value
+     # outside the contract is a different failure from a body that could not be read, and
+@@ -66,6 +71,8 @@ def parse_glpi_webhook(body: bytes) -> GlpiWebhookEvent:
+     # rejected delivery, not a database error four layers down.
+     if not 1 <= parsed.ticket_id <= TICKET_ID_MAX:
+         raise WebhookValidationError(f"GLPI webhook ticket id must be 1..{TICKET_ID_MAX}")
++    if not 0 <= parsed.entity_id <= TICKET_ID_MAX:
++        raise WebhookValidationError("Invalid GLPI webhook entity id")
+     return parsed
+ 
+ 
+@@ -74,6 +81,13 @@ def parse_glpi_webhook(body: bytes) -> GlpiWebhookEvent:
+ _SIGNATURE_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+ 
+ 
++def validate_glpi_headers(timestamp: str, signature: str) -> None:
++    if not 1 <= len(timestamp) <= 12 or not timestamp.isascii() or not timestamp.isdigit():
++        raise WebhookValidationError("Invalid webhook timestamp")
++    if _SIGNATURE_PATTERN.fullmatch(signature) is None:
++        raise WebhookValidationError("Invalid webhook signature")
++
++
+ def verify_glpi_signature(
+     *, body: bytes, timestamp: str, signature: str, secret: str, now: int | None = None
+ ) -> None:
+@@ -84,10 +98,7 @@ def verify_glpi_signature(
+     # caller could turn any of them into a 500 -- and ``str.isdigit()`` alone would not
+     # have caught the timestamp, since it accepts Arabic-Indic digits that ``int()`` reads
+     # happily and that ASCII encoding then rejects.
+-    if not timestamp.isascii() or not timestamp.isdigit():
+-        raise WebhookValidationError("Invalid webhook timestamp")
+-    if _SIGNATURE_PATTERN.fullmatch(signature) is None:
+-        raise WebhookValidationError("Invalid webhook signature")
++    validate_glpi_headers(timestamp, signature)
+     timestamp_value = int(timestamp)
+     if abs((now if now is not None else int(time.time())) - timestamp_value) > 300:
+         raise WebhookValidationError("Expired webhook request")
+diff --git a/src/servicemind/interfaces/http/operations.py b/src/servicemind/interfaces/http/operations.py
+index e214512..9224d74 100644
+--- a/src/servicemind/interfaces/http/operations.py
++++ b/src/servicemind/interfaces/http/operations.py
+@@ -12,6 +12,7 @@ from pydantic import BaseModel
+ from servicemind.persistence.models import AgentRun, AuditEvent, RunEvent, RunStatus
+ from servicemind.persistence.repository import ServiceMindRepository
+ from servicemind.security.auth import TenantContextDependency
++from servicemind.security.run_access import require_run_access, run_scope
+ 
+ router = APIRouter(tags=["ServiceMind Operations"])
+ 
+@@ -109,6 +110,12 @@ async def list_runs(
+         raise HTTPException(status_code=422, detail="Run cursor requires both values")
+     repository = ServiceMindRepository(context.tenant_id)
+     runs = await repository.list_runs(
++        reader_id=None
++        if context.roles.intersection({"approver", "operator", "tenant_admin"})
++        else context.user_id,
++        reader_scope=None
++        if context.roles.intersection({"operator", "tenant_admin"})
++        else run_scope(context),
+         status=status,
+         limit=limit,
+         after_created_at=after_created_at,
+@@ -131,8 +138,10 @@ async def get_run_timeline(
+     """Return the durable, tenant-scoped event timeline without opening an SSE stream."""
+     context.require_role("viewer")
+     repository = ServiceMindRepository(context.tenant_id)
+-    if await repository.get_run(run_id) is None:
++    run = await repository.get_run(run_id)
++    if run is None:
+         raise HTTPException(status_code=404, detail="Run not found")
++    require_run_access(run, context)
+     return [_run_event(event) for event in await repository.list_events(run_id, after)]
+ 
+ 
+@@ -145,7 +154,7 @@ async def list_audit_events(
+     after_event_id: UUID | None = Query(default=None),
+ ) -> AuditEventPage:
+     """Expose the append-only governance ledger to authorized operational roles."""
+-    context.require_any_role("operator", "approver", "tenant_admin")
++    context.require_any_role("operator", "tenant_admin")
+     if (after_created_at is None) != (after_event_id is None):
+         raise HTTPException(status_code=422, detail="Audit cursor requires both values")
+     repository = ServiceMindRepository(context.tenant_id)
+diff --git a/src/servicemind/mcp/server.py b/src/servicemind/mcp/server.py
+index 0da50f6..123a4b7 100644
+--- a/src/servicemind/mcp/server.py
++++ b/src/servicemind/mcp/server.py
+@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
+ from typing import Any, Literal
+ from uuid import UUID, uuid4
+ 
+-from fastapi import APIRouter, Header, Request, Response
++from fastapi import APIRouter, Header, HTTPException, Request, Response
+ from pydantic import BaseModel, ConfigDict, Field, ValidationError
+ 
+ from core import settings
+@@ -20,6 +20,7 @@ from servicemind.mcp.tasks import (
+ )
+ from servicemind.persistence.repository import ServiceMindRepository
+ from servicemind.security.auth import TenantContextDependency
++from servicemind.security.run_access import require_run_access, run_scope
+ from servicemind.tool_platform.contracts import ToolCall, ToolExecutionResult
+ from servicemind.tool_platform.gateway import (
+     ToolContractViolation,
+@@ -408,6 +409,10 @@ async def _tool_call(request: JsonRpcRequest, context, mcp_name: str | None) ->
+             stored_run = await ServiceMindRepository(context.tenant_id).get_run(execution.run_id)
+             if stored_run is None:
+                 raise ValueError("execution run is outside the authenticated tenant")
++            try:
++                require_run_access(stored_run, context)
++            except HTTPException as exc:
++                raise ValueError("execution run is outside the authenticated scope") from exc
+     else:
+         definition = _gateway.registry.resolve(tool_name, "1.0.0")
+         ticket_id = arguments.get("ticket_id", arguments.get("resource_id", 0))
+@@ -418,6 +423,7 @@ async def _tool_call(request: JsonRpcRequest, context, mcp_name: str | None) ->
+             ticket_id=ticket_id,
+             goal=f"MCP read operation: {tool_name}",
+             request_write=False,
++            access_scope=run_scope(context),
+         )
+         execution = ServiceMindExecutionMeta(
+             requestId=uuid4(),
+diff --git a/src/servicemind/persistence/models.py b/src/servicemind/persistence/models.py
+index 728b999..2e6d540 100644
+--- a/src/servicemind/persistence/models.py
++++ b/src/servicemind/persistence/models.py
+@@ -135,6 +135,7 @@ class AgentRun(Base):
+     ticket_id: Mapped[int] = mapped_column(Integer, nullable=False)
+     goal: Mapped[str] = mapped_column(Text, nullable=False)
+     request_write: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
++    access_scope: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+     status: Mapped[str] = mapped_column(
+         String(40), default=RunStatus.PENDING.value, nullable=False, index=True
+     )
+diff --git a/src/servicemind/persistence/repository.py b/src/servicemind/persistence/repository.py
+index 46effe9..7400d8e 100644
+--- a/src/servicemind/persistence/repository.py
++++ b/src/servicemind/persistence/repository.py
+@@ -4,8 +4,8 @@ from datetime import datetime
+ from typing import Any
+ from uuid import UUID, uuid4
+ 
+-from sqlalchemy import and_, func, or_, select, text
+-from sqlalchemy.dialects.postgresql import insert
++from sqlalchemy import and_, cast, func, or_, select, text
++from sqlalchemy.dialects.postgresql import JSONB, insert
+ 
+ from servicemind.persistence.database import tenant_session
+ from servicemind.persistence.models import (
+@@ -23,6 +23,10 @@ from servicemind.persistence.models import (
+ )
+ 
+ 
++class RunCancelled(RuntimeError):
++    pass
++
++
+ class ServiceMindRepository:
+     def __init__(self, tenant_id: UUID) -> None:
+         self.tenant_id = tenant_id
+@@ -34,6 +38,7 @@ class ServiceMindRepository:
+         ticket_id: int,
+         goal: str,
+         request_write: bool,
++        access_scope: dict[str, list[int]] | None = None,
+     ) -> AgentRun:
+         run = AgentRun(
+             id=uuid4(),
+@@ -43,6 +48,7 @@ class ServiceMindRepository:
+             ticket_id=ticket_id,
+             goal=goal,
+             request_write=request_write,
++            access_scope=access_scope,
+             status=RunStatus.PENDING.value,
+         )
+         async with tenant_session(self.tenant_id) as session:
+@@ -101,6 +107,7 @@ class ServiceMindRepository:
+                         ticket_id=ticket_id,
+                         goal=goal,
+                         request_write=False,
++                        access_scope={"entity_ids": [event_payload["entity_id"]], "group_ids": []},
+                         status=RunStatus.PENDING.value,
+                     )
+                     .on_conflict_do_nothing(index_elements=["id"])
+@@ -139,8 +146,19 @@ class ServiceMindRepository:
+         limit: int = 50,
+         after_created_at: datetime | None = None,
+         after_run_id: UUID | None = None,
++        reader_id: str | None = None,
++        reader_scope: dict[str, list[int]] | None = None,
+     ) -> list[AgentRun]:
+         statement = select(AgentRun)
++        if reader_id is not None:
++            statement = statement.where(AgentRun.user_id == reader_id)
++        if reader_scope is not None:
++            statement = statement.where(
++                AgentRun.access_scope["entity_ids"].op("<@")(
++                    cast(reader_scope["entity_ids"], JSONB)
++                ),
++                AgentRun.access_scope["group_ids"].op("<@")(cast(reader_scope["group_ids"], JSONB)),
++            )
+         if status is not None:
+             statement = statement.where(AgentRun.status == status)
+         if after_created_at is not None and after_run_id is not None:
+@@ -171,6 +189,8 @@ class ServiceMindRepository:
+                     select(AgentRun).where(AgentRun.id == run_id).with_for_update()
+                 )
+             ).scalar_one()
++            if run.status == RunStatus.CANCELLED.value and status != RunStatus.CANCELLED:
++                raise RunCancelled("Run has been cancelled")
+             run.status = status.value
+             if result is not None:
+                 run.result = result
+@@ -178,6 +198,33 @@ class ServiceMindRepository:
+             await session.flush()
+             return run
+ 
++    async def cancel_run(self, run_id: UUID) -> AgentRun:
++        async with self.action_lock(f"run-submit:{run_id}"):
++            async with tenant_session(self.tenant_id) as session:
++                run = (
++                    await session.execute(
++                        select(AgentRun).where(AgentRun.id == run_id).with_for_update()
++                    )
++                ).scalar_one()
++                if run.status in {RunStatus.SUCCEEDED.value, RunStatus.FAILED.value}:
++                    raise ValueError("Run is already terminal")
++                run.status = RunStatus.CANCELLED.value
++                await session.flush()
++                return run
++
++    @asynccontextmanager
++    async def run_submission(self, run_id: UUID) -> AsyncIterator[None]:
++        # The cancel response is the barrier: preceding in-flight submissions finish first.
++        async with self.action_lock(f"run-submit:{run_id}"):
++            run = await self.get_run(run_id)
++            if run is None or run.status in {
++                RunStatus.CANCELLED.value,
++                RunStatus.FAILED.value,
++                RunStatus.SUCCEEDED.value,
++            }:
++                raise RunCancelled("Run does not permit a new external submission")
++            yield
++
+     async def append_event(
+         self, run_id: UUID, event_type: str, payload: dict[str, Any]
+     ) -> RunEvent:
+diff --git a/src/servicemind/tool_platform/providers.py b/src/servicemind/tool_platform/providers.py
+index 9eb6e5e..bf4054b 100644
+--- a/src/servicemind/tool_platform/providers.py
++++ b/src/servicemind/tool_platform/providers.py
+@@ -111,6 +111,12 @@ class ProductionGlpiBackend:
+         return stored
+ 
+     async def _append_followup(self, arguments: dict[str, Any], call: ToolCall) -> dict[str, Any]:
++        async with ServiceMindRepository(call.tenant_id).run_submission(call.run_id):
++            return await self._append_approved_followup(arguments, call)
++
++    async def _append_approved_followup(
++        self, arguments: dict[str, Any], call: ToolCall
++    ) -> dict[str, Any]:
+         """Write one approved followup, or recognise the one a crash already wrote.
+ 
+         The bytes are pinned to the approved intent rather than trusted from the caller:
+diff --git a/tests/service/conftest.py b/tests/service/conftest.py
+index 95af8e8..dc10f3c 100644
+--- a/tests/service/conftest.py
++++ b/tests/service/conftest.py
+@@ -9,9 +9,18 @@ from service import app
+ 
+ 
+ @pytest.fixture(autouse=True)
+-def disable_deployment_auth_by_default(monkeypatch):
++def disable_deployment_auth_by_default(monkeypatch, request):
+     """Upstream contract tests are transport-agnostic unless auth is under test."""
+     monkeypatch.setattr("service.service.settings.AUTH_SECRET", None)
++    monkeypatch.setattr("service.service.settings.SERVICEMIND_GENERIC_API_ENABLED", True)
++    if request.node.path.name != "test_auth.py" and request.node.name != "test_agui_auth":
++        from service.service import verify_bearer
++
++        app.dependency_overrides[verify_bearer] = lambda: None
++        yield
++        app.dependency_overrides.pop(verify_bearer, None)
++    else:
++        yield
+ 
+ 
+ @pytest.fixture
+diff --git a/tests/service/test_auth.py b/tests/service/test_auth.py
+index f7d989d..44db1ea 100644
+--- a/tests/service/test_auth.py
++++ b/tests/service/test_auth.py
+@@ -2,18 +2,18 @@ from pydantic import SecretStr
+ 
+ 
+ def test_no_auth_secret(mock_settings, mock_agent, test_client):
+-    """Test that when AUTH_SECRET is not set, all requests are allowed"""
++    """Enabling the legacy API without a credential must fail closed."""
+     mock_settings.AUTH_SECRET = None
+     response = test_client.post(
+         "/invoke",
+         json={"message": "test"},
+         headers={"Authorization": "Bearer any-token"},
+     )
+-    assert response.status_code == 200
++    assert response.status_code == 503
+ 
+     # Should also work without any auth header
+     response = test_client.post("/invoke", json={"message": "test"})
+-    assert response.status_code == 200
++    assert response.status_code == 503
+ 
+ 
+ def test_auth_secret_correct(mock_settings, mock_agent, test_client):
+diff --git a/tests/servicemind/test_enterprise_subagents.py b/tests/servicemind/test_enterprise_subagents.py
+index 9716dff..d1f06a4 100644
+--- a/tests/servicemind/test_enterprise_subagents.py
++++ b/tests/servicemind/test_enterprise_subagents.py
+@@ -633,6 +633,10 @@ class _ExecutorRepository:
+ 
+         return _Lock()
+ 
++    def run_submission(self, run_id):
++        assert run_id == self.intent.run_id
++        return self.action_lock(f"run-submit:{run_id}")
++
+     async def get_idempotency(self, idempotency_key):
+         return self._record
+ 
+diff --git a/tests/servicemind/test_operations_api.py b/tests/servicemind/test_operations_api.py
+index 7aeb204..3624a09 100644
+--- a/tests/servicemind/test_operations_api.py
++++ b/tests/servicemind/test_operations_api.py
+@@ -55,7 +55,12 @@ class _Repository:
+         ]
+ 
+     async def get_run(self, run_id: UUID) -> SimpleNamespace:
+-        return SimpleNamespace(id=run_id)
++        return SimpleNamespace(
++            id=run_id,
++            tenant_id=TENANT_ID,
++            user_id="operator-1",
++            access_scope={"entity_ids": [], "group_ids": []},
++        )
+ 
+     async def list_events(self, run_id: UUID, after: int) -> list[SimpleNamespace]:
+         return [
+@@ -178,7 +183,12 @@ class _EventRepository:
+         self.tenant_id = tenant_id
+ 
+     async def get_run(self, run_id: UUID) -> SimpleNamespace:
+-        return SimpleNamespace(id=run_id)
++        return SimpleNamespace(
++            id=run_id,
++            tenant_id=TENANT_ID,
++            user_id="operator-1",
++            access_scope={"entity_ids": [], "group_ids": []},
++        )
+ 
+     async def list_events(self, run_id: UUID, after: int) -> list[SimpleNamespace]:
+         type(self).cursors.append(after)
+@@ -200,7 +210,7 @@ async def _stream(
+     headers = {} if last_event_id is None else {"Last-Event-ID": last_event_id}
+     seen = len(_EventRepository.cursors)
+     async with httpx.AsyncClient(
+-        transport=httpx.ASGITransport(app=_app(_context({"analyst"}))),
++        transport=httpx.ASGITransport(app=_app(_context({"viewer", "analyst"}))),
+         base_url="http://test",
+     ) as client:
+         response = await client.get(f"/v1/servicemind/runs/{uuid4()}/events", headers=headers)
+@@ -315,7 +325,8 @@ async def test_cancel_run_demands_a_mutating_role_and_only_stops_live_runs(
+             return SimpleNamespace(
+                 id=run_id,
+                 tenant_id=TENANT_ID,
+-                user_id="analyst-1",
++                user_id="operator-1",
++                access_scope={"entity_ids": [], "group_ids": []},
+                 ticket_id=42,
+                 goal="Investigate VPN incident",
+                 request_write=False,
+@@ -326,9 +337,11 @@ async def test_cancel_run_demands_a_mutating_role_and_only_stops_live_runs(
+                 updated_at=now,
+             )
+ 
+-        async def update_run(self, run_id: UUID, run_status: str) -> SimpleNamespace:
+-            self.touches.append(f"update_run:{run_status}")
+-            self.status = run_status
++        async def cancel_run(self, run_id: UUID) -> SimpleNamespace:
++            if self.status in {RunStatus.SUCCEEDED.value, RunStatus.FAILED.value}:
++                raise ValueError("terminal")
++            self.touches.append(f"update_run:{RunStatus.CANCELLED.value}")
++            self.status = RunStatus.CANCELLED
+             return await self.get_run(run_id)
+ 
+         async def audit(self, **_: object) -> None:
+@@ -370,7 +383,7 @@ async def test_cancel_run_demands_a_mutating_role_and_only_stops_live_runs(
+     missing = uuid4()
+     Repository.missing_id = missing
+     async with httpx.AsyncClient(
+-        transport=httpx.ASGITransport(app=_app(_context({"analyst"}))),
++        transport=httpx.ASGITransport(app=_app(_context({"viewer", "analyst"}))),
+         base_url="http://test",
+     ) as client:
+         absent = await client.post(f"/v1/servicemind/runs/{missing}:cancel")
+@@ -380,7 +393,7 @@ async def test_cancel_run_demands_a_mutating_role_and_only_stops_live_runs(
+     # CANCELLED: the audit trail would then disagree with what the workflow did.
+     Repository.status = RunStatus.SUCCEEDED.value
+     async with httpx.AsyncClient(
+-        transport=httpx.ASGITransport(app=_app(_context({"analyst"}))),
++        transport=httpx.ASGITransport(app=_app(_context({"viewer", "analyst"}))),
+         base_url="http://test",
+     ) as client:
+         settled = await client.post(f"/v1/servicemind/runs/{live}:cancel")
+diff --git a/tests/servicemind/test_phase7_principal_invariants.py b/tests/servicemind/test_phase7_principal_invariants.py
+index 1db0f8a..59193df 100644
+--- a/tests/servicemind/test_phase7_principal_invariants.py
++++ b/tests/servicemind/test_phase7_principal_invariants.py
+@@ -65,6 +65,7 @@ def _run(**overrides) -> AgentRun:
+         "ticket_id": 7,
+         "goal": "VPN MFA rejected after a phone change",
+         "request_write": False,
++        "access_scope": {"entity_ids": [2], "group_ids": [3]},
+         # A run that was never persisted has no timestamps, and the endpoint's view
+         # model requires them -- so the fixture carries what the row would carry.
+         "created_at": datetime(2026, 1, 1, tzinfo=UTC),
+diff --git a/tests/servicemind/test_phase7_security_contract.py b/tests/servicemind/test_phase7_security_contract.py
+index 49df61f..46ea0b5 100644
+--- a/tests/servicemind/test_phase7_security_contract.py
++++ b/tests/servicemind/test_phase7_security_contract.py
+@@ -254,7 +254,7 @@ def test_the_pytest_line_reader_ignores_the_traceback_lines() -> None:
+ 
+ 
+ def test_a_parametrised_node_id_is_aggregated_rather_than_lost() -> None:
+-    """One red parametrisation is enough to deny the behaviour; skips only count alone."""
++    """Every required parametrisation must execute; partial skips block evidence."""
+     passed = [("PASSED", EvidenceOutcome.PASSED)]
+     skipped = [("SKIPPED", EvidenceOutcome.UNEXERCISED)]
+     failed = [("FAILED", EvidenceOutcome.FAILED)]
+@@ -262,9 +262,7 @@ def test_a_parametrised_node_id_is_aggregated_rather_than_lost() -> None:
+     assert _aggregate(passed * 3) is EvidenceOutcome.PASSED
+     assert _aggregate(passed + failed) is EvidenceOutcome.FAILED
+     assert _aggregate(skipped * 2) is EvidenceOutcome.UNEXERCISED
+-    # Not promoted to BLOCKED: a single skip-guarded parametrisation would then be able to
+-    # stop the release gate on its own, and the skip is still visible in the detail line.
+-    assert _aggregate(passed + skipped) is EvidenceOutcome.PASSED
++    assert _aggregate(passed + skipped) is EvidenceOutcome.UNEXERCISED
+     assert dict(_tally(passed + skipped)) == {"PASSED": 1, "SKIPPED": 1}
+ 
+ 

@@ -1,0 +1,30 @@
+{
+  "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "model": "qwen3:30b-a3b",
+  "runtime_build_identity": {
+    "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+    "boot_id": "842eb671-a6f5-422c-b039-bc05d63506dc",
+    "captured_at": "2026-10-22T11:12:56.872136+00:00",
+    "configuration": {
+      "default_model": "ollama",
+      "ollama_model": "qwen3:30b-a3b",
+      "compatible_model": null,
+      "model_allowed_providers": "ollama",
+      "model_allowed_models": "qwen3:30b-a3b",
+      "generic_api_enabled": false,
+      "oidc_audience": "servicemind-api",
+      "tool_platform_enabled": true,
+      "tool_provider": "native_glpi"
+    },
+    "configuration_sha256": "d8bd0449f2138f4b94e3ed3c0eea002dc0f808b0cfaa4e1f40d91fab9c4dd148"
+  },
+  "remote_identity_unchanged": true,
+  "api_fee": 0,
+  "utility_verdict": "BLOCKED",
+  "terminal_status": "succeeded",
+  "seconds": 22.515543956309557,
+  "interpretation": "Single current-source normal control; not a full 28-case acceptance or a robustness rate.",
+  "raw_utility_verdict": "PASS",
+  "evidence_validity": "BLOCKED",
+  "invalid_reason": "Independent actual-model probe shared the DB with a restarting main simulator service. Recovery supplied a security-simulator-v1 analysis. Excluded from actual-model success evidence."
+}

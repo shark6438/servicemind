@@ -1,0 +1,88 @@
+{
+  "model": "Qwen3-30B-A3B-Instruct-2507",
+  "api_model_alias": "security-local-qwen-instruct",
+  "api_provider": "Local OpenAI-compatible protocol only; no commercial provider call",
+  "model_manifest": {
+    "schemaVersion": 2,
+    "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+    "config": {
+      "mediaType": "application/vnd.docker.container.image.v1+json",
+      "digest": "sha256:8c26ae310182f66177629760bd587cf4f129d9d40ad9eb907bcbabe5be45c03b",
+      "size": 494
+    },
+    "layers": [
+      {
+        "mediaType": "application/vnd.ollama.image.model",
+        "digest": "sha256:78b329e716e7e9775973d392cd132b1f1ff1c8287a992887caeb6fd6c56ba9cc",
+        "size": 18556685856
+      },
+      {
+        "mediaType": "application/vnd.ollama.image.template",
+        "digest": "sha256:eade0a07cac7712787bbce23d12f9306adb4781d873d1df6e16f7840fa37afec",
+        "size": 1379
+      },
+      {
+        "mediaType": "application/vnd.ollama.image.license",
+        "digest": "sha256:d18a5cc71b84bc4af394a31116bd3932b42241de70c77d2b76d69a314ec8aa12",
+        "size": 11338
+      },
+      {
+        "mediaType": "application/vnd.ollama.image.params",
+        "digest": "sha256:0914c7781e001948488d937994217538375b4fd8c1466c5e7a625221abd3ea7a",
+        "size": 119
+      }
+    ]
+  },
+  "gguf": {
+    "gguf_path": "/root/.ollama/models/blobs/sha256-78b329e716e7e9775973d392cd132b1f1ff1c8287a992887caeb6fd6c56ba9cc",
+    "model": "qwen3:30b-a3b-instruct-2507-q4_K_M",
+    "model_info": {
+      "general.architecture": "qwen3moe",
+      "general.basename": "Qwen3",
+      "general.file_type": 15,
+      "general.finetune": "Instruct",
+      "general.parameter_count": 30532122624,
+      "general.quantization_version": 2,
+      "general.size_label": "30B-A3B",
+      "general.type": "model",
+      "general.version": "2507",
+      "qwen3moe.attention.head_count": 32,
+      "qwen3moe.attention.head_count_kv": 4,
+      "qwen3moe.attention.key_length": 128,
+      "qwen3moe.attention.layer_norm_rms_epsilon": 1e-06,
+      "qwen3moe.attention.value_length": 128,
+      "qwen3moe.block_count": 48,
+      "qwen3moe.context_length": 262144,
+      "qwen3moe.embedding_length": 2048,
+      "qwen3moe.expert_count": 128,
+      "qwen3moe.expert_feed_forward_length": 768,
+      "qwen3moe.expert_used_count": 8,
+      "qwen3moe.feed_forward_length": 6144,
+      "qwen3moe.rope.freq_base": 10000000,
+      "tokenizer.ggml.add_bos_token": false,
+      "tokenizer.ggml.bos_token_id": 151643,
+      "tokenizer.ggml.eos_token_id": 151645,
+      "tokenizer.ggml.merges": null,
+      "tokenizer.ggml.model": "gpt2",
+      "tokenizer.ggml.padding_token_id": 151643,
+      "tokenizer.ggml.pre": "qwen2",
+      "tokenizer.ggml.token_type": null,
+      "tokenizer.ggml.tokens": null
+    },
+    "parameters": "top_p                          0.8\nrepeat_penalty                 1\nstop                           \"<|im_start|>\"\nstop                           \"<|im_end|>\"\ntemperature                    0.7\ntop_k                          20"
+  },
+  "runtime_image": "ghcr.io/ggml-org/llama.cpp@sha256:8c74db29f1a2bef3f0a331b52c4d6214601dfceed4bee0b94cc48b3b23ff257d",
+  "runtime_image_id": "sha256:433c4af64d0e6218182ca6650fc5c4451afaa8aa0355b1c006f7474f8a1f6a92",
+  "cpu_threads": 12,
+  "context_length": 16384,
+  "parallel": 1,
+  "built_in_tools": false,
+  "readonly_model_and_rootfs": true,
+  "authentication": "Private local API key; no key in artifact",
+  "chat_template_sha256": "40c21f34cf67d8c760ef72f8ad3ae5afad514299d4b06e91dd9a8d705af7b541",
+  "api_fee": 0,
+  "official_sources": [
+    "https://registry.ollama.com/library/qwen3/tags",
+    "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md"
+  ]
+}

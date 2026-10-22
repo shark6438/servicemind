@@ -91,6 +91,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: LogLevel = LogLevel.WARNING
 
     AUTH_SECRET: SecretStr | None = None
+    SERVICEMIND_GENERIC_API_ENABLED: bool = False
 
     OPENAI_API_KEY: SecretStr | None = None
     DEEPSEEK_API_KEY: SecretStr | None = None
@@ -101,6 +102,7 @@ class Settings(BaseSettings):
     USE_AWS_BEDROCK: bool = False
     OLLAMA_MODEL: str | None = None
     OLLAMA_BASE_URL: str | None = None
+    OLLAMA_REASONING: bool | None = None
     USE_FAKE_MODEL: bool = False
     OPENROUTER_API_KEY: SecretStr | None = None
 
@@ -135,6 +137,7 @@ class Settings(BaseSettings):
     SERVICEMIND_DATABASE_URL: SecretStr | None = None
     SERVICEMIND_MIGRATION_DATABASE_URL: SecretStr | None = None
     SERVICEMIND_CREDENTIAL_KEY: SecretStr | None = None
+    SERVICEMIND_CREDENTIAL_PREVIOUS_KEYS: list[SecretStr] = []
     SERVICEMIND_OIDC_ISSUER: str | None = None
     SERVICEMIND_OIDC_AUDIENCE: str = "servicemind-api"
     SERVICEMIND_OIDC_JWKS_URL: str | None = None

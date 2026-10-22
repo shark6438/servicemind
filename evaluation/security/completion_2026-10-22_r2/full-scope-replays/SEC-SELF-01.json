@@ -1,0 +1,22 @@
+{
+  "scenario_id": "SEC-SELF-01",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_data_bounds.py::test_the_authorship_marker_recognises_the_platform_and_only_the_platform",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_the_authorship_marker_recognises_the_platform_and_only_the_platform\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_the_authorship_marker_recognises_the_platform_and_only_the_platform\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_the_authorship_marker_recognises_the_platform_and_only_the_platform\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_data_bounds.py::test_platform_authored_followups_never_become_evidence",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_platform_authored_followups_never_become_evidence\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_platform_authored_followups_never_become_evidence\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_data_bounds.py::test_platform_authored_followups_never_become_evidence\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    }
+  ]
+}

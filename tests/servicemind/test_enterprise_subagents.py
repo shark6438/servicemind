@@ -633,6 +633,10 @@ class _ExecutorRepository:
 
         return _Lock()
 
+    def run_submission(self, run_id):
+        assert run_id == self.intent.run_id
+        return self.action_lock(f"run-submit:{run_id}")
+
     async def get_idempotency(self, idempotency_key):
         return self._record
 

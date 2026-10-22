@@ -1,14 +1,17 @@
+import asyncio
 import hashlib
+import hmac
 import json
 import logging
+import re
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Request, status
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request, status
+from fastapi.responses import PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from servicemind.domain.models import ApprovalDecision
@@ -24,6 +27,7 @@ from servicemind.harness.webhooks import (
     WebhookValidationError,
     glpi_webhook_goal,
     parse_glpi_webhook,
+    validate_glpi_headers,
     verify_glpi_signature,
     webhook_run_id,
 )
@@ -32,6 +36,7 @@ from servicemind.integrations.glpi.resolver import resolve_glpi_config
 from servicemind.interfaces.http.knowledge import router as knowledge_router
 from servicemind.interfaces.http.memory_review import router as memory_review_router
 from servicemind.interfaces.http.operations import router as operations_router
+from servicemind.interfaces.http.webhook_limits import webhook_admission
 from servicemind.model_gateway.gateway import model_error_code
 from servicemind.orchestration.runtime import (
     ResumeBlocked,
@@ -43,9 +48,10 @@ from servicemind.orchestration.runtime import (
     start_run,
 )
 from servicemind.persistence.models import ActionIntentRecord, AgentRun, RunStatus
-from servicemind.persistence.repository import ServiceMindRepository
+from servicemind.persistence.repository import RunCancelled, ServiceMindRepository
 from servicemind.security.auth import TenantContext, TenantContextDependency
 from servicemind.security.crypto import CredentialCipher
+from servicemind.security.run_access import require_run_access, run_scope
 
 logger = logging.getLogger(__name__)
 
@@ -187,6 +193,8 @@ async def _process_webhook_run(run: AgentRun, context: TenantContext) -> None:
     repository = ServiceMindRepository(run.tenant_id)
     try:
         await start_run(run, context)
+    except RunCancelled:
+        return
     except Exception as exc:
         # The workflow owns its own terminals: a run that reaches ``finalize`` writes both
         # its result and a ``run.<status>`` event, so this branch only sees a failure that
@@ -213,8 +221,30 @@ async def _process_webhook_run(run: AgentRun, context: TenantContext) -> None:
         await repository.update_run(run.id, RunStatus.FAILED, error=reason)
 
 
+@phase2_router.get("/webhooks/glpi/{tenant_id}", dependencies=[Depends(webhook_admission)])
+async def glpi_challenge(tenant_id: UUID, crc_token: str):
+    if re.fullmatch(r"[0-9a-f]{64}", crc_token) is None:
+        raise HTTPException(401, "Invalid webhook challenge")
+    integration = await ServiceMindRepository(tenant_id).get_glpi_integration()
+    if integration is None:
+        raise HTTPException(401, "Unknown webhook scope")
+    secret = CredentialCipher().decrypt(integration.webhook_secret_encrypted)
+    return PlainTextResponse(
+        hmac.new(secret.encode(), crc_token.encode("ascii"), hashlib.sha256).hexdigest()
+    )
+
+
 @phase2_router.post(
-    "/webhooks/glpi", status_code=status.HTTP_202_ACCEPTED, response_model=WebhookAccepted
+    "/webhooks/glpi/{tenant_id}",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=WebhookAccepted,
+    dependencies=[Depends(webhook_admission)],
+)
+@phase2_router.post(
+    "/webhooks/glpi",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=WebhookAccepted,
+    dependencies=[Depends(webhook_admission)],
 )
 async def receive_glpi_webhook(
     request: Request,
@@ -222,11 +252,32 @@ async def receive_glpi_webhook(
     x_glpi_signature: str = Header(alias="X-GLPI-signature"),
     x_glpi_timestamp: str = Header(alias="X-GLPI-timestamp"),
 ) -> WebhookAccepted:
-    body = await request.body()
+    try:
+        validate_glpi_headers(x_glpi_timestamp, x_glpi_signature)
+    except WebhookValidationError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    chunks = bytearray()
+    try:
+        async with asyncio.timeout(5):
+            async for chunk in request.stream():
+                if len(chunks) + len(chunk) > 65_536:
+                    raise HTTPException(status_code=413, detail="Webhook payload is too large")
+                chunks.extend(chunk)
+    except TimeoutError as exc:
+        raise HTTPException(status_code=408, detail="Webhook body timed out") from exc
+    body = bytes(chunks)
     try:
         webhook = parse_glpi_webhook(body)
     except WebhookValidationError as exc:
         raise HTTPException(status_code=422, detail="Invalid GLPI webhook payload") from exc
+
+    routed_tenant = request.path_params.get("tenant_id")
+    if routed_tenant is not None:
+        try:
+            if UUID(routed_tenant) != webhook.tenant_id:
+                raise ValueError("Webhook path/body tenant mismatch")
+        except ValueError as exc:
+            raise HTTPException(401, "Webhook path/body tenant mismatch") from exc
 
     context = TenantContext(
         tenant_id=webhook.tenant_id,
@@ -283,6 +334,7 @@ async def create_run(
         ticket_id=request.ticket_id,
         goal=request.goal,
         request_write=request.request_write,
+        access_scope=run_scope(context),
     )
     await repository.append_event(
         run.id,
@@ -298,10 +350,12 @@ async def create_run(
 
 @phase2_router.get("/runs/{run_id}")
 async def get_run(run_id: UUID, context: TenantContextDependency) -> RunView:
+    context.require_role("viewer")
     repository = ServiceMindRepository(context.tenant_id)
     run = await repository.get_run(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="Run not found")
+    require_run_access(run, context)
     action = await repository.get_action_intent(run_id)
     return _run_view(run, action)
 
@@ -315,6 +369,7 @@ async def approve_run(
     run = await repository.get_run(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="Run not found")
+    require_run_access(run, context)
     action = await repository.get_action_intent(run_id)
     if action is None:
         raise HTTPException(status_code=409, detail="Run has no pending action")
@@ -401,6 +456,8 @@ async def approve_run(
             await decline_run(run, context, decision)
         else:
             await resume_run(run, context, decision, scope=scope)
+    except RunCancelled as exc:
+        raise HTTPException(status_code=409, detail="Run has been cancelled") from exc
     except ResumeBlocked as exc:
         raise HTTPException(
             status_code=409,
@@ -432,23 +489,17 @@ async def approve_run(
 
 @phase2_router.post("/runs/{run_id}:cancel")
 async def cancel_run(run_id: UUID, context: TenantContextDependency) -> RunView:
-    # Cancelling is a mutation of a run the caller did not necessarily create, and
-    # ``list_runs`` exposes every run in the tenant. Without a floor, a read-only
-    # ``viewer`` could stop work across the whole tenant. ``analyst`` matches the
-    # floor that lets the same principal create one; approvers hold it too, so this
-    # does not narrow anyone who already had a hand in the run's lifecycle.
+    # Require both a write-capable role and the run's current subject/resource scope.
     context.require_role("analyst")
     repository = ServiceMindRepository(context.tenant_id)
     run = await repository.get_run(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="Run not found")
-    if run.status not in {
-        RunStatus.PENDING.value,
-        RunStatus.WAITING_APPROVAL.value,
-        RunStatus.WAITING_REVIEW.value,
-    }:
-        raise HTTPException(status_code=409, detail="Run cannot be cancelled")
-    run = await repository.update_run(run_id, RunStatus.CANCELLED)
+    require_run_access(run, context)
+    try:
+        run = await repository.cancel_run(run_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail="Run cannot be cancelled") from exc
     await repository.audit(
         actor_id=context.user_id,
         event_type="run.cancelled",
@@ -471,6 +522,7 @@ async def resolve_review_escalation(
     run = await repository.get_run(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="Run not found")
+    require_run_access(run, context)
     if run.status != RunStatus.WAITING_REVIEW.value:
         raise HTTPException(status_code=409, detail="Run is not waiting for human review")
     # Same ordering as the approval endpoint, for the same reason: a decision that
@@ -537,9 +589,12 @@ async def stream_run_events(
     context: TenantContextDependency,
     last_event_id: str | None = Header(default=None, alias="Last-Event-ID"),
 ) -> StreamingResponse:
+    context.require_role("viewer")
     repository = ServiceMindRepository(context.tenant_id)
-    if await repository.get_run(run_id) is None:
+    run = await repository.get_run(run_id)
+    if run is None:
         raise HTTPException(status_code=404, detail="Run not found")
+    require_run_access(run, context)
     after = _event_cursor(last_event_id)
 
     async def generate() -> AsyncGenerator[str, None]:

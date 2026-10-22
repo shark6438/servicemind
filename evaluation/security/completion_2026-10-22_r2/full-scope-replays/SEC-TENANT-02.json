@@ -1,0 +1,36 @@
+{
+  "scenario_id": "SEC-TENANT-02",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_group_restricted_document_is_readable_by_its_group_and_no_other",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_group_restricted_document_is_readable_by_its_group_and_no_other\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_group_restricted_document_is_readable_by_its_group_and_no_other\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_group_restricted_document_is_readable_by_its_group_and_no_other\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_an_unrestricted_document_is_readable_by_everyone_in_the_tenant",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unrestricted_document_is_readable_by_everyone_in_the_tenant\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unrestricted_document_is_readable_by_everyone_in_the_tenant\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_an_unrestricted_document_is_readable_by_everyone_in_the_tenant\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "acceptance",
+      "ref": "ACC-04c",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\", \"case\": \"ACC-04c\", \"verdict\": \"PASS\", \"report_sha256\": \"84d6e2c4c8387f232bc24cb1f71f0fbeabda874e4c1d7ae29cbd84c067f377c1\", \"replay_sha256\": \"47458f1a4cb70a271eaa31565ba237edfdb06a4ee717184065309491d00b857d\"}"
+    },
+    {
+      "kind": "acceptance",
+      "ref": "ACC-23",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\", \"case\": \"ACC-23\", \"verdict\": \"PASS\", \"report_sha256\": \"84d6e2c4c8387f232bc24cb1f71f0fbeabda874e4c1d7ae29cbd84c067f377c1\", \"replay_sha256\": \"b8bdc92b3afd06d6732e139a9e093be7372c667ea5f7e6d44a6940a74ac94ce0\"}"
+    }
+  ]
+}

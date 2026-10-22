@@ -135,6 +135,7 @@ class AgentRun(Base):
     ticket_id: Mapped[int] = mapped_column(Integer, nullable=False)
     goal: Mapped[str] = mapped_column(Text, nullable=False)
     request_write: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    access_scope: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[str] = mapped_column(
         String(40), default=RunStatus.PENDING.value, nullable=False, index=True
     )

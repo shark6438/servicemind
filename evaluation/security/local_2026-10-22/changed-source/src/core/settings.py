@@ -1,0 +1,518 @@
+from enum import StrEnum
+from json import loads
+from typing import Annotated, Any
+from urllib.parse import urlsplit
+
+from dotenv import find_dotenv
+from pydantic import (
+    BeforeValidator,
+    Field,
+    HttpUrl,
+    SecretStr,
+    TypeAdapter,
+    computed_field,
+)
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from schema.models import (
+    AllModelEnum,
+    AnthropicModelName,
+    AWSModelName,
+    AzureOpenAIModelName,
+    DeepseekModelName,
+    FakeModelName,
+    GoogleModelName,
+    GroqModelName,
+    OllamaModelName,
+    OpenAICompatibleName,
+    OpenAIModelName,
+    OpenRouterModelName,
+    Provider,
+    VertexAIModelName,
+)
+
+
+class DatabaseType(StrEnum):
+    SQLITE = "sqlite"
+    POSTGRES = "postgres"
+    MONGO = "mongo"
+
+
+class LogLevel(StrEnum):
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
+
+    def to_logging_level(self) -> int:
+        """Convert to Python logging level constant."""
+        import logging
+
+        mapping = {
+            LogLevel.DEBUG: logging.DEBUG,
+            LogLevel.INFO: logging.INFO,
+            LogLevel.WARNING: logging.WARNING,
+            LogLevel.ERROR: logging.ERROR,
+            LogLevel.CRITICAL: logging.CRITICAL,
+        }
+        return mapping[self]
+
+
+def check_str_is_http(x: str) -> str:
+    http_url_adapter = TypeAdapter(HttpUrl)
+    return str(http_url_adapter.validate_python(x))
+
+
+#: Headroom the context envelope reserves for the system prompt and the model's own
+#: output. This MUST equal ``servicemind.context.contracts.DEFAULT_SYSTEM_RESERVE`` /
+#: ``DEFAULT_OUTPUT_RESERVE``, which is where the builder reads them. The copy exists
+#: because ``core`` is the scaffold layer and may not import the product layer; the
+#: cost of the copy is that drift would keep validating a cap against a stale envelope
+#: and only raise at request time, on a live analysis run -- so
+#: ``test_the_startup_cap_bound_is_the_same_number_the_builder_enforces`` pins the two.
+CONTEXT_SYSTEM_RESERVE = 256
+CONTEXT_OUTPUT_RESERVE = 1024
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=find_dotenv(),
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        extra="ignore",
+        validate_default=False,
+    )
+    MODE: str | None = None
+
+    HOST: str = "0.0.0.0"
+    PORT: int = 8080
+    GRACEFUL_SHUTDOWN_TIMEOUT: int = 30
+    LOG_LEVEL: LogLevel = LogLevel.WARNING
+
+    AUTH_SECRET: SecretStr | None = None
+    SERVICEMIND_GENERIC_API_ENABLED: bool = False
+
+    OPENAI_API_KEY: SecretStr | None = None
+    DEEPSEEK_API_KEY: SecretStr | None = None
+    ANTHROPIC_API_KEY: SecretStr | None = None
+    GOOGLE_API_KEY: SecretStr | None = None
+    GOOGLE_APPLICATION_CREDENTIALS: SecretStr | None = None
+    GROQ_API_KEY: SecretStr | None = None
+    USE_AWS_BEDROCK: bool = False
+    OLLAMA_MODEL: str | None = None
+    OLLAMA_BASE_URL: str | None = None
+    USE_FAKE_MODEL: bool = False
+    OPENROUTER_API_KEY: SecretStr | None = None
+
+    # If DEFAULT_MODEL is None, it will be set in model_post_init
+    DEFAULT_MODEL: AllModelEnum | None = None  # type: ignore[assignment]
+    AVAILABLE_MODELS: set[AllModelEnum] = set()  # type: ignore[assignment]
+
+    # Set openai compatible api, mainly used for proof of concept
+    COMPATIBLE_MODEL: str | None = None
+    COMPATIBLE_API_KEY: SecretStr | None = None
+    COMPATIBLE_BASE_URL: str | None = None
+
+    OPENWEATHERMAP_API_KEY: SecretStr | None = None
+
+    # MCP Configuration
+    GITHUB_PAT: SecretStr | None = None
+    MCP_GITHUB_SERVER_URL: str = "https://api.githubcopilot.com/mcp/"
+
+    # ServiceMind GLPI integration
+    GLPI_BASE_URL: str | None = None
+    GLPI_API_VERSION: str = "v2.3"
+    GLPI_CLIENT_ID: SecretStr | None = None
+    GLPI_CLIENT_SECRET: SecretStr | None = None
+    GLPI_USERNAME: str | None = None
+    GLPI_PASSWORD: SecretStr | None = None
+    GLPI_ENTITY_ID: int = 0
+    GLPI_PROFILE_ID: int = 6
+    GLPI_TIMEOUT_SECONDS: float = 15.0
+    GLPI_TRUST_ENV: bool = False
+
+    # ServiceMind Phase 2 enterprise runtime
+    SERVICEMIND_DATABASE_URL: SecretStr | None = None
+    SERVICEMIND_MIGRATION_DATABASE_URL: SecretStr | None = None
+    SERVICEMIND_CREDENTIAL_KEY: SecretStr | None = None
+    SERVICEMIND_OIDC_ISSUER: str | None = None
+    SERVICEMIND_OIDC_AUDIENCE: str = "servicemind-api"
+    SERVICEMIND_OIDC_JWKS_URL: str | None = None
+    # Keycloak Admin REST, used for exactly one question: what does this user's
+    # identity grant *right now*. See ``security/entitlements.py`` for why a resumed
+    # run asks it, and why the answer is only ever intersected with what the run
+    # already recorded -- never unioned. Unset means no verifier is constructed and
+    # the resume boundary falls back to dropping scope it cannot confirm.
+    SERVICEMIND_KEYCLOAK_ADMIN_URL: str | None = None
+    SERVICEMIND_KEYCLOAK_ADMIN_USERNAME: str | None = None
+    SERVICEMIND_KEYCLOAK_ADMIN_PASSWORD: SecretStr | None = None
+    SERVICEMIND_KEYCLOAK_ADMIN_REALM: str = "servicemind"
+    #: Seconds a verified entitlement answer is reused. Short enough that a revoked
+    #: grant stops being honoured quickly, long enough that a burst of resumes does
+    #: not turn one approval into one realm query per run.
+    SERVICEMIND_ENTITLEMENT_CACHE_SECONDS: float = 30.0
+    SERVICEMIND_FRONTEND_ORIGINS: list[str] = Field(
+        default_factory=lambda: ["http://127.0.0.1:3000", "http://localhost:3000"]
+    )
+    SERVICEMIND_ACME_GLPI_USERNAME: str | None = None
+    SERVICEMIND_ACME_GLPI_PASSWORD: SecretStr | None = None
+    SERVICEMIND_GLOBEX_GLPI_USERNAME: str | None = None
+    SERVICEMIND_GLOBEX_GLPI_PASSWORD: SecretStr | None = None
+    SERVICEMIND_ACME_WEBHOOK_SECRET: SecretStr | None = None
+    SERVICEMIND_GLOBEX_WEBHOOK_SECRET: SecretStr | None = None
+    SERVICEMIND_OTEL_ENDPOINT: str | None = None
+    SERVICEMIND_OTEL_SERVICE_NAME: str = "servicemind-api"
+    # A plan accumulates across revisions: each one re-lists the completed tasks and
+    # adds an evidence, an analysis and a reviewer task, and a run may revise up to
+    # SERVICEMIND_MAX_REPLANS times. At 12 the second retrieval round was
+    # unreachable (six tasks after planning, ten after the first revision, fourteen
+    # for the next), so the Reviewer's RETRIEVE_MORE always ended in a failed run.
+    # The ceiling still has to stay below SERVICEMIND_MAX_STEPS, since every task
+    # costs at least one step.
+    SERVICEMIND_MAX_TASKS: int = 32
+    SERVICEMIND_MAX_PARALLEL: int = 4
+    SERVICEMIND_MAX_REPLANS: int = 2
+    SERVICEMIND_MAX_STEPS: int = 64
+    # Sized from the plan the platform permits, not from the runs it happens to see.
+    # ``dispatch_node`` and ``_invocation`` grant every task up to two model calls, so
+    # a plan at SERVICEMIND_MAX_TASKS can spend 32 x 2 = 64 of these before the control
+    # plane spends anything at all; the router, the planner and a supervisor decision
+    # per transition (retried once on a policy rejection) account for the rest. At 32
+    # the ceiling was binding on ordinary work, not just on pathological loops: of the
+    # runs recorded on this deployment, the successful ones used 11-31 calls and the
+    # cancelled ones used 32-33 -- and three of those cancellations were plain write
+    # runs that never narrowed their scope. It is also the rail that a scope narrowing
+    # runs into first: narrowing reopens the plan and mandates a full re-derivation
+    # (re-retrieve, re-analyse, re-review, re-approve) from the same counter the first
+    # pass already drew on, and a measured narrowed run (ACC-23, ticket 26) spent 22
+    # calls reaching ``waiting_approval`` with roughly twenty more still to go. The
+    # run was then cancelled with ``budget_exceeded`` while its plan was healthy and
+    # its review had passed, so the platform's own safety rule was unreachable within
+    # the platform's own resource bound. The failure is quiet, too: every remaining
+    # task is clamped by ``min(2, remaining_model, ...)``, so a ceiling approached
+    # mid-run starves the re-derivation to one call per task while the first pass got
+    # two. A ceiling that cancels a live run does not save the work already spent on
+    # it -- 33 calls produced nothing -- it only makes the platform pay for the same
+    # question twice.
+    SERVICEMIND_MAX_MODEL_CALLS: int = 80
+    SERVICEMIND_MAX_TOOL_CALLS: int = 32
+    SERVICEMIND_RUN_DEADLINE_SECONDS: int = 600
+    SERVICEMIND_RAG_ENABLED: bool = False
+    SERVICEMIND_RAG_REQUIRED: bool = False
+    SERVICEMIND_OPENSEARCH_URL: str = "https://127.0.0.1:9200"
+    SERVICEMIND_OPENSEARCH_USERNAME: str = "admin"
+    SERVICEMIND_OPENSEARCH_PASSWORD: SecretStr | None = None
+    SERVICEMIND_OPENSEARCH_VERIFY_CERTS: bool = False
+    SERVICEMIND_EMBEDDING_MODEL: str = "BAAI/bge-m3"
+    #: MUST be pinned to a concrete commit hash in production. Floating "main" silently
+    #: changes the vector space; previously indexed chunks lose Recall.
+    SERVICEMIND_EMBEDDING_REVISION: str = "main"
+    SERVICEMIND_RERANKER_MODEL: str = "BAAI/bge-reranker-v2-m3"
+    #: MUST be pinned alongside SERVICEMIND_EMBEDDING_REVISION (see comment above).
+    SERVICEMIND_RERANKER_REVISION: str = "main"
+    SERVICEMIND_MODEL_DEVICE: str | None = None
+    #: huggingface_hub cache roots for the in-process fallback providers (the repo's
+    #: pre-fetched snapshots live under ``data/phase4/models/{embedding,reranker}``).
+    #: When both cache dir and revision are pinned, in-process load is fully offline.
+    SERVICEMIND_EMBEDDING_CACHE_DIR: str | None = None
+    SERVICEMIND_RERANKER_CACHE_DIR: str | None = None
+    #: Graph-RAG (Phase 4 baseline 4.2): optional structural retrieval over the
+    #: Neo4j projection (Ticket/Ci/Service/Problem/Change). Text hybrid retrieval
+    #: remains the primary channel; graph findings are a side channel.
+    SERVICEMIND_GRAPH_RAG_ENABLED: bool = False
+    NEO4J_URI: str = "bolt://127.0.0.1:7687"
+    NEO4J_USER: str = "neo4j"
+    NEO4J_PASSWORD: SecretStr | None = None
+    SERVICEMIND_RAG_CONTEXT_TOKENS: int = 8000
+    # Context packer diversity ceilings (Phase 4 baseline §7). A single document
+    # must not crowd the context, and no single source may drown every other source;
+    # selection still only packs parents whose rerank earned them a place.
+    SERVICEMIND_RAG_MAX_PARENTS_PER_DOCUMENT: int = 2
+    # The source ceiling is a bound *between* sources, so rag/service.py applies it only
+    # when the candidate pool names more than one. With a single source -- which is what
+    # every ingester in rag/sources.py produces when it is the tenant's only connector --
+    # there is nothing to balance, and the bound would silently become a ceiling on the
+    # whole prompt. This knob therefore controls inter-source fairness; how much evidence
+    # one answer may carry is SERVICEMIND_RAG_CONTEXT_TOKENS.
+    SERVICEMIND_RAG_MAX_PARENTS_PER_SOURCE: int = 4
+    #: Multi-query fan-out (hybrid only): add one BM25 sub-query per LLM rewrite to
+    #: the unchanged single dense anchor, inside one OpenSearch ``hybrid`` query that
+    #: the cluster RRF merges (OpenSearch caps ``hybrid`` at 5 arms, so rewrites
+    #: expand lexical coverage rather than duplicating dense vectors). The rewrite
+    #: stage always runs; disable to revert to today's single-query two-arm request
+    #: when the extra lexical arms' latency is unwanted.
+    SERVICEMIND_RAG_MULTI_QUERY: bool = True
+    #: Candidate funnel for hybrid retrieval (RRF). The dense and BM25 arms each
+    #: fetch ``_ARM_K`` hits and RRF fuses them down to ``_CANDIDATE_K`` rows that
+    #: reach the cross-encoder rerank. Keeping the arms wider than the fused pool
+    #: gives the reranker material to promote items neither channel ranked alone;
+    #: ``candidate_k`` is therefore the effective recall ceiling and costs one
+    #: rerank score per row. Operators raise the funnel for large corpora, lower it
+    #: to bound rerank latency.
+    SERVICEMIND_RAG_DENSE_K: int = Field(default=100, ge=1, le=500)
+    SERVICEMIND_RAG_BM25_K: int = Field(default=100, ge=1, le=500)
+    SERVICEMIND_RAG_CANDIDATE_K: int = Field(default=100, ge=1, le=500)
+    #: Cross-encoder evidence is the main ranking signal, while a small amount of
+    #: normalized RRF score prevents semantic reranking from discarding strong exact
+    #: identifier/title matches. This is ranking only; confidence remains the raw,
+    #: calibrated reranker score.
+    SERVICEMIND_RAG_RERANK_WEIGHT: float = Field(default=0.85, ge=0.0, le=1.0)
+    #: The relevance the best retrieved passage must reach before a *lookup* may be
+    #: answered from it. Below this the corpus is treated as not covering the question,
+    #: and the run is sent down the reviewed pipeline instead of returning the nearest
+    #: passages as if they were the answer.
+    #:
+    #: Retrieval is top-k, not thresholded, so a question no document covers still comes
+    #: back with k rows -- ordered by relevance, but rows. Measured over the 200-case
+    #: quality batch (2026-09-24), the two populations do not overlap: questions the
+    #: corpus covers scored at least 0.19 (median 0.99), and questions it deliberately
+    #: does not cover scored at most 0.010 (median 0.0001). 0.05 sits in the gap, and
+    #: moving it anywhere between those bounds changes no case in that batch.
+    #:
+    #: Erring high is cheap and erring low is not. A *declined* lookup is not a lost
+    #: answer: the run continues into planning, retrieval, analysis and review, which is
+    #: where a question the corpus cannot answer has to be handled anyway -- the reviewer
+    #: is the component that may abstain. A lookup that wrongly proceeds is the expensive
+    #: direction, because nothing downstream sees the score again.
+    SERVICEMIND_RAG_ANSWER_FLOOR: float = Field(default=0.05, ge=0.0, le=1.0)
+    SERVICEMIND_EMBEDDING_URL: str | None = None
+    SERVICEMIND_RERANKER_URL: str | None = None
+
+    # ServiceMind Phase 5 governance. Long-term memory and context injection are
+    # feature-gated independently so rollout and rollback never require a schema
+    # downgrade. The Model Gateway path itself is always used; this flag controls
+    # durable per-call audit persistence.
+    SERVICEMIND_MEMORY_ENABLED: bool = False
+    SERVICEMIND_MEMORY_AUTO_ACTIVATION_CONFIDENCE: float = 0.9
+    SERVICEMIND_MEMORY_VECTOR_ENABLED: bool = False
+    #: The lexical candidate window, i.e. how many memories the repository may hand a
+    #: lexical ranker. With ``SERVICEMIND_MEMORY_VECTOR_ENABLED`` the ranker is cosine
+    #: similarity and the window widens to the repository cap (500): ordering candidates
+    #: by lexeme overlap is not a sound way to prune for a cosine comparison, and a
+    #: memory sharing no token with the query would never be scored at all.
+    SERVICEMIND_MEMORY_CANDIDATE_CEILING: int = Field(default=100, ge=1, le=500)
+    #: Automatically propose (never auto-activate) a procedure after the same
+    #: normalized recommendation is verified on at least two distinct tickets.
+    SERVICEMIND_MEMORY_PROCEDURAL_PROPOSALS_ENABLED: bool = False
+    SERVICEMIND_CONTEXT_ENABLED: bool = False
+    SERVICEMIND_CONTEXT_MAX_INPUT_TOKENS: int = 12_000
+    #: Ceiling on how many tokens the EVIDENCE channel may claim in one envelope.
+    #: Evidence is bulk and sorts above memory (authority 0.95 vs 0.7), so with no cap
+    #: a knowledge-saturated run leaves the memory channel whatever is left over -- at
+    #: the shipped defaults that measured 238 tokens out of 10720, which is less than a
+    #: single realistic runbook and therefore silently drops governed procedures the
+    #: reviewer had already approved. ``None`` keeps the historical uncapped behaviour.
+    SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP: int | None = Field(default=None, ge=256, le=1_000_000)
+    SERVICEMIND_SKILLS_ENABLED: bool = False
+    SERVICEMIND_SKILLS_DIR: str = "skills"
+    SERVICEMIND_MODEL_GATEWAY_AUDIT_ENABLED: bool = False
+    SERVICEMIND_MODEL_ALLOWED_PROVIDERS: str = (
+        "deepseek,openai,azure,anthropic,google,vertexai,groq,aws,ollama,openrouter,fake"
+    )
+    SERVICEMIND_MODEL_ALLOWED_MODELS: str = "*"
+    SERVICEMIND_TENANT_MODEL_ALLOWLIST_JSON: str = "{}"
+    SERVICEMIND_MODEL_MAX_RETRIES: int = 1
+    SERVICEMIND_MODEL_TIMEOUT_SECONDS: float = 30
+    SERVICEMIND_MODEL_MAX_COST_USD_PER_CALL: float = Field(default=0.05, gt=0, le=10)
+    SERVICEMIND_SEMANTIC_CACHE_ENABLED: bool = False
+
+    # Phase 6 governed tool platform. Native and MCP are provider adapters behind
+    # one registry/policy/audit boundary; Redis is delivery only, PostgreSQL remains
+    # the transactional authority.
+    SERVICEMIND_TOOL_PLATFORM_ENABLED: bool = False
+    SERVICEMIND_TOOL_PROVIDER: str = "native_glpi"
+    SERVICEMIND_TOOL_POLICY_MODE: str = "local"
+    SERVICEMIND_TOOL_POLICY_VERSION: str = "servicemind-tool-policy-v1"
+    SERVICEMIND_OPA_URL: str | None = None
+    SERVICEMIND_OPA_DECISION_PATH: str = "/v1/data/servicemind/tool/decision"
+    SERVICEMIND_MCP_GLPI_URL: str | None = None
+    SERVICEMIND_MCP_PUBLIC_URL: str | None = None
+    SERVICEMIND_MCP_EXPECTED_ISSUER: str = "servicemind://glpi-mcp"
+    SERVICEMIND_MCP_SERVICE_TOKEN: SecretStr | None = None
+    SERVICEMIND_REDIS_URL: SecretStr | None = None
+    SERVICEMIND_TOOL_RATE_LIMIT_PER_MINUTE: int = Field(default=60, ge=1, le=10_000)
+    SERVICEMIND_TOOL_BULKHEAD_LIMIT: int = Field(default=8, ge=1, le=100)
+    SERVICEMIND_TOOL_CIRCUIT_FAILURES: int = Field(default=5, ge=1, le=100)
+    SERVICEMIND_TOOL_CIRCUIT_RESET_SECONDS: float = Field(default=30, gt=0, le=600)
+
+    LANGCHAIN_TRACING_V2: bool = False
+    LANGCHAIN_PROJECT: str = "default"
+    LANGCHAIN_ENDPOINT: Annotated[str, BeforeValidator(check_str_is_http)] = (
+        "https://api.smith.langchain.com"
+    )
+    LANGCHAIN_API_KEY: SecretStr | None = None
+
+    LANGFUSE_TRACING: bool = False
+    LANGFUSE_HOST: Annotated[str, BeforeValidator(check_str_is_http)] = "https://cloud.langfuse.com"
+    LANGFUSE_PUBLIC_KEY: SecretStr | None = None
+    LANGFUSE_SECRET_KEY: SecretStr | None = None
+
+    # Database Configuration
+    DATABASE_TYPE: DatabaseType = (
+        DatabaseType.SQLITE
+    )  # Options: DatabaseType.SQLITE or DatabaseType.POSTGRES
+    SQLITE_DB_PATH: str = "checkpoints.db"
+
+    # PostgreSQL Configuration
+    POSTGRES_USER: str | None = None
+    POSTGRES_PASSWORD: SecretStr | None = None
+    POSTGRES_HOST: str | None = None
+    POSTGRES_PORT: int | None = None
+    POSTGRES_DB: str | None = None
+    POSTGRES_APPLICATION_NAME: str = "servicemind"
+    POSTGRES_MIN_CONNECTIONS_PER_POOL: int = 1
+    POSTGRES_MAX_CONNECTIONS_PER_POOL: int = 1
+    POSTGRES_AUTO_SETUP: bool = True
+
+    # MongoDB Configuration
+    MONGO_HOST: str | None = None
+    MONGO_PORT: int | None = None
+    MONGO_DB: str | None = None
+    MONGO_USER: str | None = None
+    MONGO_PASSWORD: SecretStr | None = None
+    MONGO_AUTH_SOURCE: str | None = None
+    MONGO_TLS: bool = False  # opt-in TLS for MongoDB; set to True for production/Atlas
+
+    # Azure OpenAI Settings
+    AZURE_OPENAI_API_KEY: SecretStr | None = None
+    AZURE_OPENAI_ENDPOINT: str | None = None
+    AZURE_OPENAI_API_VERSION: str = "2024-02-15-preview"
+    AZURE_OPENAI_DEPLOYMENT_MAP: dict[str, str] = Field(
+        default_factory=dict, description="Map of model names to Azure deployment IDs"
+    )
+
+    def model_post_init(self, __context: Any) -> None:
+        for origin in self.SERVICEMIND_FRONTEND_ORIGINS:
+            parsed = urlsplit(origin)
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not parsed.netloc
+                or parsed.username is not None
+                or parsed.password is not None
+                or parsed.path not in {"", "/"}
+                or parsed.query
+                or parsed.fragment
+                or "*" in origin
+            ):
+                raise ValueError(
+                    "SERVICEMIND_FRONTEND_ORIGINS entries must be exact HTTP(S) origins"
+                )
+        evidence_cap = self.SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP
+        usable_context = (
+            self.SERVICEMIND_CONTEXT_MAX_INPUT_TOKENS
+            - CONTEXT_SYSTEM_RESERVE
+            - CONTEXT_OUTPUT_RESERVE
+        )
+        if evidence_cap is not None and evidence_cap > usable_context // 2:
+            raise ValueError(
+                "SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP must not exceed half "
+                "the usable context budget"
+            )
+        api_keys = {
+            Provider.OPENAI: self.OPENAI_API_KEY,
+            Provider.OPENAI_COMPATIBLE: self.COMPATIBLE_BASE_URL and self.COMPATIBLE_MODEL,
+            Provider.DEEPSEEK: self.DEEPSEEK_API_KEY,
+            Provider.ANTHROPIC: self.ANTHROPIC_API_KEY,
+            Provider.GOOGLE: self.GOOGLE_API_KEY,
+            Provider.VERTEXAI: self.GOOGLE_APPLICATION_CREDENTIALS,
+            Provider.GROQ: self.GROQ_API_KEY,
+            Provider.AWS: self.USE_AWS_BEDROCK,
+            Provider.OLLAMA: self.OLLAMA_MODEL,
+            Provider.FAKE: self.USE_FAKE_MODEL,
+            Provider.AZURE_OPENAI: self.AZURE_OPENAI_API_KEY,
+            Provider.OPENROUTER: self.OPENROUTER_API_KEY,
+        }
+        active_keys = [k for k, v in api_keys.items() if v]
+        if not active_keys:
+            raise ValueError("At least one LLM API key must be provided.")
+
+        # USE_FAKE_MODEL must win the default even when real provider keys are present.
+        if self.USE_FAKE_MODEL and self.DEFAULT_MODEL is None:
+            self.DEFAULT_MODEL = FakeModelName.FAKE
+
+        for provider in active_keys:
+            match provider:
+                case Provider.OPENAI:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = OpenAIModelName.GPT_5_NANO
+                    self.AVAILABLE_MODELS.update(set(OpenAIModelName))
+                case Provider.OPENAI_COMPATIBLE:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = OpenAICompatibleName.OPENAI_COMPATIBLE
+                    self.AVAILABLE_MODELS.update(set(OpenAICompatibleName))
+                case Provider.DEEPSEEK:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = DeepseekModelName.DEEPSEEK_V4_FLASH
+                    self.AVAILABLE_MODELS.update(set(DeepseekModelName))
+                case Provider.ANTHROPIC:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = AnthropicModelName.HAIKU_45
+                    self.AVAILABLE_MODELS.update(set(AnthropicModelName))
+                case Provider.GOOGLE:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = GoogleModelName.GEMINI_36_FLASH
+                    self.AVAILABLE_MODELS.update(set(GoogleModelName))
+                case Provider.VERTEXAI:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = VertexAIModelName.GEMINI_36_FLASH
+                    self.AVAILABLE_MODELS.update(set(VertexAIModelName))
+                case Provider.GROQ:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = GroqModelName.GPT_OSS_20B
+                    self.AVAILABLE_MODELS.update(set(GroqModelName))
+                case Provider.AWS:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = AWSModelName.BEDROCK_HAIKU
+                    self.AVAILABLE_MODELS.update(set(AWSModelName))
+                case Provider.OLLAMA:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = OllamaModelName.OLLAMA_GENERIC
+                    self.AVAILABLE_MODELS.update(set(OllamaModelName))
+                case Provider.OPENROUTER:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = OpenRouterModelName.GEMINI_36_FLASH
+                    self.AVAILABLE_MODELS.update(set(OpenRouterModelName))
+                case Provider.FAKE:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = FakeModelName.FAKE
+                    self.AVAILABLE_MODELS.update(set(FakeModelName))
+                case Provider.AZURE_OPENAI:
+                    if self.DEFAULT_MODEL is None:
+                        self.DEFAULT_MODEL = AzureOpenAIModelName.AZURE_GPT_5_MINI
+                    self.AVAILABLE_MODELS.update(set(AzureOpenAIModelName))
+                    # Validate Azure OpenAI settings if Azure provider is available
+                    if not self.AZURE_OPENAI_API_KEY:
+                        raise ValueError("AZURE_OPENAI_API_KEY must be set")
+                    if not self.AZURE_OPENAI_ENDPOINT:
+                        raise ValueError("AZURE_OPENAI_ENDPOINT must be set")
+                    if not self.AZURE_OPENAI_DEPLOYMENT_MAP:
+                        raise ValueError("AZURE_OPENAI_DEPLOYMENT_MAP must be set")
+
+                    # Parse deployment map if it's a string
+                    if isinstance(self.AZURE_OPENAI_DEPLOYMENT_MAP, str):
+                        try:
+                            self.AZURE_OPENAI_DEPLOYMENT_MAP = loads(
+                                self.AZURE_OPENAI_DEPLOYMENT_MAP
+                            )
+                        except Exception as e:
+                            raise ValueError(f"Invalid AZURE_OPENAI_DEPLOYMENT_MAP JSON: {e}")
+
+                    # Validate required deployments exist
+                    required_models = {"gpt-5", "gpt-5-mini"}
+                    missing_models = required_models - set(self.AZURE_OPENAI_DEPLOYMENT_MAP.keys())
+                    if missing_models:
+                        raise ValueError(f"Missing required Azure deployments: {missing_models}")
+                case _:
+                    raise ValueError(f"Unknown provider: {provider}")
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def BASE_URL(self) -> str:
+        return f"http://{self.HOST}:{self.PORT}"
+
+    def is_dev(self) -> bool:
+        return self.MODE == "dev"
+
+
+settings = Settings()

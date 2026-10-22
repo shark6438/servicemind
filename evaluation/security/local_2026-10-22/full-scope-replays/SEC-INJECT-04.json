@@ -1,0 +1,22 @@
+{
+  "scenario_id": "SEC-INJECT-04",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase5_governance.py::test_the_boundary_a_model_reads_from_says_which_channel_it_is",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase5_governance.py::test_the_boundary_a_model_reads_from_says_which_channel_it_is\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase5_governance.py::test_the_boundary_a_model_reads_from_says_which_channel_it_is\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase5_governance.py::test_the_boundary_a_model_reads_from_says_which_channel_it_is\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"39 passed, 1 warning in 9.75s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase5_governance.py::test_a_memory_reaches_the_model_with_the_identity_of_who_wrote_it",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase5_governance.py::test_a_memory_reaches_the_model_with_the_identity_of_who_wrote_it\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase5_governance.py::test_a_memory_reaches_the_model_with_the_identity_of_who_wrote_it\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase5_governance.py::test_a_memory_reaches_the_model_with_the_identity_of_who_wrote_it\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"39 passed, 1 warning in 9.75s\"}"
+    }
+  ]
+}

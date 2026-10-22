@@ -1,0 +1,43 @@
+{
+  "scenario_id": "SEC-LIMIT-02",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M02 a nil hint is read as 'not a throttle'",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_rate_limit_degradation.evidence.json\", \"sha256\": \"054534e40f2be341221222be5a471e849daf66e0ec106ed943b84bf76371144c\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M03 a nil hint is collapsed into the not-a-throttle answer",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_rate_limit_degradation.evidence.json\", \"sha256\": \"054534e40f2be341221222be5a471e849daf66e0ec106ed943b84bf76371144c\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M08 a nil hint is refused at the call site",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_rate_limit_degradation.evidence.json\", \"sha256\": \"054534e40f2be341221222be5a471e849daf66e0ec106ed943b84bf76371144c\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    }
+  ]
+}

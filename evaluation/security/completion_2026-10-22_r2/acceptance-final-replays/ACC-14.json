@@ -1,0 +1,78 @@
+{
+  "case_id": "ACC-14",
+  "cases_digest": "63a3a71fd0a6caedb9041dffa0094cabe80a84afe91bdbf11f13c6334d67356c",
+  "environment": {
+    "entitlement_verifier_configured": true,
+    "base_url": "http://127.0.0.1:18080",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "recorded_at": "2026-10-22T11:09:55.465624Z",
+    "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+    "notes": [
+      "runtime_build_identity={\"boot_id\": \"b5be54c0-7dcc-44d1-bb5a-72acce578055\", \"captured_at\": \"2026-10-22T11:09:37.896212+00:00\", \"configuration\": {\"compatible_model\": \"security-simulator-v1\", \"default_model\": \"openai-compatible\", \"generic_api_enabled\": false, \"model_allowed_models\": \"security-simulator-v1\", \"model_allowed_providers\": \"openai\", \"oidc_audience\": \"servicemind-api\", \"ollama_model\": \"qwen3:30b-a3b\", \"tool_platform_enabled\": true, \"tool_provider\": \"native_glpi\"}, \"configuration_sha256\": \"9de15e8dd2d4a26dfe18f343941fa24d6d5894ba4de9c2a57d9a1796955160a7\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}",
+      "The entitlement verifier's presence is read from this process's own registry, after importing servicemind.security.auth -- the module whose import installs it. Importing the registry alone reads an empty slot that no deployment ever fills, which would report 'not configured' for a deployment that had one.",
+      "Whether that answer describes the *serving* process is a separate question, and the driver refuses to run when the unit predates the tree."
+    ]
+  },
+  "subject": {
+    "username": "globex-approver",
+    "tenant_id": "22222222-2222-4222-8222-222222222222",
+    "roles": [
+      "operator",
+      "approver",
+      "viewer",
+      "analyst"
+    ],
+    "entity_ids": [
+      2
+    ],
+    "group_ids": [
+      3,
+      4
+    ]
+  },
+  "steps": [
+    {
+      "id": "browser-login",
+      "description": "在浏览器中完成 Keycloak 登录",
+      "action": "Playwright login",
+      "started_at": "2026-10-22T11:11:40.516012Z",
+      "elapsed_seconds": 4.85553281661123,
+      "http_status": null,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "Running 4 tests using 2 workers\n\n  ✓  2 [mobile] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator and shows the workbench (1.7s)\n  ✓  1 [desktop] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator and shows the workbench (1.8s)\n  -  3 [mobile] › e2e/acceptance-console.spec.ts:72:5 › an operator submits a run in the console and sees it reach a terminal state\n  -  4 [desktop] › e2e/acceptance-console.spec.ts:72:5 › an operator submits a run in the console and sees it reach a terminal state\n\n  2 skipped\n  2 passed (3.1s)\nnpm notice\nnpm notice New major version of npm available! 11.19.0 -> 12.2.1\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1\nnpm notice To update run: npm install -g npm@12.2.1\nnpm notice"
+    },
+    {
+      "id": "browser-submit",
+      "description": "通过控制台提交一次运行并等待结果可见，把探针的原始输出写入 detail",
+      "action": "Playwright submit + assert visible",
+      "started_at": "2026-10-22T11:11:45.371611Z",
+      "elapsed_seconds": 14.823278105817735,
+      "http_status": null,
+      "action_hash": null,
+      "action_status": null,
+      "outcome": "passed",
+      "detail": "Running 4 tests using 2 workers\n\n  -  1 [mobile] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator and shows the workbench\n  -  2 [desktop] › e2e/acceptance-console.spec.ts:49:5 › the console authenticates an operator and shows the workbench\n  ✓  3 [mobile] › e2e/acceptance-console.spec.ts:72:5 › an operator submits a run in the console and sees it reach a terminal state (12.1s)\n  ✓  4 [desktop] › e2e/acceptance-console.spec.ts:72:5 › an operator submits a run in the console and sees it reach a terminal state (12.0s)\n\n  2 skipped\n  2 passed (13.3s)\nnpm notice\nnpm notice New major version of npm available! 11.19.0 -> 12.2.1\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1\nnpm notice To update run: npm install -g npm@12.2.1\nnpm notice"
+    }
+  ],
+  "run_id": null,
+  "case_run_ids": [],
+  "terminal_status": null,
+  "total_seconds": null,
+  "action_intent": null,
+  "citations": [],
+  "evidence": [],
+  "analysis": null,
+  "review": null,
+  "selection_manifest": [],
+  "followups_before": [],
+  "followups_after": [],
+  "timeline_events": [],
+  "audit_events": [],
+  "memory_records": [],
+  "graph_readings": [],
+  "foreign_run_status": null,
+  "listed_for_own_tenant": null,
+  "errors": []
+}

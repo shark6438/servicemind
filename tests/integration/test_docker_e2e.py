@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import pytest
 from streamlit.testing.v1 import AppTest
 
@@ -11,7 +14,7 @@ def test_service_with_fake_model():
 
     This test requires the service container to be running with USE_FAKE_MODEL=true
     """
-    client = AgentClient("http://0.0.0.0", agent="chatbot")
+    client = AgentClient(os.getenv("AGENT_URL", "http://127.0.0.1:8080"), agent="chatbot")
     response = client.invoke("Tell me a joke?", model="fake")
     assert response.type == "ai"
     assert response.content == "This is a test response from the fake model."
@@ -24,7 +27,9 @@ def test_service_with_app():
 
     This test requires the service container to be running with USE_FAKE_MODEL=true
     """
-    at = AppTest.from_file("../../src/streamlit_app.py").run()
+    at = AppTest.from_file(
+        str(Path(__file__).resolve().parents[2] / "src/streamlit_app.py"), default_timeout=30
+    ).run()
     assert at.chat_message[0].avatar == "assistant"
     welcome = at.chat_message[0].markdown[0].value
     assert welcome.startswith("Hello! I'm an AI-powered research assistant")

@@ -105,6 +105,8 @@ def _citation_check_evidence(evidence: Evidence) -> str:
             "evidence_id": evidence.evidence_id,
             "source_type": evidence.source_type.value,
             "source_ref": evidence.source_ref,
+            "resource_type": evidence.resource_type,
+            "resource_id": evidence.resource_id,
             "content": evidence.content,
             "content_hash": evidence.provenance.content_hash,
             "citation": (

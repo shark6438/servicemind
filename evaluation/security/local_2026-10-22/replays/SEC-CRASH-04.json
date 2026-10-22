@@ -1,0 +1,22 @@
+{
+  "scenario_id": "SEC-CRASH-04",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_every_terminal_path_publishes_one_evidence_shape",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_every_terminal_path_publishes_one_evidence_shape\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_every_terminal_path_publishes_one_evidence_shape\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_every_terminal_path_publishes_one_evidence_shape\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"12 passed, 1 warning in 14.18s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_supervisor_runtime.py::test_a_run_that_joined_nothing_still_publishes_the_envelope",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_run_that_joined_nothing_still_publishes_the_envelope\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_run_that_joined_nothing_still_publishes_the_envelope\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_supervisor_runtime.py::test_a_run_that_joined_nothing_still_publishes_the_envelope\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"12 passed, 1 warning in 14.18s\"}"
+    }
+  ]
+}

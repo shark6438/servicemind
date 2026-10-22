@@ -254,7 +254,7 @@ def test_the_pytest_line_reader_ignores_the_traceback_lines() -> None:
 
 
 def test_a_parametrised_node_id_is_aggregated_rather_than_lost() -> None:
-    """One red parametrisation is enough to deny the behaviour; skips only count alone."""
+    """Every required parametrisation must execute; partial skips block evidence."""
     passed = [("PASSED", EvidenceOutcome.PASSED)]
     skipped = [("SKIPPED", EvidenceOutcome.UNEXERCISED)]
     failed = [("FAILED", EvidenceOutcome.FAILED)]
@@ -262,9 +262,7 @@ def test_a_parametrised_node_id_is_aggregated_rather_than_lost() -> None:
     assert _aggregate(passed * 3) is EvidenceOutcome.PASSED
     assert _aggregate(passed + failed) is EvidenceOutcome.FAILED
     assert _aggregate(skipped * 2) is EvidenceOutcome.UNEXERCISED
-    # Not promoted to BLOCKED: a single skip-guarded parametrisation would then be able to
-    # stop the release gate on its own, and the skip is still visible in the detail line.
-    assert _aggregate(passed + skipped) is EvidenceOutcome.PASSED
+    assert _aggregate(passed + skipped) is EvidenceOutcome.UNEXERCISED
     assert dict(_tally(passed + skipped)) == {"PASSED": 1, "SKIPPED": 1}
 
 

@@ -1,0 +1,580 @@
+[
+  {
+    "name": "baseline",
+    "exit_code": 0,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "7 passed, 1 warning in 10.52s"
+  },
+  {
+    "name": "M01 the stream is published to without a bound",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 11.60s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M02 the stream bound is exact, so every publish pays to find the cut",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.80s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M03 retention forgets which rows it has delivered",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.10s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M04 retention forgets to wait for the delivery record to age",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.20s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M05 retention measures the wait, not the delivery",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.79s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M06 retention also retires the rows that were never delivered",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.18s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M07 one sweep takes a single page however much has aged out",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.60s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M08 one sweep has no ceiling, so it can outlast the publishing it interrupts",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.63s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M09 one tenant's retention failure abandons the others",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.09s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M10 shutting the worker down is treated as a retention failure to stop on",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 12.19s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M11 the sweep is never reached from the delivery loop",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.60s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M12 the sweep is un-scheduled and would run on every delivery",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 8.32s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "restored baseline",
+    "exit_code": 0,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase6_tool_platform.py::test_redis_outbox_message_contains_references_only",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "7 passed, 1 warning in 10.59s"
+  }
+]

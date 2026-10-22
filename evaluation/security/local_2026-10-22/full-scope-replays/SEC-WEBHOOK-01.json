@@ -1,0 +1,22 @@
+{
+  "scenario_id": "SEC-WEBHOOK-01",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_webhooks.py::test_signature_is_body_timestamp_and_secret_bound",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_webhooks.py::test_signature_is_body_timestamp_and_secret_bound\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_webhooks.py::test_signature_is_body_timestamp_and_secret_bound\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_webhooks.py::test_signature_is_body_timestamp_and_secret_bound\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"11 passed in 0.08s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_webhooks.py::test_parse_glpi_webhook",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_webhooks.py::test_parse_glpi_webhook\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_webhooks.py::test_parse_glpi_webhook\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_webhooks.py::test_parse_glpi_webhook\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"11 passed in 0.08s\"}"
+    }
+  ]
+}

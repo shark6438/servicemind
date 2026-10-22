@@ -1,0 +1,84 @@
+{
+  "scope": "local-controls-and-simulated-models-only",
+  "live_models": false,
+  "paid_calls": false,
+  "excluded_acceptance_evidence": {
+    "SEC-TENANT-02": [
+      {
+        "kind": "acceptance",
+        "ref": "ACC-04c",
+        "note": "无组分析员的三向对照实测"
+      },
+      {
+        "kind": "acceptance",
+        "ref": "ACC-23",
+        "note": "写前撤权后重新派生的检索范围不再含该组手册"
+      }
+    ],
+    "SEC-NARROW-05": [
+      {
+        "kind": "acceptance",
+        "ref": "ACC-21",
+        "note": "账号被停用后核验器必须给出「不可确认」而不是「照常继续」"
+      }
+    ],
+    "SEC-NARROW-06": [
+      {
+        "kind": "acceptance",
+        "ref": "ACC-18",
+        "note": "撤组后旧动作被作废而不是被写入"
+      }
+    ],
+    "SEC-NARROW-07": [
+      {
+        "kind": "acceptance",
+        "ref": "ACC-19",
+        "note": "撤实体后交付能力归零必须阻止执行"
+      },
+      {
+        "kind": "acceptance",
+        "ref": "ACC-20",
+        "note": "权限集非空但缺少该步骤必需角色，仍然必须阻止执行"
+      }
+    ],
+    "SEC-APPROVAL-01": [
+      {
+        "kind": "acceptance",
+        "ref": "ACC-10a",
+        "note": "停摆时什么也不写，运行原地等待"
+      }
+    ],
+    "SEC-APPROVAL-02": [
+      {
+        "kind": "acceptance",
+        "ref": "ACC-23",
+        "note": "动作被作废后重新派生，新决定才写入，且只写一次"
+      }
+    ],
+    "SEC-APPROVAL-03": [
+      {
+        "kind": "acceptance",
+        "ref": "ACC-09a"
+      }
+    ],
+    "SEC-APPROVAL-05": [
+      {
+        "kind": "acceptance",
+        "ref": "ACC-09b",
+        "note": "拒绝决定让运行走到终止，且不因身份服务故障而被阻止"
+      },
+      {
+        "kind": "acceptance",
+        "ref": "ACC-22",
+        "note": "身份服务不可达时暂停，恢复后同一个决定仍然可以应用"
+      }
+    ],
+    "SEC-WRITE-03": [
+      {
+        "kind": "acceptance",
+        "ref": "ACC-11",
+        "note": "批准后恰好写一次，且正文回读等于获批内容"
+      }
+    ]
+  }
+}

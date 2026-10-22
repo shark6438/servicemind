@@ -1,0 +1,28 @@
+{
+  "missing_password_rejected": true,
+  "all_published_ports_loopback": true,
+  "health_endpoint": "/health",
+  "bindings": [
+    {
+      "mode": "ingress",
+      "host_ip": "127.0.0.1",
+      "target": 8080,
+      "published": "8080",
+      "protocol": "tcp"
+    },
+    {
+      "mode": "ingress",
+      "host_ip": "127.0.0.1",
+      "target": 5432,
+      "published": "5432",
+      "protocol": "tcp"
+    },
+    {
+      "mode": "ingress",
+      "host_ip": "127.0.0.1",
+      "target": 8501,
+      "published": "8501",
+      "protocol": "tcp"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "scenario_id": "LOCAL-RUN-SCOPE",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes0]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes0]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes0]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes1]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes1]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes1]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes2]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes2]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes2]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes3]\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes3]\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_read_scope_rejects_cross_subject_and_revoked_grants[changes3]\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_security_remediation.py::test_run_scope_allows_owner_and_scoped_approver_but_not_unknown_legacy_scope",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_scope_allows_owner_and_scoped_approver_but_not_unknown_legacy_scope\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_scope_allows_owner_and_scoped_approver_but_not_unknown_legacy_scope\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_run_scope_allows_owner_and_scoped_approver_but_not_unknown_legacy_scope\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_security_remediation.py::test_real_database_run_scope_filters_before_pagination_and_rls",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_real_database_run_scope_filters_before_pagination_and_rls\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_real_database_run_scope_filters_before_pagination_and_rls\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_real_database_run_scope_filters_before_pagination_and_rls\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_security_remediation.py",
+      "mutation": "M01 cross-tenant run access is accepted",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_security_remediation.evidence.json\", \"sha256\": \"181269bdc1893df32cb211c092626099250017dca2019ff1956ca606e4461e70\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_security_remediation.py",
+      "mutation": "M02 cross-subject run access is accepted",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_security_remediation.evidence.json\", \"sha256\": \"181269bdc1893df32cb211c092626099250017dca2019ff1956ca606e4461e70\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_security_remediation.py::test_mcp_execution_metadata_obeys_run_scope_and_new_runs_keep_scope",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_mcp_execution_metadata_obeys_run_scope_and_new_runs_keep_scope\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_mcp_execution_metadata_obeys_run_scope_and_new_runs_keep_scope\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_mcp_execution_metadata_obeys_run_scope_and_new_runs_keep_scope\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    }
+  ]
+}

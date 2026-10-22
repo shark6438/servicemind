@@ -1,0 +1,64 @@
+{
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(fd07e4ed3fa4)",
+  "evidence": [
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 12.45s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_providers_own_hint_wins_over_the_schedule"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 12.45s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_header_that_is_not_a_delay_falls_back_to_the_schedule"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 12.45s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_schedule_bounds_the_wait_when_the_provider_gives_no_hint"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 12.45s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_total_wait_is_capped"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M04 the provider's own hint is ignored in favour of the schedule",
+      "outcome": "missing",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M05 a header that is not a delay is parsed as one",
+      "outcome": "missing",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M06 the schedule has no ceiling",
+      "outcome": "missing",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M09 the wait is unbounded in total",
+      "outcome": "missing",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    }
+  ],
+  "observed_at": "2026-10-22T10:12:54.644702Z",
+  "scenario_id": "SEC-LIMIT-03",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea"
+}

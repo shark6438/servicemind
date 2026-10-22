@@ -1,0 +1,31 @@
+{
+  "verdict": "PASS",
+  "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "assembled_at": "2026-10-22T10:56:19.082942+00:00",
+  "detected": 106,
+  "expected": 106,
+  "experiments": {
+    "scripts/mutate_glpi_write_gateway.py": 15,
+    "scripts/mutate_outbox_retention.py": 12,
+    "scripts/mutate_phase7_permissions.py": 50,
+    "scripts/mutate_rate_limit_degradation.py": 16,
+    "scripts/mutate_revision_crash.py": 4,
+    "scripts/mutate_security_remediation.py": 6,
+    "scripts/mutate_supervisor_feedback.py": 3
+  },
+  "test_selectors": 175,
+  "live_security_cases": [
+    "ACC-04c",
+    "ACC-09a",
+    "ACC-09b",
+    "ACC-10a",
+    "ACC-11",
+    "ACC-18",
+    "ACC-19",
+    "ACC-20",
+    "ACC-21",
+    "ACC-22",
+    "ACC-23"
+  ],
+  "method": "Complete setup/call/teardown; passing original/restored baselines; call-phase mutant failures; independently regraded current 28-case acceptance."
+}

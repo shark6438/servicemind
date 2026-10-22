@@ -1,0 +1,29 @@
+{
+  "scenario_id": "SEC-AUTHZ-06",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_identity_boundary.py::test_a_grant_set_larger_than_an_identity_can_carry_is_not_an_identity",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_grant_set_larger_than_an_identity_can_carry_is_not_an_identity\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_grant_set_larger_than_an_identity_can_carry_is_not_an_identity\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_grant_set_larger_than_an_identity_can_carry_is_not_an_identity\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"6 passed, 1 warning in 11.79s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_identity_boundary.py::test_an_over_large_grant_set_is_a_401_not_a_500",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_an_over_large_grant_set_is_a_401_not_a_500\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_an_over_large_grant_set_is_a_401_not_a_500\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_an_over_large_grant_set_is_a_401_not_a_500\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"6 passed, 1 warning in 11.79s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_identity_boundary.py::test_a_principal_cannot_hold_an_acl_the_retrieval_cannot_filter_by",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_principal_cannot_hold_an_acl_the_retrieval_cannot_filter_by\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_principal_cannot_hold_an_acl_the_retrieval_cannot_filter_by\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_principal_cannot_hold_an_acl_the_retrieval_cannot_filter_by\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"6 passed, 1 warning in 11.79s\"}"
+    }
+  ]
+}

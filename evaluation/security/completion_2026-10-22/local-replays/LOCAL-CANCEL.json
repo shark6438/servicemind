@@ -1,0 +1,29 @@
+{
+  "scenario_id": "LOCAL-CANCEL",
+  "observed_at": "2026-10-22T10:43:18.616962Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_security_remediation.py::test_real_database_cancel_is_a_barrier_and_cannot_be_resurrected",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_real_database_cancel_is_a_barrier_and_cannot_be_resurrected\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_real_database_cancel_is_a_barrier_and_cannot_be_resurrected\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_security_remediation.py::test_real_database_cancel_is_a_barrier_and_cannot_be_resurrected\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_security_remediation.py",
+      "mutation": "M03 cancelled runs can be resurrected",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_security_remediation.evidence.json\", \"sha256\": \"b40feb8ea86429a123caa2c8ac756a34de3b3fecc8648aa5e988f077bba420a5\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_security_remediation.py",
+      "mutation": "M04 cancelled runs can submit new writes",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_security_remediation.evidence.json\", \"sha256\": \"b40feb8ea86429a123caa2c8ac756a34de3b3fecc8648aa5e988f077bba420a5\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    }
+  ]
+}

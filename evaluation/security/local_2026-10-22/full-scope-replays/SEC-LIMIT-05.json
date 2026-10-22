@@ -1,0 +1,50 @@
+{
+  "scenario_id": "SEC-LIMIT-05",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 9.40s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 9.40s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 9.40s\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M12 a throttle is re-asked indefinitely instead of a bounded number of times",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_rate_limit_degradation.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M13 a throttle that survived the wait is reported as a model defect",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_rate_limit_degradation.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M14 the revision call gives up on a throttle the draft path would have waited out",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_rate_limit_degradation.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    }
+  ]
+}

@@ -1,0 +1,370 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "@next/eslint-plugin-next": {
+      "name": "@next/eslint-plugin-next",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "fast-glob"
+      ],
+      "effects": [
+        "eslint-config-next"
+      ],
+      "range": ">=14.3.0-canary.0",
+      "nodes": [
+        "node_modules/@next/eslint-plugin-next"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "14.2.35",
+        "isSemVerMajor": true
+      }
+    },
+    "@vitest/mocker": {
+      "name": "@vitest/mocker",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1242766,
+          "name": "@vitest/mocker",
+          "dependency": "@vitest/mocker",
+          "title": "Vitest: Code injection via unauthenticated manual mock registration",
+          "url": "https://github.com/advisories/GHSA-qxg6-89mg-rqv8",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-94",
+            "CWE-116",
+            "CWE-306"
+          ],
+          "cvss": {
+            "score": 4.7,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N"
+          },
+          "range": ">=5.0.0-beta.1 <5.0.3"
+        },
+        {
+          "source": 1242768,
+          "name": "@vitest/mocker",
+          "dependency": "@vitest/mocker",
+          "title": "Vitest: Windows backslash traversal bypasses the @vitest/mocker redirect allowlist fix",
+          "url": "https://github.com/advisories/GHSA-xp26-3454-mjgp",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-22"
+          ],
+          "cvss": {
+            "score": 5.9,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+          },
+          "range": ">=5.0.0-rc.2 <5.0.3"
+        }
+      ],
+      "effects": [
+        "vitest"
+      ],
+      "range": "5.0.0-beta.1 - 5.0.2",
+      "nodes": [
+        "node_modules/@vitest/mocker"
+      ],
+      "fixAvailable": true
+    },
+    "braces": {
+      "name": "braces",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1240992,
+          "name": "braces",
+          "dependency": "braces",
+          "title": "braces vulnerable to stack-exhaustion denial of service through deeply nested patterns",
+          "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+          "severity": "high",
+          "cwe": [
+            "CWE-674"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": "<=3.0.3"
+        }
+      ],
+      "effects": [
+        "micromatch"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/braces"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "14.2.35",
+        "isSemVerMajor": true
+      }
+    },
+    "eslint-config-next": {
+      "name": "eslint-config-next",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        "@next/eslint-plugin-next"
+      ],
+      "effects": [],
+      "range": ">=14.3.0-canary.0",
+      "nodes": [
+        "node_modules/eslint-config-next"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "14.2.35",
+        "isSemVerMajor": true
+      }
+    },
+    "fast-glob": {
+      "name": "fast-glob",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "micromatch"
+      ],
+      "effects": [
+        "@next/eslint-plugin-next"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/fast-glob"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "14.2.35",
+        "isSemVerMajor": true
+      }
+    },
+    "micromatch": {
+      "name": "micromatch",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "braces"
+      ],
+      "effects": [
+        "fast-glob"
+      ],
+      "range": ">=0.2.0",
+      "nodes": [
+        "node_modules/micromatch"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "14.2.35",
+        "isSemVerMajor": true
+      }
+    },
+    "sharp": {
+      "name": "sharp",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1241331,
+          "name": "sharp",
+          "dependency": "sharp",
+          "title": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+          "url": "https://github.com/advisories/GHSA-wq5f-xc86-pv6w",
+          "severity": "high",
+          "cwe": [
+            "CWE-416",
+            "CWE-1395"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": "<0.35.5"
+        }
+      ],
+      "effects": [],
+      "range": "<0.35.5",
+      "nodes": [
+        "node_modules/sharp"
+      ],
+      "fixAvailable": true
+    },
+    "source-map-js": {
+      "name": "source-map-js",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1241209,
+          "name": "source-map-js",
+          "dependency": "source-map-js",
+          "title": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+          "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q",
+          "severity": "high",
+          "cwe": [
+            "CWE-1284"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": ">=1.0.0 <1.2.2"
+        }
+      ],
+      "effects": [],
+      "range": "1.0.0 - 1.2.1",
+      "nodes": [
+        "node_modules/source-map-js"
+      ],
+      "fixAvailable": true
+    },
+    "vite": {
+      "name": "vite",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        {
+          "source": 1242626,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+          "url": "https://github.com/advisories/GHSA-698v-4r3x-3vcv",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-78"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": ">=8.3.0 <=8.3.2"
+        },
+        {
+          "source": 1242655,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+          "url": "https://github.com/advisories/GHSA-r825-w8mm-5pxw",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-88"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": ">=8.3.0 <=8.3.2"
+        },
+        {
+          "source": 1242662,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+          "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm",
+          "severity": "high",
+          "cwe": [
+            "CWE-77"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": ">=8.3.0 <=8.3.2"
+        },
+        {
+          "source": 1242728,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "Vite: Cross origin script execution through Vite custom middleware",
+          "url": "https://github.com/advisories/GHSA-9jrq-w75r-8gcw",
+          "severity": "low",
+          "cwe": [
+            "CWE-80"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": ">=8.3.0 <=8.3.2"
+        },
+        {
+          "source": 1242734,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+          "url": "https://github.com/advisories/GHSA-rq7h-c2jc-7f22",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-22",
+            "CWE-284"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": ">=8.3.0 <=8.3.2"
+        },
+        {
+          "source": 1242737,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "Vite: First 4 bytes of files outside of `server.fs` setting is exposed by `?vite-wasm-instance`",
+          "url": "https://github.com/advisories/GHSA-vfpm-58rq-9qcg",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-22",
+            "CWE-200",
+            "CWE-209"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": ">=8.3.0 <=8.3.2"
+        }
+      ],
+      "effects": [],
+      "range": "8.3.0 - 8.3.2",
+      "nodes": [
+        "node_modules/vite"
+      ],
+      "fixAvailable": true
+    },
+    "vitest": {
+      "name": "vitest",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "@vitest/mocker"
+      ],
+      "effects": [],
+      "range": "5.0.0-beta.1 - 5.0.2",
+      "nodes": [
+        "node_modules/vitest"
+      ],
+      "fixAvailable": true
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 2,
+      "high": 8,
+      "critical": 0,
+      "total": 10
+    },
+    "dependencies": {
+      "prod": 28,
+      "dev": 457,
+      "optional": 92,
+      "peer": 9,
+      "peerOptional": 0,
+      "total": 522
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "interpretation": "Raw observations are retained. A raw PASS is not valid actual-model evidence when recovery changed the model source.",
+  "invalid_actual_model_controls": [
+    {
+      "batch": "completion_2026-10-22",
+      "replay": "local-model-final-probe/ACC-01.json",
+      "analysis_source": "security-simulator-v1",
+      "validity": "BLOCKED"
+    },
+    {
+      "batch": "completion_2026-10-22_r2",
+      "replay": "current-local-model-control/ACC-01.json",
+      "analysis_source": "security-simulator-v1",
+      "validity": "BLOCKED"
+    }
+  ],
+  "valid_actual_model_failure": "completion_2026-10-22_r2/current-local-main-control/ACC-01.json"
+}

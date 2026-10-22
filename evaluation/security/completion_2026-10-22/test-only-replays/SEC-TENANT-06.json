@@ -1,0 +1,29 @@
+{
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(fd07e4ed3fa4)",
+  "evidence": [
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_leaves_another_tenants_rows_alone\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_leaves_another_tenants_rows_alone\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_leaves_another_tenants_rows_alone\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"7 passed, 1 warning in 10.95s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_leaves_another_tenants_rows_alone"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"7 passed, 1 warning in 10.95s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_one_tenants_retention_failure_does_not_stop_the_others"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M09 one tenant's retention failure abandons the others",
+      "outcome": "missing",
+      "ref": "scripts/mutate_outbox_retention.py"
+    }
+  ],
+  "observed_at": "2026-10-22T10:12:54.644702Z",
+  "scenario_id": "SEC-TENANT-06",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea"
+}

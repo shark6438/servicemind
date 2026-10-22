@@ -1,0 +1,36 @@
+{
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(fd07e4ed3fa4)",
+  "evidence": [
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_revoked_group_is_enforced_into_the_checkpoint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_revoked_group_is_enforced_into_the_checkpoint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_revoked_group_is_enforced_into_the_checkpoint\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"42 passed, 1 warning in 14.97s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_revoked_group_is_enforced_into_the_checkpoint"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_resume_that_narrows_nothing_writes_no_audit\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_resume_that_narrows_nothing_writes_no_audit\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_resume_that_narrows_nothing_writes_no_audit\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"42 passed, 1 warning in 14.97s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_resume_that_narrows_nothing_writes_no_audit"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M06 the intersection is handed over as configurable only (the original bug)",
+      "outcome": "missing",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M09 the intersection is replaced by the recorded grants alone",
+      "outcome": "missing",
+      "ref": "scripts/mutate_phase7_permissions.py"
+    }
+  ],
+  "observed_at": "2026-10-22T10:12:54.644702Z",
+  "scenario_id": "SEC-NARROW-03",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea"
+}

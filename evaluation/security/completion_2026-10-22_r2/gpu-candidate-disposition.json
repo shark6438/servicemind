@@ -1,0 +1,11 @@
+{
+  "verdict": "NOT_RELEASED",
+  "original_image_high": 14,
+  "patched_image_high": 0,
+  "patched_image_critical": 0,
+  "reason": "Patched CUDA candidate loads the host driver after removing cuda-compat, but kernel execution fails with device kernel image is invalid. Minor-version compatibility does not guarantee all PTX/features.",
+  "host_driver_changed": false,
+  "container_stopped_and_removed": true,
+  "final_profile": "Authenticated read-only llama.cpp CPU, original secure CPU image; actual normal task timed out and remains FAIL.",
+  "documentation": "https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html"
+}

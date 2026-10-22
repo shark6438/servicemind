@@ -1,0 +1,46 @@
+{
+  "reason": "Only cancel ORM response materialization and its regression/mutation changed. Exact dependencies, frontend source/image and browser test unchanged; prior component-bound scans and browser evidence retained without relabeling their acquisition times. Actual local-model samples retain prior source revision 2f4c84acea88.",
+  "components": [
+    {
+      "path": "requirements.txt",
+      "sha256": "a5d55bd659a305b12247e0738be391ae289b16de9023555e855179869ea0297b",
+      "unchanged_from_prior_candidate": true
+    },
+    {
+      "path": "uv.lock",
+      "sha256": "a34cd3416ceb270ae416c3ba6fcc9feee46ec0aa2152d8f1b5e3e822dfde62b6",
+      "unchanged_from_prior_candidate": true
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "d46ad67803105b4fa6f45ab2da283af7a1d6212bb358131a461fc231535b120e",
+      "unchanged_from_prior_candidate": true
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "sha256": "87c6e5f06c9ab14edf9f69108bf678582166271fe53b84d0c22552c3ac466edc",
+      "unchanged_from_prior_candidate": true
+    },
+    {
+      "path": "frontend/Dockerfile",
+      "sha256": "50f110c3ee7877b288030435b2abe74ad853d3762fe8f41f66f0f2e2e0f7b328",
+      "unchanged_from_prior_candidate": true
+    },
+    {
+      "path": "frontend/scripts/audit-gate.mjs",
+      "sha256": "29dd679f43f938893cfcb268651110fe8535d72237975b1e79c2d000f7acab9c",
+      "unchanged_from_prior_candidate": true
+    },
+    {
+      "path": "frontend/scripts/audit-gate.test.mjs",
+      "sha256": "8fdc8d76073e79e7f29b08253413cb50c225b23d8aa17c18f9527a09a93bffed",
+      "unchanged_from_prior_candidate": true
+    },
+    {
+      "path": "frontend/e2e/security-render.spec.ts",
+      "sha256": "53881131dff17e1d91d816b7c3c5d49db04ff01a71b4481b5d61d26aa0a90510",
+      "unchanged_from_prior_candidate": true
+    }
+  ],
+  "prior_batch": "../completion_2026-10-22"
+}

@@ -1,0 +1,50 @@
+{
+  "scenario_id": "SEC-LIMIT-05",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttle_that_outlasts_the_wait_degrades_as_rate_limited\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_draft_that_answers_on_the_retry_is_not_degraded\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_throttled_revision_is_waited_out_like_the_draft\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M12 a throttle is re-asked indefinitely instead of a bounded number of times",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_rate_limit_degradation.evidence.json\", \"sha256\": \"054534e40f2be341221222be5a471e849daf66e0ec106ed943b84bf76371144c\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M13 a throttle that survived the wait is reported as a model defect",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_rate_limit_degradation.evidence.json\", \"sha256\": \"054534e40f2be341221222be5a471e849daf66e0ec106ed943b84bf76371144c\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_rate_limit_degradation.py",
+      "mutation": "M14 the revision call gives up on a throttle the draft path would have waited out",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_rate_limit_degradation.evidence.json\", \"sha256\": \"054534e40f2be341221222be5a471e849daf66e0ec106ed943b84bf76371144c\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    }
+  ]
+}

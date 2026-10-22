@@ -45,13 +45,18 @@ def webhook_run_id(tenant_id: UUID, signature: str) -> UUID:
 def parse_glpi_webhook(body: bytes) -> GlpiWebhookEvent:
     try:
         payload = json.loads(body)
+        ticket_id = payload["item"]["id"]
+        entity_id = payload["item"]["entity"]["id"]
+        event = payload.get("event", "updated")
+        if type(ticket_id) is not int or type(entity_id) is not int or not isinstance(event, str):
+            raise ValueError("Invalid webhook field types")
         parsed = GlpiWebhookEvent(
             tenant_id=UUID(str(payload["tenant_id"])),
-            ticket_id=int(payload["item"]["id"]),
-            entity_id=int(payload["item"]["entity"]["id"]),
-            event=str(payload.get("event", "updated")),
+            ticket_id=ticket_id,
+            entity_id=entity_id,
+            event=event,
         )
-    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+    except (KeyError, TypeError, ValueError, RecursionError, OverflowError) as exc:
         raise WebhookValidationError("Invalid GLPI webhook payload") from exc
     # Checked after the parse guard, not inside it: a well-formed body carrying a value
     # outside the contract is a different failure from a body that could not be read, and
@@ -66,12 +71,21 @@ def parse_glpi_webhook(body: bytes) -> GlpiWebhookEvent:
     # rejected delivery, not a database error four layers down.
     if not 1 <= parsed.ticket_id <= TICKET_ID_MAX:
         raise WebhookValidationError(f"GLPI webhook ticket id must be 1..{TICKET_ID_MAX}")
+    if not 0 <= parsed.entity_id <= TICKET_ID_MAX:
+        raise WebhookValidationError("Invalid GLPI webhook entity id")
     return parsed
 
 
 #: An HMAC-SHA256 digest is 32 bytes, so its hex form is exactly 64 characters. This is
 #: the same shape ``ApprovalRequest.expected_action_hash`` already requires.
 _SIGNATURE_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+
+
+def validate_glpi_headers(timestamp: str, signature: str) -> None:
+    if not 1 <= len(timestamp) <= 12 or not timestamp.isascii() or not timestamp.isdigit():
+        raise WebhookValidationError("Invalid webhook timestamp")
+    if _SIGNATURE_PATTERN.fullmatch(signature) is None:
+        raise WebhookValidationError("Invalid webhook signature")
 
 
 def verify_glpi_signature(
@@ -84,10 +98,7 @@ def verify_glpi_signature(
     # caller could turn any of them into a 500 -- and ``str.isdigit()`` alone would not
     # have caught the timestamp, since it accepts Arabic-Indic digits that ``int()`` reads
     # happily and that ASCII encoding then rejects.
-    if not timestamp.isascii() or not timestamp.isdigit():
-        raise WebhookValidationError("Invalid webhook timestamp")
-    if _SIGNATURE_PATTERN.fullmatch(signature) is None:
-        raise WebhookValidationError("Invalid webhook signature")
+    validate_glpi_headers(timestamp, signature)
     timestamp_value = int(timestamp)
     if abs((now if now is not None else int(time.time())) - timestamp_value) > 300:
         raise WebhookValidationError("Expired webhook request")

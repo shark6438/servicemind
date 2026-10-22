@@ -1,0 +1,275 @@
+name: servicemind-glpi
+
+services:
+  database:
+    image: mariadb:11.8
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${GLPI_DB_NAME}
+      MARIADB_USER: ${GLPI_DB_USER}
+      MARIADB_PASSWORD: ${GLPI_DB_PASSWORD}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - glpi_database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  glpi:
+    image: glpi/glpi:11.0.8
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      GLPI_DB_HOST: database
+      GLPI_DB_PORT: 3306
+      GLPI_DB_NAME: ${GLPI_DB_NAME}
+      GLPI_DB_USER: ${GLPI_DB_USER}
+      GLPI_DB_PASSWORD: ${GLPI_DB_PASSWORD}
+      GLPI_SKIP_AUTOINSTALL: "false"
+      GLPI_SKIP_AUTOUPDATE: "false"
+      GLPI_CRONTAB_ENABLED: "1"
+      SERVICEMIND_WEBHOOK_TARGET_URL: ${SERVICEMIND_WEBHOOK_TARGET_URL:?Set the reachable private webhook ingress URL}
+    ports:
+      - "127.0.0.1:18088:80"
+    volumes:
+      - glpi_application:/var/glpi
+      - ./local_define.php:/var/www/glpi/config/local_define.php:ro
+
+  servicemind-postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${SERVICEMIND_DB_NAME}
+      POSTGRES_USER: ${SERVICEMIND_DB_USER}
+      POSTGRES_PASSWORD: ${SERVICEMIND_DB_PASSWORD}
+      SERVICEMIND_RUNTIME_USER: ${SERVICEMIND_RUNTIME_USER}
+      SERVICEMIND_RUNTIME_PASSWORD: ${SERVICEMIND_RUNTIME_PASSWORD}
+    ports:
+      - "127.0.0.1:55434:5432"
+    volumes:
+      - servicemind_database:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SERVICEMIND_DB_USER} -d ${SERVICEMIND_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  keycloak-database:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME}
+      POSTGRES_USER: ${KEYCLOAK_DB_USER}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+    volumes:
+      - keycloak_database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KEYCLOAK_DB_USER} -d ${KEYCLOAK_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.3
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm"]
+    depends_on:
+      keycloak-database:
+        condition: service_healthy
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-database:5432/${KEYCLOAK_DB_NAME}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: http://127.0.0.1:8090
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      JAVA_OPTS_KC_HEAP: -Xms128m -Xmx512m
+      ACME_ANALYST_PASSWORD: ${ACME_ANALYST_PASSWORD}
+      ACME_APPROVER_PASSWORD: ${ACME_APPROVER_PASSWORD}
+      GLOBEX_ANALYST_PASSWORD: ${GLOBEX_ANALYST_PASSWORD}
+    ports:
+      - "127.0.0.1:8090:8080"
+      - "127.0.0.1:19001:9000"
+    volumes:
+      - ./keycloak/servicemind-realm.json:/opt/keycloak/data/import/servicemind-realm.json:ro
+
+  opensearch:
+    image: opensearchproject/opensearch:3.8.0
+    profiles: ["rag"]
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      bootstrap.memory_lock: "true"
+      OPENSEARCH_JAVA_OPTS: -Xms1g -Xmx1g
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${SERVICEMIND_RUNTIME_PASSWORD}
+      plugins.security.ssl.http.enabled: "true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - servicemind_opensearch:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -k -u admin:${SERVICEMIND_RUNTIME_PASSWORD} https://localhost:9200/_cluster/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  rag-embedding:
+    # cuda-1.9.3 requires CUDA 12.9 and cannot start on the host's production
+    # 535 driver. Pin the verified CUDA 12.2 multi-arch digest: it keeps the
+    # runtime reproducible and is compatible with the installed driver.
+    image: ghcr.io/huggingface/text-embeddings-inference:cuda-1.8.3@sha256:57ad7e05ca1b42e0c16cb5fa42f43ee5187c6cd3b14288cd2c412b61953b4d39
+    profiles: ["rag"]
+    restart: unless-stopped
+    command: ["--model-id", "/data/models--BAAI--bge-m3/snapshots/${SERVICEMIND_EMBEDDING_REVISION}", "--tokenization-workers", "4", "--max-concurrent-requests", "32", "--max-batch-tokens", "8192", "--max-client-batch-size", "32"]
+    environment:
+      # huggingface_hub honours HF_ENDPOINT; the datacenter has no direct route to
+      # huggingface.co (TCP timeout) and must pull artifacts through the mirror.
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+      # The cache bind below is a huggingface_hub cache. TEI's downloader must be told
+      # to treat /data as that cache or it re-downloads through hf-mirror (whose
+      # resolve-cache 307 breaks Content-Range and aborts startup). Pin HF_HUB_OFFLINE
+      # so a missing artifact fails fast instead of hanging on the network.
+      HF_HUB_CACHE: /data
+      HUGGINGFACE_HUB_CACHE: /data
+      HF_HUB_OFFLINE: "1"
+    ports:
+      - "127.0.0.1:8085:80"
+    volumes:
+      # HuggingFace cache bind: TEI's Rust downloader cannot follow hf-mirror's
+      # resolve-cache 307 (Content-Range missing), so artifacts are pre-fetched on the
+      # host with python huggingface_hub into data/phase4/models/embedding.
+      - /home/shihongye/data1/servicemind/data/phase4/models/embedding:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 120s
+
+  rag-reranker:
+    image: ghcr.io/huggingface/text-embeddings-inference:cuda-1.8.3@sha256:57ad7e05ca1b42e0c16cb5fa42f43ee5187c6cd3b14288cd2c412b61953b4d39
+    profiles: ["rag"]
+    restart: unless-stopped
+    command: ["--model-id", "/data/models--BAAI--bge-reranker-v2-m3/snapshots/${SERVICEMIND_RERANKER_REVISION}", "--tokenization-workers", "4", "--max-concurrent-requests", "32", "--max-batch-tokens", "8192", "--max-client-batch-size", "32"]
+    environment:
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+      HF_HUB_CACHE: /data
+      HUGGINGFACE_HUB_CACHE: /data
+      HF_HUB_OFFLINE: "1"
+    ports:
+      - "127.0.0.1:8086:80"
+    volumes:
+      - /home/shihongye/data1/servicemind/data/phase4/models/reranker:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 120s
+
+  neo4j:
+    image: neo4j:5.26
+    profiles: ["rag"]
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 768m
+      NEO4J_server_memory_pagecache_size: 512m
+    ports:
+      - "127.0.0.1:${SERVICEMIND_NEO4J_HTTP_PORT:-17474}:7474"
+      - "127.0.0.1:${SERVICEMIND_NEO4J_BOLT_PORT:-17687}:7687"
+    volumes:
+      - servicemind_neo4j:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u ${NEO4J_USER} -p ${NEO4J_PASSWORD} 'RETURN 1' >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  redis:
+    image: redis:8.2-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${SERVICEMIND_REDIS_PASSWORD:?SERVICEMIND_REDIS_PASSWORD is required}
+    command:
+      - sh
+      - -ec
+      - exec redis-server --appendonly yes --appendfsync everysec --requirepass "$${REDIS_PASSWORD}"
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - servicemind_redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  opa:
+    image: openpolicyagent/opa:1.20.2-static
+    restart: unless-stopped
+    command:
+      - run
+      - --server
+      - --addr=0.0.0.0:8181
+      - --set=decision_logs.console=true
+      - /policy/servicemind.rego
+    ports:
+      - "127.0.0.1:8181:8181"
+    volumes:
+      - ./opa/servicemind.rego:/policy/servicemind.rego:ro
+    healthcheck:
+      test: ["CMD", "/opa", "eval", "1"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  glpi_application:
+  glpi_database:
+  servicemind_database:
+  keycloak_database:
+  servicemind_opensearch:
+  servicemind_embedding_models:
+  servicemind_reranker_models:
+  servicemind_neo4j:
+  servicemind_redis:

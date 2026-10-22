@@ -253,6 +253,7 @@ jobs:
       # printed in the log instead of being invisible -- a bare `npm audit
       # --audit-level=high` cannot pass while an advisory has no released fix.
       run: |
+        node --test scripts/audit-gate.test.mjs
         node scripts/audit-gate.mjs
         npm sbom --sbom-format=cyclonedx > frontend-sbom.cdx.json
     - name: Upload frontend SBOM
@@ -405,3 +406,27 @@ jobs:
         run: |
           docker stop service-container app-container frontend-container || true
           docker rm service-container app-container frontend-container || true
+
+  python-dependency-security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - uses: astral-sh/setup-uv@v9.0.0
+      with:
+        version: "0.11.32"
+    - name: Export the frozen default runtime dependencies
+      run: uv export --frozen --no-dev --no-hashes --no-emit-project --no-header --output-file /tmp/security-requirements.txt
+    - name: Scan runtime dependencies and save SBOM
+      run: |
+        docker run --rm \
+          -v /tmp/security-requirements.txt:/requirements.txt:ro \
+          -v "$PWD:/output" \
+          ghcr.io/aquasecurity/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
+          fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 \
+          --db-repository public.ecr.aws/aquasecurity/trivy-db:2 \
+          --format cyclonedx --output /output/python-runtime-sbom.cdx.json /requirements.txt
+    - uses: actions/upload-artifact@v7
+      if: always()
+      with:
+        name: python-runtime-sbom
+        path: python-runtime-sbom.cdx.json

@@ -1,0 +1,528 @@
+[
+  {
+    "name": "baseline",
+    "exit_code": 0,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_requester_who_never_held_the_step_role_cannot_approve_it",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_requester_who_never_held_the_step_role_cannot_approve_it",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_requester_who_never_held_the_step_role_cannot_approve_it",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_verified_requester_without_the_step_role_is_refused",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_verified_requester_without_the_step_role_is_refused",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_verified_requester_without_the_step_role_is_refused",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_no_glpi_entity_in_scope_is_not_a_tenant_wide_integration",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_no_glpi_entity_in_scope_is_not_a_tenant_wide_integration",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_no_glpi_entity_in_scope_is_not_a_tenant_wide_integration",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_graphrag.py::test_a_projection_derives_every_node_under_the_records_acl",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_graphrag.py::test_a_projection_derives_every_node_under_the_records_acl",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_graphrag.py::test_a_projection_derives_every_node_under_the_records_acl",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "7 passed, 1 warning in 13.56s"
+  },
+  {
+    "name": "M31 a narrowed action is re-scoped and carried on instead of withdrawn",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 14.44s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M32 the void is announced but not carried into the resume payload",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 13.81s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M33 the conclusions drawn from the cleared evidence are left standing",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 14.65s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M34 the step's own role requirement is not checked before the approval",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_requester_who_never_held_the_step_role_cannot_approve_it",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_requester_who_never_held_the_step_role_cannot_approve_it",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_requester_who_never_held_the_step_role_cannot_approve_it",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 14.46s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M35 the approval node records a void as the decision it arrived with",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 13.86s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M36 the void is routed by the approval's own branch instead of the supervisor",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 15.14s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M37 the executor stops requiring the step's role at the point of use",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_verified_requester_without_the_step_role_is_refused",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_verified_requester_without_the_step_role_is_refused",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_verified_requester_without_the_step_role_is_refused",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 14.85s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M38 an out-of-scope GLPI entity resolves to the tenant's integration anyway",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_no_glpi_entity_in_scope_is_not_a_tenant_wide_integration",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_no_glpi_entity_in_scope_is_not_a_tenant_wide_integration",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_no_glpi_entity_in_scope_is_not_a_tenant_wide_integration",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.38s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M39 an entity-bound tool is visible to a caller holding any entity at all",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 9.71s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "M40 the projection drops the ACL its record declared",
+    "exit_code": 1,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase4_graphrag.py::test_a_projection_derives_every_node_under_the_records_acl",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_graphrag.py::test_a_projection_derives_every_node_under_the_records_acl",
+        "when": "call",
+        "outcome": "failed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_graphrag.py::test_a_projection_derives_every_node_under_the_records_acl",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "1 failed, 1 warning in 10.75s",
+    "status": "RED (good)"
+  },
+  {
+    "name": "restored baseline",
+    "exit_code": 0,
+    "reports": [
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_pending_action_is_withdrawn_when_the_scope_narrows",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_requester_who_never_held_the_step_role_cannot_approve_it",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_requester_who_never_held_the_step_role_cannot_approve_it",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_requester_who_never_held_the_step_role_cannot_approve_it",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_voided_action_is_re_derived_rather_than_decided",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_verified_requester_without_the_step_role_is_refused",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_verified_requester_without_the_step_role_is_refused",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_supervisor_runtime.py::test_a_verified_requester_without_the_step_role_is_refused",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_no_glpi_entity_in_scope_is_not_a_tenant_wide_integration",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_no_glpi_entity_in_scope_is_not_a_tenant_wide_integration",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_no_glpi_entity_in_scope_is_not_a_tenant_wide_integration",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase7_principal_invariants.py::test_a_tool_bound_to_an_entity_is_invisible_without_that_entity",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_graphrag.py::test_a_projection_derives_every_node_under_the_records_acl",
+        "when": "setup",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_graphrag.py::test_a_projection_derives_every_node_under_the_records_acl",
+        "when": "call",
+        "outcome": "passed",
+        "wasxfail": null
+      },
+      {
+        "nodeid": "tests/servicemind/test_phase4_graphrag.py::test_a_projection_derives_every_node_under_the_records_acl",
+        "when": "teardown",
+        "outcome": "passed",
+        "wasxfail": null
+      }
+    ],
+    "summary": "7 passed, 1 warning in 11.83s"
+  }
+]

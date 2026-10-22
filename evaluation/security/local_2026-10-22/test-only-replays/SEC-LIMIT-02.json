@@ -1,0 +1,43 @@
+{
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "evidence": [
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 9.40s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_a_nil_hint_is_honoured_as_an_immediate_retry"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"14 passed, 1 warning in 9.40s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_rate_limit_degradation.py::test_the_throttle_wait_is_not_read_as_a_non_throttle_anywhere"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M02 a nil hint is read as 'not a throttle'",
+      "outcome": "missing",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M03 a nil hint is collapsed into the not-a-throttle answer",
+      "outcome": "missing",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M08 a nil hint is refused at the call site",
+      "outcome": "missing",
+      "ref": "scripts/mutate_rate_limit_degradation.py"
+    }
+  ],
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "scenario_id": "SEC-LIMIT-02",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea"
+}

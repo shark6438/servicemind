@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from servicemind.persistence.models import AgentRun, AuditEvent, RunEvent, RunStatus
 from servicemind.persistence.repository import ServiceMindRepository
 from servicemind.security.auth import TenantContextDependency
+from servicemind.security.run_access import require_run_access, run_scope
 
 router = APIRouter(tags=["ServiceMind Operations"])
 
@@ -109,6 +110,12 @@ async def list_runs(
         raise HTTPException(status_code=422, detail="Run cursor requires both values")
     repository = ServiceMindRepository(context.tenant_id)
     runs = await repository.list_runs(
+        reader_id=None
+        if context.roles.intersection({"approver", "operator", "tenant_admin"})
+        else context.user_id,
+        reader_scope=None
+        if context.roles.intersection({"operator", "tenant_admin"})
+        else run_scope(context),
         status=status,
         limit=limit,
         after_created_at=after_created_at,
@@ -131,8 +138,10 @@ async def get_run_timeline(
     """Return the durable, tenant-scoped event timeline without opening an SSE stream."""
     context.require_role("viewer")
     repository = ServiceMindRepository(context.tenant_id)
-    if await repository.get_run(run_id) is None:
+    run = await repository.get_run(run_id)
+    if run is None:
         raise HTTPException(status_code=404, detail="Run not found")
+    require_run_access(run, context)
     return [_run_event(event) for event in await repository.list_events(run_id, after)]
 
 
@@ -145,7 +154,7 @@ async def list_audit_events(
     after_event_id: UUID | None = Query(default=None),
 ) -> AuditEventPage:
     """Expose the append-only governance ledger to authorized operational roles."""
-    context.require_any_role("operator", "approver", "tenant_admin")
+    context.require_any_role("operator", "tenant_admin")
     if (after_created_at is None) != (after_event_id is None):
         raise HTTPException(status_code=422, detail="Audit cursor requires both values")
     repository = ServiceMindRepository(context.tenant_id)

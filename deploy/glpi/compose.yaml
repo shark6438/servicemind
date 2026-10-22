@@ -36,6 +36,7 @@ services:
       GLPI_SKIP_AUTOINSTALL: "false"
       GLPI_SKIP_AUTOUPDATE: "false"
       GLPI_CRONTAB_ENABLED: "1"
+      SERVICEMIND_WEBHOOK_TARGET_URL: ${SERVICEMIND_WEBHOOK_TARGET_URL:?Set the reachable private webhook ingress URL}
     ports:
       - "127.0.0.1:18088:80"
     volumes:

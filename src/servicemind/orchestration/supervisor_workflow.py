@@ -909,6 +909,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                             )
                         ):
                             envelope = await svc.data.run(**run_kwargs)
+                        envelope.ensure_matches(invocation, agent_name="data")
                         evidence = envelope.output
                         if (
                             envelope.metrics.model_calls > state.get("invocation_model_budget", 0)
@@ -929,6 +930,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                     await asyncio.sleep(0.25)
             except Exception as exc:
                 error = exc
+                envelope = None
                 break
         if envelope is not None:
             await record_agent_result(state, envelope)
@@ -1231,6 +1233,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                     )
                 ):
                     envelope = await svc.analysis.run(**run_kwargs)
+                envelope.ensure_matches(invocation, agent_name="analysis")
                 result = envelope.output
             else:
                 result = await svc.analysis.analyze_evidence(
@@ -1317,6 +1320,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                 )
             ):
                 envelope = await svc.reviewer.run(**run_kwargs)
+            envelope.ensure_matches(invocation, agent_name="reviewer")
             result = envelope.output
         else:
             result = await svc.reviewer.review(

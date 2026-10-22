@@ -1,8 +1,8 @@
+import importlib
 import math
 import re
 
 import numexpr
-from langchain_chroma import Chroma
 from langchain_core.tools import BaseTool, tool
 from langchain_openai import OpenAIEmbeddings
 
@@ -48,6 +48,13 @@ def format_contexts(docs):
 
 
 def load_chroma_db():
+    try:
+        chroma = importlib.import_module("langchain_chroma").Chroma
+    except ImportError as exc:
+        raise RuntimeError(
+            "The legacy handbook tool requires the optional legacy-chroma dependency. "
+            "It is excluded from the default secure deployment."
+        ) from exc
     # Create the embedding function for our project description database
     try:
         embeddings = OpenAIEmbeddings()
@@ -57,7 +64,7 @@ def load_chroma_db():
         ) from e
 
     # Load the stored vector database
-    chroma_db = Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
+    chroma_db = chroma(persist_directory="./chroma_db", embedding_function=embeddings)
     retriever = chroma_db.as_retriever(search_kwargs={"k": 5})
     return retriever
 

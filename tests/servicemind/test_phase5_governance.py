@@ -983,11 +983,15 @@ async def test_the_reviewer_reads_evidence_as_a_citation_not_as_a_provenance_dum
         "evidence_id",
         "source_type",
         "source_ref",
+        "resource_type",
+        "resource_id",
         "content",
         "content_hash",
         "citation",
     }
     assert body(reviewer)["content"] == probe.content
+    assert body(reviewer)["resource_type"] == probe.resource_type
+    assert body(reviewer)["resource_id"] == probe.resource_id
 
     analysis = await governance.build_context(
         state=state, task=task, invocation=invocation, agent=ContextAgent.ANALYSIS

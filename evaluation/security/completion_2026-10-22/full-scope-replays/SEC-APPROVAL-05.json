@@ -1,0 +1,64 @@
+{
+  "scenario_id": "SEC-APPROVAL-05",
+  "observed_at": "2026-10-22T10:43:18.616962Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_refusal_does_not_need_the_requester_reestablished",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_refusal_does_not_need_the_requester_reestablished\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_refusal_does_not_need_the_requester_reestablished\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_refusal_does_not_need_the_requester_reestablished\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_the_refusal_path_cannot_be_borrowed_to_approve",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_refusal_path_cannot_be_borrowed_to_approve\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_refusal_path_cannot_be_borrowed_to_approve\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_the_refusal_path_cannot_be_borrowed_to_approve\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_principal_invariants.py::test_a_refusal_resumes_as_the_requester_without_narrowing",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_refusal_resumes_as_the_requester_without_narrowing\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_refusal_resumes_as_the_requester_without_narrowing\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_principal_invariants.py::test_a_refusal_resumes_as_the_requester_without_narrowing\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M48 a refusal is gated on the verifier again (an outage can stop a decline)",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_40_50.evidence.json\", \"sha256\": \"b885d5b2715cca031d98f9dd092d8d3c93ce2997b7508c94b16e6ea8827223e8\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M49 the refusal resume runs as the approver who called it",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_40_50.evidence.json\", \"sha256\": \"b885d5b2715cca031d98f9dd092d8d3c93ce2997b7508c94b16e6ea8827223e8\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M50 the refusal path stops refusing anything but a refusal",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_phase7_permissions_40_50.evidence.json\", \"sha256\": \"b885d5b2715cca031d98f9dd092d8d3c93ce2997b7508c94b16e6ea8827223e8\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "acceptance",
+      "ref": "ACC-09b",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\", \"case\": \"ACC-09b\", \"verdict\": \"PASS\", \"report_sha256\": \"24faf2833426f2da17a95d0ba54037bcd249b0d99ec0ccc916bc3eb659d9c251\", \"replay_sha256\": \"7561161d1cf5ffae7f0557d9febe47156adc44f54e8864f0067a2373b5f3d24a\"}"
+    },
+    {
+      "kind": "acceptance",
+      "ref": "ACC-22",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\", \"case\": \"ACC-22\", \"verdict\": \"PASS\", \"report_sha256\": \"24faf2833426f2da17a95d0ba54037bcd249b0d99ec0ccc916bc3eb659d9c251\", \"replay_sha256\": \"d0ccd6c3e24d2653881b7f603ba5a60c8af9d39132700b593a8577826ad6cccd\"}"
+    }
+  ]
+}

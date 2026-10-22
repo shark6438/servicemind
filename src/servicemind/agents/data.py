@@ -424,6 +424,9 @@ class DataAgent:
         evidence = state["evidence"]
         return AgentResultEnvelope[list[Evidence]](
             agent_name="data",
+            run_id=invocation.run_id,
+            tenant_id=invocation.tenant_id,
+            user_id=invocation.user_id,
             task_id=invocation.task_id,
             status=(AgentRunStatus.DEGRADED if state.get("degraded") else AgentRunStatus.SUCCEEDED),
             output=evidence,

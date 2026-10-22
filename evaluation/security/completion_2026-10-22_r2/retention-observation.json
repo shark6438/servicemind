@@ -1,0 +1,49 @@
+{
+  "verdict": "PASS",
+  "observed_at": "2026-10-22T11:22:57.031917+00:00",
+  "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "positive_controls": {
+    "PostgreSQL": "written and independently read before destruction",
+    "Redis": "written and independently read before destruction",
+    "Neo4j": "written and independently read before destruction",
+    "OpenSearch": "written and independently read before destruction"
+  },
+  "canary_sha256": "bf57e155e30252522746ca3ab23e1d35dee11679fbb549d704f75a050eb04072",
+  "removed_containers": [
+    "servicemind-security-completion-pg",
+    "servicemind-security-completion-redis",
+    "servicemind-security-completion-neo4j",
+    "servicemind-security-completion-os"
+  ],
+  "removed_anonymous_volumes": [
+    "73e346ca059f75dd50ee41575c71512d5cdbb37bc0d806b68f0b6cdf17794120",
+    "7800e5353c1e4d22ef7386005a3d9fb1202a89a9f4b237342142f0431ed4ecf7",
+    "7c698d1d15457ed408290c32052cad65aac77b68884db70a32b738ca88aa97aa",
+    "afa882e9df4a513ba23c9b4492f30f1b65276985fca0f85c70a741573d81bea8"
+  ],
+  "closed_ports": {
+    "pg": 32776,
+    "redis": 32777,
+    "neo4j": 32778,
+    "os": 32779
+  },
+  "method": "Whole isolated store teardown removes batch Run/memory/document/index/cache/checkpoint/audit copies, including append-only ledgers, without altering production immutability triggers.",
+  "retained_exceptions": [
+    {
+      "scope": "New raw evidence, source snapshots, synthetic fixture IDs and model observer hashes",
+      "reason": "User-requested audit reproducibility",
+      "expires_at": "2026-11-21T23:59:59+08:00"
+    },
+    {
+      "scope": "Synthetic fixtures and append-only audit/approval records in shared deployment; native GLPI ticket 39 and new local-model probe IDs listed in artifacts",
+      "reason": "User-authorized live assessment; preserve independent read-back and immutable ledgers",
+      "expires_at": "2026-11-21T23:59:59+08:00",
+      "disposal": "Authorized administrator must use existing retention procedure; this report does not certify production erasure or automatic expiry."
+    },
+    {
+      "scope": "Private pre-migration database/config backup",
+      "reason": "Rollback safety; chmod 0700 directory and 0600 backup",
+      "expires_at": "2026-11-21T23:59:59+08:00"
+    }
+  ]
+}

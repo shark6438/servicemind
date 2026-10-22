@@ -1,0 +1,50 @@
+{
+  "scenario_id": "SEC-CRASH-02",
+  "observed_at": "2026-10-22T11:11:41.064890Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"46b2a11924e5d36fdfe697e2186291c4f7aa5c7cec5f21606ac3d3b37b2ec407\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_revision_crash.py",
+      "mutation": "M01 the crashed revision leaves the draft it was repairing in place",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_revision_crash.evidence.json\", \"sha256\": \"2c5de5e5c6cc31c5c4fa7637e43d83faa8b6aff65398f492749b326f0664b7a4\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_revision_crash.py",
+      "mutation": "M02 the crashed revision is relabeled as a grounding failure",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_revision_crash.evidence.json\", \"sha256\": \"2c5de5e5c6cc31c5c4fa7637e43d83faa8b6aff65398f492749b326f0664b7a4\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_revision_crash.py",
+      "mutation": "M03 the crash is recorded without saying what crashed",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_revision_crash.evidence.json\", \"sha256\": \"2c5de5e5c6cc31c5c4fa7637e43d83faa8b6aff65398f492749b326f0664b7a4\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_revision_crash.py",
+      "mutation": "M04 the crashed revision still counts against the model budget it never spent",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_revision_crash.evidence.json\", \"sha256\": \"2c5de5e5c6cc31c5c4fa7637e43d83faa8b6aff65398f492749b326f0664b7a4\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)\"}"
+    }
+  ]
+}

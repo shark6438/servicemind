@@ -1126,6 +1126,9 @@ class ReviewerAgent:
         result = state["result"]
         return AgentResultEnvelope[ReviewResult](
             agent_name="reviewer",
+            run_id=invocation.run_id,
+            tenant_id=invocation.tenant_id,
+            user_id=invocation.user_id,
             task_id=invocation.task_id,
             status=AgentRunStatus.DEGRADED if result.degraded else AgentRunStatus.SUCCEEDED,
             output=result,

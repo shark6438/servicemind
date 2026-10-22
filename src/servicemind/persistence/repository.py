@@ -4,8 +4,8 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import and_, func, or_, select, text
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import and_, cast, func, or_, select, text
+from sqlalchemy.dialects.postgresql import JSONB, insert
 
 from servicemind.persistence.database import tenant_session
 from servicemind.persistence.models import (
@@ -23,6 +23,10 @@ from servicemind.persistence.models import (
 )
 
 
+class RunCancelled(RuntimeError):
+    pass
+
+
 class ServiceMindRepository:
     def __init__(self, tenant_id: UUID) -> None:
         self.tenant_id = tenant_id
@@ -34,6 +38,7 @@ class ServiceMindRepository:
         ticket_id: int,
         goal: str,
         request_write: bool,
+        access_scope: dict[str, list[int]] | None = None,
     ) -> AgentRun:
         run = AgentRun(
             id=uuid4(),
@@ -43,6 +48,7 @@ class ServiceMindRepository:
             ticket_id=ticket_id,
             goal=goal,
             request_write=request_write,
+            access_scope=access_scope,
             status=RunStatus.PENDING.value,
         )
         async with tenant_session(self.tenant_id) as session:
@@ -101,6 +107,7 @@ class ServiceMindRepository:
                         ticket_id=ticket_id,
                         goal=goal,
                         request_write=False,
+                        access_scope={"entity_ids": [event_payload["entity_id"]], "group_ids": []},
                         status=RunStatus.PENDING.value,
                     )
                     .on_conflict_do_nothing(index_elements=["id"])
@@ -139,8 +146,19 @@ class ServiceMindRepository:
         limit: int = 50,
         after_created_at: datetime | None = None,
         after_run_id: UUID | None = None,
+        reader_id: str | None = None,
+        reader_scope: dict[str, list[int]] | None = None,
     ) -> list[AgentRun]:
         statement = select(AgentRun)
+        if reader_id is not None:
+            statement = statement.where(AgentRun.user_id == reader_id)
+        if reader_scope is not None:
+            statement = statement.where(
+                AgentRun.access_scope["entity_ids"].op("<@")(
+                    cast(reader_scope["entity_ids"], JSONB)
+                ),
+                AgentRun.access_scope["group_ids"].op("<@")(cast(reader_scope["group_ids"], JSONB)),
+            )
         if status is not None:
             statement = statement.where(AgentRun.status == status)
         if after_created_at is not None and after_run_id is not None:
@@ -171,12 +189,44 @@ class ServiceMindRepository:
                     select(AgentRun).where(AgentRun.id == run_id).with_for_update()
                 )
             ).scalar_one()
+            if run.status == RunStatus.CANCELLED.value and status != RunStatus.CANCELLED:
+                raise RunCancelled("Run has been cancelled")
             run.status = status.value
             if result is not None:
                 run.result = result
             run.error = error
             await session.flush()
             return run
+
+    async def cancel_run(self, run_id: UUID) -> AgentRun:
+        async with self.action_lock(f"run-submit:{run_id}"):
+            async with tenant_session(self.tenant_id) as session:
+                run = (
+                    await session.execute(
+                        select(AgentRun).where(AgentRun.id == run_id).with_for_update()
+                    )
+                ).scalar_one()
+                if run.status in {RunStatus.SUCCEEDED.value, RunStatus.FAILED.value}:
+                    raise ValueError("Run is already terminal")
+                run.status = RunStatus.CANCELLED.value
+                await session.flush()
+                # onupdate=func.now() expires updated_at on UPDATE. Materialize it
+                # before this session closes so the HTTP response can serialize it.
+                await session.refresh(run)
+                return run
+
+    @asynccontextmanager
+    async def run_submission(self, run_id: UUID) -> AsyncIterator[None]:
+        # The cancel response is the barrier: preceding in-flight submissions finish first.
+        async with self.action_lock(f"run-submit:{run_id}"):
+            run = await self.get_run(run_id)
+            if run is None or run.status in {
+                RunStatus.CANCELLED.value,
+                RunStatus.FAILED.value,
+                RunStatus.SUCCEEDED.value,
+            }:
+                raise RunCancelled("Run does not permit a new external submission")
+            yield
 
     async def append_event(
         self, run_id: UUID, event_type: str, payload: dict[str, Any]

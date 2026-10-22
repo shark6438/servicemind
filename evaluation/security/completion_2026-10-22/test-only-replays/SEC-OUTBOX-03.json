@@ -1,0 +1,71 @@
+{
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(fd07e4ed3fa4)",
+  "evidence": [
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"7 passed, 1 warning in 10.95s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_repeats_until_a_batch_comes_back_short"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"7 passed, 1 warning in 10.95s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_gives_up_between_batches_rather_than_inside_one"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"7 passed, 1 warning in 10.95s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_does_not_run_on_every_delivery"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"7 passed, 1 warning in 10.95s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_a_sweep_that_is_cancelled_propagates_the_cancellation"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M07 one sweep takes a single page however much has aged out",
+      "outcome": "missing",
+      "ref": "scripts/mutate_outbox_retention.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M08 one sweep has no ceiling, so it can outlast the publishing it interrupts",
+      "outcome": "missing",
+      "ref": "scripts/mutate_outbox_retention.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M10 shutting the worker down is treated as a retention failure to stop on",
+      "outcome": "missing",
+      "ref": "scripts/mutate_outbox_retention.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M11 the sweep is never reached from the delivery loop",
+      "outcome": "missing",
+      "ref": "scripts/mutate_outbox_retention.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M12 the sweep is un-scheduled and would run on every delivery",
+      "outcome": "missing",
+      "ref": "scripts/mutate_outbox_retention.py"
+    }
+  ],
+  "observed_at": "2026-10-22T10:12:54.644702Z",
+  "scenario_id": "SEC-OUTBOX-03",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea"
+}

@@ -40,3 +40,22 @@ password before exposing the service beyond localhost. The `bootstrap_*.php` scr
 idempotently provision the ServiceMind entities, OAuth client, service identities,
 webhooks and evaluation tickets; pass credentials through environment variables rather
 than storing them in the scripts.
+
+The API listens on host loopback at port 18080. Container callbacks use the dedicated
+[`servicemind-webhook-proxy.service`](../systemd/servicemind-webhook-proxy.service),
+which exposes only `POST /v1/servicemind/webhooks/glpi` on the Docker bridge gateway.
+Configure its environment file at `~/.config/servicemind/webhook-proxy.env` with
+`SERVICEMIND_WEBHOOK_PROXY_BIND_HOST` equal to that gateway,
+`SERVICEMIND_WEBHOOK_PROXY_ALLOWED_CIDR` equal to this Compose network's subnet, and
+`SERVICEMIND_WEBHOOK_PROXY_UPSTREAM=http://127.0.0.1:18080`. The proxy defaults to
+loopback and does not expose general API routes. It preserves the signed body, strips
+unrelated credentials, refuses redirects, and enforces request bounds.
+
+Set `SERVICEMIND_WEBHOOK_TARGET_URL` in this directory's private `.env` to
+`http://<docker-bridge-gateway>:18082/v1/servicemind/webhooks/glpi`. Find the gateway and
+subnet with `docker inspect` / `docker network inspect`; do not assume a fixed address.
+This value also creates the exact URL exception in `local_define.php`; other private
+network URLs stay blocked. Enable the user proxy unit and recreate only the GLPI
+container to load its environment. Then pass the same target to
+`bootstrap_webhooks.php` along with the existing webhook secrets. The bootstrap now
+refuses an unspecified target instead of registering an unreachable port 8080.

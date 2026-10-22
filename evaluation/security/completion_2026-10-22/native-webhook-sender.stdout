@@ -1,0 +1,64 @@
+{
+    "ticket_id": 39,
+    "queue_id": 39,
+    "native_sender": "QueuedWebhook::sendById",
+    "cra_enabled": true,
+    "frames": [
+        {
+            "case": "wrong-tenant-cra",
+            "sender_return": false,
+            "http_status": 0,
+            "expected_run_id": "e5e64e14-ec75-527e-9be9-df2154681276",
+            "body_sha256": "d7199ae0605f35328c535222c255f0185c2415dd4d1d47f933990dae06680872",
+            "response": null
+        },
+        {
+            "case": "tampered-body",
+            "sender_return": true,
+            "http_status": 401,
+            "expected_run_id": "e5e64e14-ec75-527e-9be9-df2154681276",
+            "body_sha256": "4bea8b33ac1e06fd9093fc3f17e03663a1ca293a86e2d6c0078cedb82364f7bd",
+            "response": null
+        },
+        {
+            "case": "expired-signed-frame",
+            "sender_return": true,
+            "http_status": 401,
+            "expected_run_id": "75b57abf-8331-58f3-862e-67cead4cf206",
+            "body_sha256": "d7199ae0605f35328c535222c255f0185c2415dd4d1d47f933990dae06680872",
+            "response": null
+        },
+        {
+            "case": "wrong-entity-valid-hmac",
+            "sender_return": true,
+            "http_status": 401,
+            "expected_run_id": "6d800d39-0fc5-5299-ad13-497e229d71c2",
+            "body_sha256": "f0667cd76d1df501b5d033c881bbf7aa6e10c704a1e3a018ab2048aebc27aed5",
+            "response": null
+        },
+        {
+            "case": "native-valid-delivery",
+            "sender_return": true,
+            "http_status": 202,
+            "expected_run_id": "e5e64e14-ec75-527e-9be9-df2154681276",
+            "body_sha256": "d7199ae0605f35328c535222c255f0185c2415dd4d1d47f933990dae06680872",
+            "response": null
+        },
+        {
+            "case": "same-signature-retry",
+            "sender_return": true,
+            "http_status": 202,
+            "expected_run_id": "e5e64e14-ec75-527e-9be9-df2154681276",
+            "body_sha256": "d7199ae0605f35328c535222c255f0185c2415dd4d1d47f933990dae06680872",
+            "response": null
+        },
+        {
+            "case": "resigned-delivery",
+            "sender_return": true,
+            "http_status": 202,
+            "expected_run_id": "0ccbcbbc-0e81-5a35-888f-a2a33948b95d",
+            "body_sha256": "d7199ae0605f35328c535222c255f0185c2415dd4d1d47f933990dae06680872",
+            "response": null
+        }
+    ]
+}

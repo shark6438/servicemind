@@ -1,0 +1,36 @@
+{
+  "scenario_id": "SEC-AUTHZ-08",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase4_graphrag.py::test_the_retriever_refuses_a_store_that_cannot_apply_node_acls",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_the_retriever_refuses_a_store_that_cannot_apply_node_acls\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_the_retriever_refuses_a_store_that_cannot_apply_node_acls\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_the_retriever_refuses_a_store_that_cannot_apply_node_acls\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"if not asyncio.iscoroutinefunction(self.close):\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase4_graphrag.py::test_the_side_channel_reports_an_unfilterable_store_rather_than_degrading",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_the_side_channel_reports_an_unfilterable_store_rather_than_degrading\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_the_side_channel_reports_an_unfilterable_store_rather_than_degrading\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_phase4_graphrag.py::test_the_side_channel_reports_an_unfilterable_store_rather_than_degrading\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"if not asyncio.iscoroutinefunction(self.close):\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M43 the retriever stops refusing a store that cannot apply node ACLs",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_phase7_permissions_40_50.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_phase7_permissions.py",
+      "mutation": "M44 the side channel folds a refusal into the ordinary degradation",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_phase7_permissions_40_50.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    }
+  ]
+}

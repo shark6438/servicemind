@@ -31,9 +31,67 @@ import os
 import signal
 import subprocess
 import sys
+import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+
+from servicemind.evaluation.pytest_evidence import grade_test_phases
+from servicemind.evaluation.security_grader import EvidenceOutcome
+
+
+def run_probe(
+    root: Path, tests: Sequence[str], pytest_args: Sequence[str]
+) -> tuple[int, list[dict], str]:
+    with tempfile.TemporaryDirectory() as temporary:
+        evidence = Path(temporary) / "phases.json"
+        try:
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "pytest",
+                    *tests,
+                    "-q",
+                    "--no-header",
+                    "-p",
+                    "no:randomly",
+                    "-p",
+                    "servicemind.evaluation.pytest_evidence",
+                    *pytest_args,
+                ],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                timeout=1800,
+                env={**os.environ, "SERVICEMIND_PYTEST_EVIDENCE": str(evidence)},
+            )
+            payload = json.loads(evidence.read_text())
+            if payload.get("exitstatus") != proc.returncode:
+                return 3, [], "evidence/process mismatch"
+            lines = (proc.stdout + proc.stderr).strip().splitlines()
+            return proc.returncode, payload.get("reports", []), lines[-1] if lines else "no output"
+        except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
+            return 3, [], type(exc).__name__
+
+
+def mutation_status(code: int, rows: list[dict]) -> str:
+    if not rows or code not in {0, 1}:
+        return "UNRUN (no test ran)"
+    if any(row.get("wasxfail") or row["outcome"] == "skipped" for row in rows):
+        return "UNEXERCISED (all skipped)"
+    if any(row["outcome"] != "passed" and row["when"] != "call" for row in rows):
+        return "UNRUN (no test ran)"
+    for nodeid in {row["nodeid"] for row in rows}:
+        if sorted(row["when"] for row in rows if row["nodeid"] == nodeid) != [
+            "call",
+            "setup",
+            "teardown",
+        ]:
+            return "UNRUN (no test ran)"
+    if code == 1 and any(row["when"] == "call" and row["outcome"] == "failed" for row in rows):
+        return "RED (good)"
+    return "GREEN (BAD - no teeth)" if code == 0 else "UNRUN (no test ran)"
 
 
 @dataclass(frozen=True, slots=True)
@@ -241,6 +299,14 @@ def run_mutations(
     reconcile_interrupted_run()
     acquire_lock()
 
+    all_tests = tuple(dict.fromkeys(test for mutation in mutations for test in mutation.tests))
+    code, rows, tail = run_probe(root, all_tests, pytest_args)
+    evidence_rows = [{"name": "baseline", "exit_code": code, "reports": rows, "summary": tail}]
+    if code != 0 or grade_test_phases(rows, process_ok=True) != EvidenceOutcome.PASSED:
+        print(f"BASELINE BLOCKED: {tail}")
+        restore_all()
+        return 1
+
     failures: list[str] = []
     unrunnable_names: list[str] = []
     for mutation in mutations:
@@ -259,33 +325,25 @@ def run_mutations(
         )
         mutation.path.write_text(mutated)
         try:
-            proc = subprocess.run(
-                [
-                    "uv",
-                    "run",
-                    "pytest",
-                    *mutation.tests,
-                    "-q",
-                    "--no-header",
-                    "-p",
-                    "no:randomly",
-                    *pytest_args,
-                ],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                timeout=1800,
-            )
-            tail = [ln for ln in proc.stdout.strip().splitlines() if ln.strip()][-1]
+            code, rows, tail = run_probe(root, mutation.tests, pytest_args)
         finally:
             restore(mutation.path, original, stamps.get(mutation.path))
             manifest.unlink(missing_ok=True)
-        detected = proc.returncode != 0
+        status = mutation_status(code, rows)
+        evidence_rows.append(
+            {
+                "name": mutation.name,
+                "exit_code": code,
+                "reports": rows,
+                "summary": tail,
+                "status": status,
+            }
+        )
+        detected = status == "RED (good)"
         # A green run that only skipped graded nothing: the behaviour the mutation removed
         # was never reached, so "the suite did not notice" would be the wrong reading --
         # there was no suite. Reported separately, because it is a defect in the invocation
         # (usually a missing ``--run-docker``) rather than a hole in the tests.
-        unexercised = (not detected) and " skipped" in tail and " passed" not in tail
         # A red run in which no test ever ran is not a detection either. Removing a line
         # can leave a block empty, which is a syntax error, and pytest then reports
         # ``1 error`` from collection -- exit code 1, "RED", and exactly as uninformative
@@ -294,19 +352,24 @@ def run_mutations(
         # fails loudest without this line") while proving nothing, which is the same false
         # sense of safety as an equivalent mutant that reads RED. The mutation has to be
         # repaired into a semantic change; until it is, the experiment has not graded it.
-        unrunnable = detected and " passed" not in tail and " failed" not in tail
-        if unexercised:
-            status = "UNEXERCISED (all skipped)"
-        elif unrunnable:
-            status = "UNRUN (no test ran)"
-        else:
-            status = "RED (good)" if detected else "GREEN (BAD - no teeth)"
+        unrunnable = status == "UNRUN (no test ran)"
         print(f"{status:28} | {mutation.name}\n{'':28} | {tail}")
         if not detected or unrunnable:
             failures.append(mutation.name)
         if unrunnable:
             unrunnable_names.append(mutation.name)
 
+    code, rows, tail = run_probe(root, all_tests, pytest_args)
+    evidence_rows.append(
+        {"name": "restored baseline", "exit_code": code, "reports": rows, "summary": tail}
+    )
+    (runtime / f"mutate_{experiment}.evidence.json").write_text(
+        json.dumps(evidence_rows, indent=2) + "\n"
+    )
+    if code != 0 or grade_test_phases(rows, process_ok=True) != EvidenceOutcome.PASSED:
+        failures.append("restored baseline")
+        print(f"RESTORE BLOCKED: {tail}")
+    restore_all()
     print()
     verdicts = []
     if unrunnable_names:

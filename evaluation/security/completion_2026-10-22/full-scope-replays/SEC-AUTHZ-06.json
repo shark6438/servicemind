@@ -1,0 +1,29 @@
+{
+  "scenario_id": "SEC-AUTHZ-06",
+  "observed_at": "2026-10-22T10:43:18.616962Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_identity_boundary.py::test_a_grant_set_larger_than_an_identity_can_carry_is_not_an_identity",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_grant_set_larger_than_an_identity_can_carry_is_not_an_identity\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_grant_set_larger_than_an_identity_can_carry_is_not_an_identity\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_grant_set_larger_than_an_identity_can_carry_is_not_an_identity\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_identity_boundary.py::test_an_over_large_grant_set_is_a_401_not_a_500",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_an_over_large_grant_set_is_a_401_not_a_500\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_an_over_large_grant_set_is_a_401_not_a_500\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_an_over_large_grant_set_is_a_401_not_a_500\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_identity_boundary.py::test_a_principal_cannot_hold_an_acl_the_retrieval_cannot_filter_by",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_principal_cannot_hold_an_acl_the_retrieval_cannot_filter_by\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_principal_cannot_hold_an_acl_the_retrieval_cannot_filter_by\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_identity_boundary.py::test_a_principal_cannot_hold_an_acl_the_retrieval_cannot_filter_by\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    }
+  ]
+}

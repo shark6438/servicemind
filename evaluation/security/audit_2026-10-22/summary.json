@@ -1,0 +1,72 @@
+{
+  "schema_version": "servicemind-security-audit-v1",
+  "audit_date": "2026-10-22",
+  "timezone": "Asia/Shanghai",
+  "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b",
+  "scope": "targeted static audit and local tests; not production assessment",
+  "source_checkout": "git archive HEAD, without .env",
+  "python": "3.14 (existing project virtualenv; dependencies not rebuilt)",
+  "pytest": {
+    "tests": 113,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "pytest_files": [
+    "test_webhooks.py",
+    "test_identity_boundary.py",
+    "test_phase3_security.py",
+    "test_phase7_security_contract.py",
+    "test_phase5_memory_review_api.py",
+    "test_operations_api.py",
+    "test_recovery.py",
+    "test_phase7_gate_revisions.py",
+    "test_phase7_gate_refusals.py"
+  ],
+  "probe_limitations": [
+    "OIDC dependency overridden with role-free synthetic principal",
+    "database repository and credential cipher replaced in HTTP probes",
+    "ASGI transport used without listening socket or production reverse proxy",
+    "no live GLPI, database, model, IdP, mutations, or vulnerability scan executed"
+  ],
+  "observations": {
+    "function_probes": {
+      "webhook_long_timestamp": {
+        "exception": "ValueError",
+        "caught_by_endpoint": false,
+        "int_max_str_digits": 4300
+      },
+      "mixed_pass_skip": "passed",
+      "blocked_acceptance_import": {
+        "exception": "AttributeError",
+        "message": "type object 'EvidenceOutcome' has no attribute 'BLOCKED'"
+      }
+    },
+    "http_probes": {
+      "no_role/detail": {
+        "status": 200,
+        "contains_fixture_canary": true
+      },
+      "no_role/events": {
+        "status": 200,
+        "contains_fixture_canary": true
+      },
+      "no_role/timeline": {
+        "status": 403,
+        "contains_fixture_canary": false
+      },
+      "webhook_5000_digit_timestamp": {
+        "status": 500
+      }
+    }
+  },
+  "files_sha256": {
+    "README.md": "20715ff7d6f1e1ad030bb34cb7aca3bc69df4b6c70bdf4c0fa1e72a6d9236d15",
+    "audit-http-probes.json": "4f906f46bef0be840922dc41a8482bf0d3f20023d236e1f265659c642802d44e",
+    "audit-junit.xml": "368b6ad41d83fb63d7a5082100579c130fd42ba59221a5b1f1ca5039b5f357c7",
+    "audit-probes.json": "0c3f582174c45bac39a4702d366b31016738650cbd062a23573c37e4b682bed4",
+    "audit_http_probes.py": "2563cacd67c4c221adb7661f3997a2580815bbbe2b7caa95ad6e0f90b6f4eed9",
+    "audit_probes.py": "1c84d721d5a696a44e017f5b166c0a015895e102ecd35cccab8ebe8bdfc420a1",
+    "pytest-output.txt": "95e2076c3f0efac24ec613b91d41d3f4fdfa1f9d5afd3e54a80fcb497d8bc12f"
+  }
+}

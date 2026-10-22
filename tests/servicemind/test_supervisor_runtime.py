@@ -1616,3 +1616,31 @@ async def test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its
         assert item["failure_detail"].endswith(" " + LONG_FAILURE_MARKER), (
             "a head-only slice records the completion and drops the cause"
         )
+
+
+@pytest.mark.asyncio
+async def test_a_foreign_task_result_never_reaches_joined_evidence():
+    from servicemind.runtime.contracts import AgentResultEnvelope, AgentRunStatus
+
+    class ForeignData:
+        async def run(self, *, invocation, **kwargs):
+            return AgentResultEnvelope[list[Evidence]](
+                agent_name="data",
+                run_id=uuid4(),
+                tenant_id=invocation.tenant_id,
+                user_id=invocation.user_id,
+                task_id=invocation.task_id,
+                status=AgentRunStatus.SUCCEEDED,
+                output=[evidence(EvidenceSourceType.GLPI, "ticket", "FOREIGN_RESULT_CANARY")],
+                prompt_version="test",
+                policy_version="test",
+            )
+
+    svc = replace(services(), data=ForeignData())
+    state = await build_supervisor_graph(svc).ainvoke(initial("Analyze the incident evidence"))
+    assert "FOREIGN_RESULT_CANARY" not in str(state.get("data_evidence", []))
+    assert "FOREIGN_RESULT_CANARY" not in str(state.get("final_result", {}))
+    assert not any(
+        kind == "agent.completed" and value.get("agent_name") == "data"
+        for kind, value in FakeRepository.events
+    )

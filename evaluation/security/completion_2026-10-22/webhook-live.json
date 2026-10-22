@@ -1,0 +1,135 @@
+{
+  "ticket_id": 39,
+  "queue_id": 39,
+  "native_sender": "QueuedWebhook::sendById",
+  "cra_enabled": true,
+  "frames": [
+    {
+      "case": "wrong-tenant-cra",
+      "sender_return": false,
+      "http_status": 0,
+      "expected_run_id": "e5e64e14-ec75-527e-9be9-df2154681276",
+      "body_sha256": "d7199ae0605f35328c535222c255f0185c2415dd4d1d47f933990dae06680872",
+      "response": null
+    },
+    {
+      "case": "tampered-body",
+      "sender_return": true,
+      "http_status": 401,
+      "expected_run_id": "e5e64e14-ec75-527e-9be9-df2154681276",
+      "body_sha256": "4bea8b33ac1e06fd9093fc3f17e03663a1ca293a86e2d6c0078cedb82364f7bd",
+      "response": null
+    },
+    {
+      "case": "expired-signed-frame",
+      "sender_return": true,
+      "http_status": 401,
+      "expected_run_id": "75b57abf-8331-58f3-862e-67cead4cf206",
+      "body_sha256": "d7199ae0605f35328c535222c255f0185c2415dd4d1d47f933990dae06680872",
+      "response": null
+    },
+    {
+      "case": "wrong-entity-valid-hmac",
+      "sender_return": true,
+      "http_status": 401,
+      "expected_run_id": "6d800d39-0fc5-5299-ad13-497e229d71c2",
+      "body_sha256": "f0667cd76d1df501b5d033c881bbf7aa6e10c704a1e3a018ab2048aebc27aed5",
+      "response": null
+    },
+    {
+      "case": "native-valid-delivery",
+      "sender_return": true,
+      "http_status": 202,
+      "expected_run_id": "e5e64e14-ec75-527e-9be9-df2154681276",
+      "body_sha256": "d7199ae0605f35328c535222c255f0185c2415dd4d1d47f933990dae06680872",
+      "response": null
+    },
+    {
+      "case": "same-signature-retry",
+      "sender_return": true,
+      "http_status": 202,
+      "expected_run_id": "e5e64e14-ec75-527e-9be9-df2154681276",
+      "body_sha256": "d7199ae0605f35328c535222c255f0185c2415dd4d1d47f933990dae06680872",
+      "response": null
+    },
+    {
+      "case": "resigned-delivery",
+      "sender_return": true,
+      "http_status": 202,
+      "expected_run_id": "0ccbcbbc-0e81-5a35-888f-a2a33948b95d",
+      "body_sha256": "d7199ae0605f35328c535222c255f0185c2415dd4d1d47f933990dae06680872",
+      "response": null
+    }
+  ],
+  "started_at": "2026-10-22T10:51:42.345470+00:00",
+  "terminal_runs": {
+    "e5e64e14-ec75-527e-9be9-df2154681276": {
+      "status": "succeeded",
+      "ticket_id": 39,
+      "request_write": false,
+      "event_types": [
+        "webhook.accepted",
+        "route.completed",
+        "supervisor.decision",
+        "plan.validated",
+        "supervisor.decision",
+        "agent.completed",
+        "agent.completed",
+        "supervisor.decision",
+        "evidence.joined",
+        "supervisor.decision",
+        "agent.completed",
+        "supervisor.decision",
+        "agent.completed",
+        "review.completed",
+        "supervisor.decision",
+        "run.succeeded",
+        "memory.post_run_completed"
+      ]
+    },
+    "0ccbcbbc-0e81-5a35-888f-a2a33948b95d": {
+      "status": "succeeded",
+      "ticket_id": 39,
+      "request_write": false,
+      "event_types": [
+        "webhook.accepted",
+        "route.completed",
+        "supervisor.decision",
+        "plan.validated",
+        "supervisor.decision",
+        "agent.completed",
+        "agent.completed",
+        "supervisor.decision",
+        "evidence.joined",
+        "supervisor.decision",
+        "agent.completed",
+        "supervisor.decision",
+        "agent.completed",
+        "review.completed",
+        "supervisor.decision",
+        "run.succeeded",
+        "memory.post_run_completed"
+      ]
+    }
+  },
+  "interpretation": "Same signature gives one Run; re-signing creates a distinct Run. HTTP 202 alone is not completion.",
+  "verdict": "PASS",
+  "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "runtime_build_identity": {
+    "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+    "boot_id": "00527d6c-d97a-4225-82fc-d067bf4e5d39",
+    "captured_at": "2026-10-22T10:45:12.852115+00:00",
+    "configuration": {
+      "default_model": "openai-compatible",
+      "ollama_model": "qwen3:30b-a3b",
+      "compatible_model": "security-simulator-v1",
+      "model_allowed_providers": "openai",
+      "model_allowed_models": "security-simulator-v1",
+      "generic_api_enabled": false,
+      "oidc_audience": "servicemind-api",
+      "tool_platform_enabled": true,
+      "tool_provider": "native_glpi"
+    },
+    "configuration_sha256": "9de15e8dd2d4a26dfe18f343941fa24d6d5894ba4de9c2a57d9a1796955160a7"
+  }
+}

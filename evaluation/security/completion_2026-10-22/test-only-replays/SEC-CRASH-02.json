@@ -1,0 +1,50 @@
+{
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(fd07e4ed3fa4)",
+  "evidence": [
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"2 passed, 1 warning in 9.26s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_analysis_revision_failure.py::test_a_crashed_revision_does_not_publish_the_draft_it_was_repairing"
+    },
+    {
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"2 passed, 1 warning in 9.26s\"}",
+      "kind": "test",
+      "mutation": null,
+      "outcome": "passed",
+      "ref": "tests/servicemind/test_analysis_revision_failure.py::test_revision_model_crash_is_reported_as_revision_failure"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M01 the crashed revision leaves the draft it was repairing in place",
+      "outcome": "missing",
+      "ref": "scripts/mutate_revision_crash.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M02 the crashed revision is relabeled as a grounding failure",
+      "outcome": "missing",
+      "ref": "scripts/mutate_revision_crash.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M03 the crash is recorded without saying what crashed",
+      "outcome": "missing",
+      "ref": "scripts/mutate_revision_crash.py"
+    },
+    {
+      "detail": "--skip-mutations was given; the experiment was not run",
+      "kind": "mutation",
+      "mutation": "M04 the crashed revision still counts against the model budget it never spent",
+      "outcome": "missing",
+      "ref": "scripts/mutate_revision_crash.py"
+    }
+  ],
+  "observed_at": "2026-10-22T10:12:54.644702Z",
+  "scenario_id": "SEC-CRASH-02",
+  "scenarios_digest": "db3731e1046f66fa21a3e0890d71624d02f3e1f2580ec6d261ae9e9cd2042bea"
+}

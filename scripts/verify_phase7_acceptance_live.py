@@ -537,6 +537,7 @@ class Stack:
         self.base_url = base_url.rstrip("/")
         self.tenant_id = tenant_id
         self.timeout_scale = timeout_scale
+        self.build_identity: dict[str, Any] | None = None
         self._secrets = dotenv_values(DEPLOY_ENV)
         #: Token and the monotonic instant it stops being usable, per subject. A bare
         #: cached string is what made the first full sweep stop observing halfway
@@ -2291,6 +2292,8 @@ def environment_of(stack: Stack, revision: str | None) -> ObservedEnvironment:
         recorded_at=datetime.now(UTC),
         deployed_revision=revision,
         notes=[
+            "runtime_build_identity="
+            + json.dumps(getattr(stack, "build_identity", None), sort_keys=True),
             "The entitlement verifier's presence is read from this process's own "
             "registry, after importing servicemind.security.auth -- the module whose "
             "import installs it. Importing the registry alone reads an empty slot that "
@@ -2441,6 +2444,16 @@ async def main() -> int:
         tenant_id=UUID(args.tenant_id),
         timeout_scale=args.timeout_scale,
     )
+    await stack.await_health()
+    build_response = await stack.client.get(f"{stack.base_url}/health/build")
+    build_response.raise_for_status()
+    stack.build_identity = build_response.json()
+    if stack.build_identity.get("source_revision") != source_revision():
+        await stack.aclose()
+        print(
+            "Refusing acceptance: serving build identity differs from the source tree", flush=True
+        )
+        return 3
     environment = environment_of(stack, source_revision())
     print(
         json.dumps(

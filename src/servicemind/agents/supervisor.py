@@ -11,6 +11,32 @@ from servicemind.runtime.structured import structured_output
 class SupervisorAgent:
     """Control-plane agent: proposes the next transition but owns no domain tools."""
 
+    @staticmethod
+    def decision_options(state_view: dict[str, Any]) -> list[dict[str, Any]]:
+        options = []
+        ready = state_view.get("ready_tasks", [])
+        for action in state_view["legal_actions"]:
+            if action == "dispatch":
+                ids = [task["task_id"] for task in ready if task["agent"] in {"data", "knowledge"}]
+                if state_view["max_parallel"] > 0:
+                    options.extend(
+                        {"action": action, "selected_task_ids": [task_id]} for task_id in ids
+                    )
+                if len(ids) > 1 and state_view["max_parallel"] > 1:
+                    options.append(
+                        {"action": action, "selected_task_ids": ids[: state_view["max_parallel"]]}
+                    )
+            elif action in {"analyze", "review"}:
+                agent = "analysis" if action == "analyze" else "reviewer"
+                options.extend(
+                    {"action": action, "selected_task_ids": [task["task_id"]]}
+                    for task in ready
+                    if task["agent"] == agent
+                )
+            else:
+                options.append({"action": action, "selected_task_ids": []})
+        return options
+
     async def decide(
         self,
         state_view: dict[str, Any],
@@ -44,6 +70,11 @@ class SupervisorAgent:
                         "one or more ready evidence task IDs up to max_parallel. For ANALYZE or "
                         "REVIEW, select exactly one matching ready task ID. For every other "
                         "action selected_task_ids must be empty. Use current task status, "
+                        "Copy both action and selected_task_ids from one decision_options "
+                        "entry; never omit selected_task_ids. "
+                        "When plan is null and plan is legal, choose plan to create the "
+                        "evidence tasks. An empty ready_tasks list and no evidence before "
+                        "planning are expected initialization, not reasons to escalate. "
                         "review feedback and remaining budget. Never invent task IDs. Return "
                         "Prefer progressing ready work. Use REPLAN only for failure, conflict, "
                         "or explicit reviewer feedback; use ESCALATE only when safe progress is "
@@ -54,7 +85,12 @@ class SupervisorAgent:
                         f"{json.dumps(SupervisorDecision.model_json_schema())}"
                     )
                 ),
-                HumanMessage(content=json.dumps(state_view, ensure_ascii=False)),
+                HumanMessage(
+                    content=json.dumps(
+                        {**state_view, "decision_options": self.decision_options(state_view)},
+                        ensure_ascii=False,
+                    )
+                ),
             ]
         )
         return SupervisorDecision.model_validate(result)

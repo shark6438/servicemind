@@ -1,0 +1,29 @@
+{
+  "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)",
+  "runtime_build_identity": {
+    "boot_id": "0db9253b-2d7d-4e96-a805-9b12a11d30fa",
+    "captured_at": "2026-10-22T11:15:55.036756+00:00",
+    "configuration": {
+      "compatible_model": null,
+      "default_model": "ollama",
+      "generic_api_enabled": false,
+      "model_allowed_models": "qwen3:30b-a3b",
+      "model_allowed_providers": "ollama",
+      "oidc_audience": "servicemind-api",
+      "ollama_model": "qwen3:30b-a3b",
+      "tool_platform_enabled": true,
+      "tool_provider": "native_glpi"
+    },
+    "configuration_sha256": "d8bd0449f2138f4b94e3ed3c0eea002dc0f808b0cfaa4e1f40d91fab9c4dd148",
+    "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(9d7e9716f6ac)"
+  },
+  "model": "qwen3:30b-a3b",
+  "remote_identity_unchanged": true,
+  "api_fee": 0,
+  "evidence_validity": "VALID",
+  "utility_verdict": "FAIL",
+  "terminal_status": "failed",
+  "seconds": 92.66729882080108,
+  "failure": "critical_error: ValueError: Replan must add at least one evidence task",
+  "interpretation": "Actual main API after simulator shutdown; no intentional restart or shared secondary recovery. Real model produced invalid replan; failure preserved."
+}

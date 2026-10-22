@@ -1,0 +1,43 @@
+{
+  "scenario_id": "SEC-OUTBOX-02",
+  "observed_at": "2026-10-22T10:43:18.616962Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"raw_phases\": \"release-test-phases.json\", \"sha256\": \"86944fd20f95ba071f0d28d4793e837f8c1451e746e05d3c3036d3123048f0c9\", \"phases\": [{\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else\", \"when\": \"setup\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else\", \"when\": \"call\", \"outcome\": \"passed\", \"wasxfail\": null}, {\"nodeid\": \"tests/servicemind/test_phase7_outbox_retention.py::test_the_sweep_retires_delivered_rows_and_keeps_everything_else\", \"when\": \"teardown\", \"outcome\": \"passed\", \"wasxfail\": null}]}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_outbox_retention.py",
+      "mutation": "M03 retention forgets which rows it has delivered",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_outbox_retention.evidence.json\", \"sha256\": \"72767d96446dd1b29cc99b9111f30c255307a462d733b761a306cb48cb53a744\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_outbox_retention.py",
+      "mutation": "M04 retention forgets to wait for the delivery record to age",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_outbox_retention.evidence.json\", \"sha256\": \"72767d96446dd1b29cc99b9111f30c255307a462d733b761a306cb48cb53a744\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_outbox_retention.py",
+      "mutation": "M05 retention measures the wait, not the delivery",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_outbox_retention.evidence.json\", \"sha256\": \"72767d96446dd1b29cc99b9111f30c255307a462d733b761a306cb48cb53a744\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_outbox_retention.py",
+      "mutation": "M06 retention also retires the rows that were never delivered",
+      "outcome": "passed",
+      "detail": "{\"raw_evidence\": \"mutation-evidence/mutate_outbox_retention.evidence.json\", \"sha256\": \"72767d96446dd1b29cc99b9111f30c255307a462d733b761a306cb48cb53a744\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)\"}"
+    }
+  ]
+}

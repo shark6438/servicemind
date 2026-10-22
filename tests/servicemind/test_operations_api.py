@@ -55,7 +55,12 @@ class _Repository:
         ]
 
     async def get_run(self, run_id: UUID) -> SimpleNamespace:
-        return SimpleNamespace(id=run_id)
+        return SimpleNamespace(
+            id=run_id,
+            tenant_id=TENANT_ID,
+            user_id="operator-1",
+            access_scope={"entity_ids": [], "group_ids": []},
+        )
 
     async def list_events(self, run_id: UUID, after: int) -> list[SimpleNamespace]:
         return [
@@ -178,7 +183,12 @@ class _EventRepository:
         self.tenant_id = tenant_id
 
     async def get_run(self, run_id: UUID) -> SimpleNamespace:
-        return SimpleNamespace(id=run_id)
+        return SimpleNamespace(
+            id=run_id,
+            tenant_id=TENANT_ID,
+            user_id="operator-1",
+            access_scope={"entity_ids": [], "group_ids": []},
+        )
 
     async def list_events(self, run_id: UUID, after: int) -> list[SimpleNamespace]:
         type(self).cursors.append(after)
@@ -200,7 +210,7 @@ async def _stream(
     headers = {} if last_event_id is None else {"Last-Event-ID": last_event_id}
     seen = len(_EventRepository.cursors)
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=_app(_context({"analyst"}))),
+        transport=httpx.ASGITransport(app=_app(_context({"viewer", "analyst"}))),
         base_url="http://test",
     ) as client:
         response = await client.get(f"/v1/servicemind/runs/{uuid4()}/events", headers=headers)
@@ -315,7 +325,8 @@ async def test_cancel_run_demands_a_mutating_role_and_only_stops_live_runs(
             return SimpleNamespace(
                 id=run_id,
                 tenant_id=TENANT_ID,
-                user_id="analyst-1",
+                user_id="operator-1",
+                access_scope={"entity_ids": [], "group_ids": []},
                 ticket_id=42,
                 goal="Investigate VPN incident",
                 request_write=False,
@@ -326,9 +337,11 @@ async def test_cancel_run_demands_a_mutating_role_and_only_stops_live_runs(
                 updated_at=now,
             )
 
-        async def update_run(self, run_id: UUID, run_status: str) -> SimpleNamespace:
-            self.touches.append(f"update_run:{run_status}")
-            self.status = run_status
+        async def cancel_run(self, run_id: UUID) -> SimpleNamespace:
+            if self.status in {RunStatus.SUCCEEDED.value, RunStatus.FAILED.value}:
+                raise ValueError("terminal")
+            self.touches.append(f"update_run:{RunStatus.CANCELLED.value}")
+            self.status = RunStatus.CANCELLED
             return await self.get_run(run_id)
 
         async def audit(self, **_: object) -> None:
@@ -370,7 +383,7 @@ async def test_cancel_run_demands_a_mutating_role_and_only_stops_live_runs(
     missing = uuid4()
     Repository.missing_id = missing
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=_app(_context({"analyst"}))),
+        transport=httpx.ASGITransport(app=_app(_context({"viewer", "analyst"}))),
         base_url="http://test",
     ) as client:
         absent = await client.post(f"/v1/servicemind/runs/{missing}:cancel")
@@ -380,7 +393,7 @@ async def test_cancel_run_demands_a_mutating_role_and_only_stops_live_runs(
     # CANCELLED: the audit trail would then disagree with what the workflow did.
     Repository.status = RunStatus.SUCCEEDED.value
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=_app(_context({"analyst"}))),
+        transport=httpx.ASGITransport(app=_app(_context({"viewer", "analyst"}))),
         base_url="http://test",
     ) as client:
         settled = await client.post(f"/v1/servicemind/runs/{live}:cancel")

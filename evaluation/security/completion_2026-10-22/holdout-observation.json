@@ -1,0 +1,217 @@
+{
+  "source_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(2f4c84acea88)",
+  "observed_at": "2026-10-22T10:45:06.322830+00:00",
+  "inputs_sha256": "ad2bbcce8894f88b602304b7bdf557e26427dbb524d8dec041aaf0e8c8a0c1c6",
+  "generated_after_source_freeze": true,
+  "samples": 16,
+  "baseline": [
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    }
+  ],
+  "counterfactual_control_removed_only_in_isolated_process": [
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 200,
+      "canary_observed": true
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    }
+  ],
+  "restored": [
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    },
+    {
+      "status": 404,
+      "canary_observed": false
+    }
+  ],
+  "positive_before": {
+    "status": 200,
+    "canary_observed": true
+  },
+  "positive_after": {
+    "status": 200,
+    "canary_observed": true
+  },
+  "canary_sha256": "d20c187a0b43f53d0080b1220237221a859003eda498700246892e5a1255ae35",
+  "synthetic_run_id": "2a76a2a6-901c-4e1b-8ee5-23051d038e7e",
+  "interpretation": "Held-out authorization probes; these are not real-model ASR samples.",
+  "verdict": "PASS"
+}

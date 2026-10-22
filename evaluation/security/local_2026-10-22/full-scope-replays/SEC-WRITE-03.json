@@ -1,0 +1,43 @@
+{
+  "scenario_id": "SEC-WRITE-03",
+  "observed_at": "2026-10-22T08:18:21.115106Z",
+  "deployed_revision": "19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)",
+  "scenarios_digest": "420941c90cd9c8062dc19387f08567c691171b7f24305958a89d6f38078ecf12",
+  "evidence": [
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_the_gateway_will_not_write_a_body_the_approval_does_not_cover\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"17 passed, 1 warning in 11.76s\"}"
+    },
+    {
+      "kind": "test",
+      "ref": "tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused",
+      "mutation": null,
+      "outcome": "passed",
+      "detail": "{\"phases\": [{\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"setup\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"call\"}, {\"nodeid\": \"tests/servicemind/test_enterprise_subagents.py::test_a_marker_that_does_not_name_the_approved_action_is_refused\", \"outcome\": \"passed\", \"wasxfail\": null, \"when\": \"teardown\"}], \"summary\": \"17 passed, 1 warning in 11.76s\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_glpi_write_gateway.py",
+      "mutation": "M07 the provider writes whatever body the caller sent",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_glpi_write_gateway.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "mutation",
+      "ref": "scripts/mutate_glpi_write_gateway.py",
+      "mutation": "M08 the provider trusts a marker the caller chose",
+      "outcome": "passed",
+      "detail": "{\"status\": \"RED (good)\", \"raw_evidence\": \"mutate_glpi_write_gateway.evidence.json\", \"source_revision\": \"19d9a377fb98e1c3f56edc59be40b374013bc08b+patch(e4951fd79716)\"}"
+    },
+    {
+      "kind": "acceptance",
+      "ref": "ACC-11",
+      "mutation": null,
+      "outcome": "missing",
+      "detail": "acceptance observations belong to a different source revision; live acceptance excluded by user scope"
+    }
+  ]
+}
