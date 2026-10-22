@@ -1,0 +1,226 @@
+[
+  {
+    "event_type": "run.created",
+    "payload": {
+      "ticket_id": 25,
+      "request_write": false
+    },
+    "created_at": "2026-10-22 13:03:47.931824+00:00"
+  },
+  {
+    "event_type": "route.completed",
+    "payload": {
+      "route": "complex_workflow",
+      "reason_code": "analysis_or_action_required"
+    },
+    "created_at": "2026-10-22 13:03:47.972799+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "plan",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The issue involves a multi-factor authentication failure after device change, which suggests a potential misconfiguration in the MFA token or device registration. Since no evidence tasks exist and the system is at the initial routing stage, creating a structured plan to generate diagnostic tasks is necessary. The plan must address device-specific MFA validation, token synchronization, and user context verification to identify the root cause."
+    },
+    "created_at": "2026-10-22 13:04:01.741100+00:00"
+  },
+  {
+    "event_type": "plan.validated",
+    "payload": {
+      "plan_id": "a0269378-f255-4fb4-be3f-4406a1851069",
+      "tasks": [
+        {
+          "id": "T1",
+          "agent": "data"
+        },
+        {
+          "id": "T2",
+          "agent": "analysis"
+        },
+        {
+          "id": "T3",
+          "agent": "reviewer"
+        }
+      ]
+    },
+    "created_at": "2026-10-22 13:04:25.452702+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "dispatch",
+      "selected_task_ids": [
+        "T1"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "The task T1 is ready and aligned with the initial step of retrieving ticket details to understand the reported issue and user context. Dispatching T1 will enable subsequent analysis and review steps to proceed with accurate data."
+    },
+    "created_at": "2026-10-22 13:04:39.230097+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "data",
+      "run_id": "bf1cfcde-7263-4ef0-bc24-a022b7d7b01b",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T1",
+      "status": "degraded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "attempts": 2,
+        "latency_ms": 8698.775904253125
+      },
+      "model_name": "openai-compatible",
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-agent-policy-v2",
+      "failure_code": "DATA_PLAN_DEGRADED",
+      "failure_detail": null
+    },
+    "created_at": "2026-10-22 13:04:47.945540+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "join_evidence",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The system indicates that evidence is dirty and there are 3 pieces of evidence pending consolidation. Before proceeding with analysis or review, it is necessary to join the evidence to ensure data integrity and completeness. This step is required to avoid incorrect analysis due to inconsistent or incomplete data."
+    },
+    "created_at": "2026-10-22 13:04:58.432496+00:00"
+  },
+  {
+    "event_type": "evidence.joined",
+    "payload": {
+      "count": 3,
+      "gathered": 3,
+      "dropped": 0,
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967"
+      ]
+    },
+    "created_at": "2026-10-22 13:04:58.438261+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "analyze",
+      "selected_task_ids": [
+        "T2"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "The ticket indicates a multi-factor authentication (MFA) failure after a device change, while password authentication succeeds. This suggests the issue is likely tied to the MFA method being device-specific, such as a hardware token, authenticator app, or device-bound biometrics. The ready task T2 is designed to analyze the ticket data to determine if the MFA failure correlates with the device change. Proceeding with analysis is the appropriate next step to isolate the root cause before escalation or replanning."
+    },
+    "created_at": "2026-10-22 13:05:18.815608+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "analysis",
+      "run_id": "bf1cfcde-7263-4ef0-bc24-a022b7d7b01b",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T2",
+      "status": "degraded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "attempts": 1,
+        "latency_ms": 90052.84562613815
+      },
+      "model_name": "openai-compatible",
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-agent-policy-v2",
+      "failure_code": "ANALYSIS_MODEL_FAILURE",
+      "failure_detail": "TimeoutError: Model invocation exhausted its total timeout budget"
+    },
+    "created_at": "2026-10-22 13:06:48.923800+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "review",
+      "selected_task_ids": [
+        "T3"
+      ],
+      "confidence": 0.85,
+      "rationale_summary": "The analysis task T3 is ready for review, and the current evidence and reasoning support a conservative ITSM triage to the Network Team. The model's low confidence (0.49) and unresolved human verification requirement justify a formal review to validate accuracy before proceeding. No replan or escalate is warranted at this stage."
+    },
+    "created_at": "2026-10-22 13:07:08.742043+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "reviewer",
+      "run_id": "bf1cfcde-7263-4ef0-bc24-a022b7d7b01b",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T3",
+      "status": "succeeded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967"
+      ],
+      "metrics": {
+        "model_calls": 0,
+        "tool_calls": 0,
+        "attempts": 1,
+        "latency_ms": 23.941250517964363
+      },
+      "model_name": null,
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-review-policy-v6",
+      "failure_code": null,
+      "failure_detail": null
+    },
+    "created_at": "2026-10-22 13:07:08.780337+00:00"
+  },
+  {
+    "event_type": "review.completed",
+    "payload": {
+      "decision": "replan",
+      "feedback": "Degraded analysis cannot authorize an autonomous handoff: the analysis runtime failed, so the run is re-derived from the evidence.",
+      "review_id": "b61df504-e6d5-4120-ad30-e044501652e8",
+      "policy_version": "servicemind-review-policy-v6",
+      "reason_codes": [
+        "DEGRADED_ANALYSIS"
+      ]
+    },
+    "created_at": "2026-10-22 13:07:08.785125+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "replan",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The analysis is degraded due to a runtime failure (TimeoutError), and the review explicitly requires re-derivation of the analysis from the evidence. Since the current plan is invalid due to failed execution, a replan is necessary to regenerate the analysis with intact evidence. The evidence count (3) and dirty status (false) confirm that the evidence is available and clean, making replanning safe and appropriate. No escalation is warranted as the issue is technical and resolvable through reprocessing."
+    },
+    "created_at": "2026-10-22 13:07:30.769932+00:00"
+  },
+  {
+    "event_type": "replanner.proposal_rejected",
+    "payload": {
+      "attempt": 1,
+      "error_type": "PlanValidationError",
+      "reason": "INVALID_TASK_TYPE: 'analyze_mfa_failure' is not allowed for analysis",
+      "error_code": "MODEL_SCHEMA_INVALID"
+    },
+    "created_at": "2026-10-22 13:08:33.417153+00:00"
+  }
+]

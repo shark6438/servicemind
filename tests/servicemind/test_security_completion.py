@@ -251,6 +251,22 @@ async def test_serving_build_identity_is_captured_once_and_excludes_secrets(monk
     assert "must-not-appear-in-build" not in str(first)
 
 
+def test_build_identity_tracks_endpoint_and_budget_without_credentials(monkeypatch):
+    from service.build import capture_build_identity
+
+    monkeypatch.setattr(
+        settings, "COMPATIBLE_BASE_URL", "http://user:hidden@127.0.0.1:11441/v1?key=secret"
+    )
+    first = capture_build_identity()
+    assert "hidden" not in str(first) and "key=secret" not in str(first)
+    monkeypatch.setattr(settings, "COMPATIBLE_BASE_URL", "http://127.0.0.1:11440/v1")
+    second = capture_build_identity()
+    assert first["configuration_sha256"] != second["configuration_sha256"]
+    monkeypatch.setattr(settings, "SERVICEMIND_MODEL_TIMEOUT_SECONDS", 17)
+    third = capture_build_identity()
+    assert second["configuration_sha256"] != third["configuration_sha256"]
+
+
 @pytest.mark.docker
 @pytest.mark.postgres
 @pytest.mark.asyncio

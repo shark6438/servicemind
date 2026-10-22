@@ -1,0 +1,232 @@
+[
+  {
+    "event_type": "run.created",
+    "payload": {
+      "ticket_id": 25,
+      "request_write": false
+    },
+    "created_at": "2026-10-22 12:57:18.478130+00:00"
+  },
+  {
+    "event_type": "route.completed",
+    "payload": {
+      "route": "complex_workflow",
+      "reason_code": "analysis_or_action_required"
+    },
+    "created_at": "2026-10-22 12:57:18.512038+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "plan",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The issue involves a multi-factor authentication failure post-mobile device change, with successful password authentication. Since no ready tasks exist and no evidence has been generated, a plan must be created to initiate diagnostic evidence collection. The root cause likely relates to MFA configuration, token synchronization, or device-specific authentication policies, requiring structured investigation steps."
+    },
+    "created_at": "2026-10-22 12:57:31.745502+00:00"
+  },
+  {
+    "event_type": "plan.validated",
+    "payload": {
+      "plan_id": "4b3cd631-2e2e-48d7-be51-801b17fd987c",
+      "tasks": [
+        {
+          "id": "T1",
+          "agent": "data"
+        },
+        {
+          "id": "T2",
+          "agent": "knowledge"
+        },
+        {
+          "id": "T3",
+          "agent": "analysis"
+        },
+        {
+          "id": "T4",
+          "agent": "reviewer"
+        }
+      ]
+    },
+    "created_at": "2026-10-22 12:58:00.739168+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "dispatch",
+      "selected_task_ids": [
+        "T1",
+        "T2"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "Both T1 and T2 are ready and independent, with T1 retrieving ticket context and T2 fetching the required runbook. Dispatching both in parallel will accelerate root cause analysis by enabling immediate cross-referencing of user device change and MFA reset procedures."
+    },
+    "created_at": "2026-10-22 12:58:17.291158+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "knowledge",
+      "task_id": "T2",
+      "status": "succeeded",
+      "evidence_refs": [
+        "ev-d72ccc78782a2f2c",
+        "ev-f212a289322da040",
+        "ev-b56d8169cd5ddfbd",
+        "ev-796df03357f16321",
+        "ev-37c64154a573862c",
+        "ev-b9a88f9315179f28",
+        "ev-b58688b1c2e0e0d4",
+        "ev-1ee400c4502c608c"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "attempts": 1,
+        "latency_ms": 8512.50846683979
+      },
+      "failure_code": null,
+      "failure_detail": null,
+      "policy_version": "servicemind-agent-policy-v2"
+    },
+    "created_at": "2026-10-22 12:58:25.821784+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "data",
+      "run_id": "2c1db980-1d0a-4237-a696-a5a208376871",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T1",
+      "status": "degraded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "attempts": 2,
+        "latency_ms": 8714.678834192455
+      },
+      "model_name": "openai-compatible",
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-agent-policy-v2",
+      "failure_code": "DATA_PLAN_DEGRADED",
+      "failure_detail": null
+    },
+    "created_at": "2026-10-22 12:58:26.032783+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "join_evidence",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The system has identified a pending analysis task (T3) that is ready to process after data and knowledge retrieval. Evidence is currently marked as dirty, indicating potential inconsistencies or incomplete data. To ensure accurate root cause analysis, it is necessary to join the existing evidence before proceeding with analysis. This step ensures data integrity and supports reliable conclusions."
+    },
+    "created_at": "2026-10-22 12:58:49.393614+00:00"
+  },
+  {
+    "event_type": "evidence.joined",
+    "payload": {
+      "count": 11,
+      "gathered": 11,
+      "dropped": 0,
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967",
+        "ev-d72ccc78782a2f2c",
+        "ev-f212a289322da040",
+        "ev-b56d8169cd5ddfbd",
+        "ev-796df03357f16321",
+        "ev-37c64154a573862c",
+        "ev-b9a88f9315179f28",
+        "ev-b58688b1c2e0e0d4",
+        "ev-1ee400c4502c608c"
+      ]
+    },
+    "created_at": "2026-10-22 12:58:49.400890+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "analyze",
+      "selected_task_ids": [
+        "T3"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "The ready task T3 is pending and aligned with the analysis objective to determine the root cause of MFA failure after phone replacement. The task is supported by successfully retrieved ticket and knowledge data, and no evidence of failure or conflict exists. Proceeding with analysis is the optimal next step to resolve the issue."
+    },
+    "created_at": "2026-10-22 12:59:05.815438+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "analysis",
+      "run_id": "2c1db980-1d0a-4237-a696-a5a208376871",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T3",
+      "status": "degraded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967",
+        "ev-d72ccc78782a2f2c",
+        "ev-f212a289322da040",
+        "ev-b56d8169cd5ddfbd",
+        "ev-796df03357f16321",
+        "ev-37c64154a573862c",
+        "ev-b9a88f9315179f28",
+        "ev-b58688b1c2e0e0d4",
+        "ev-1ee400c4502c608c"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "attempts": 1,
+        "latency_ms": 120045.46323977411
+      },
+      "model_name": "openai-compatible",
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-agent-policy-v2",
+      "failure_code": "ANALYSIS_MODEL_FAILURE",
+      "failure_detail": "TimeoutError: Model invocation exhausted its total timeout budget"
+    },
+    "created_at": "2026-10-22 13:01:05.919949+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "review",
+      "selected_task_ids": [
+        "T4"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "The analysis is pending review, and the only ready task is T4, which is a review of the analysis for accuracy and completeness. The current evidence and reasoning support the recommendation to reset the MFA device, and the review task is the next logical step to validate this conclusion before proceeding. No replan or escalate is warranted at this stage."
+    },
+    "created_at": "2026-10-22 13:01:28.189835+00:00"
+  },
+  {
+    "event_type": "context.assembly_failed",
+    "payload": {
+      "agent": "reviewer",
+      "task_id": "T4",
+      "code": "required_item_exceeds_token_budget",
+      "reason": "required context item exceeds token budget: ev-f212a289322da040 (606 tokens for 2816 usable)"
+    },
+    "created_at": "2026-10-22 13:01:28.209634+00:00"
+  },
+  {
+    "event_type": "run.failed",
+    "payload": {
+      "status": "failed",
+      "decision": null
+    },
+    "created_at": "2026-10-22 13:01:28.226448+00:00"
+  }
+]

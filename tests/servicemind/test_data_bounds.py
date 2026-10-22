@@ -7,6 +7,7 @@ count is capped so one task cannot exhaust the joined-evidence budget. The degra
 path must also be budget-respecting instead of raising out of the sub-agent.
 """
 
+import asyncio
 import json
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
@@ -22,6 +23,9 @@ from servicemind.domain.evidence import (
     join_evidence,
     self_authored_marker,
 )
+from servicemind.model_gateway.gateway import ModelGateway
+from servicemind.model_gateway.policy import ModelRoutePolicy
+from servicemind.model_gateway.repository import InMemoryModelAuditSink
 from servicemind.runtime.contracts import AgentInvocationContext, AgentRunStatus
 from servicemind.runtime.tool_gateway import DataToolName
 from servicemind.security.auth import TenantContext
@@ -35,6 +39,42 @@ class FakeRunnable:
 
     async def ainvoke(self, messages):
         return self.results.pop(0)
+
+
+@pytest.mark.asyncio
+async def test_slow_model_planning_preserves_time_for_authorized_evidence(monkeypatch):
+    class SlowRunnable:
+        async def ainvoke(self, *args, **kwargs):
+            await asyncio.sleep(10)
+
+    class SlowModel:
+        model_name = "local-slow-data-control"
+
+        def with_structured_output(self, *args, **kwargs):
+            return SlowRunnable()
+
+    sink = InMemoryModelAuditSink()
+    model_gateway = ModelGateway(
+        policy=ModelRoutePolicy(allowed_providers=("unknown",)),
+        audit_sink=sink,
+        max_retries=1,
+    )
+    monkeypatch.setattr(data_module.settings, "SERVICEMIND_DATA_PLANNING_TIMEOUT_SECONDS", 0.02)
+    monkeypatch.setattr(data_module, "structured_output", model_gateway.structured)
+    tools = FakeReadGateway()
+    async with asyncio.timeout(1):
+        result = await DataAgent(gateway=tools, model_factory=SlowModel).run(
+            invocation=invocation(max_tool_calls=2),
+            tenant_context=tenant_context(),
+            objective="Read the ticket",
+            ticket_id=2,
+        )
+    assert result.status is AgentRunStatus.DEGRADED
+    assert result.failure_code == "DATA_PLAN_DEGRADED"
+    assert result.output
+    assert set(tools.calls) == {DataToolName.GET_TICKET, DataToolName.LIST_GROUPS}
+    assert sink.records[0].error_code == "MODEL_TIMEOUT"
+    assert sink.records[0].context.run_id == result.run_id
 
 
 class FailingRunnable:

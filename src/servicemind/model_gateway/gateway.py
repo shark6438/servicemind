@@ -6,7 +6,7 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage
@@ -62,11 +62,11 @@ def _model_identity(model: BaseChatModel) -> tuple[str, str, str]:
     return provider, name, revision
 
 
-def _structured[SchemaT: BaseModel](model: BaseChatModel, schema: type[SchemaT]):
+def _structured[SchemaT: BaseModel](model: BaseChatModel, schema: type[SchemaT], **kwargs: Any):
     name = str(getattr(model, "model_name", getattr(model, "model", "")))
     if name in {item.value for item in DeepseekModelName}:
-        return model.with_structured_output(schema, method="json_mode", include_raw=True)
-    return model.with_structured_output(schema, include_raw=True)
+        return model.with_structured_output(schema, method="json_mode", include_raw=True, **kwargs)
+    return model.with_structured_output(schema, include_raw=True, **kwargs)
 
 
 def _message_payload(messages: Any) -> Any:
@@ -339,11 +339,14 @@ class ModelGateway:
         config: Any = None,
         **kwargs: Any,
     ) -> SchemaT:
+        from core import settings
+
         payload = _message_payload(messages)
         prompt_hash = stable_hash(payload)
         schema_hash = stable_hash(schema.model_json_schema())
         input_tokens = _conservative_token_count(payload)
         call_started = time.perf_counter()
+        request_id = uuid4()
         models = [model]
         if self.policy.allow_fallback(context):
             models.extend(fallback_models)
@@ -353,8 +356,6 @@ class ModelGateway:
 
         max_retries = self.max_retries
         if max_retries is None:
-            from core import settings
-
             max_retries = settings.SERVICEMIND_MODEL_MAX_RETRIES
         for candidate_index, candidate in enumerate(models):
             provider, name, revision = _model_identity(candidate)
@@ -404,6 +405,7 @@ class ModelGateway:
                 if cached is not None:
                     result = schema.model_validate(cached)
                     cost_exceeded = await self._audit(
+                        request_id=request_id,
                         context=context,
                         route=route,
                         prompt_hash=prompt_hash,
@@ -432,12 +434,25 @@ class ModelGateway:
             # key. That a repair happened stays visible in the audit ``attempts`` count.
             attempt_messages = messages
             for retry in range(max_retries + 1):
+                remaining_seconds = context.timeout_seconds - (time.perf_counter() - call_started)
+                if remaining_seconds <= 0:
+                    last_error = TimeoutError("Model invocation exhausted its total timeout budget")
+                    break
                 attempts_for_model += 1
                 total_attempts += 1
                 try:
-                    async with asyncio.timeout(context.timeout_seconds):
-                        raw = await _structured(candidate, schema).ainvoke(
-                            attempt_messages, config=config, **kwargs
+                    invocation_kwargs = dict(kwargs)
+                    structured_kwargs = {}
+                    if settings.SERVICEMIND_MODEL_TRACE_HEADERS_ENABLED and provider == "openai":
+                        structured_kwargs["extra_headers"] = {
+                            **invocation_kwargs.pop("extra_headers", {}),
+                            "X-ServiceMind-Request-ID": str(request_id),
+                            "X-ServiceMind-Run-ID": str(context.run_id or ""),
+                            "X-ServiceMind-Agent-Role": context.agent_role,
+                        }
+                    async with asyncio.timeout(remaining_seconds):
+                        raw = await _structured(candidate, schema, **structured_kwargs).ainvoke(
+                            attempt_messages, config=config, **invocation_kwargs
                         )
                     usage: dict[str, int] | None = None
                     if isinstance(raw, dict) and "parsed" in raw:
@@ -458,6 +473,7 @@ class ModelGateway:
                     self._failures[provider] = 0
                     latency_ms = (time.perf_counter() - started) * 1000
                     cost_exceeded = await self._audit(
+                        request_id=request_id,
                         context=context,
                         route=route,
                         prompt_hash=prompt_hash,
@@ -506,6 +522,7 @@ class ModelGateway:
             if candidate_index + 1 == len(models):
                 latency_ms = (time.perf_counter() - started) * 1000
                 await self._audit(
+                    request_id=request_id,
                     context=context,
                     route=route,
                     prompt_hash=prompt_hash,
@@ -526,6 +543,7 @@ class ModelGateway:
         self,
         *,
         context: ModelCallContext,
+        request_id: UUID,
         route: ModelRouteDecision,
         prompt_hash: str,
         schema_hash: str,
@@ -564,6 +582,7 @@ class ModelGateway:
         cost_exceeded = context.max_cost_usd is not None and cost > context.max_cost_usd
         await self.audit_sink.record(
             ModelInvocationAudit(
+                request_id=request_id,
                 context=context,
                 route=route,
                 prompt_hash=prompt_hash,

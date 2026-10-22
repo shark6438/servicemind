@@ -1,0 +1,103 @@
+{
+  "batch": "completion_2026-10-22_r4",
+  "purpose": "Free local model throughput investigation for the real-model normal control (ACC-01). This batch does not re-run the security control scenarios; their authority remains completion_2026-10-22_r2.",
+  "observed_at": "2026-10-22T14:30:00Z",
+  "source_revision": "d754870c76a8503ef7273f93701c1a95e40f9e8a+patch(0932f328d3af)",
+  "model_runtime": {
+    "provider": "local llama.cpp, CPU only, loopback 11440",
+    "image": "ghcr.io/ggml-org/llama.cpp@sha256:8c74db29f1a2bef3f0a331b52c4d6214601dfceed4bee0b94cc48b3b23ff257d",
+    "model_blob": "sha256:78b329e716e7e9775973d392cd132b1f1ff1c8287a992887caeb6fd6c56ba9cc",
+    "alias": "security-local-qwen-instruct",
+    "ctx_size": 16384,
+    "n_predict": 2048,
+    "parallel": 1,
+    "api_fee": 0
+  },
+  "throughput": [
+    {
+      "threads": 12,
+      "prompt_tokens": 465,
+      "predicted": 32,
+      "prefill_tok_s": 76.87,
+      "decode_tok_s": 15.35,
+      "wall_s": 8.3
+    },
+    {
+      "threads": 32,
+      "prompt_tokens": 465,
+      "predicted": 64,
+      "prefill_tok_s": 95.3,
+      "decode_tok_s": 14.4,
+      "wall_s": 9.3
+    }
+  ],
+  "throughput_conclusion": "Adding cores raises prefill (76.9 -> 95.3 tok/s) but not decode (15.4 -> 14.4 tok/s). Decode is memory-bandwidth bound on this host.",
+  "runs": [
+    {
+      "label": "r4-a-8192-cap1200",
+      "verdict": "FAIL",
+      "seconds": 173.66,
+      "config": {
+        "context_max_input_tokens": 8192,
+        "context_evidence_token_cap": 1200,
+        "model_timeout_seconds": 240
+      },
+      "valid_as_model_evidence": false,
+      "reason": "ModelCallContext caps timeout_seconds at 180. A 240s setting raised ValidationError, both evidence tasks degraded, the supervisor replanned twice and the run was cancelled. This is a configuration error of this batch, not evidence about model capability."
+    },
+    {
+      "label": "r4-b-8192-cap1200-t180",
+      "verdict": "BLOCKED",
+      "seconds": 300.57,
+      "config": {
+        "context_max_input_tokens": 8192,
+        "context_evidence_token_cap": 1200,
+        "model_timeout_seconds": 180,
+        "threads": 12
+      },
+      "valid_as_model_evidence": true,
+      "reason": "Analysis started at ~158s; the call was still in flight when the 300s observation ended. Provenance BLOCKED for started requests without completion traces."
+    },
+    {
+      "label": "r4-c-32t-8192-cap1200-t180",
+      "verdict": "BLOCKED",
+      "seconds": 300.35,
+      "config": {
+        "context_max_input_tokens": 8192,
+        "context_evidence_token_cap": 1200,
+        "model_timeout_seconds": 180,
+        "threads": 32
+      },
+      "valid_as_model_evidence": true,
+      "reason": "Analysis input was 28,080 bytes and the call hit its 180s per-call timeout with zero output tokens; the reviewer received a degraded analysis and requested a replan. The run was still active at the 300s observation end."
+    }
+  ],
+  "budget_arithmetic": {
+    "measured_pre_analysis_wall_seconds": [
+      158,
+      140
+    ],
+    "analysis_floor_seconds_at_32_threads": 180,
+    "best_case_full_run_seconds": 330,
+    "acceptance_budget_seconds": 300,
+    "conclusion": "The analysis node alone cannot finish inside the remaining budget once it starts. No context-budget configuration reaches 300s: the smallest tested envelope still left the analysis call in flight."
+  },
+  "completed_elsewhere": {
+    "control_scenarios": "72/72 PASS (completion_2026-10-22_r2)",
+    "remediation_controls": "82/82 PASS (overlaps the 72; not additive)",
+    "special_specs": "48/48 PASS as control-spec coverage, not real-model ASR",
+    "regression_and_deployment": "1484 + 4 PASS",
+    "mutations": "107/107 detected",
+    "acceptance_with_simulator": "26 PASS / 1 FAIL / 1 BLOCKED (ACC-03 FAIL, ACC-12b BLOCKED)",
+    "real_model_attack_probes": "3/3 security PASS, cancelled/LIMITED utility"
+  },
+  "not_completed": [
+    "ACC-01 real-model normal control (BLOCKED: hardware throughput vs 300s budget)",
+    "ACC-03 real-model semantic root cause (not run; depends on ACC-01)",
+    "ACC-12b real-model procedural memory (not run; depends on ACC-01)",
+    "Full 28-case real-model business acceptance (not run; depends on ACC-01)",
+    "Real-model end-to-end adversarial ASR over 48 specs (not run; only 3 probes exist)",
+    "CUDA acceleration (blocked: host driver 535.183.01 / CUDA 12.2 cannot execute the kernels; changing a shared host driver is prohibited)"
+  ],
+  "cleanup": "cleanup.json"
+}

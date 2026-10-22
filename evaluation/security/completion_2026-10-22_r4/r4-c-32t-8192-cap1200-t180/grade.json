@@ -1,0 +1,112 @@
+{
+  "case_id": "ACC-01",
+  "title": "只读 run 生命周期：提交 → 终态 → 无副作用",
+  "goal": "一个真实用户提交一个真实问题后，运行能走到成功终态、留下可回放的轨迹，并且不写任何东西到工单。这是其余全部案例的基线：如果这一条不成立，后面任何「结果正确」的断言都没有载体。",
+  "source": "P7.6 交付物 E ACC-01（只读 run 生命周期）",
+  "verdict": "BLOCKED",
+  "blocks_acceptance_when_blocked": true,
+  "modules": [
+    "identity",
+    "api",
+    "audit-and-events",
+    "retrieval",
+    "context",
+    "analysis",
+    "reviewer",
+    "glpi"
+  ],
+  "assertions": [
+    {
+      "assertion_id": "acc01-accepted",
+      "description": "提交被接受为 202，而不是同步阻塞到工作流结束",
+      "kind": "http_status",
+      "verifies_module": "api",
+      "requires_entitlement_verifier": false,
+      "verdict": "PASS",
+      "detail": "step 'submit' returned 202",
+      "expectation": {
+        "kind": "http_status",
+        "step_id": "submit",
+        "status": 202
+      }
+    },
+    {
+      "assertion_id": "acc01-created-recorded",
+      "description": "运行的创建被写入事件流，运行可从轨迹重建",
+      "kind": "timeline_event",
+      "verifies_module": "audit-and-events",
+      "requires_entitlement_verifier": false,
+      "verdict": "PASS",
+      "detail": "timeline event 'run.created' was recorded",
+      "expectation": {
+        "kind": "timeline_event",
+        "event_type": "run.created"
+      }
+    },
+    {
+      "assertion_id": "acc01-terminal-succeeded",
+      "description": "运行到达 succeeded 终态",
+      "kind": "terminal_status",
+      "verifies_module": "api",
+      "requires_entitlement_verifier": false,
+      "verdict": "FAIL",
+      "detail": "run ended running, expected succeeded",
+      "expectation": {
+        "kind": "terminal_status",
+        "status": "succeeded"
+      }
+    },
+    {
+      "assertion_id": "acc01-succeeded-recorded",
+      "description": "终态本身被写入事件流，而不是只体现在数据库列上",
+      "kind": "timeline_event",
+      "verifies_module": "audit-and-events",
+      "requires_entitlement_verifier": false,
+      "verdict": "FAIL",
+      "detail": "timeline event 'run.succeeded' was not recorded; saw ['run.created', 'route.completed', 'supervisor.decision', 'plan.validated', 'supervisor.decision', 'agent.completed', 'agent.completed', 'supervisor.decision', 'evidence.joined', 'supervisor.decision', 'agent.completed', 'supervisor.decision', 'agent.completed', 'review.completed', 'end']",
+      "expectation": {
+        "kind": "timeline_event",
+        "event_type": "run.succeeded"
+      }
+    },
+    {
+      "assertion_id": "acc01-within-budget",
+      "description": "端到端耗时在冻结预算内（超时判失败，不得无限归为数据不足）",
+      "kind": "latency_budget",
+      "verifies_module": "api",
+      "requires_entitlement_verifier": false,
+      "verdict": "FAIL",
+      "detail": "the case took 300.3s, budget 300.0s",
+      "expectation": {
+        "kind": "latency_budget",
+        "seconds": 300.0
+      }
+    },
+    {
+      "assertion_id": "acc01-no-write",
+      "description": "只读运行不得在工单上留下任何新 followup",
+      "kind": "no_new_followups",
+      "verifies_module": "glpi",
+      "requires_entitlement_verifier": false,
+      "verdict": "PASS",
+      "detail": "no followup was added",
+      "expectation": {
+        "kind": "no_new_followups"
+      }
+    }
+  ],
+  "failure_reasons": [
+    "acc01-terminal-succeeded: run ended running, expected succeeded",
+    "acc01-succeeded-recorded: timeline event 'run.succeeded' was not recorded; saw ['run.created', 'route.completed', 'supervisor.decision', 'plan.validated', 'supervisor.decision', 'agent.completed', 'agent.completed', 'supervisor.decision', 'evidence.joined', 'supervisor.decision', 'agent.completed', 'supervisor.decision', 'agent.completed', 'review.completed', 'end']",
+    "acc01-within-budget: the case took 300.3s, budget 300.0s"
+  ],
+  "blocked_reasons": [
+    "driver: ACC-01/observe-terminal: the run never settled; last status 'running' after 300.3s"
+  ],
+  "driver_errors": [
+    "ACC-01/observe-terminal: the run never settled; last status 'running' after 300.3s"
+  ],
+  "run_id": "67fa2f67-fc76-4b3b-b85a-ee600dfc8da1",
+  "terminal_status": "running",
+  "total_seconds": 300.34934461209923
+}

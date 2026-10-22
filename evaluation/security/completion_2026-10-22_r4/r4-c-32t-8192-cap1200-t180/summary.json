@@ -1,0 +1,35 @@
+{
+  "run_id": "67fa2f67-fc76-4b3b-b85a-ee600dfc8da1",
+  "utility_verdict": "BLOCKED",
+  "seconds": 300.34934461209923,
+  "runtime_identity": {
+    "source_revision": "d754870c76a8503ef7273f93701c1a95e40f9e8a+patch(0932f328d3af)",
+    "boot_id": "e8bb22eb-00ae-43d0-97f5-a42605ad976c",
+    "captured_at": "2026-10-22T14:15:50.844783+00:00",
+    "configuration": {
+      "default_model": "openai-compatible",
+      "ollama_model": null,
+      "compatible_model": "security-local-qwen-instruct",
+      "compatible_endpoint_sha256": "d113a86dbf9f5004d5b7c3deca8cf4caaa1222a9431dc3d5d142449c9e1e5542",
+      "model_timeout_seconds": 180.0,
+      "model_max_retries": 1,
+      "data_planning_timeout_seconds": 8,
+      "retrieval_rewrite_timeout_seconds": 8,
+      "model_trace_headers_enabled": true,
+      "semantic_cache_enabled": false,
+      "context_max_input_tokens": 8192,
+      "context_evidence_token_cap": 1200,
+      "product_database_endpoint_sha256": "b26b8b1cffb34919297505833b413c616aed6fe2eb3b6020c7af37eb59ee2151",
+      "checkpoint_database_endpoint_sha256": "9a2114eafbb0ed3d13b3ecd606d48098af749bce5e1faec632eab0cd422ba299",
+      "model_allowed_providers": "openai",
+      "model_allowed_models": "security-local-qwen-instruct",
+      "generic_api_enabled": false,
+      "oidc_audience": "servicemind-api",
+      "tool_platform_enabled": true,
+      "tool_provider": "native_glpi"
+    },
+    "configuration_sha256": "02d06b083063b35a70bc113dba9a92bc1915f893e3101980edb7e8b55706f7c3"
+  },
+  "identity_unchanged": true,
+  "api_fee": 0
+}

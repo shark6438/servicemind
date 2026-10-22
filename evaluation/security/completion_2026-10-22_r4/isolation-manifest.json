@@ -1,0 +1,27 @@
+{
+  "ports": {
+    "pg": 32785,
+    "redis": 32786,
+    "neo4j": 32787,
+    "os": 32788,
+    "model": 32789
+  },
+  "containers": [
+    "servicemind-local-eval-r3-pg",
+    "servicemind-local-eval-r3-redis",
+    "servicemind-local-eval-r3-neo4j",
+    "servicemind-local-eval-r3-os",
+    "servicemind-local-eval-r3-model"
+  ],
+  "application_role": "NOSUPERUSER NOBYPASSRLS",
+  "checkpoint_store": "dedicated PostgreSQL; no shared sqlite files",
+  "external_read_only_fixtures": [
+    "GLPI tickets",
+    "Keycloak subjects",
+    "embedding/reranker services"
+  ],
+  "model_backend": "http://127.0.0.1:32789/v1",
+  "model": "security-local-qwen-instruct",
+  "api_fee": 0,
+  "production_configuration_modified": false
+}

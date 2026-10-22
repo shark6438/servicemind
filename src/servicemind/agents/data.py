@@ -4,6 +4,7 @@ import asyncio
 import json
 import time
 from collections.abc import Callable
+from datetime import UTC, datetime
 from typing import Any, TypedDict
 from uuid import UUID
 
@@ -24,6 +25,8 @@ from servicemind.domain.evidence import (
 from servicemind.integrations.glpi.client import GlpiAPIError, GlpiClient
 from servicemind.integrations.glpi.models import html_to_text
 from servicemind.integrations.glpi.resolver import resolve_glpi_config
+from servicemind.model_gateway.contracts import ModelCallContext, ModelPurpose
+from servicemind.model_gateway.gateway import model_call_scope
 from servicemind.runtime.contracts import (
     AgentInvocationContext,
     AgentResultEnvelope,
@@ -212,6 +215,20 @@ class DataAgent:
             raise ValueError("Data Agent plan must retrieve ticket facts and support groups")
         return proposal
 
+    async def _propose_plan(self, invocation: AgentInvocationContext, messages):
+        remaining = (invocation.deadline - datetime.now(UTC)).total_seconds()
+        planning_seconds = min(settings.SERVICEMIND_DATA_PLANNING_TIMEOUT_SECONDS, remaining / 2)
+        context = ModelCallContext.from_invocation(
+            invocation, agent_role="data", purpose=ModelPurpose.DATA_PLANNING
+        )
+        context = context.model_copy(
+            update={"timeout_seconds": max(0.001, min(context.timeout_seconds, planning_seconds))}
+        )
+        with model_call_scope(context):
+            return await structured_output(self.model_factory(), DataAcquisitionPlan).ainvoke(
+                messages
+            )
+
     async def _plan_node(self, state: DataAgentState) -> dict[str, Any]:
         invocation = state["invocation"]
         invocation.ensure_active()
@@ -229,7 +246,6 @@ class DataAgent:
             }
         fallback = self._budgeted_minimum(invocation, ticket_id, objective)
         try:
-            runnable = structured_output(self.model_factory(), DataAcquisitionPlan)
             envelope = state.get("context_envelope")
             model_input: dict[str, Any] = {
                 "ticket_id": state["ticket_id"],
@@ -240,7 +256,8 @@ class DataAgent:
                 model_input["governed_context"] = envelope.model_payload()
             else:
                 model_input["objective"] = state["objective"]
-            proposal = await runnable.ainvoke(
+            proposal = await self._propose_plan(
+                invocation,
                 [
                     SystemMessage(
                         content=(
@@ -255,7 +272,7 @@ class DataAgent:
                     HumanMessage(
                         content=redact_for_model(json.dumps(model_input, ensure_ascii=False)).text
                     ),
-                ]
+                ],
             )
             plan = self._compile_plan(
                 DataAcquisitionPlan.model_validate(proposal),

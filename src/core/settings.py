@@ -1,5 +1,6 @@
 from enum import StrEnum
 from json import loads
+from os import getenv
 from typing import Annotated, Any
 from urllib.parse import urlsplit
 
@@ -77,7 +78,11 @@ CONTEXT_OUTPUT_RESERVE = 1024
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=find_dotenv(),
+        env_file=(
+            None
+            if getenv("PYTHON_DOTENV_DISABLED", "").casefold() in {"1", "true", "t", "yes", "y"}
+            else find_dotenv()
+        ),
         env_file_encoding="utf-8",
         env_ignore_empty=True,
         extra="ignore",
@@ -309,6 +314,7 @@ class Settings(BaseSettings):
     SERVICEMIND_SKILLS_ENABLED: bool = False
     SERVICEMIND_SKILLS_DIR: str = "skills"
     SERVICEMIND_MODEL_GATEWAY_AUDIT_ENABLED: bool = False
+    SERVICEMIND_MODEL_TRACE_HEADERS_ENABLED: bool = False
     SERVICEMIND_MODEL_ALLOWED_PROVIDERS: str = (
         "deepseek,openai,azure,anthropic,google,vertexai,groq,aws,ollama,openrouter,fake"
     )
@@ -316,6 +322,8 @@ class Settings(BaseSettings):
     SERVICEMIND_TENANT_MODEL_ALLOWLIST_JSON: str = "{}"
     SERVICEMIND_MODEL_MAX_RETRIES: int = 1
     SERVICEMIND_MODEL_TIMEOUT_SECONDS: float = 30
+    SERVICEMIND_DATA_PLANNING_TIMEOUT_SECONDS: float = Field(default=8, gt=0, le=15)
+    SERVICEMIND_RETRIEVAL_REWRITE_TIMEOUT_SECONDS: float = Field(default=8, gt=0, le=15)
     SERVICEMIND_MODEL_MAX_COST_USD_PER_CALL: float = Field(default=0.05, gt=0, le=10)
     SERVICEMIND_SEMANTIC_CACHE_ENABLED: bool = False
 

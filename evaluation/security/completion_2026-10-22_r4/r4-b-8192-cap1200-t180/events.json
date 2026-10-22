@@ -1,0 +1,242 @@
+[
+  {
+    "event_type": "run.created",
+    "payload": {
+      "ticket_id": 25,
+      "request_write": false
+    },
+    "created_at": "2026-10-22 14:16:04.902205+00:00"
+  },
+  {
+    "event_type": "route.completed",
+    "payload": {
+      "route": "complex_workflow",
+      "reason_code": "analysis_or_action_required"
+    },
+    "created_at": "2026-10-22 14:16:05.725155+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "plan",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The incident involves a multi-factor authentication failure after a device change, with password authentication succeeding. This suggests the issue is related to the MFA token or device-specific authentication mechanism, not credentials. Since no evidence tasks exist and the system is at initialization, the next logical step is to create a structured plan to investigate the root cause by generating targeted evidence tasks, such as checking MFA configuration, device registration status, and authentication logs."
+    },
+    "created_at": "2026-10-22 14:16:20.428581+00:00"
+  },
+  {
+    "event_type": "plan.validated",
+    "payload": {
+      "plan_id": "2fe822dd-e742-4c50-bafe-bcdd3cb0e9c1",
+      "tasks": [
+        {
+          "id": "T1",
+          "agent": "data"
+        },
+        {
+          "id": "T2",
+          "agent": "data"
+        },
+        {
+          "id": "T3",
+          "agent": "knowledge"
+        },
+        {
+          "id": "T4",
+          "agent": "analysis"
+        },
+        {
+          "id": "T5",
+          "agent": "reviewer"
+        }
+      ]
+    },
+    "created_at": "2026-10-22 14:16:54.093254+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "dispatch",
+      "selected_task_ids": [
+        "T1",
+        "T3"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "Both T1 and T3 are ready and independent tasks that provide essential context and knowledge for root cause analysis. Retrieving ticket details and MFA device registration runbook simultaneously will enable efficient downstream analysis without blocking progress."
+    },
+    "created_at": "2026-10-22 14:17:09.990768+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "data",
+      "run_id": "fa875222-393c-4092-9e30-53095349b3c5",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T1",
+      "status": "degraded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "attempts": 2,
+        "latency_ms": 8698.41988477856
+      },
+      "model_name": "openai-compatible",
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-agent-policy-v2",
+      "failure_code": "DATA_PLAN_DEGRADED",
+      "failure_detail": null
+    },
+    "created_at": "2026-10-22 14:17:18.714828+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "knowledge",
+      "task_id": "T3",
+      "status": "succeeded",
+      "evidence_refs": [
+        "ev-9828b659687293da",
+        "ev-4df07c9e3e7bc91c",
+        "ev-e3170b5bb1c7683e",
+        "ev-f755ead143076b5d",
+        "ev-e649c62a2b8c8dd5",
+        "ev-54a180fd8bf04095",
+        "ev-5fca7f22581163f8",
+        "ev-46a6937ae5e60ea1"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "attempts": 1,
+        "latency_ms": 8880.633902736008
+      },
+      "failure_code": null,
+      "failure_detail": null,
+      "policy_version": "servicemind-agent-policy-v2"
+    },
+    "created_at": "2026-10-22 14:17:18.887539+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "join_evidence",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The system is in a state where evidence is marked as dirty, indicating potential inconsistencies or incomplete data. Before proceeding to analysis or review, it is critical to resolve data integrity issues by joining the available evidence. This ensures that the subsequent analysis is based on a complete and consistent dataset, particularly since the root cause involves device registration status for MFA, which depends on accurate device records. No further tasks are ready to execute until the evidence is cleaned and unified."
+    },
+    "created_at": "2026-10-22 14:17:48.990903+00:00"
+  },
+  {
+    "event_type": "evidence.joined",
+    "payload": {
+      "count": 11,
+      "gathered": 11,
+      "dropped": 0,
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967",
+        "ev-9828b659687293da",
+        "ev-4df07c9e3e7bc91c",
+        "ev-e3170b5bb1c7683e",
+        "ev-f755ead143076b5d",
+        "ev-e649c62a2b8c8dd5",
+        "ev-54a180fd8bf04095",
+        "ev-5fca7f22581163f8",
+        "ev-46a6937ae5e60ea1"
+      ]
+    },
+    "created_at": "2026-10-22 14:17:48.998655+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "dispatch",
+      "selected_task_ids": [
+        "T2"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "The user's new device is not registered for MFA, which explains the multi-factor authentication failure despite successful password authentication. The ready task T2 is specifically designed to retrieve device registration records, which will confirm whether the new phone is enrolled. Dispatching T2 is the next logical step to gather critical evidence for root cause analysis."
+    },
+    "created_at": "2026-10-22 14:18:04.509902+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "data",
+      "run_id": "fa875222-393c-4092-9e30-53095349b3c5",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T2",
+      "status": "degraded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "attempts": 2,
+        "latency_ms": 8634.570021182299
+      },
+      "model_name": "openai-compatible",
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-agent-policy-v2",
+      "failure_code": "DATA_PLAN_DEGRADED",
+      "failure_detail": null
+    },
+    "created_at": "2026-10-22 14:18:13.158200+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "join_evidence",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The system indicates that evidence is dirty and there are 14 evidence items, suggesting incomplete or inconsistent data. Before proceeding with analysis, it is critical to resolve data integrity issues by joining all available evidence to ensure accurate and consistent input for the analysis task. This step is necessary to avoid flawed conclusions during the root cause determination."
+    },
+    "created_at": "2026-10-22 14:18:25.705505+00:00"
+  },
+  {
+    "event_type": "evidence.joined",
+    "payload": {
+      "count": 11,
+      "gathered": 14,
+      "dropped": 0,
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967",
+        "ev-9828b659687293da",
+        "ev-4df07c9e3e7bc91c",
+        "ev-e3170b5bb1c7683e",
+        "ev-f755ead143076b5d",
+        "ev-e649c62a2b8c8dd5",
+        "ev-54a180fd8bf04095",
+        "ev-5fca7f22581163f8",
+        "ev-46a6937ae5e60ea1"
+      ]
+    },
+    "created_at": "2026-10-22 14:18:25.711409+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "analyze",
+      "selected_task_ids": [
+        "T4"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "The task T4 is ready and aligned with the objective to analyze the ticket, device registration data, and MFA runbook. The evidence is available and the analysis task is the next logical step to determine if the new device is properly enrolled for MFA. No errors or failures are reported, and the system is in a stable state, making this the optimal progression."
+    },
+    "created_at": "2026-10-22 14:18:42.621533+00:00"
+  }
+]

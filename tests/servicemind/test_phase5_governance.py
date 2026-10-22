@@ -2214,6 +2214,98 @@ async def test_model_gateway_timeout_has_explicit_terminal() -> None:
 
 
 @pytest.mark.asyncio
+async def test_model_timeout_does_not_grant_each_retry_a_new_budget() -> None:
+    sink = InMemoryModelAuditSink()
+    calls = []
+
+    class Runnable:
+        async def ainvoke(self, *args, **kwargs):
+            calls.append(time.perf_counter())
+            await asyncio.sleep(10)
+
+    class Model:
+        model_name = "timeout-budget-control"
+
+        def with_structured_output(self, *args, **kwargs):
+            return Runnable()
+
+    gateway = ModelGateway(
+        policy=ModelRoutePolicy(allowed_providers=("unknown",)), audit_sink=sink, max_retries=3
+    )
+    with pytest.raises(TimeoutError):
+        await gateway.invoke(
+            Model(),
+            GatewayResult,
+            "request",
+            context=model_context().model_copy(update={"timeout_seconds": 0.02}),
+        )
+    assert len(calls) == 1
+    assert sink.records[0].attempts == 1
+    assert sink.records[0].error_code == "MODEL_TIMEOUT"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("enabled", [False, True])
+async def test_optional_wire_trace_matches_the_durable_request_identity(monkeypatch, enabled):
+    import httpx
+    from langchain_openai import ChatOpenAI
+
+    sink = InMemoryModelAuditSink()
+    headers = []
+
+    async def respond(request):
+        headers.append({k: v for k, v in request.headers.items() if k.startswith("x-servicemind-")})
+        value = 0 if len(headers) == 1 else 2
+        return httpx.Response(
+            200,
+            json={
+                "id": "local-test",
+                "object": "chat.completion",
+                "created": 1,
+                "model": "local-trace-control",
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "stop",
+                        "message": {
+                            "role": "assistant",
+                            "content": json.dumps({"value": value}),
+                        },
+                    }
+                ],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+            },
+        )
+
+    monkeypatch.setattr(settings, "SERVICEMIND_MODEL_TRACE_HEADERS_ENABLED", enabled)
+    gateway = ModelGateway(
+        policy=ModelRoutePolicy(allowed_providers=("openai",)), audit_sink=sink, max_retries=1
+    )
+    run_id = uuid4()
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
+        model = ChatOpenAI(
+            model="local-trace-control",
+            api_key="local-unit-test",
+            base_url="http://local.invalid/v1",
+            http_async_client=client,
+            max_retries=0,
+        )
+        await gateway.invoke(
+            model,
+            GatewayResult,
+            "request",
+            context=model_context().model_copy(update={"run_id": run_id}),
+        )
+    assert len(headers) == 2
+    if enabled:
+        assert headers[0] == headers[1]
+        assert headers[0]["x-servicemind-request-id"] == str(sink.records[0].request_id)
+        assert headers[0]["x-servicemind-run-id"] == str(run_id)
+    else:
+        assert headers == [{}, {}]
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "failure", [RuntimeError("429 rate limit"), RuntimeError("503 unavailable")]
 )

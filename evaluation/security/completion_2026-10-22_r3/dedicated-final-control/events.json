@@ -1,0 +1,263 @@
+[
+  {
+    "event_type": "run.created",
+    "payload": {
+      "ticket_id": 25,
+      "request_write": false
+    },
+    "created_at": "2026-10-22 13:11:33.824136+00:00"
+  },
+  {
+    "event_type": "route.completed",
+    "payload": {
+      "route": "complex_workflow",
+      "reason_code": "analysis_or_action_required"
+    },
+    "created_at": "2026-10-22 13:11:33.885520+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "plan",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "用户更换手机后出现VPN多因素认证失败但密码认证成功，表明问题与设备绑定或认证因子相关。由于当前无准备任务且无证据，需创建证据任务以排查设备证书、认证应用（如Google Authenticator）同步状态、设备指纹识别策略及网络环境变更等关键因素，确保后续分析有据可依。"
+    },
+    "created_at": "2026-10-22 13:11:56.160035+00:00"
+  },
+  {
+    "event_type": "plan.validated",
+    "payload": {
+      "plan_id": "a2b2e63b-346e-46f9-8cdb-5e1ed94a3adb",
+      "tasks": [
+        {
+          "id": "T1",
+          "agent": "data"
+        },
+        {
+          "id": "T2",
+          "agent": "knowledge"
+        },
+        {
+          "id": "T3",
+          "agent": "analysis"
+        },
+        {
+          "id": "T4",
+          "agent": "reviewer"
+        }
+      ]
+    },
+    "created_at": "2026-10-22 13:12:37.365226+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "dispatch",
+      "selected_task_ids": [
+        "T1",
+        "T2"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "Both T1 and T2 are ready and independent tasks required to gather foundational evidence: ticket details and relevant knowledge on MFA and device-specific policies. Dispatching them in parallel accelerates the analysis phase without dependency constraints."
+    },
+    "created_at": "2026-10-22 13:12:53.140165+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "knowledge",
+      "task_id": "T2",
+      "status": "succeeded",
+      "evidence_refs": [
+        "ev-d72ccc78782a2f2c",
+        "ev-98d6a8a9009ef899",
+        "ev-796df03357f16321",
+        "ev-b56d8169cd5ddfbd",
+        "ev-37c64154a573862c",
+        "ev-1795d5f45b31f7b7",
+        "ev-b9a88f9315179f28",
+        "ev-25cef7b20a9062f9"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "attempts": 1,
+        "latency_ms": 8681.305419653654
+      },
+      "failure_code": null,
+      "failure_detail": null,
+      "policy_version": "servicemind-agent-policy-v2"
+    },
+    "created_at": "2026-10-22 13:13:01.831748+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "data",
+      "run_id": "4ec2f3f9-41ca-4a75-b796-23eef13794b6",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T1",
+      "status": "degraded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "attempts": 2,
+        "latency_ms": 8693.347482010722
+      },
+      "model_name": "openai-compatible",
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-agent-policy-v2",
+      "failure_code": "DATA_PLAN_DEGRADED",
+      "failure_detail": null
+    },
+    "created_at": "2026-10-22 13:13:01.850745+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "join_evidence",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The system has accumulated 11 evidence items and the analysis task (T3) is ready to proceed. The evidence is marked as dirty, indicating it may contain inconsistencies or incomplete data. Before initiating further analysis, it is necessary to join and reconcile the evidence to ensure data integrity and consistency. This step is critical to avoid erroneous conclusions during the root cause analysis of the MFA failure."
+    },
+    "created_at": "2026-10-22 13:13:34.867123+00:00"
+  },
+  {
+    "event_type": "evidence.joined",
+    "payload": {
+      "count": 11,
+      "gathered": 11,
+      "dropped": 0,
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967",
+        "ev-d72ccc78782a2f2c",
+        "ev-98d6a8a9009ef899",
+        "ev-796df03357f16321",
+        "ev-b56d8169cd5ddfbd",
+        "ev-37c64154a573862c",
+        "ev-1795d5f45b31f7b7",
+        "ev-b9a88f9315179f28",
+        "ev-25cef7b20a9062f9"
+      ]
+    },
+    "created_at": "2026-10-22 13:13:34.875260+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "analyze",
+      "selected_task_ids": [
+        "T3"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "The ticket indicates a multi-factor authentication (MFA) failure after device replacement, with successful password authentication. The only ready task is T3, which is designed to analyze the ticket and knowledge data to identify device-specific causes such as lost authentication tokens or outdated device registrations. Since the evidence is already available and the task is ready, proceeding with analysis is the appropriate next step to root-cause the issue."
+    },
+    "created_at": "2026-10-22 13:13:53.033270+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "analysis",
+      "run_id": "4ec2f3f9-41ca-4a75-b796-23eef13794b6",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T3",
+      "status": "degraded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967",
+        "ev-d72ccc78782a2f2c",
+        "ev-98d6a8a9009ef899",
+        "ev-796df03357f16321",
+        "ev-b56d8169cd5ddfbd",
+        "ev-37c64154a573862c",
+        "ev-1795d5f45b31f7b7",
+        "ev-b9a88f9315179f28",
+        "ev-25cef7b20a9062f9"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "attempts": 1,
+        "latency_ms": 90060.94397604465
+      },
+      "model_name": "openai-compatible",
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-agent-policy-v2",
+      "failure_code": "ANALYSIS_MODEL_FAILURE",
+      "failure_detail": "TimeoutError: Model invocation exhausted its total timeout budget"
+    },
+    "created_at": "2026-10-22 13:15:23.237071+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "review",
+      "selected_task_ids": [
+        "T4"
+      ],
+      "confidence": 0.85,
+      "rationale_summary": "The analysis task T3 has completed and is pending review. The current evidence and reasoning, though marked as degraded with low confidence (0.49), align with the ticket's conservative triage requirements. The review task T4 is ready and must be executed to validate the root cause identification before any action is taken. Proceeding with review ensures auditability and correctness before escalation or replanning."
+    },
+    "created_at": "2026-10-22 13:16:22.077161+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "reviewer",
+      "run_id": "4ec2f3f9-41ca-4a75-b796-23eef13794b6",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T4",
+      "status": "succeeded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967",
+        "ev-d72ccc78782a2f2c",
+        "ev-98d6a8a9009ef899",
+        "ev-796df03357f16321",
+        "ev-b56d8169cd5ddfbd",
+        "ev-37c64154a573862c",
+        "ev-1795d5f45b31f7b7",
+        "ev-b9a88f9315179f28",
+        "ev-25cef7b20a9062f9"
+      ],
+      "metrics": {
+        "model_calls": 0,
+        "tool_calls": 0,
+        "attempts": 1,
+        "latency_ms": 37.34230436384678
+      },
+      "model_name": null,
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-review-policy-v6",
+      "failure_code": null,
+      "failure_detail": null
+    },
+    "created_at": "2026-10-22 13:16:22.138490+00:00"
+  },
+  {
+    "event_type": "review.completed",
+    "payload": {
+      "decision": "replan",
+      "feedback": "Degraded analysis cannot authorize an autonomous handoff: the analysis runtime failed, so the run is re-derived from the evidence.",
+      "review_id": "29228a9a-b24a-404e-b5a6-de3b5bb7ff2d",
+      "policy_version": "servicemind-review-policy-v6",
+      "reason_codes": [
+        "DEGRADED_ANALYSIS"
+      ]
+    },
+    "created_at": "2026-10-22 13:16:22.145104+00:00"
+  }
+]

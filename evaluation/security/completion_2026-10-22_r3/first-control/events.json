@@ -1,0 +1,68 @@
+[
+  {
+    "event_type": "run.created",
+    "payload": {
+      "ticket_id": 25,
+      "request_write": false
+    },
+    "created_at": "2026-10-22 12:40:18.618500+00:00"
+  },
+  {
+    "event_type": "route.completed",
+    "payload": {
+      "route": "complex_workflow",
+      "reason_code": "analysis_or_action_required"
+    },
+    "created_at": "2026-10-22 12:40:19.303273+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "plan",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The user reports successful password authentication but failure in multi-factor authentication (MFA) after changing devices. Since no evidence tasks are currently ready and no prior evidence exists, the initial step is to create a structured plan to investigate the root cause. This includes validating MFA configuration, checking device-specific authentication tokens, reviewing session logs, and verifying device registration in the MFA system. A plan is required to generate actionable tasks for analysis."
+    },
+    "created_at": "2026-10-22 12:40:36.571382+00:00"
+  },
+  {
+    "event_type": "plan.validated",
+    "payload": {
+      "plan_id": "f7e596e5-4609-42de-a7bc-55cd7dcdb6eb",
+      "tasks": [
+        {
+          "id": "T1",
+          "agent": "data"
+        },
+        {
+          "id": "T2",
+          "agent": "data"
+        },
+        {
+          "id": "T3",
+          "agent": "knowledge"
+        },
+        {
+          "id": "T4",
+          "agent": "analysis"
+        },
+        {
+          "id": "T5",
+          "agent": "reviewer"
+        }
+      ]
+    },
+    "created_at": "2026-10-22 12:41:13.444743+00:00"
+  },
+  {
+    "event_type": "run.failed",
+    "payload": {
+      "status": "failed",
+      "error_type": "NameError",
+      "error_code": "MODEL_NAMEERROR",
+      "reason": "NameError: name 'datetime' is not defined",
+      "stage": "workflow"
+    },
+    "created_at": "2026-10-22 12:41:13.459662+00:00"
+  }
+]

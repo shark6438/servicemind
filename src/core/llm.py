@@ -83,6 +83,8 @@ def get_model(model_name: AllModelEnum, /) -> ModelT:
             streaming=True,
             openai_api_base=settings.COMPATIBLE_BASE_URL,
             openai_api_key=settings.COMPATIBLE_API_KEY,
+            max_retries=0,
+            stream_usage=True,
         )
     if model_name in AzureOpenAIModelName:
         if not settings.AZURE_OPENAI_API_KEY or not settings.AZURE_OPENAI_ENDPOINT:

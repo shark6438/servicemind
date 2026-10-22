@@ -664,6 +664,74 @@ async def test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold
     assert "still applies" in prompt
 
 
+def test_supervisor_schema_enforces_current_action_task_pairs():
+    from pydantic import ValidationError
+
+    from servicemind.agents.supervisor import SupervisorAgent
+
+    schema = SupervisorAgent.decision_schema(
+        {
+            "legal_actions": ["dispatch", "analyze", "escalate"],
+            "max_parallel": 1,
+            "ready_tasks": [
+                {"task_id": "T1", "agent": "data"},
+                {"task_id": "T2", "agent": "analysis"},
+            ],
+        }
+    )
+    base = {"rationale_summary": "Proceed with ready work", "confidence": 0.9}
+    for action, task_ids in [
+        ("finalize", []),
+        ("dispatch", ["T2"]),
+        ("analyze", ["T1"]),
+        ("escalate", ["T1"]),
+        ("dispatch", ["T1", "T2"]),
+    ]:
+        with pytest.raises(ValidationError):
+            schema.model_validate({**base, "action": action, "selected_task_ids": task_ids})
+    assert schema.model_validate({**base, "action": "dispatch", "selected_task_ids": ["T1"]})
+
+
+def test_control_model_timeout_honors_configuration_and_remaining_run_time(monkeypatch):
+    from core import settings
+    from servicemind.model_gateway.contracts import ModelPurpose
+    from servicemind.orchestration.supervisor_workflow import _control_model_context
+
+    monkeypatch.setattr(settings, "SERVICEMIND_MODEL_TIMEOUT_SECONDS", 90)
+    state = initial("Analyze VPN incident")
+    assert (
+        _control_model_context(
+            state, agent_role="planner", purpose=ModelPurpose.PLANNING
+        ).timeout_seconds
+        == 90
+    )
+    state["task_plan"] = minimal_plan().model_dump(mode="json", by_alias=True)
+    due = (datetime.now(UTC) + timedelta(seconds=2)).isoformat()
+    state["task_plan"]["deadline"] = due
+    state["task_plan"]["budget"]["deadline"] = due
+    bounded = _control_model_context(state, agent_role="supervisor", purpose=ModelPurpose.CONTROL)
+    assert 0 < bounded.timeout_seconds <= 2
+
+
+@pytest.mark.asyncio
+async def test_replanner_timeout_is_not_reasked_as_a_shape_correction():
+    class TimedOutPlanner(FakePlanner):
+        revisions = 0
+
+        async def revise_plan(self, **kwargs):
+            self.revisions += 1
+            raise TimeoutError("local model deadline reached")
+
+    planner = TimedOutPlanner()
+    supervisor = StateDrivenSupervisor(override={2: SupervisorAction.REPLAN})
+    result = await build_supervisor_graph(services(planner=planner, supervisor=supervisor)).ainvoke(
+        initial("Analyze VPN incident")
+    )
+    assert planner.revisions == 1
+    assert result["final_result"]["termination_code"] == "critical_error"
+    assert result["control"]["model_call_count"] >= 4
+
+
 @pytest.mark.asyncio
 async def test_a_control_plane_that_cannot_choose_still_terminates() -> None:
     """The bound is finite, and reaching it must remain a recorded terminal.

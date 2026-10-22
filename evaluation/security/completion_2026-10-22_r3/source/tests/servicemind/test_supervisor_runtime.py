@@ -1,0 +1,1714 @@
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
+from uuid import UUID, uuid4
+
+import pytest
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import Command
+
+from core import settings
+from servicemind.agents.action import ActionAgent
+from servicemind.context.contracts import (
+    ContextAgent,
+    ContextAssemblyError,
+    ContextSource,
+)
+from servicemind.context.repository import NullContextArtifactSink
+from servicemind.domain.analysis import AnalysisResult, ProposedAction
+from servicemind.domain.evidence import Evidence, EvidenceSourceType, evidence_items
+from servicemind.domain.models import ExecutionResult
+from servicemind.domain.review import ReviewDecision, ReviewResult, RiskLevel
+from servicemind.domain.routing import RouteDecision, RouteType
+from servicemind.domain.supervisor import SupervisorAction, SupervisorDecision
+from servicemind.domain.task import (
+    TASK_OUTPUT_REF_MAX_LENGTH,
+    AgentName,
+    Budget,
+    ErrorPolicy,
+    Task,
+    TaskPlan,
+    TaskStatus,
+)
+from servicemind.orchestration.dispatcher import TaskDispatcher
+from servicemind.orchestration.phase5_governance import Phase5Governance
+from servicemind.orchestration.registry import supervisor_contract
+from servicemind.orchestration.router import FastPathRouter
+from servicemind.orchestration.supervisor_policy import (
+    SupervisorPolicy,
+    SupervisorPolicyError,
+)
+from servicemind.orchestration.supervisor_workflow import (
+    SupervisorRuntimeServices,
+    _bounded_output_ref,
+    build_supervisor_graph,
+)
+from servicemind.security.entitlements import (
+    configure_entitlement_verifier,
+    current_entitlement_verifier,
+)
+
+TENANT = UUID("11111111-1111-4111-8111-111111111111")
+
+
+class _ConfirmingVerifier:
+    """Confirms whatever this file's ``initial()`` state records, and nothing more."""
+
+    async def verify(self, tenant_id, user_id, *, fresh=False):
+        from servicemind.security.entitlements import EntitlementOutcome, EntitlementResult
+
+        assert tenant_id == TENANT
+        assert fresh is True, "the pre-write check must not be served from a cache"
+        return EntitlementResult(
+            EntitlementOutcome.VERIFIED,
+            roles=frozenset({"viewer", "analyst"}),
+            entity_ids=frozenset({1}),
+            group_ids=frozenset(),
+        )
+
+
+class FakeRepository:
+    events: list[tuple[str, dict]] = []
+    results: dict[UUID, dict] = {}
+    #: ``error`` is assigned on every write, not only when one is passed, because that is
+    #: what the real repository does -- a later write that omits it *clears* the column.
+    #: A fake that kept the last non-null value would accept a workflow that records the
+    #: cause once and then silently drops it on the way to the terminal state.
+    errors: dict[UUID, str | None] = {}
+
+    def __init__(self, tenant_id: UUID) -> None:
+        assert tenant_id == TENANT
+
+    @classmethod
+    def reset(cls) -> None:
+        cls.events = []
+        cls.results = {}
+        cls.errors = {}
+
+    async def update_run(self, run_id, status, *, result=None, error=None):
+        if result is not None:
+            self.results[run_id] = result
+        self.errors[run_id] = error
+        return SimpleNamespace(id=run_id, status=status.value, result=result, error=error)
+
+    async def append_event(self, run_id, event_type, payload):
+        self.events.append((event_type, payload))
+        return SimpleNamespace()
+
+    async def audit(self, *, event_type, payload, **kwargs):
+        self.events.append((event_type, payload))
+        return SimpleNamespace()
+
+    async def save_action_intent(self, **kwargs):
+        return SimpleNamespace(id=uuid4(), **kwargs)
+
+
+def evidence(source: EvidenceSourceType, resource_type: str, content: str) -> Evidence:
+    return Evidence.create(
+        tenant_id=TENANT,
+        source_type=source,
+        source_ref=f"{source.value}://fixture/{resource_type}",
+        resource_type=resource_type,
+        resource_id="2",
+        content=content,
+        provider="supervisor-test",
+        retrieval_method="fixture",
+        metadata=(
+            {
+                "ticket_facts": {
+                    "id": 2,
+                    "name": "VPN MFA outage",
+                    "impact": 3,
+                    "urgency": 4,
+                    "priority": 4,
+                }
+            }
+            if resource_type == "ticket"
+            else {}
+        ),
+    )
+
+
+class FakeData:
+    calls = 0
+
+    async def get_ticket_evidence(self, context, ticket_id):
+        type(self).calls += 1
+        return [
+            evidence(EvidenceSourceType.GLPI, "ticket", "VPN MFA incident facts"),
+            evidence(
+                EvidenceSourceType.GLPI,
+                "support_group",
+                "GLPI support group: Network Team",
+            ),
+        ]
+
+
+class FakeKnowledge:
+    calls = 0
+
+    async def retrieve(self, *, tenant_id, query, retrieval_round=0):
+        type(self).calls += 1
+        return [
+            evidence(
+                EvidenceSourceType.KNOWLEDGE,
+                "runbook",
+                "Network Team owns VPN faults",
+            )
+        ]
+
+
+class FakeAnalysis:
+    async def analyze_evidence(self, joined, goal, *, request_write, ticket_id):
+        actions = []
+        if request_write:
+            actions = [
+                ProposedAction(
+                    operation="append_ticket_followup",
+                    resource_type="ticket",
+                    resource_id=str(ticket_id),
+                    evidence_refs=joined.evidence_refs,
+                    risk_level=RiskLevel.LOW,
+                )
+            ]
+        return AnalysisResult(
+            classification="network/vpn",
+            impact=3,
+            urgency=4,
+            priority=4,
+            recommended_group="Network Team",
+            recurring_incident=False,
+            problem_recommendation="Collect recurrence evidence.",
+            change_recommendation="No change supported.",
+            proposed_actions=actions,
+            reasoning_summary="Evidence supports Network Team.",
+            evidence_refs=joined.evidence_refs,
+            confidence=0.8,
+            source="supervisor-test",
+        )
+
+
+class FakeReviewer:
+    async def review(self, *, analysis, evidence, **kwargs):
+        return ReviewResult(
+            decision=ReviewDecision.PASSED,
+            risk_level=RiskLevel.LOW,
+            feedback="Evidence and policy checks passed.",
+            reviewed_evidence_refs=evidence.evidence_refs,
+        )
+
+
+class FakePlanner:
+    def __init__(self) -> None:
+        self.goals: list[str] = []
+
+    async def create_plan(self, *, goal, ticket_id, request_write, correction=None):
+        self.goals.append(goal)
+        due = datetime.now(UTC) + timedelta(minutes=5)
+        budget = Budget(deadline=due)
+        tasks = [
+            Task(
+                task_id="T1",
+                agent=AgentName.DATA,
+                task_type="get_ticket",
+                input={"objective": "Read ticket", "ticket_id": ticket_id},
+                error_policy=ErrorPolicy.RETRY,
+                deadline=due,
+            )
+        ]
+        evidence_ids = ["T1"]
+        if "runbook" in goal.casefold():
+            tasks.append(
+                Task(
+                    task_id="T2",
+                    agent=AgentName.KNOWLEDGE,
+                    task_type="retrieve_knowledge",
+                    input={"objective": "Read runbook", "ticket_id": ticket_id},
+                    error_policy=ErrorPolicy.RETRY,
+                    deadline=due,
+                )
+            )
+            evidence_ids.append("T2")
+        next_id = len(tasks) + 1
+        analysis_id = f"T{next_id}"
+        reviewer_id = f"T{next_id + 1}"
+        tasks.extend(
+            [
+                Task(
+                    task_id=analysis_id,
+                    agent=AgentName.ANALYSIS,
+                    task_type="analyze_ticket",
+                    depends_on=evidence_ids,
+                    deadline=due,
+                ),
+                Task(
+                    task_id=reviewer_id,
+                    agent=AgentName.REVIEWER,
+                    task_type="review_analysis",
+                    depends_on=[analysis_id],
+                    deadline=due,
+                ),
+            ]
+        )
+        if request_write:
+            tasks.append(
+                Task(
+                    task_id=f"T{next_id + 2}",
+                    agent=AgentName.ACTION,
+                    task_type="propose_followup",
+                    depends_on=[reviewer_id],
+                    deadline=due,
+                )
+            )
+        return TaskPlan(
+            goal=goal,
+            tasks=tasks,
+            max_parallel=2,
+            max_steps=budget.max_steps,
+            max_replans=budget.max_replans,
+            deadline=due,
+            budget=budget,
+        )
+
+    async def revise_plan(self, **kwargs):
+        return kwargs["previous"]
+
+
+class StateDrivenSupervisor:
+    def __init__(
+        self,
+        invalid_first: int | bool = 0,
+        override: dict[int, SupervisorAction] | None = None,
+    ) -> None:
+        self.calls = 0
+        self.feedback: list[str | None] = []
+        # An int rather than a flag so a test can say how many decisions in a row come
+        # back illegal -- the bound on that run of rejections is what is under test.
+        self.invalid_first = int(invalid_first)
+        self.override = override or {}
+
+    async def decide(self, state_view, *, policy_feedback=None):
+        self.calls += 1
+        self.feedback.append(policy_feedback)
+        if self.calls <= self.invalid_first:
+            return SupervisorDecision(
+                action=SupervisorAction.HANDOFF_ACTION,
+                rationale_summary="Intentionally invalid decision.",
+                confidence=1,
+            )
+        legal = set(state_view["legal_actions"])
+        forced = self.override.get(self.calls)
+        if forced is not None:
+            if forced.value not in legal:
+                raise AssertionError(f"{forced.value} is not legal: {sorted(legal)}")
+            return SupervisorDecision(
+                action=forced,
+                selected_task_ids=[],
+                rationale_summary=f"Forced {forced.value} decision.",
+                confidence=1,
+            )
+        for action in (
+            SupervisorAction.PLAN,
+            SupervisorAction.DISPATCH,
+            SupervisorAction.JOIN_EVIDENCE,
+            SupervisorAction.ANALYZE,
+            SupervisorAction.REVIEW,
+            SupervisorAction.HANDOFF_ACTION,
+            SupervisorAction.FINALIZE,
+            SupervisorAction.RETRIEVE_MORE,
+            SupervisorAction.REPLAN,
+            SupervisorAction.ESCALATE,
+        ):
+            if action.value in legal:
+                return SupervisorDecision(
+                    action=action,
+                    selected_task_ids=(
+                        [item["task_id"] for item in state_view["ready_tasks"]]
+                        if action is SupervisorAction.DISPATCH
+                        else [
+                            item["task_id"]
+                            for item in state_view["ready_tasks"]
+                            if item["agent"]
+                            == ("analysis" if action is SupervisorAction.ANALYZE else "reviewer")
+                        ][:1]
+                        if action in {SupervisorAction.ANALYZE, SupervisorAction.REVIEW}
+                        else []
+                    ),
+                    rationale_summary=f"Progress workflow with {action.value}.",
+                    confidence=1,
+                )
+        raise AssertionError(legal)
+
+
+class CountingAction:
+    def __init__(self) -> None:
+        self.calls = 0
+        self.delegate = ActionAgent()
+
+    def propose_from_handoff(self, handoff, analysis, *, ticket_id):
+        self.calls += 1
+        return self.delegate.propose_from_handoff(handoff, analysis, ticket_id=ticket_id)
+
+
+class FakeExecutor:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def execute(self, context, intent):
+        self.calls += 1
+        return ExecutionResult(
+            tool_name="glpi_append_ticket_followup",
+            followup_id=200,
+            ticket_id=intent.target_id,
+            verified=True,
+        )
+
+
+def initial(goal: str, *, write: bool = False) -> dict:
+    return {
+        "run_id": str(uuid4()),
+        "tenant_id": str(TENANT),
+        "user_id": "user-1",
+        "username": "analyst",
+        "roles": ["viewer", "analyst"],
+        "allowed_glpi_entity_ids": [1],
+        "thread_id": str(uuid4()),
+        "ticket_id": 2,
+        "raw_request": goal,
+        "goal": goal,
+        "request_write": write,
+        "data_evidence": [],
+        "knowledge_evidence": [],
+        "branch_timings": [],
+        "branch_errors": [],
+        "task_completions": [],
+        "trajectory": [],
+        "control": {},
+        "control_owner": "supervisor",
+        "active_agent": "router",
+        "evidence_dirty": False,
+        "plan_revision": 0,
+    }
+
+
+def services(
+    supervisor=None,
+    planner=None,
+    action=None,
+    executor=None,
+    phase5=None,
+    reviewer=None,
+    knowledge=None,
+):
+    return SupervisorRuntimeServices(
+        router=FastPathRouter(),
+        supervisor=supervisor or StateDrivenSupervisor(),
+        planner=planner or FakePlanner(),
+        policy=SupervisorPolicy(),
+        dispatcher=TaskDispatcher(),
+        data=FakeData(),
+        knowledge=knowledge or FakeKnowledge(),
+        analysis=FakeAnalysis(),
+        reviewer=reviewer or FakeReviewer(),
+        action=action or CountingAction(),
+        executor=executor or FakeExecutor(),
+        repository_factory=FakeRepository,
+        **({"phase5": phase5} if phase5 is not None else {}),
+    )
+
+
+@pytest.fixture(autouse=True)
+def reset_fakes():
+    FakeRepository.reset()
+    FakeData.calls = 0
+    FakeKnowledge.calls = 0
+
+
+@pytest.fixture(autouse=True)
+def authority_still_held():
+    """The identity provider confirms exactly the grants ``initial()`` records.
+
+    ``execute_node`` re-verifies the requester's authority before it writes, because a
+    grant can be revoked between the approval and the moment the write is spent. These
+    tests drive the graph by hand rather than through ``runtime.resume_run`` -- which is
+    the only path that reaches the node in production, and which establishes a verifier
+    before it gets here -- so the confirmation they would have arrived with has to be
+    supplied. Returning a *narrower* set here is what the revocation tests assert on;
+    this fixture is the case where nothing changed.
+    """
+    original = current_entitlement_verifier()
+    configure_entitlement_verifier(_ConfirmingVerifier())
+    yield
+    configure_entitlement_verifier(original)
+
+
+def test_supervisor_policy_rejects_handoff_before_review() -> None:
+    assert supervisor_contract.allowed_tools == ()
+    assert supervisor_contract.read_write_scope == "control_only"
+    state = initial("Analyze VPN incident")
+    decision = SupervisorDecision(
+        action=SupervisorAction.HANDOFF_ACTION,
+        rationale_summary="Unsafe premature handoff.",
+        confidence=1,
+    )
+    with pytest.raises(SupervisorPolicyError, match="illegal"):
+        SupervisorPolicy().validate(decision, state)
+
+
+def test_supervisor_policy_rejects_parallel_dispatch_without_tool_budget() -> None:
+    state = initial("Analyze VPN with the relevant runbook")
+    due = datetime.now(UTC) + timedelta(minutes=5)
+    budget = Budget(max_tool_calls=1, deadline=due)
+    plan = TaskPlan(
+        goal=state["goal"],
+        tasks=[
+            Task(
+                task_id="T1",
+                agent=AgentName.DATA,
+                task_type="get_ticket",
+                deadline=due,
+            ),
+            Task(
+                task_id="T2",
+                agent=AgentName.KNOWLEDGE,
+                task_type="retrieve_knowledge",
+                deadline=due,
+            ),
+        ],
+        max_parallel=2,
+        max_steps=budget.max_steps,
+        max_replans=budget.max_replans,
+        deadline=due,
+        budget=budget,
+    )
+    state["task_plan"] = plan.model_dump(mode="json", by_alias=True)
+    decision = SupervisorDecision(
+        action=SupervisorAction.DISPATCH,
+        selected_task_ids=["T1", "T2"],
+        rationale_summary="Run both evidence tasks.",
+        confidence=1,
+    )
+    with pytest.raises(SupervisorPolicyError, match="fewer remaining tool calls"):
+        SupervisorPolicy().validate(decision, state)
+
+
+@pytest.mark.asyncio
+async def test_real_supervisor_node_drives_dynamic_loop() -> None:
+    supervisor = StateDrivenSupervisor()
+    graph = build_supervisor_graph(services(supervisor=supervisor))
+    result = await graph.ainvoke(initial("Analyze VPN with the relevant runbook"))
+    assert result["final_result"]["review"]["decision"] == "passed"
+    assert supervisor.calls >= 6
+    assert result["trajectory"].count("supervisor") == supervisor.calls
+    actions = [
+        item.removeprefix("decision:")
+        for item in result["trajectory"]
+        if item.startswith("decision:")
+    ]
+    assert actions == ["plan", "dispatch", "join_evidence", "analyze", "review", "finalize"]
+
+
+@pytest.mark.asyncio
+async def test_dynamic_planner_produces_different_dags_for_different_goals() -> None:
+    planner = FakePlanner()
+    first = await build_supervisor_graph(services(planner=planner)).ainvoke(
+        initial("Analyze current ticket facts")
+    )
+    second = await build_supervisor_graph(services(planner=planner)).ainvoke(
+        initial("Analyze current ticket with the relevant runbook")
+    )
+    first_agents = [task["agent"] for task in first["final_result"]["task_plan"]["tasks"]]
+    second_agents = [task["agent"] for task in second["final_result"]["task_plan"]["tasks"]]
+    assert first_agents == ["data", "analysis", "reviewer"]
+    assert second_agents == ["data", "knowledge", "analysis", "reviewer"]
+
+
+@pytest.mark.asyncio
+async def test_policy_rejection_is_returned_to_supervisor_for_self_correction() -> None:
+    supervisor = StateDrivenSupervisor(invalid_first=True)
+    result = await build_supervisor_graph(services(supervisor=supervisor)).ainvoke(
+        initial("Analyze VPN with the relevant runbook")
+    )
+    assert result["final_result"]["review"]["decision"] == "passed"
+    assert supervisor.feedback[0] is None
+    assert supervisor.feedback[1] and "illegal" in supervisor.feedback[1]
+
+
+@pytest.mark.asyncio
+async def test_two_rejections_in_a_row_are_still_correctable() -> None:
+    """The second rejection is the one that used to end the run outright.
+
+    Each rejection hands back the legal set for the state the model was looking at, so
+    the next attempt is informed rather than repeated -- and the second correction can
+    fail on a *different* rule (the action legal, its argument not), which is what
+    happened on ACC-03 (2026-09-23): a healthy read-only run whose second proposal was
+    already the right action selected wrongly finalized with
+    ``supervisor_policy_failure`` and lost its plan, evidence and analysis with it.
+    """
+    supervisor = StateDrivenSupervisor(invalid_first=2)
+
+    result = await build_supervisor_graph(services(supervisor=supervisor)).ainvoke(
+        initial("Analyze VPN with the relevant runbook")
+    )
+
+    assert result["final_result"]["termination_code"] is None
+    assert result["final_result"]["review"]["decision"] == "passed"
+    assert supervisor.feedback[1] and "illegal" in supervisor.feedback[1]
+    assert supervisor.feedback[2] and "illegal" in supervisor.feedback[2]
+    assert supervisor.feedback[0] is None
+
+
+class OscillatingSupervisor(StateDrivenSupervisor):
+    """A control plane that repairs the newest correction by breaking the previous one.
+
+    Deliberately reads its own feedback: a real model does. It repeats its first
+    rejected decision unless that rejection is still in front of it -- which is the
+    question under test, since the platform used to hand back one correction at a time.
+    """
+
+    async def decide(self, state_view, *, policy_feedback=None):
+        if self.calls >= 3:
+            # Past the first visit it is an ordinary control plane again; only the
+            # opening three proposals are the behaviour under test.
+            return await super().decide(state_view, policy_feedback=policy_feedback)
+        self.calls += 1
+        self.feedback.append(policy_feedback)
+        if self.calls == 1:
+            return SupervisorDecision(
+                action=SupervisorAction.HANDOFF_ACTION,
+                rationale_summary="First mistake.",
+                confidence=1,
+            )
+        if self.calls == 2:
+            return SupervisorDecision(
+                action=SupervisorAction.JOIN_EVIDENCE,
+                rationale_summary="A different mistake, with a different rule to fix.",
+                confidence=1,
+            )
+        if "handoff_action" in (policy_feedback or ""):
+            # Told about the first rejection as well, it stops making it.
+            return SupervisorDecision(
+                action=SupervisorAction.PLAN,
+                rationale_summary="Plan, now that both rules are visible.",
+                confidence=1,
+            )
+        # Only the latest correction survived, so the earlier rule looks forgotten and
+        # the model walks straight back into it.
+        return SupervisorDecision(
+            action=SupervisorAction.HANDOFF_ACTION,
+            rationale_summary="Regression to the first mistake.",
+            confidence=1,
+        )
+
+
+@pytest.mark.asyncio
+async def test_a_rejection_is_not_spent_by_the_rejection_after_it() -> None:
+    """Three attempts, three different things to say, and all of them said.
+
+    The live failure this pins: on ticket 26 the control plane proposed ``dispatch``
+    (refused), then ``join_evidence`` naming a task (refused for its argument), then
+    ``dispatch`` again -- the first rule had dropped out of the feedback, so fixing the
+    second one meant breaking the first. Three attempts, two distinct rules, and the
+    run ended in ``supervisor_policy_failure`` with its plan, evidence and analysis
+    discarded.
+    """
+    supervisor = OscillatingSupervisor()
+
+    result = await build_supervisor_graph(services(supervisor=supervisor)).ainvoke(
+        initial("Analyze VPN with the relevant runbook")
+    )
+
+    assert result["final_result"]["termination_code"] is None
+    assert result["final_result"]["review"]["decision"] == "passed"
+    # The third attempt can only choose correctly if the first rejection came with it.
+    assert "handoff_action" in supervisor.feedback[2]
+    assert "join_evidence" in supervisor.feedback[2]
+
+
+@pytest.mark.asyncio
+async def test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold(
+    monkeypatch,
+) -> None:
+    """Asserted on the text the model reads, where it is assembled.
+
+    The orchestration test above shows the history is *handed over*; this one shows what
+    the control plane is told to do with it. A prompt that lists the corrections but
+    calls them history invites the model to treat an old one as spent, which is the
+    behaviour the cumulative list exists to stop.
+    """
+    from servicemind.agents import supervisor as supervisor_module
+
+    captured: list[list[object]] = []
+
+    class _Runnable:
+        async def ainvoke(self, messages, **_):
+            captured.append(messages)
+            return {
+                "action": "finalize",
+                "selected_task_ids": [],
+                "rationale_summary": "prompt probe",
+                "confidence": 1,
+            }
+
+    monkeypatch.setattr(supervisor_module, "get_model", lambda *a, **k: object())
+    monkeypatch.setattr(supervisor_module, "structured_output", lambda *a, **k: _Runnable())
+
+    await supervisor_module.SupervisorAgent().decide(
+        {"goal": "g", "legal_actions": ["finalize"]},
+        policy_feedback="1. the first rule\n2. the second rule",
+    )
+
+    prompt = captured[0][0].content
+    assert "the first rule" in prompt
+    assert "the second rule" in prompt
+    assert "still applies" in prompt
+
+
+def test_supervisor_schema_enforces_current_action_task_pairs():
+    from pydantic import ValidationError
+
+    from servicemind.agents.supervisor import SupervisorAgent
+
+    schema = SupervisorAgent.decision_schema(
+        {
+            "legal_actions": ["dispatch", "analyze", "escalate"],
+            "max_parallel": 1,
+            "ready_tasks": [
+                {"task_id": "T1", "agent": "data"},
+                {"task_id": "T2", "agent": "analysis"},
+            ],
+        }
+    )
+    base = {"rationale_summary": "Proceed with ready work", "confidence": 0.9}
+    for action, task_ids in [
+        ("finalize", []),
+        ("dispatch", ["T2"]),
+        ("analyze", ["T1"]),
+        ("escalate", ["T1"]),
+        ("dispatch", ["T1", "T2"]),
+    ]:
+        with pytest.raises(ValidationError):
+            schema.model_validate({**base, "action": action, "selected_task_ids": task_ids})
+    assert schema.model_validate({**base, "action": "dispatch", "selected_task_ids": ["T1"]})
+
+
+def test_control_model_timeout_honors_configuration_and_remaining_run_time(monkeypatch):
+    from core import settings
+    from servicemind.model_gateway.contracts import ModelPurpose
+    from servicemind.orchestration.supervisor_workflow import _control_model_context
+
+    monkeypatch.setattr(settings, "SERVICEMIND_MODEL_TIMEOUT_SECONDS", 90)
+    state = initial("Analyze VPN incident")
+    assert (
+        _control_model_context(
+            state, agent_role="planner", purpose=ModelPurpose.PLANNING
+        ).timeout_seconds
+        == 90
+    )
+    state["task_plan"] = minimal_plan().model_dump(mode="json", by_alias=True)
+    due = (datetime.now(UTC) + timedelta(seconds=2)).isoformat()
+    state["task_plan"]["deadline"] = due
+    state["task_plan"]["budget"]["deadline"] = due
+    bounded = _control_model_context(state, agent_role="supervisor", purpose=ModelPurpose.CONTROL)
+    assert 0 < bounded.timeout_seconds <= 2
+
+
+@pytest.mark.asyncio
+async def test_replanner_timeout_is_not_reasked_as_a_shape_correction():
+    class TimedOutPlanner(FakePlanner):
+        revisions = 0
+
+        async def revise_plan(self, **kwargs):
+            self.revisions += 1
+            raise TimeoutError("local model deadline reached")
+
+    planner = TimedOutPlanner()
+    supervisor = StateDrivenSupervisor(override={2: SupervisorAction.REPLAN})
+    result = await build_supervisor_graph(services(planner=planner, supervisor=supervisor)).ainvoke(
+        initial("Analyze VPN incident")
+    )
+    assert planner.revisions == 1
+    assert result["final_result"]["termination_code"] == "critical_error"
+    assert result["control"]["model_call_count"] >= 4
+
+
+@pytest.mark.asyncio
+async def test_a_control_plane_that_cannot_choose_still_terminates() -> None:
+    """The bound is finite, and reaching it must remain a recorded terminal.
+
+    Raising the allowance cannot turn into "retry until the model agrees": the run's
+    model-call budget is the outer bound, and this terminal is what an operator reads
+    when a control plane genuinely cannot name a legal next transition.
+    """
+    supervisor = StateDrivenSupervisor(invalid_first=3)
+
+    result = await build_supervisor_graph(services(supervisor=supervisor)).ainvoke(
+        initial("Analyze VPN with the relevant runbook")
+    )
+
+    assert result["final_result"]["termination_code"] == "supervisor_policy_failure"
+    assert supervisor.calls == 3
+
+
+@pytest.mark.asyncio
+async def test_handoff_changes_control_owner_and_enters_existing_harness() -> None:
+    supervisor, action, executor = StateDrivenSupervisor(), CountingAction(), FakeExecutor()
+    graph = build_supervisor_graph(
+        services(supervisor=supervisor, action=action, executor=executor)
+    )
+    graph.checkpointer = InMemorySaver()
+    state = initial(
+        "Analyze VPN with the relevant runbook and prepare a reviewed private work note",
+        write=True,
+    )
+    config = {"configurable": {"thread_id": state["thread_id"]}}
+    interrupted = await graph.ainvoke(state, config=config)
+    assert interrupted["control_owner"] == "human"
+    assert "handoff:supervisor->action" in interrupted["trajectory"]
+    assert action.calls == 1
+    handoff_events = [
+        payload for event, payload in FakeRepository.events if event == "control.handoff"
+    ]
+    assert len(handoff_events) == 1
+    assert handoff_events[0]["from"] == "supervisor"
+    assert handoff_events[0]["to"] == "action"
+    assert handoff_events[0]["allowed_operations"] == ["append_ticket_followup"]
+    assert len(handoff_events[0]["review_digest"]) == 64
+    assert len(handoff_events[0]["evidence_digest"]) == 64
+    completed = await graph.ainvoke(
+        Command(
+            resume={
+                "decision": "approved",
+                "decided_by": "approver-1",
+                "comment": "approved",
+            }
+        ),
+        config=config,
+    )
+    assert executor.calls == 1
+    assert completed["final_result"]["execution"]["verified"] is True
+    assert completed["final_result"]["control_owner"] == "none"
+
+
+@pytest.mark.asyncio
+async def test_a_voided_action_is_re_derived_rather_than_decided() -> None:
+    """What the graph does with an approval that arrived for an action it withdrew.
+
+    ``runtime.resume_run`` sends ``{"voided": True}`` when the requester's scope moved
+    while the run sat at the interrupt. The node has to route that somewhere, and the
+    three candidates are all wrong in their own way: executing it spends a decision on
+    evidence that is gone, finalising it turns somebody else's revocation into the
+    requester's failure, and recording it as an approval is what the void exists to
+    prevent. It goes back to the supervisor, whose job is to re-derive the action from
+    re-retrieved evidence and ask again.
+    """
+    supervisor, action, executor = StateDrivenSupervisor(), CountingAction(), FakeExecutor()
+    graph = build_supervisor_graph(
+        services(supervisor=supervisor, action=action, executor=executor)
+    )
+    graph.checkpointer = InMemorySaver()
+    state = initial(
+        "Analyze VPN with the relevant runbook and prepare a reviewed private work note",
+        write=True,
+    )
+    config = {"configurable": {"thread_id": state["thread_id"]}}
+    interrupted = await graph.ainvoke(state, config=config)
+    assert interrupted["control_owner"] == "human"
+    assert action.calls == 1
+
+    voided = await graph.ainvoke(Command(resume={"voided": True}), config=config)
+
+    assert executor.calls == 0, "a voided action is never executed"
+    assert "approval:voided" in voided["trajectory"]
+    assert "execute" not in voided["trajectory"], "the harness never took control"
+    trail = voided["trajectory"]
+    assert trail[trail.index("approval:voided") + 1] == "supervisor", (
+        "the void hands the run back to the supervisor, not to the approval's own branch"
+    )
+    assert not any(
+        payload.get("decision") == "approved"
+        for event, payload in FakeRepository.events
+        if event.startswith("approval.")
+    ), "the human never ruled on the withdrawn action"
+
+
+@pytest.mark.asyncio
+async def test_a_grant_revoked_after_approval_stops_the_write() -> None:
+    """The window the approval leaves open, closed at the point of use.
+
+    A human approves an action, and the approval is bound to a hash so the action
+    cannot change -- but the *authority behind it* can. Between the approval and the
+    write, the requester may be dropped from a group, and everything the approval was
+    granted on the strength of was gathered while they still held it. Re-checking only
+    at the resume boundary would miss exactly this, so the check is repeated here,
+    without a cache, and it refuses rather than narrows.
+    """
+    from servicemind.security.entitlements import (
+        AuthorityWithdrawn,
+        EntitlementOutcome,
+        EntitlementResult,
+    )
+
+    class _Revoked:
+        """Same subject, same roles, one entity grant taken away since the approval."""
+
+        async def verify(self, tenant_id, user_id, *, fresh=False):
+            return EntitlementResult(
+                EntitlementOutcome.VERIFIED,
+                roles=frozenset({"viewer", "analyst"}),
+                entity_ids=frozenset(),
+                group_ids=frozenset(),
+            )
+
+    configure_entitlement_verifier(_Revoked())
+    supervisor, action, executor = StateDrivenSupervisor(), CountingAction(), FakeExecutor()
+    graph = build_supervisor_graph(
+        services(supervisor=supervisor, action=action, executor=executor)
+    )
+    graph.checkpointer = InMemorySaver()
+    state = initial(
+        "Analyze VPN with the relevant runbook and prepare a reviewed private work note",
+        write=True,
+    )
+    config = {"configurable": {"thread_id": state["thread_id"]}}
+    await graph.ainvoke(state, config=config)
+
+    with pytest.raises(AuthorityWithdrawn) as raised:
+        await graph.ainvoke(
+            Command(resume={"decision": "approved", "decided_by": "approver-1", "comment": "ok"}),
+            config=config,
+        )
+
+    assert executor.calls == 0, "the write must not be attempted"
+    assert raised.value.revoked == {"roles": [], "entity_ids": [1], "group_ids": []}
+    audit = [
+        payload for event, payload in FakeRepository.events if event == "action.authority_withdrawn"
+    ]
+    assert len(audit) == 1
+    assert audit[0]["reason"] == "revoked"
+
+
+@pytest.mark.asyncio
+async def test_a_verified_requester_without_the_step_role_is_refused() -> None:
+    """The other half of the pre-write gate, and the one a revocation check cannot see.
+
+    Nothing was taken away here: the subject is enabled, the entity grant is intact, and
+    every recorded role is still held. What is missing is the role the step itself
+    requires -- and the reason this has to be stated separately is that a check built
+    only around "what changed since the approval" finds no change at all.
+    """
+
+    from servicemind.security.entitlements import (
+        AuthorityWithdrawn,
+        EntitlementOutcome,
+        EntitlementResult,
+    )
+
+    class _NoStepRole:
+        async def verify(self, tenant_id, user_id, *, fresh=False):
+            return EntitlementResult(
+                EntitlementOutcome.VERIFIED,
+                roles=frozenset({"viewer"}),
+                entity_ids=frozenset({1}),
+                group_ids=frozenset(),
+            )
+
+    configure_entitlement_verifier(_NoStepRole())
+    supervisor, action, executor = StateDrivenSupervisor(), CountingAction(), FakeExecutor()
+    graph = build_supervisor_graph(
+        services(supervisor=supervisor, action=action, executor=executor)
+    )
+    graph.checkpointer = InMemorySaver()
+    state = initial(
+        "Analyze VPN with the relevant runbook and prepare a reviewed private work note",
+        write=True,
+    )
+    state["roles"] = ["viewer"]
+    config = {"configurable": {"thread_id": state["thread_id"]}}
+    await graph.ainvoke(state, config=config)
+
+    with pytest.raises(AuthorityWithdrawn) as raised:
+        await graph.ainvoke(
+            Command(resume={"decision": "approved", "decided_by": "approver-1", "comment": "ok"}),
+            config=config,
+        )
+
+    assert executor.calls == 0, "the write must not be attempted"
+    assert raised.value.reason == "insufficient"
+    assert raised.value.missing == {"roles": ["analyst"]}
+    audit = [
+        payload for event, payload in FakeRepository.events if event == "action.authority_withdrawn"
+    ]
+    assert audit[0]["missing"] == {"roles": ["analyst"]}
+
+
+# ---------------------------------------------------------------------------
+# Orchestration audit regressions (2026-09-08): pre-review REPLAN crash, plan/
+# revision double-failure terminal handling, and ESCALATE human-override loop.
+# ---------------------------------------------------------------------------
+
+
+def minimal_plan() -> TaskPlan:
+    due = datetime.now(UTC) + timedelta(minutes=5)
+    budget = Budget(deadline=due)
+    tasks = [
+        Task(
+            task_id="T1",
+            agent=AgentName.DATA,
+            task_type="get_ticket",
+            input={"objective": "Read ticket", "ticket_id": 2},
+            error_policy=ErrorPolicy.RETRY,
+            deadline=due,
+        )
+    ]
+    return TaskPlan(
+        goal="Analyze VPN incident",
+        tasks=tasks,
+        max_parallel=2,
+        max_steps=budget.max_steps,
+        max_replans=budget.max_replans,
+        deadline=due,
+        budget=budget,
+    )
+
+
+def test_policy_escalate_allows_finalize_but_human_continue_is_terminal() -> None:
+    """A human "continue" on an escalation must not re-enter the interrupt loop."""
+    plan = minimal_plan()
+    review = ReviewResult(
+        decision=ReviewDecision.ESCALATE,
+        risk_level=RiskLevel.HIGH,
+        feedback="Reviewer could not resolve the blocking finding.",
+    )
+    state = initial("Analyze VPN incident")
+    state["task_plan"] = plan.model_dump(mode="json", by_alias=True)
+    state["review_result"] = review.model_dump(mode="json")
+    policy = SupervisorPolicy()
+    assert policy.legal_actions(state) == {
+        SupervisorAction.ESCALATE,
+        SupervisorAction.FINALIZE,
+    }
+    state["human_review"] = {"decision": "continue"}
+    assert policy.legal_actions(state) == {SupervisorAction.FINALIZE}
+
+
+@pytest.mark.asyncio
+async def test_supervisor_replan_before_any_review_does_not_crash() -> None:
+    """A pre-review REPLAN (legal when evidence is still un-joined) previously hit
+    ``_review(state)`` on an empty payload and crashed the graph with a raw
+    validation error. The revision node now tolerates a missing review and the run
+    must complete normally through to a passed review."""
+    supervisor = StateDrivenSupervisor(override={2: SupervisorAction.REPLAN})
+    graph = build_supervisor_graph(services(supervisor=supervisor))
+    result = await graph.ainvoke(initial("Analyze VPN with the relevant runbook"))
+    assert result["final_result"]["review"]["decision"] == "passed"
+    assert result["plan_revision"] >= 1
+    decisions = [
+        item.removeprefix("decision:")
+        for item in result["trajectory"]
+        if item.startswith("decision:")
+    ]
+    assert decisions[0] == "plan"
+    assert decisions[1] == "replan"
+
+
+#: Every long failure message below ends with this. ``bounded_error_text`` keeps both ends
+#: and drops the middle, so a marker at the very end is what a head-only clip loses -- and a
+#: head-only clip is the regression these three tests exist to catch.
+LONG_FAILURE_MARKER = "<-- cause, at the end"
+
+#: Long enough that the clip has to fire, so "the reason is the clipped one" is testable
+#: rather than asserted about the source.
+LONG_FAILURE_BODY = "filler " * 500
+
+
+class BrokenReplanner(FakePlanner):
+    async def revise_plan(self, **kwargs):
+        raise ValueError(
+            f"replanner model returned an invalid revision: {LONG_FAILURE_BODY} {LONG_FAILURE_MARKER}"
+        )
+
+
+class RetrieveMoreSupervisor(StateDrivenSupervisor):
+    """Picks RETRIEVE_MORE the first time an open review makes it legal."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.took_retrieve_more = False
+        self.asked_after_termination = 0
+
+    async def decide(self, state_view, *, policy_feedback=None):
+        # The Supervisor is the control plane, not a bystander. Asking it to decide a
+        # run that has already ended costs a model call and writes a rationale for a
+        # state it is not being shown correctly.
+        if state_view.get("termination_code"):
+            self.asked_after_termination += 1
+        if (
+            not self.took_retrieve_more
+            and SupervisorAction.RETRIEVE_MORE.value in state_view["legal_actions"]
+        ):
+            self.calls += 1
+            self.feedback.append(policy_feedback)
+            self.took_retrieve_more = True
+            return SupervisorDecision(
+                action=SupervisorAction.RETRIEVE_MORE,
+                selected_task_ids=[],
+                rationale_summary="The review named a repair.",
+                confidence=1,
+            )
+        return await super().decide(state_view, policy_feedback=policy_feedback)
+
+
+class ReviewerNamingARepair(FakeReviewer):
+    """The live ACC-03 verdict: one defect, and it is a citation, not a missing document.
+
+    Both records the Reviewer compares are already in the joined evidence -- it says so
+    itself ("the ticket-25 counterpart ev-ff24bc453152bf9d, not cited"). No retrieval
+    can change this analysis, which is why the run needed a planner that could still
+    fail while leaving the answer intact.
+    """
+
+    async def review(self, *, analysis, evidence, **kwargs):
+        return ReviewResult(
+            decision=ReviewDecision.RETRIEVE_MORE,
+            risk_level=RiskLevel.LOW,
+            feedback="C12 cites the wrong record; the right one is already in evidence.",
+            reviewed_evidence_refs=evidence.evidence_refs,
+        )
+
+
+class ReplannerThatNeedsTwoCorrections(FakePlanner):
+    """Breaks one shape rule per attempt, and fixes the rule it was last told about.
+
+    ``compile_proposal`` raises on the first rule it finds, so this is what a proposal
+    looks like from the node's side whenever the model clears the rule it was corrected
+    on and then breaks a different one.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.corrections: list[str | None] = []
+
+    async def revise_plan(self, **kwargs):
+        self.corrections.append(kwargs.get("correction"))
+        if len(self.corrections) < 3:
+            raise ValueError(f"shape rule {len(self.corrections)} not met")
+        return kwargs["previous"]
+
+
+@pytest.mark.asyncio
+async def test_a_second_shape_rejection_still_reaches_the_replanner() -> None:
+    """Live regression, 2026-09-23, ACC-03, run 16a6ba03 -- and the same shape as the
+    Supervisor's ``policy_attempts`` comment: at two attempts the allowance was one
+    informed correction, so a proposal that fixed the rule it was told about and broke a
+    different one ended the run. The third call has to happen and has to carry the second
+    rule's message; the run's model-call budget is the real bound, not this number.
+    """
+    supervisor = RetrieveMoreSupervisor()
+    planner = ReplannerThatNeedsTwoCorrections()
+    graph = build_supervisor_graph(
+        services(
+            supervisor=supervisor,
+            planner=planner,
+            reviewer=ReviewerNamingARepair(),
+        )
+    )
+    result = await graph.ainvoke(initial("Analyze VPN incident"))
+
+    assert planner.corrections[0] is None, "the first proposal is not a correction"
+    assert "shape rule 1 not met" in planner.corrections[1]
+    assert "shape rule 2 not met" in planner.corrections[2], (
+        "the second rejection's cause must reach the model, not just the event log"
+    )
+    assert result["plan_revision"] >= 1
+    assert result["final_result"]["termination_code"] is None
+    # The same column from the other side. ``update_run`` assigns unconditionally, so a
+    # finalize that passed a stale cause would leave a run that answered its question
+    # carrying a failure message -- and a run list is exactly where that would be read.
+    run_id = next(iter(FakeRepository.results))
+    assert FakeRepository.errors[run_id] is None
+
+
+@pytest.mark.asyncio
+async def test_a_revision_the_planner_cannot_produce_keeps_what_the_run_answered() -> None:
+    """Live regression, 2026-09-23, ACC-03, run 16a6ba03.
+
+    The Analyst answered correctly; the Reviewer found exactly one defect and asked for
+    a repair; the replanner's proposals were rejected on shape rules. This branch then
+    returned ``analysis_result: {}`` and ``review_result: {}`` alongside
+    ``critical_error``, so the run's only record of what it had answered -- and of the
+    one thing left open -- was erased at the exact moment an operator would need it.
+    ``run.failed`` carried neither, and the analysis had to be re-derived from the
+    database to find out what the run had said.
+    """
+    supervisor = RetrieveMoreSupervisor()
+    graph = build_supervisor_graph(
+        services(
+            supervisor=supervisor,
+            planner=BrokenReplanner(),
+            reviewer=ReviewerNamingARepair(),
+        )
+    )
+    result = await graph.ainvoke(initial("Analyze VPN incident"))
+    final = result["final_result"]
+
+    assert final["termination_code"] == "critical_error"
+    assert final["analysis"], "the analysis the Reviewer was judging must survive the failure"
+    assert final["analysis"]["classification"] == "network/vpn"
+    assert final["review"]["decision"] == "retrieve_more"
+    assert final["review"]["feedback"] == (
+        "C12 cites the wrong record; the right one is already in evidence."
+    )
+    assert [event for event, _ in FakeRepository.events].count("run.failed") == 1
+    # ``retrieve_more`` is ``replan`` with the flag set and ends a run the same way, so
+    # it routes on the same condition. As a static edge it woke the control plane after
+    # the run had already terminated: on ACC-03 that produced a confident "no dirty
+    # evidence, failures, or open review feedback. The only legal action is finalize"
+    # for a run whose review had just asked for a repair.
+    assert supervisor.asked_after_termination == 0
+
+
+@pytest.mark.asyncio
+async def test_replan_double_failure_finalizes_without_raw_runtime_error() -> None:
+    """A replanner that fails validation twice must end the run through the normal
+    finalizer (persisted, run.failed) instead of escaping the node and erroring
+    the whole graph.
+
+    The finalizer must also run *once*. ``replan`` carries a static edge to
+    ``supervisor``, and returning ``Command(goto="finalize")`` from such a node follows
+    both routes: finalize wrote ``run.failed`` and persisted the result, the Supervisor
+    was asked to decide again with ``FINALIZE`` as its only legal action, and finalize
+    wrote a second ``run.failed`` for the same run -- two terminal records for one
+    failure, and a control-plane model call spent choosing an action already chosen.
+    """
+    supervisor = StateDrivenSupervisor(override={2: SupervisorAction.REPLAN})
+    graph = build_supervisor_graph(services(supervisor=supervisor, planner=BrokenReplanner()))
+    result = await graph.ainvoke(initial("Analyze VPN incident"))
+    assert result["final_result"]["termination_code"] == "critical_error"
+    event_types = [event for event, _ in FakeRepository.events]
+    assert event_types.count("run.failed") == 1
+    assert event_types[-1] == "run.failed"
+
+    # The rejection detail is the shared both-ends clip, observed at the ledger rather than
+    # read off the source. A raw ``str(exc)`` here is not a smaller version of this: it is a
+    # 3500-character line, and a head-only ``[:200]`` drops the marker along with the cause.
+    reasons = [
+        payload["reason"]
+        for event, payload in FakeRepository.events
+        if event == "replanner.proposal_rejected"
+    ]
+    assert reasons, "the two replan attempts are both on the timeline"
+    for reason in reasons:
+        assert len(reason) <= 1000
+        assert "characters elided" in reason
+        assert reason.endswith(" " + LONG_FAILURE_MARKER), (
+            "the end of the detail is where the cause is; a head-only clip drops exactly this"
+        )
+
+
+class UnretrievableKnowledge:
+    """A knowledge branch whose model path fails with more to say than the ledger holds."""
+
+    async def retrieve(self, *, tenant_id, query, retrieval_round=0):
+        del tenant_id, query, retrieval_round
+        raise RuntimeError(
+            f"knowledge model transport failed: {LONG_FAILURE_BODY} {LONG_FAILURE_MARKER}"
+        )
+
+
+class BrokenSupervisor:
+    """A control plane whose model will not answer the decision schema."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def decide(self, state_view, *, policy_feedback=None):
+        del state_view, policy_feedback
+        self.calls += 1
+        # The shape the live escape takes: the governed gateway spent its schema-repair
+        # attempt and re-raised the violation it could not talk the model out of. Padded
+        # with the fields a model invents until the rendered violation is longer than the
+        # clip, so the test can see which end of it survives.
+        invented = {f"invented_field_{index}": "value" for index in range(12)}
+        return SupervisorDecision.model_validate(
+            {"confidence": 2, "rationale_summary": "over the documented maximum", **invented}
+        )
+
+
+class UnassemblableContext:
+    """A governance layer whose governed input cannot be built for one agent.
+
+    The live shape: the Reviewer's context item *is* the ``AnalysisResult`` the model
+    just produced, so a verbose analysis can exceed the run's context budget. The
+    governance layer reports that as a typed refusal rather than a pydantic error.
+    """
+
+    def __init__(self, agent: ContextAgent) -> None:
+        self.agent = agent
+
+    async def build_context(self, *, state, task, invocation, agent):
+        del state, task, invocation
+        if agent is self.agent:
+            # The refusal carries the governed item that did not fit, which is exactly the
+            # case where its message is longer than the ledger's clip.
+            raise ContextAssemblyError(
+                "required_item_exceeds_token_budget",
+                f"required context item exceeds token budget: state for {agent.value}: "
+                f"{LONG_FAILURE_BODY} {LONG_FAILURE_MARKER}",
+            )
+        return None
+
+    async def post_run(self, *, state, result, status) -> int:
+        del state, result, status
+        return 0
+
+
+@pytest.mark.asyncio
+async def test_a_context_that_cannot_be_assembled_finalizes_instead_of_crashing_the_graph() -> None:
+    """A run whose governed input does not fit ends through ``finalize``, not an exception.
+
+    ``build_context`` raises when a required item exceeds the context budget. Every call
+    site in the workflow let that escape the node, so the graph errored: no finalize, no
+    trajectory, no review, and ``_process_webhook_run`` recorded FAILED with a bare
+    ``MODEL_VALUEERROR`` -- the same ledger entry a genuine bug in this file would get.
+    A run that is too big for its own context budget is a property of the run, and it
+    has to be readable as one.
+    """
+    graph = build_supervisor_graph(
+        services(phase5=UnassemblableContext(ContextAgent.REVIEWER))  # type: ignore[arg-type]
+    )
+    result = await graph.ainvoke(initial("Analyze VPN incident"))
+
+    assert result["final_result"]["termination_code"] == "context_assembly_failure"
+    event_types = [event for event, _ in FakeRepository.events]
+    assert "context.assembly_failed" in event_types
+    # Exactly one terminal write. A Command(goto="finalize") from a node that also
+    # carries a static edge follows both, so finalize ran twice and one failed run
+    # left two run.failed events on the timeline.
+    assert event_types.count("run.failed") == 1
+    assert event_types[-1] == "run.failed"
+    failure = next(
+        payload for event, payload in FakeRepository.events if event == "context.assembly_failed"
+    )
+    assert failure["code"] == "required_item_exceeds_token_budget"
+    assert failure["agent"] == "reviewer"
+    # The event's own detail, and the control plane's copy of it, are the shared clip.
+    assert len(failure["reason"]) <= 1000
+    assert "characters elided" in failure["reason"]
+    assert failure["reason"].endswith(" " + LONG_FAILURE_MARKER)
+    control_errors = [
+        item
+        for item in result["final_result"]["control"]["errors"]
+        if item["error_type"] == "ContextAssemblyError"
+    ]
+    assert control_errors, "the refusal is also on the in-state control record"
+    for item in control_errors:
+        assert len(item["reason"]) <= 1000
+        assert item["reason"].endswith(" " + LONG_FAILURE_MARKER)
+
+
+@pytest.mark.asyncio
+async def test_an_agent_that_builds_no_context_still_runs_ungoverned() -> None:
+    """``None`` from ``build_context`` means "no envelope", not "refuse to run".
+
+    ``SERVICEMIND_CONTEXT_ENABLED`` defaults to off and the governance layer returns
+    ``None`` for every agent; that path must stay reachable now that the call sites
+    also handle a refusal.
+    """
+    graph = build_supervisor_graph(
+        services(phase5=UnassemblableContext(ContextAgent.KNOWLEDGE))  # type: ignore[arg-type]
+    )
+    result = await graph.ainvoke(initial("Analyze VPN incident"))
+
+    assert result["final_result"]["review"]["decision"] == "passed"
+    assert "context.assembly_failed" not in [event for event, _ in FakeRepository.events]
+
+
+class RecordingGovernance:
+    """The real governance layer, keeping what each role was handed and from what state.
+
+    ``build_context`` is the one place the Analyst's delivery decision exists, and the
+    Reviewer's scope is supposed to be a *copy* of it rather than a second, wider
+    reading of the same retrieval. Neither half of that is visible from the envelope
+    alone -- the Reviewer's state is built by the graph -- so the node inputs are kept
+    alongside the envelopes.
+    """
+
+    def __init__(self, delegate) -> None:
+        self.delegate = delegate
+        self.calls: list[tuple[ContextAgent, dict, object]] = []
+
+    async def build_context(self, *, state, task, invocation, agent):
+        envelope = await self.delegate.build_context(
+            state=state, task=task, invocation=invocation, agent=agent
+        )
+        self.calls.append((agent, dict(state), envelope))
+        return envelope
+
+    async def post_run(self, *, state, result, status) -> int:
+        return await self.delegate.post_run(state=state, result=result, status=status)
+
+
+@pytest.mark.asyncio
+async def test_the_analyst_delivery_is_what_the_reviewer_is_then_held_to(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D3 regression, wiring half: ``analysis_node`` records the envelope it just built.
+
+    The unit test in ``test_phase5_governance`` pins the filter; this one pins the other
+    end. ``analysis_evidence_ids`` is written by the analysis node *and* has to survive
+    the graph's state reducers to reach the Reviewer's node input -- if either half is
+    unwired the key never arrives, the filter falls back to the whole joined set, and the
+    Reviewer is back to judging the analysis against rows its envelope pruned.
+
+    The three fixture rows all fit here, so this test does not reproduce a pruning; it
+    asserts the recorded set is the delivered set, which is the fact the filter trusts.
+    """
+    monkeypatch.setattr(settings, "SERVICEMIND_CONTEXT_ENABLED", True)
+    monkeypatch.setattr(settings, "SERVICEMIND_MEMORY_ENABLED", False)
+    monkeypatch.setattr(settings, "SERVICEMIND_SKILLS_ENABLED", False)
+    recorder = RecordingGovernance(
+        Phase5Governance(context_sink=NullContextArtifactSink())  # type: ignore[arg-type]
+    )
+    graph = build_supervisor_graph(services(phase5=recorder))  # type: ignore[arg-type]
+    await graph.ainvoke(initial("Analyze VPN incident with runbook"))
+
+    def evidence_ids(envelope) -> set[str]:
+        return {item.item_id for item in envelope.items if item.source is ContextSource.EVIDENCE}
+
+    _analysis_state, analysis_envelope = next(
+        (state, envelope)
+        for agent, state, envelope in recorder.calls
+        if agent is ContextAgent.ANALYSIS
+    )
+    reviewer_state, reviewer_envelope = next(
+        (state, envelope)
+        for agent, state, envelope in recorder.calls
+        if agent is ContextAgent.REVIEWER
+    )
+    delivered = evidence_ids(analysis_envelope)
+    assert delivered, "the fixture must deliver evidence or this test asserts nothing"
+    assert "analysis_evidence_ids" in reviewer_state, (
+        "the analysis node did not record its delivery, so the reviewer fell back to "
+        "the whole joined set -- the D3 fault"
+    )
+    assert reviewer_state["analysis_evidence_ids"] == sorted(delivered)
+    # And the Reviewer's own envelope honours it: bounded by what the Analyst was
+    # delivered plus what the analysis cites, which here is a subset of the same rows.
+    cited = set(reviewer_state["analysis_result"]["evidence_refs"])
+    assert evidence_ids(reviewer_envelope) <= delivered | cited
+    assert evidence_ids(reviewer_envelope) == delivered, (
+        "this fixture prunes nothing, so the two roles must see the same rows"
+    )
+
+
+def test_an_ordinary_data_task_does_not_overflow_its_output_ref() -> None:
+    """66 evidence ids is a normal data task, and it must leave a plan the graph can re-read.
+
+    A data task returns a ticket, up to 50 support groups and up to 15 followups
+    (``agents/data.py``), so any tenant with 25 support groups exceeds the 500-character
+    ``Task.output_ref`` on every run. ``Task`` does not validate assignments, so the join
+    wrote 519 characters without complaint; the run then died one node later inside
+    ``TaskPlan.model_validate``, after the evidence had already been gathered -- and the
+    error named a field nobody had written to in that node.
+    """
+    evidence_ids = [f"ev-{index:016x}" for index in range(66)]
+    plan = minimal_plan()
+    plan.tasks[0].status = TaskStatus.RUNNING
+
+    completed = TaskDispatcher().transition(
+        plan, "T1", TaskStatus.SUCCESS, output_ref=_bounded_output_ref(evidence_ids)
+    )
+    reference = completed.tasks[0].output_ref
+
+    assert len(reference) <= TASK_OUTPUT_REF_MAX_LENGTH
+    kept, _, dropped = reference.partition(" …[")
+    assert dropped.endswith(" more]"), "the clip must say how much it dropped"
+    # Every id is either in the reference or counted by the elision marker; the ledger
+    # must account for all 66 rather than quietly lose some.
+    assert len(kept.split(",")) + int(dropped.removesuffix(" more]")) == len(evidence_ids)
+    assert set(kept.split(",")) <= set(evidence_ids), "the clip must not cut an id in half"
+    # The real assertion: what the next supervisor node does with the plan it was handed.
+    assert TaskPlan.model_validate(completed.model_dump(mode="json", by_alias=True)).goal == (
+        completed.goal
+    )
+
+
+def test_a_task_without_evidence_ids_records_the_same_placeholder_as_before() -> None:
+    assert _bounded_output_ref([]) == "none"
+    assert _bounded_output_ref(["ev-1", "ev-2"]) == "ev-1,ev-2"
+
+
+@pytest.mark.asyncio
+async def test_a_decision_the_schema_rejects_finalizes_instead_of_crashing_the_graph() -> None:
+    """``decide`` was the one model call whose failure took the graph down with it.
+
+    It sits outside ``supervisor_node``'s only ``try``, which catches
+    ``SupervisorPolicyError`` alone, so a ``ValidationError`` from it escaped the node.
+    The graph raised and ``_process_webhook_run`` swallowed that into
+    ``update_run(FAILED, error="ValidationError")``: no termination code, no finalize
+    record, no review, no timeline entry -- an operator saw a run that simply stopped.
+    The planner already finalizes with ``critical_error`` on the same class of failure;
+    the control plane must reach the same terminal, because a graph that raises cannot
+    be recovered, retried or audited.
+    """
+    supervisor = BrokenSupervisor()
+    graph = build_supervisor_graph(services(supervisor=supervisor))
+    result = await graph.ainvoke(initial("Analyze VPN incident"))
+
+    assert result["final_result"]["termination_code"] == "supervisor_decision_failure"
+    assert supervisor.calls == 1, "the gateway already repaired once; a third ask cannot help"
+    event_types = [event for event, _ in FakeRepository.events]
+    assert "supervisor.decision_rejected" in event_types
+    assert event_types[-1] == "run.failed"
+    rejection = next(
+        payload
+        for event, payload in FakeRepository.events
+        if event == "supervisor.decision_rejected"
+    )
+    assert rejection["error_type"] == "ValidationError"
+    assert rejection["error_code"] == "MODEL_SCHEMA_INVALID"
+    assert rejection["attempt"] == 1
+    # A pydantic violation renders the whole completion first and the verdict last, so the
+    # end is the diagnosable half. This one is 2900 characters; the ledger keeps both ends
+    # and says it cut.
+    assert len(rejection["reason"]) <= 1000
+    assert "characters elided" in rejection["reason"]
+    assert "invented_field_11" in rejection["reason"], (
+        "the last schema error is the one a head-only clip loses"
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_failed_run_persists_its_cause_on_the_run_row() -> None:
+    """``agent_runs.error`` used to be NULL for every workflow failure.
+
+    The cause was written to ``control.errors`` inside ``result`` and to the event
+    stream, so the run was diagnosable -- but both of those are read by opening the run,
+    and ``update_run`` writes the column unconditionally, which makes an omitted
+    ``error=`` a positive statement that there was no cause. Measured on the 2026-09-24
+    load batch: forty-one runs rested at ``failed`` with an ``error`` that said nothing,
+    and the account exhaustion behind them was legible only in the service journal.
+    """
+    graph = build_supervisor_graph(
+        services(phase5=UnassemblableContext(ContextAgent.REVIEWER))  # type: ignore[arg-type]
+    )
+    await graph.ainvoke(initial("Analyze VPN incident"))
+
+    run_id = next(iter(FakeRepository.results))
+    error = FakeRepository.errors[run_id]
+    assert error is not None
+    # The code says *which* terminal, the node's own message says *why*. Both, because
+    # either alone leaves the operator with a run they cannot triage from the list view.
+    assert error.startswith("context_assembly_failure: ")
+    assert "required context item exceeds token budget" in error
+
+
+def write_plan(*, action_done: bool = False) -> TaskPlan:
+    due = datetime.now(UTC) + timedelta(minutes=5)
+    budget = Budget(deadline=due)
+
+    def task(
+        task_id: str, agent: AgentName, task_type: str, depends: list[str], done: bool
+    ) -> Task:
+        return Task(
+            task_id=task_id,
+            agent=agent,
+            task_type=task_type,
+            input={"objective": f"Run {task_type}", "ticket_id": 2},
+            depends_on=depends,
+            status=TaskStatus.SUCCESS if done else TaskStatus.PENDING,
+            deadline=due,
+        )
+
+    tasks = [
+        task("T1", AgentName.DATA, "get_ticket", [], done=True),
+        task("T2", AgentName.ANALYSIS, "analyze_ticket", ["T1"], done=True),
+        task("T3", AgentName.REVIEWER, "review_analysis", ["T2"], done=True),
+        task("T4", AgentName.ACTION, "propose_followup", ["T3"], done=action_done),
+    ]
+    return TaskPlan(
+        goal="Analyze and prepare a reviewed work note",
+        tasks=tasks,
+        max_parallel=2,
+        max_steps=budget.max_steps,
+        max_replans=budget.max_replans,
+        deadline=due,
+        budget=budget,
+    )
+
+
+def test_policy_handoff_requires_a_ready_action_task() -> None:
+    """A passed write review may only offer HANDOFF_ACTION once an Action task is
+    actually ready; otherwise the graph would raise inside handoff_node."""
+    review = ReviewResult(
+        decision=ReviewDecision.PASSED,
+        risk_level=RiskLevel.LOW,
+        feedback="Reviewed and passed.",
+    )
+    state = initial("Analyze and prepare a reviewed private work note", write=True)
+    policy = SupervisorPolicy()
+
+    state["task_plan"] = write_plan(action_done=False).model_dump(mode="json", by_alias=True)
+    state["review_result"] = review.model_dump(mode="json")
+    assert SupervisorAction.HANDOFF_ACTION in policy.legal_actions(state)
+
+    state["task_plan"] = write_plan(action_done=True).model_dump(mode="json", by_alias=True)
+    legal = policy.legal_actions(state)
+    assert SupervisorAction.HANDOFF_ACTION not in legal
+    assert legal == {SupervisorAction.REPLAN}
+
+
+# ------------------------------------------------------- D6: one shape for result.evidence
+#
+# ``result.evidence`` used to have three encodings: the ``{items, tenant_id}`` envelope
+# from a supervisor run, a bare list from ``fast_data``/``fast_knowledge``, and ``None``
+# from a supervisor run that finalized without joining. Three readers each worked around
+# it (the console, the acceptance driver, the workflow verifier), and a fourth that
+# understood only one shape would see *no evidence at all* for a whole class of runs --
+# which reads as "this run answered without evidence", a statement about the run rather
+# than about the encoding. These tests drive every terminal path and require one shape.
+
+
+class _ForcedRouter:
+    """A router that returns one route, so a terminal path can be reached on purpose."""
+
+    def __init__(self, route: RouteType) -> None:
+        self.route_type = route
+
+    def route(self, request: str, *, request_write: bool) -> RouteDecision:
+        return RouteDecision(
+            route=self.route_type,
+            required_capabilities=[],
+            reason_code="forced_for_test",
+            confidence=1,
+        )
+
+
+class _ExpiredPlanner(FakePlanner):
+    """Plans a real plan whose deadline is already gone.
+
+    The Supervisor checks the budget before it may dispatch anything else, so the very
+    next visit finalizes a run that never joined evidence -- which is the case that used
+    to persist ``None``, reached the way production reaches it rather than by writing the
+    state by hand.
+    """
+
+    async def create_plan(self, *, goal, ticket_id, request_write, correction=None):
+        plan = await super().create_plan(
+            goal=goal, ticket_id=ticket_id, request_write=request_write, correction=correction
+        )
+        expired = datetime.now(UTC) - timedelta(seconds=1)
+        return plan.model_copy(
+            update={
+                "deadline": expired,
+                "budget": plan.budget.model_copy(update={"deadline": expired}),
+            }
+        )
+
+
+def _is_envelope(payload: object) -> bool:
+    return (
+        isinstance(payload, dict)
+        and set(payload) == {"tenant_id", "items"}
+        and isinstance(payload["items"], list)
+    )
+
+
+@pytest.mark.asyncio
+async def test_every_terminal_path_publishes_one_evidence_shape() -> None:
+    """All three writers, one contract -- and the reader resolves the same rows from each."""
+    for route, label in (
+        (RouteType.SIMPLE_KNOWLEDGE_QUERY, "fast_knowledge"),
+        (RouteType.SIMPLE_DATA_QUERY, "fast_data"),
+    ):
+        graph = build_supervisor_graph(replace(services(), router=_ForcedRouter(route)))
+        result = await graph.ainvoke(initial("Where is the runbook?"))
+
+        payload = result["final_result"]["evidence"]
+        assert _is_envelope(payload), f"{label} wrote {type(payload).__name__} instead"
+        assert payload["tenant_id"] == str(TENANT)
+        assert payload["items"], f"{label} published no rows"
+        assert evidence_items(payload) == payload["items"]
+
+    full = await build_supervisor_graph(services()).ainvoke(
+        initial("Analyze VPN with the relevant runbook")
+    )
+    supervisor_payload = full["final_result"]["evidence"]
+    assert _is_envelope(supervisor_payload)
+    assert evidence_items(supervisor_payload) == supervisor_payload["items"]
+
+
+@pytest.mark.asyncio
+async def test_a_run_that_joined_nothing_still_publishes_the_envelope() -> None:
+    """``None`` was the third encoding, and it is the one that cannot be told apart
+    from "this run has no evidence" -- so a run that joined nothing says so in a shape
+    the reader can parse, with the empty list where the rows would be."""
+    graph = build_supervisor_graph(services(planner=_ExpiredPlanner()))
+    result = await graph.ainvoke(initial("Analyze VPN with the relevant runbook"))
+
+    payload = result["final_result"]["evidence"]
+    assert _is_envelope(payload), f"finalize wrote {type(payload).__name__} instead"
+    assert payload["items"] == []
+    assert result["final_result"]["termination_code"] == "deadline_exceeded"
+
+
+@pytest.mark.asyncio
+async def test_a_degraded_knowledge_task_records_a_clipped_reason_that_keeps_its_end() -> None:
+    """The knowledge branch is the third place the graph records why an agent degraded.
+
+    It recorded ``str(error)[:300]`` until 2026-10-01 while the other two went through
+    ``foundation.errors.bounded_error_text``. Both are truncation, and that is the trap:
+    an ``OutputParserException`` opens with the entire completion and ends with the
+    schema violation, so a head-only slice keeps exactly the part that says nothing about
+    this failure. Observed here at the ledger, because that is where an operator reads it.
+    """
+    graph = build_supervisor_graph(services(knowledge=UnretrievableKnowledge()))
+    # The goal names a runbook because that is what makes the fake planner schedule the
+    # knowledge task at all; without it the branch is never dispatched and this test would
+    # pass over an empty timeline.
+    await graph.ainvoke(initial("Analyze VPN with the relevant runbook"))
+
+    completions = [
+        payload
+        for event, payload in FakeRepository.events
+        if event == "agent.completed" and payload["agent_name"] == "knowledge"
+    ]
+    assert completions, "the knowledge task is on the timeline"
+    degraded = [item for item in completions if item["status"] == "degraded"]
+    assert degraded, "a knowledge branch that raised is recorded as degraded"
+    for item in degraded:
+        assert item["failure_code"] == "RuntimeError"
+        assert len(item["failure_detail"]) <= 1000
+        assert "characters elided" in item["failure_detail"]
+        assert item["failure_detail"].endswith(" " + LONG_FAILURE_MARKER), (
+            "a head-only slice records the completion and drops the cause"
+        )
+
+
+@pytest.mark.asyncio
+async def test_a_foreign_task_result_never_reaches_joined_evidence():
+    from servicemind.runtime.contracts import AgentResultEnvelope, AgentRunStatus
+
+    class ForeignData:
+        async def run(self, *, invocation, **kwargs):
+            return AgentResultEnvelope[list[Evidence]](
+                agent_name="data",
+                run_id=uuid4(),
+                tenant_id=invocation.tenant_id,
+                user_id=invocation.user_id,
+                task_id=invocation.task_id,
+                status=AgentRunStatus.SUCCEEDED,
+                output=[evidence(EvidenceSourceType.GLPI, "ticket", "FOREIGN_RESULT_CANARY")],
+                prompt_version="test",
+                policy_version="test",
+            )
+
+    svc = replace(services(), data=ForeignData())
+    state = await build_supervisor_graph(svc).ainvoke(initial("Analyze the incident evidence"))
+    assert "FOREIGN_RESULT_CANARY" not in str(state.get("data_evidence", []))
+    assert "FOREIGN_RESULT_CANARY" not in str(state.get("final_result", {}))
+    assert not any(
+        kind == "agent.completed" and value.get("agent_name") == "data"
+        for kind, value in FakeRepository.events
+    )

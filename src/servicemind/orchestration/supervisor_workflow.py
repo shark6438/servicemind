@@ -3,6 +3,7 @@ import json
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any, Literal, cast
 from uuid import UUID, uuid4
 
@@ -337,6 +338,10 @@ def _control_model_context(
     purpose: ModelPurpose,
     risk: ModelRisk = ModelRisk.MEDIUM,
 ) -> ModelCallContext:
+    timeout = settings.SERVICEMIND_MODEL_TIMEOUT_SECONDS
+    if state.get("task_plan"):
+        remaining = (_plan(state).budget.deadline - datetime.now(UTC)).total_seconds()
+        timeout = min(timeout, remaining)
     return ModelCallContext(
         tenant_id=UUID(state["tenant_id"]),
         run_id=UUID(state["run_id"]),
@@ -345,6 +350,7 @@ def _control_model_context(
         risk=risk,
         policy_version="servicemind-agent-policy-v2",
         prompt_version="2026-09-08",
+        timeout_seconds=max(0.1, min(timeout, 180)),
         max_cost_usd=settings.SERVICEMIND_MODEL_MAX_COST_USD_PER_CALL,
     )
 
@@ -783,12 +789,17 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                         "attempt": attempt + 1,
                         "error_type": type(exc).__name__,
                         "reason": str(exc)[:1000],
+                        "error_code": model_error_code(exc),
                     },
                 )
+                if isinstance(exc, TimeoutError):
+                    break
+        control = _control(state)
+        control.model_call_count += attempts_used
         if task_plan is None:
             return {
                 "termination_code": "critical_error",
-                "control": _control(state).model_dump(mode="json"),
+                "control": control.model_dump(mode="json"),
                 "trajectory": [
                     "planner",
                     f"decision:{SupervisorAction.FINALIZE.value}",
@@ -804,8 +815,6 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                 ],
             },
         )
-        control = _control(state)
-        control.model_call_count += attempts_used
         control.total_steps += 1
         return {
             "task_plan": task_plan.model_dump(mode="json", by_alias=True),
@@ -1015,14 +1024,21 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             attempts_used += 1
             try:
                 async with asyncio.timeout(20):
-                    with model_call_scope(
-                        ModelCallContext.from_invocation(
-                            invocation,
-                            agent_role="knowledge",
-                            purpose=ModelPurpose.RETRIEVAL_REWRITE,
-                            risk=ModelRisk.LOW,
-                        )
-                    ):
+                    model_context = ModelCallContext.from_invocation(
+                        invocation,
+                        agent_role="knowledge",
+                        purpose=ModelPurpose.RETRIEVAL_REWRITE,
+                        risk=ModelRisk.LOW,
+                    )
+                    model_context = model_context.model_copy(
+                        update={
+                            "timeout_seconds": min(
+                                model_context.timeout_seconds,
+                                settings.SERVICEMIND_RETRIEVAL_REWRITE_TIMEOUT_SECONDS,
+                            )
+                        }
+                    )
+                    with model_call_scope(model_context):
                         evidence = await svc.knowledge.retrieve(**kwargs)
                 error = None
                 break
@@ -1433,8 +1449,12 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                         "attempt": attempt + 1,
                         "error_type": type(exc).__name__,
                         "reason": detail,
+                        "error_code": model_error_code(exc),
                     },
                 )
+                if isinstance(exc, TimeoutError):
+                    break
+        control.model_call_count += attempts_used
         if revised is None:
             # Double replan validation failure is a run-level policy failure: persist
             # it through the normal finalizer instead of raising a raw RuntimeError.
@@ -1468,7 +1488,6 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
                     f"decision:{SupervisorAction.FINALIZE.value}",
                 ],
             }
-        control.model_call_count += attempts_used
         control.total_steps += 1
         return {
             "task_plan": revised.model_dump(mode="json", by_alias=True),

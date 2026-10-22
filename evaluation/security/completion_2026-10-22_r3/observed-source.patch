@@ -1,0 +1,789 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index 367068e..f65ba54 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -151,7 +151,11 @@ target-version = "py312"
+ # sha256 manifest that pins exactly which bytes produced the numbers cited in
+ # docs/ — so they stay byte-for-byte as they ran, and are excluded from lint
+ # rather than rewritten. New analysis code belongs under scripts/ or src/.
+-extend-exclude = ["evaluation/experiments"]
++extend-exclude = [
++    "evaluation/experiments",
++    "evaluation/security/*/source",
++    "evaluation/security/*/changed-source",
++]
+ 
+ [tool.ruff.lint]
+ extend-select = ["I", "U"]
+diff --git a/src/core/llm.py b/src/core/llm.py
+index 1e641a5..a36ffe0 100644
+--- a/src/core/llm.py
++++ b/src/core/llm.py
+@@ -83,6 +83,8 @@ def get_model(model_name: AllModelEnum, /) -> ModelT:
+             streaming=True,
+             openai_api_base=settings.COMPATIBLE_BASE_URL,
+             openai_api_key=settings.COMPATIBLE_API_KEY,
++            max_retries=0,
++            stream_usage=True,
+         )
+     if model_name in AzureOpenAIModelName:
+         if not settings.AZURE_OPENAI_API_KEY or not settings.AZURE_OPENAI_ENDPOINT:
+diff --git a/src/core/settings.py b/src/core/settings.py
+index 7cf3838..79e8feb 100644
+--- a/src/core/settings.py
++++ b/src/core/settings.py
+@@ -1,5 +1,6 @@
+ from enum import StrEnum
+ from json import loads
++from os import getenv
+ from typing import Annotated, Any
+ from urllib.parse import urlsplit
+ 
+@@ -77,7 +78,11 @@ CONTEXT_OUTPUT_RESERVE = 1024
+ 
+ class Settings(BaseSettings):
+     model_config = SettingsConfigDict(
+-        env_file=find_dotenv(),
++        env_file=(
++            None
++            if getenv("PYTHON_DOTENV_DISABLED", "").casefold() in {"1", "true", "t", "yes", "y"}
++            else find_dotenv()
++        ),
+         env_file_encoding="utf-8",
+         env_ignore_empty=True,
+         extra="ignore",
+@@ -309,6 +314,7 @@ class Settings(BaseSettings):
+     SERVICEMIND_SKILLS_ENABLED: bool = False
+     SERVICEMIND_SKILLS_DIR: str = "skills"
+     SERVICEMIND_MODEL_GATEWAY_AUDIT_ENABLED: bool = False
++    SERVICEMIND_MODEL_TRACE_HEADERS_ENABLED: bool = False
+     SERVICEMIND_MODEL_ALLOWED_PROVIDERS: str = (
+         "deepseek,openai,azure,anthropic,google,vertexai,groq,aws,ollama,openrouter,fake"
+     )
+@@ -316,6 +322,8 @@ class Settings(BaseSettings):
+     SERVICEMIND_TENANT_MODEL_ALLOWLIST_JSON: str = "{}"
+     SERVICEMIND_MODEL_MAX_RETRIES: int = 1
+     SERVICEMIND_MODEL_TIMEOUT_SECONDS: float = 30
++    SERVICEMIND_DATA_PLANNING_TIMEOUT_SECONDS: float = Field(default=8, gt=0, le=15)
++    SERVICEMIND_RETRIEVAL_REWRITE_TIMEOUT_SECONDS: float = Field(default=8, gt=0, le=15)
+     SERVICEMIND_MODEL_MAX_COST_USD_PER_CALL: float = Field(default=0.05, gt=0, le=10)
+     SERVICEMIND_SEMANTIC_CACHE_ENABLED: bool = False
+ 
+diff --git a/src/service/build.py b/src/service/build.py
+index b5a01d1..1a734f0 100644
+--- a/src/service/build.py
++++ b/src/service/build.py
+@@ -2,17 +2,43 @@ import hashlib
+ import json
+ from datetime import UTC, datetime
+ from pathlib import Path
++from urllib.parse import urlsplit
+ from uuid import uuid4
+ 
+ from core import settings
+ from servicemind.evaluation.source_revision import source_revision
+ 
+ 
++def endpoint_fingerprint(value: str | None) -> str:
++    parsed = urlsplit(value or "")
++    endpoint = [parsed.scheme, parsed.hostname, parsed.port, parsed.path]
++    return hashlib.sha256(json.dumps(endpoint, separators=(",", ":")).encode()).hexdigest()
++
++
+ def capture_build_identity() -> dict:
+     configuration = {
+         "default_model": str(settings.DEFAULT_MODEL),
+         "ollama_model": settings.OLLAMA_MODEL,
+         "compatible_model": settings.COMPATIBLE_MODEL,
++        "compatible_endpoint_sha256": endpoint_fingerprint(settings.COMPATIBLE_BASE_URL),
++        "model_timeout_seconds": settings.SERVICEMIND_MODEL_TIMEOUT_SECONDS,
++        "model_max_retries": settings.SERVICEMIND_MODEL_MAX_RETRIES,
++        "data_planning_timeout_seconds": settings.SERVICEMIND_DATA_PLANNING_TIMEOUT_SECONDS,
++        "retrieval_rewrite_timeout_seconds": settings.SERVICEMIND_RETRIEVAL_REWRITE_TIMEOUT_SECONDS,
++        "model_trace_headers_enabled": settings.SERVICEMIND_MODEL_TRACE_HEADERS_ENABLED,
++        "semantic_cache_enabled": settings.SERVICEMIND_SEMANTIC_CACHE_ENABLED,
++        "context_max_input_tokens": settings.SERVICEMIND_CONTEXT_MAX_INPUT_TOKENS,
++        "context_evidence_token_cap": settings.SERVICEMIND_CONTEXT_EVIDENCE_TOKEN_CAP,
++        "product_database_endpoint_sha256": endpoint_fingerprint(
++            settings.SERVICEMIND_DATABASE_URL.get_secret_value()
++            if settings.SERVICEMIND_DATABASE_URL
++            else None
++        ),
++        "checkpoint_database_endpoint_sha256": endpoint_fingerprint(
++            f"postgresql://{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
++            if str(settings.DATABASE_TYPE) == "postgres"
++            else str(settings.DATABASE_TYPE)
++        ),
+         "model_allowed_providers": settings.SERVICEMIND_MODEL_ALLOWED_PROVIDERS,
+         "model_allowed_models": settings.SERVICEMIND_MODEL_ALLOWED_MODELS,
+         "generic_api_enabled": settings.SERVICEMIND_GENERIC_API_ENABLED,
+diff --git a/src/servicemind/agents/data.py b/src/servicemind/agents/data.py
+index e474494..71eb374 100644
+--- a/src/servicemind/agents/data.py
++++ b/src/servicemind/agents/data.py
+@@ -4,6 +4,7 @@ import asyncio
+ import json
+ import time
+ from collections.abc import Callable
++from datetime import UTC, datetime
+ from typing import Any, TypedDict
+ from uuid import UUID
+ 
+@@ -24,6 +25,8 @@ from servicemind.domain.evidence import (
+ from servicemind.integrations.glpi.client import GlpiAPIError, GlpiClient
+ from servicemind.integrations.glpi.models import html_to_text
+ from servicemind.integrations.glpi.resolver import resolve_glpi_config
++from servicemind.model_gateway.contracts import ModelCallContext, ModelPurpose
++from servicemind.model_gateway.gateway import model_call_scope
+ from servicemind.runtime.contracts import (
+     AgentInvocationContext,
+     AgentResultEnvelope,
+@@ -212,6 +215,20 @@ class DataAgent:
+             raise ValueError("Data Agent plan must retrieve ticket facts and support groups")
+         return proposal
+ 
++    async def _propose_plan(self, invocation: AgentInvocationContext, messages):
++        remaining = (invocation.deadline - datetime.now(UTC)).total_seconds()
++        planning_seconds = min(settings.SERVICEMIND_DATA_PLANNING_TIMEOUT_SECONDS, remaining / 2)
++        context = ModelCallContext.from_invocation(
++            invocation, agent_role="data", purpose=ModelPurpose.DATA_PLANNING
++        )
++        context = context.model_copy(
++            update={"timeout_seconds": max(0.001, min(context.timeout_seconds, planning_seconds))}
++        )
++        with model_call_scope(context):
++            return await structured_output(self.model_factory(), DataAcquisitionPlan).ainvoke(
++                messages
++            )
++
+     async def _plan_node(self, state: DataAgentState) -> dict[str, Any]:
+         invocation = state["invocation"]
+         invocation.ensure_active()
+@@ -229,7 +246,6 @@ class DataAgent:
+             }
+         fallback = self._budgeted_minimum(invocation, ticket_id, objective)
+         try:
+-            runnable = structured_output(self.model_factory(), DataAcquisitionPlan)
+             envelope = state.get("context_envelope")
+             model_input: dict[str, Any] = {
+                 "ticket_id": state["ticket_id"],
+@@ -240,7 +256,8 @@ class DataAgent:
+                 model_input["governed_context"] = envelope.model_payload()
+             else:
+                 model_input["objective"] = state["objective"]
+-            proposal = await runnable.ainvoke(
++            proposal = await self._propose_plan(
++                invocation,
+                 [
+                     SystemMessage(
+                         content=(
+@@ -255,7 +272,7 @@ class DataAgent:
+                     HumanMessage(
+                         content=redact_for_model(json.dumps(model_input, ensure_ascii=False)).text
+                     ),
+-                ]
++                ],
+             )
+             plan = self._compile_plan(
+                 DataAcquisitionPlan.model_validate(proposal),
+diff --git a/src/servicemind/agents/supervisor.py b/src/servicemind/agents/supervisor.py
+index 9afd84d..78389f2 100644
+--- a/src/servicemind/agents/supervisor.py
++++ b/src/servicemind/agents/supervisor.py
+@@ -1,7 +1,9 @@
+ import json
+-from typing import Any
++from enum import StrEnum
++from typing import Any, cast
+ 
+ from langchain_core.messages import HumanMessage, SystemMessage
++from pydantic import Field, create_model, model_validator
+ 
+ from core import get_model, settings
+ from servicemind.domain.supervisor import SupervisorDecision
+@@ -37,6 +39,34 @@ class SupervisorAgent:
+                 options.append({"action": action, "selected_task_ids": []})
+         return options
+ 
++    @classmethod
++    def decision_schema(cls, state_view: dict[str, Any]) -> type[SupervisorDecision]:
++        options = cls.decision_options(state_view)
++        if not options:
++            raise ValueError("No legal Supervisor decisions are available")
++        actions = tuple(dict.fromkeys(option["action"] for option in options))
++        selections = list({tuple(option["selected_task_ids"]): None for option in options})
++
++        @model_validator(mode="after")
++        def require_legal_pair(decision):
++            if {
++                "action": decision.action,
++                "selected_task_ids": decision.selected_task_ids,
++            } not in options:
++                raise ValueError("Copy an action and selected_task_ids pair from decision_options")
++            return decision
++
++        return create_model(
++            "SupervisorDecision",
++            __base__=SupervisorDecision,
++            __validators__=cast(Any, {"require_legal_pair": require_legal_pair}),
++            action=(StrEnum("LegalSupervisorAction", {a.upper(): a for a in actions}), ...),
++            selected_task_ids=(
++                list[str],
++                Field(max_length=16, json_schema_extra={"enum": [list(s) for s in selections]}),
++            ),
++        )
++
+     async def decide(
+         self,
+         state_view: dict[str, Any],
+@@ -44,7 +74,8 @@ class SupervisorAgent:
+         policy_feedback: str | None = None,
+     ) -> SupervisorDecision:
+         model = get_model(settings.DEFAULT_MODEL)
+-        runnable = structured_output(model, SupervisorDecision)
++        schema = self.decision_schema(state_view)
++        runnable = structured_output(model, schema)
+         # Numbered and cumulative, because the corrections are not alternatives: each
+         # one is a rule about the same state that still holds. Told only the most recent
+         # one, a model repairs it by breaking the previous -- the oscillation this list
+@@ -70,19 +101,21 @@ class SupervisorAgent:
+                         "one or more ready evidence task IDs up to max_parallel. For ANALYZE or "
+                         "REVIEW, select exactly one matching ready task ID. For every other "
+                         "action selected_task_ids must be empty. Use current task status, "
++                        "review feedback and remaining budget. "
+                         "Copy both action and selected_task_ids from one decision_options "
+                         "entry; never omit selected_task_ids. "
+                         "When plan is null and plan is legal, choose plan to create the "
+                         "evidence tasks. An empty ready_tasks list and no evidence before "
+                         "planning are expected initialization, not reasons to escalate. "
+-                        "review feedback and remaining budget. Never invent task IDs. Return "
++                        "Never invent task IDs. "
+                         "Prefer progressing ready work. Use REPLAN only for failure, conflict, "
+                         "or explicit reviewer feedback; use ESCALATE only when safe progress is "
+-                        "not possible. "
+-                        "JSON matching SupervisorDecision. rationale_summary must be an auditable "
++                        "not possible. Join dirty evidence before analysis. A passed read-only "
++                        "review is ready to finalize, not a reason to replan. "
++                        "Return JSON matching SupervisorDecision. rationale_summary must be an auditable "
+                         "business control rationale, not hidden chain-of-thought."
+                         f"{feedback}\nRequired JSON Schema:\n"
+-                        f"{json.dumps(SupervisorDecision.model_json_schema())}"
++                        f"{json.dumps(schema.model_json_schema())}"
+                     )
+                 ),
+                 HumanMessage(
+@@ -93,7 +126,8 @@ class SupervisorAgent:
+                 ),
+             ]
+         )
+-        return SupervisorDecision.model_validate(result)
++        validated = schema.model_validate(result)
++        return SupervisorDecision.model_validate(validated.model_dump())
+ 
+ 
+ supervisor_agent = SupervisorAgent()
+diff --git a/src/servicemind/model_gateway/gateway.py b/src/servicemind/model_gateway/gateway.py
+index ddd0db3..813b9f3 100644
+--- a/src/servicemind/model_gateway/gateway.py
++++ b/src/servicemind/model_gateway/gateway.py
+@@ -6,7 +6,7 @@ from collections.abc import Iterator, Sequence
+ from contextlib import contextmanager
+ from contextvars import ContextVar
+ from typing import Any
+-from uuid import UUID
++from uuid import UUID, uuid4
+ 
+ from langchain_core.language_models import BaseChatModel
+ from langchain_core.messages import HumanMessage
+@@ -62,11 +62,11 @@ def _model_identity(model: BaseChatModel) -> tuple[str, str, str]:
+     return provider, name, revision
+ 
+ 
+-def _structured[SchemaT: BaseModel](model: BaseChatModel, schema: type[SchemaT]):
++def _structured[SchemaT: BaseModel](model: BaseChatModel, schema: type[SchemaT], **kwargs: Any):
+     name = str(getattr(model, "model_name", getattr(model, "model", "")))
+     if name in {item.value for item in DeepseekModelName}:
+-        return model.with_structured_output(schema, method="json_mode", include_raw=True)
+-    return model.with_structured_output(schema, include_raw=True)
++        return model.with_structured_output(schema, method="json_mode", include_raw=True, **kwargs)
++    return model.with_structured_output(schema, include_raw=True, **kwargs)
+ 
+ 
+ def _message_payload(messages: Any) -> Any:
+@@ -339,11 +339,14 @@ class ModelGateway:
+         config: Any = None,
+         **kwargs: Any,
+     ) -> SchemaT:
++        from core import settings
++
+         payload = _message_payload(messages)
+         prompt_hash = stable_hash(payload)
+         schema_hash = stable_hash(schema.model_json_schema())
+         input_tokens = _conservative_token_count(payload)
+         call_started = time.perf_counter()
++        request_id = uuid4()
+         models = [model]
+         if self.policy.allow_fallback(context):
+             models.extend(fallback_models)
+@@ -353,8 +356,6 @@ class ModelGateway:
+ 
+         max_retries = self.max_retries
+         if max_retries is None:
+-            from core import settings
+-
+             max_retries = settings.SERVICEMIND_MODEL_MAX_RETRIES
+         for candidate_index, candidate in enumerate(models):
+             provider, name, revision = _model_identity(candidate)
+@@ -404,6 +405,7 @@ class ModelGateway:
+                 if cached is not None:
+                     result = schema.model_validate(cached)
+                     cost_exceeded = await self._audit(
++                        request_id=request_id,
+                         context=context,
+                         route=route,
+                         prompt_hash=prompt_hash,
+@@ -432,12 +434,25 @@ class ModelGateway:
+             # key. That a repair happened stays visible in the audit ``attempts`` count.
+             attempt_messages = messages
+             for retry in range(max_retries + 1):
++                remaining_seconds = context.timeout_seconds - (time.perf_counter() - call_started)
++                if remaining_seconds <= 0:
++                    last_error = TimeoutError("Model invocation exhausted its total timeout budget")
++                    break
+                 attempts_for_model += 1
+                 total_attempts += 1
+                 try:
+-                    async with asyncio.timeout(context.timeout_seconds):
+-                        raw = await _structured(candidate, schema).ainvoke(
+-                            attempt_messages, config=config, **kwargs
++                    invocation_kwargs = dict(kwargs)
++                    structured_kwargs = {}
++                    if settings.SERVICEMIND_MODEL_TRACE_HEADERS_ENABLED and provider == "openai":
++                        structured_kwargs["extra_headers"] = {
++                            **invocation_kwargs.pop("extra_headers", {}),
++                            "X-ServiceMind-Request-ID": str(request_id),
++                            "X-ServiceMind-Run-ID": str(context.run_id or ""),
++                            "X-ServiceMind-Agent-Role": context.agent_role,
++                        }
++                    async with asyncio.timeout(remaining_seconds):
++                        raw = await _structured(candidate, schema, **structured_kwargs).ainvoke(
++                            attempt_messages, config=config, **invocation_kwargs
+                         )
+                     usage: dict[str, int] | None = None
+                     if isinstance(raw, dict) and "parsed" in raw:
+@@ -458,6 +473,7 @@ class ModelGateway:
+                     self._failures[provider] = 0
+                     latency_ms = (time.perf_counter() - started) * 1000
+                     cost_exceeded = await self._audit(
++                        request_id=request_id,
+                         context=context,
+                         route=route,
+                         prompt_hash=prompt_hash,
+@@ -506,6 +522,7 @@ class ModelGateway:
+             if candidate_index + 1 == len(models):
+                 latency_ms = (time.perf_counter() - started) * 1000
+                 await self._audit(
++                    request_id=request_id,
+                     context=context,
+                     route=route,
+                     prompt_hash=prompt_hash,
+@@ -526,6 +543,7 @@ class ModelGateway:
+         self,
+         *,
+         context: ModelCallContext,
++        request_id: UUID,
+         route: ModelRouteDecision,
+         prompt_hash: str,
+         schema_hash: str,
+@@ -564,6 +582,7 @@ class ModelGateway:
+         cost_exceeded = context.max_cost_usd is not None and cost > context.max_cost_usd
+         await self.audit_sink.record(
+             ModelInvocationAudit(
++                request_id=request_id,
+                 context=context,
+                 route=route,
+                 prompt_hash=prompt_hash,
+diff --git a/src/servicemind/orchestration/supervisor_workflow.py b/src/servicemind/orchestration/supervisor_workflow.py
+index 12a7ab2..7aa8d08 100644
+--- a/src/servicemind/orchestration/supervisor_workflow.py
++++ b/src/servicemind/orchestration/supervisor_workflow.py
+@@ -3,6 +3,7 @@ import json
+ import time
+ from collections.abc import Callable
+ from dataclasses import dataclass
++from datetime import UTC, datetime
+ from typing import Any, Literal, cast
+ from uuid import UUID, uuid4
+ 
+@@ -337,6 +338,10 @@ def _control_model_context(
+     purpose: ModelPurpose,
+     risk: ModelRisk = ModelRisk.MEDIUM,
+ ) -> ModelCallContext:
++    timeout = settings.SERVICEMIND_MODEL_TIMEOUT_SECONDS
++    if state.get("task_plan"):
++        remaining = (_plan(state).budget.deadline - datetime.now(UTC)).total_seconds()
++        timeout = min(timeout, remaining)
+     return ModelCallContext(
+         tenant_id=UUID(state["tenant_id"]),
+         run_id=UUID(state["run_id"]),
+@@ -345,6 +350,7 @@ def _control_model_context(
+         risk=risk,
+         policy_version="servicemind-agent-policy-v2",
+         prompt_version="2026-09-08",
++        timeout_seconds=max(0.1, min(timeout, 180)),
+         max_cost_usd=settings.SERVICEMIND_MODEL_MAX_COST_USD_PER_CALL,
+     )
+ 
+@@ -783,12 +789,17 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
+                         "attempt": attempt + 1,
+                         "error_type": type(exc).__name__,
+                         "reason": str(exc)[:1000],
++                        "error_code": model_error_code(exc),
+                     },
+                 )
++                if isinstance(exc, TimeoutError):
++                    break
++        control = _control(state)
++        control.model_call_count += attempts_used
+         if task_plan is None:
+             return {
+                 "termination_code": "critical_error",
+-                "control": _control(state).model_dump(mode="json"),
++                "control": control.model_dump(mode="json"),
+                 "trajectory": [
+                     "planner",
+                     f"decision:{SupervisorAction.FINALIZE.value}",
+@@ -804,8 +815,6 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
+                 ],
+             },
+         )
+-        control = _control(state)
+-        control.model_call_count += attempts_used
+         control.total_steps += 1
+         return {
+             "task_plan": task_plan.model_dump(mode="json", by_alias=True),
+@@ -1015,14 +1024,21 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
+             attempts_used += 1
+             try:
+                 async with asyncio.timeout(20):
+-                    with model_call_scope(
+-                        ModelCallContext.from_invocation(
+-                            invocation,
+-                            agent_role="knowledge",
+-                            purpose=ModelPurpose.RETRIEVAL_REWRITE,
+-                            risk=ModelRisk.LOW,
+-                        )
+-                    ):
++                    model_context = ModelCallContext.from_invocation(
++                        invocation,
++                        agent_role="knowledge",
++                        purpose=ModelPurpose.RETRIEVAL_REWRITE,
++                        risk=ModelRisk.LOW,
++                    )
++                    model_context = model_context.model_copy(
++                        update={
++                            "timeout_seconds": min(
++                                model_context.timeout_seconds,
++                                settings.SERVICEMIND_RETRIEVAL_REWRITE_TIMEOUT_SECONDS,
++                            )
++                        }
++                    )
++                    with model_call_scope(model_context):
+                         evidence = await svc.knowledge.retrieve(**kwargs)
+                 error = None
+                 break
+@@ -1433,8 +1449,12 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
+                         "attempt": attempt + 1,
+                         "error_type": type(exc).__name__,
+                         "reason": detail,
++                        "error_code": model_error_code(exc),
+                     },
+                 )
++                if isinstance(exc, TimeoutError):
++                    break
++        control.model_call_count += attempts_used
+         if revised is None:
+             # Double replan validation failure is a run-level policy failure: persist
+             # it through the normal finalizer instead of raising a raw RuntimeError.
+@@ -1468,7 +1488,6 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
+                     f"decision:{SupervisorAction.FINALIZE.value}",
+                 ],
+             }
+-        control.model_call_count += attempts_used
+         control.total_steps += 1
+         return {
+             "task_plan": revised.model_dump(mode="json", by_alias=True),
+diff --git a/tests/servicemind/test_data_bounds.py b/tests/servicemind/test_data_bounds.py
+index 2b5b991..e711e05 100644
+--- a/tests/servicemind/test_data_bounds.py
++++ b/tests/servicemind/test_data_bounds.py
+@@ -7,6 +7,7 @@ count is capped so one task cannot exhaust the joined-evidence budget. The degra
+ path must also be budget-respecting instead of raising out of the sub-agent.
+ """
+ 
++import asyncio
+ import json
+ from datetime import UTC, datetime, timedelta
+ from uuid import UUID, uuid4
+@@ -22,6 +23,9 @@ from servicemind.domain.evidence import (
+     join_evidence,
+     self_authored_marker,
+ )
++from servicemind.model_gateway.gateway import ModelGateway
++from servicemind.model_gateway.policy import ModelRoutePolicy
++from servicemind.model_gateway.repository import InMemoryModelAuditSink
+ from servicemind.runtime.contracts import AgentInvocationContext, AgentRunStatus
+ from servicemind.runtime.tool_gateway import DataToolName
+ from servicemind.security.auth import TenantContext
+@@ -37,6 +41,42 @@ class FakeRunnable:
+         return self.results.pop(0)
+ 
+ 
++@pytest.mark.asyncio
++async def test_slow_model_planning_preserves_time_for_authorized_evidence(monkeypatch):
++    class SlowRunnable:
++        async def ainvoke(self, *args, **kwargs):
++            await asyncio.sleep(10)
++
++    class SlowModel:
++        model_name = "local-slow-data-control"
++
++        def with_structured_output(self, *args, **kwargs):
++            return SlowRunnable()
++
++    sink = InMemoryModelAuditSink()
++    model_gateway = ModelGateway(
++        policy=ModelRoutePolicy(allowed_providers=("unknown",)),
++        audit_sink=sink,
++        max_retries=1,
++    )
++    monkeypatch.setattr(data_module.settings, "SERVICEMIND_DATA_PLANNING_TIMEOUT_SECONDS", 0.02)
++    monkeypatch.setattr(data_module, "structured_output", model_gateway.structured)
++    tools = FakeReadGateway()
++    async with asyncio.timeout(1):
++        result = await DataAgent(gateway=tools, model_factory=SlowModel).run(
++            invocation=invocation(max_tool_calls=2),
++            tenant_context=tenant_context(),
++            objective="Read the ticket",
++            ticket_id=2,
++        )
++    assert result.status is AgentRunStatus.DEGRADED
++    assert result.failure_code == "DATA_PLAN_DEGRADED"
++    assert result.output
++    assert set(tools.calls) == {DataToolName.GET_TICKET, DataToolName.LIST_GROUPS}
++    assert sink.records[0].error_code == "MODEL_TIMEOUT"
++    assert sink.records[0].context.run_id == result.run_id
++
++
+ class FailingRunnable:
+     async def ainvoke(self, messages):
+         raise RuntimeError("model transport failure")
+diff --git a/tests/servicemind/test_phase5_governance.py b/tests/servicemind/test_phase5_governance.py
+index 4c7f034..fe7a2d9 100644
+--- a/tests/servicemind/test_phase5_governance.py
++++ b/tests/servicemind/test_phase5_governance.py
+@@ -2213,6 +2213,98 @@ async def test_model_gateway_timeout_has_explicit_terminal() -> None:
+     assert sink.records[0].error_code == "MODEL_TIMEOUT"
+ 
+ 
++@pytest.mark.asyncio
++async def test_model_timeout_does_not_grant_each_retry_a_new_budget() -> None:
++    sink = InMemoryModelAuditSink()
++    calls = []
++
++    class Runnable:
++        async def ainvoke(self, *args, **kwargs):
++            calls.append(time.perf_counter())
++            await asyncio.sleep(10)
++
++    class Model:
++        model_name = "timeout-budget-control"
++
++        def with_structured_output(self, *args, **kwargs):
++            return Runnable()
++
++    gateway = ModelGateway(
++        policy=ModelRoutePolicy(allowed_providers=("unknown",)), audit_sink=sink, max_retries=3
++    )
++    with pytest.raises(TimeoutError):
++        await gateway.invoke(
++            Model(),
++            GatewayResult,
++            "request",
++            context=model_context().model_copy(update={"timeout_seconds": 0.02}),
++        )
++    assert len(calls) == 1
++    assert sink.records[0].attempts == 1
++    assert sink.records[0].error_code == "MODEL_TIMEOUT"
++
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize("enabled", [False, True])
++async def test_optional_wire_trace_matches_the_durable_request_identity(monkeypatch, enabled):
++    import httpx
++    from langchain_openai import ChatOpenAI
++
++    sink = InMemoryModelAuditSink()
++    headers = []
++
++    async def respond(request):
++        headers.append({k: v for k, v in request.headers.items() if k.startswith("x-servicemind-")})
++        value = 0 if len(headers) == 1 else 2
++        return httpx.Response(
++            200,
++            json={
++                "id": "local-test",
++                "object": "chat.completion",
++                "created": 1,
++                "model": "local-trace-control",
++                "choices": [
++                    {
++                        "index": 0,
++                        "finish_reason": "stop",
++                        "message": {
++                            "role": "assistant",
++                            "content": json.dumps({"value": value}),
++                        },
++                    }
++                ],
++                "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
++            },
++        )
++
++    monkeypatch.setattr(settings, "SERVICEMIND_MODEL_TRACE_HEADERS_ENABLED", enabled)
++    gateway = ModelGateway(
++        policy=ModelRoutePolicy(allowed_providers=("openai",)), audit_sink=sink, max_retries=1
++    )
++    run_id = uuid4()
++    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
++        model = ChatOpenAI(
++            model="local-trace-control",
++            api_key="local-unit-test",
++            base_url="http://local.invalid/v1",
++            http_async_client=client,
++            max_retries=0,
++        )
++        await gateway.invoke(
++            model,
++            GatewayResult,
++            "request",
++            context=model_context().model_copy(update={"run_id": run_id}),
++        )
++    assert len(headers) == 2
++    if enabled:
++        assert headers[0] == headers[1]
++        assert headers[0]["x-servicemind-request-id"] == str(sink.records[0].request_id)
++        assert headers[0]["x-servicemind-run-id"] == str(run_id)
++    else:
++        assert headers == [{}, {}]
++
++
+ @pytest.mark.asyncio
+ @pytest.mark.parametrize(
+     "failure", [RuntimeError("429 rate limit"), RuntimeError("503 unavailable")]
+diff --git a/tests/servicemind/test_security_completion.py b/tests/servicemind/test_security_completion.py
+index 4c312a9..8df8d52 100644
+--- a/tests/servicemind/test_security_completion.py
++++ b/tests/servicemind/test_security_completion.py
+@@ -251,6 +251,22 @@ async def test_serving_build_identity_is_captured_once_and_excludes_secrets(monk
+     assert "must-not-appear-in-build" not in str(first)
+ 
+ 
++def test_build_identity_tracks_endpoint_and_budget_without_credentials(monkeypatch):
++    from service.build import capture_build_identity
++
++    monkeypatch.setattr(
++        settings, "COMPATIBLE_BASE_URL", "http://user:hidden@127.0.0.1:11441/v1?key=secret"
++    )
++    first = capture_build_identity()
++    assert "hidden" not in str(first) and "key=secret" not in str(first)
++    monkeypatch.setattr(settings, "COMPATIBLE_BASE_URL", "http://127.0.0.1:11440/v1")
++    second = capture_build_identity()
++    assert first["configuration_sha256"] != second["configuration_sha256"]
++    monkeypatch.setattr(settings, "SERVICEMIND_MODEL_TIMEOUT_SECONDS", 17)
++    third = capture_build_identity()
++    assert second["configuration_sha256"] != third["configuration_sha256"]
++
++
+ @pytest.mark.docker
+ @pytest.mark.postgres
+ @pytest.mark.asyncio
+diff --git a/tests/servicemind/test_supervisor_runtime.py b/tests/servicemind/test_supervisor_runtime.py
+index c390153..d4a03f7 100644
+--- a/tests/servicemind/test_supervisor_runtime.py
++++ b/tests/servicemind/test_supervisor_runtime.py
+@@ -664,6 +664,74 @@ async def test_the_retry_prompt_carries_every_rejection_and_says_they_still_hold
+     assert "still applies" in prompt
+ 
+ 
++def test_supervisor_schema_enforces_current_action_task_pairs():
++    from pydantic import ValidationError
++
++    from servicemind.agents.supervisor import SupervisorAgent
++
++    schema = SupervisorAgent.decision_schema(
++        {
++            "legal_actions": ["dispatch", "analyze", "escalate"],
++            "max_parallel": 1,
++            "ready_tasks": [
++                {"task_id": "T1", "agent": "data"},
++                {"task_id": "T2", "agent": "analysis"},
++            ],
++        }
++    )
++    base = {"rationale_summary": "Proceed with ready work", "confidence": 0.9}
++    for action, task_ids in [
++        ("finalize", []),
++        ("dispatch", ["T2"]),
++        ("analyze", ["T1"]),
++        ("escalate", ["T1"]),
++        ("dispatch", ["T1", "T2"]),
++    ]:
++        with pytest.raises(ValidationError):
++            schema.model_validate({**base, "action": action, "selected_task_ids": task_ids})
++    assert schema.model_validate({**base, "action": "dispatch", "selected_task_ids": ["T1"]})
++
++
++def test_control_model_timeout_honors_configuration_and_remaining_run_time(monkeypatch):
++    from core import settings
++    from servicemind.model_gateway.contracts import ModelPurpose
++    from servicemind.orchestration.supervisor_workflow import _control_model_context
++
++    monkeypatch.setattr(settings, "SERVICEMIND_MODEL_TIMEOUT_SECONDS", 90)
++    state = initial("Analyze VPN incident")
++    assert (
++        _control_model_context(
++            state, agent_role="planner", purpose=ModelPurpose.PLANNING
++        ).timeout_seconds
++        == 90
++    )
++    state["task_plan"] = minimal_plan().model_dump(mode="json", by_alias=True)
++    due = (datetime.now(UTC) + timedelta(seconds=2)).isoformat()
++    state["task_plan"]["deadline"] = due
++    state["task_plan"]["budget"]["deadline"] = due
++    bounded = _control_model_context(state, agent_role="supervisor", purpose=ModelPurpose.CONTROL)
++    assert 0 < bounded.timeout_seconds <= 2
++
++
++@pytest.mark.asyncio
++async def test_replanner_timeout_is_not_reasked_as_a_shape_correction():
++    class TimedOutPlanner(FakePlanner):
++        revisions = 0
++
++        async def revise_plan(self, **kwargs):
++            self.revisions += 1
++            raise TimeoutError("local model deadline reached")
++
++    planner = TimedOutPlanner()
++    supervisor = StateDrivenSupervisor(override={2: SupervisorAction.REPLAN})
++    result = await build_supervisor_graph(services(planner=planner, supervisor=supervisor)).ainvoke(
++        initial("Analyze VPN incident")
++    )
++    assert planner.revisions == 1
++    assert result["final_result"]["termination_code"] == "critical_error"
++    assert result["control"]["model_call_count"] >= 4
++
++
+ @pytest.mark.asyncio
+ async def test_a_control_plane_that_cannot_choose_still_terminates() -> None:
+     """The bound is finite, and reaching it must remain a recorded terminal.

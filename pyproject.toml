@@ -151,7 +151,11 @@ target-version = "py312"
 # sha256 manifest that pins exactly which bytes produced the numbers cited in
 # docs/ — so they stay byte-for-byte as they ran, and are excluded from lint
 # rather than rewritten. New analysis code belongs under scripts/ or src/.
-extend-exclude = ["evaluation/experiments"]
+extend-exclude = [
+    "evaluation/experiments",
+    "evaluation/security/*/source",
+    "evaluation/security/*/changed-source",
+]
 
 [tool.ruff.lint]
 extend-select = ["I", "U"]

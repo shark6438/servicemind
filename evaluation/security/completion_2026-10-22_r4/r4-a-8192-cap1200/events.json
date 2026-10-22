@@ -1,0 +1,135 @@
+[
+  {
+    "event_type": "run.created",
+    "payload": {
+      "ticket_id": 25,
+      "request_write": false
+    },
+    "created_at": "2026-10-22 14:12:02.878017+00:00"
+  },
+  {
+    "event_type": "route.completed",
+    "payload": {
+      "route": "complex_workflow",
+      "reason_code": "analysis_or_action_required"
+    },
+    "created_at": "2026-10-22 14:12:03.664897+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "plan",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "用户更换手机后出现VPN多因素认证失败，但密码认证成功，表明问题集中于多因素认证机制与新设备的兼容性。当前无证据或任务，需创建计划以生成证据任务，包括检查多因素认证配置、设备绑定状态、认证应用状态及日志分析，以定位根因。"
+    },
+    "created_at": "2026-10-22 14:12:22.403951+00:00"
+  },
+  {
+    "event_type": "plan.validated",
+    "payload": {
+      "plan_id": "b68de373-4255-4d42-af8f-f65387212125",
+      "tasks": [
+        {
+          "id": "T1",
+          "agent": "data"
+        },
+        {
+          "id": "T2",
+          "agent": "knowledge"
+        },
+        {
+          "id": "T3",
+          "agent": "analysis"
+        },
+        {
+          "id": "T4",
+          "agent": "reviewer"
+        }
+      ]
+    },
+    "created_at": "2026-10-22 14:13:06.030428+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "dispatch",
+      "selected_task_ids": [
+        "T1",
+        "T2"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "Both T1 and T2 are ready and independent tasks that are critical to understanding the user context and identifying known causes of MFA failures after device replacement. Retrieving the ticket details and relevant knowledge base articles in parallel will accelerate root cause analysis without dependency conflicts."
+    },
+    "created_at": "2026-10-22 14:13:23.079845+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "knowledge",
+      "task_id": "T2",
+      "status": "degraded",
+      "evidence_refs": [],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "attempts": 1,
+        "latency_ms": 11.207175441086292
+      },
+      "failure_code": "ValidationError",
+      "failure_detail": "ValidationError: 1 validation error for ModelCallContext\ntimeout_seconds\n  Input should be less than or equal to 180 [type=less_than_equal, input_value=240.0, input_type=float]\n    For further information visit https://errors.pydantic.dev/2.13/v/less_than_equal",
+      "policy_version": "servicemind-agent-policy-v2"
+    },
+    "created_at": "2026-10-22 14:13:23.141721+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "replan",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "Both evidence retrieval tasks (T1 and T2) failed due to validation errors, indicating a systemic issue with data access or knowledge retrieval configuration. Given that the initial plan is invalid and the review explicitly requested a revised plan, a replan is required to correct the task structure and ensure successful evidence generation. No further progress can be made without addressing these failures."
+    },
+    "created_at": "2026-10-22 14:13:39.677742+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "dispatch",
+      "selected_task_ids": [
+        "T1",
+        "T2"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "Both T1 and T2 are ready and critical for initial investigation. T1 retrieves the ticket details to establish user context and incident specifics, while T2 fetches relevant knowledge base articles on MFA failures post-device replacement. Dispatching both tasks in parallel maximizes efficiency given the current parallelism limit of 2 and the need to resolve validation errors blocking progress."
+    },
+    "created_at": "2026-10-22 14:14:56.142401+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "knowledge",
+      "task_id": "T2",
+      "status": "degraded",
+      "evidence_refs": [],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "attempts": 1,
+        "latency_ms": 4.736014641821384
+      },
+      "failure_code": "ValidationError",
+      "failure_detail": "ValidationError: 1 validation error for ModelCallContext\ntimeout_seconds\n  Input should be less than or equal to 180 [type=less_than_equal, input_value=240.0, input_type=float]\n    For further information visit https://errors.pydantic.dev/2.13/v/less_than_equal",
+      "policy_version": "servicemind-agent-policy-v2"
+    },
+    "created_at": "2026-10-22 14:14:56.158429+00:00"
+  },
+  {
+    "event_type": "run.cancelled",
+    "payload": {
+      "status": "cancelled",
+      "decision": null
+    },
+    "created_at": "2026-10-22 14:14:56.185618+00:00"
+  }
+]

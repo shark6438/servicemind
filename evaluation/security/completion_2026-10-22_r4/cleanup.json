@@ -1,0 +1,24 @@
+{
+  "containers_removed": true,
+  "containers": [
+    "servicemind-local-eval-r3-pg",
+    "servicemind-local-eval-r3-redis",
+    "servicemind-local-eval-r3-neo4j",
+    "servicemind-local-eval-r3-os",
+    "servicemind-local-eval-r3-model"
+  ],
+  "anonymous_volumes_removed": [
+    "0bdd02f0dfd4b7d56069ed1a5356207107fcd7c427dc4fe96e0c1b3a1eb3332b",
+    "6dfecdd67492a97fbb8782c391d7c6f097a68ab76037e9f9e43c1370b828b8e8",
+    "a50823adbb5df32df60fef1f77c5f10f9707b431aac5a9c9091b83450fb99553",
+    "de2979968ef7f5d28fd3f5f174a1b85d2c37d51cce8a55d1cf94f144fe09f04e"
+  ],
+  "private_environment_removed": true,
+  "production_services_modified": false,
+  "retained_untouched": [
+    "servicemind-security-llama",
+    "servicemind-frontend",
+    "servicemind-glpi-* (all)"
+  ],
+  "note": "The harness cleanup refused to stop API/proxy because they were launched through an execve wrapper whose cmdline carried a relative script path. They were stopped via the task supervisor; containers and anonymous volumes were removed after verifying label and creation time (2026-10-22T22:10Z). No production or user container was stopped or rebuilt."
+}

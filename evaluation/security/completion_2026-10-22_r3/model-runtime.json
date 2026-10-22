@@ -1,0 +1,59 @@
+{
+  "Id": "a662a2ce572a9ef3d424428ddbd4d2f47bca652ae9dc9c8d2920f163b9a0c640",
+  "Image": "sha256:433c4af64d0e6218182ca6650fc5c4451afaa8aa0355b1c006f7474f8a1f6a92",
+  "Created": "2026-10-22T11:33:00.804483972Z",
+  "command": [
+    "--model",
+    "/models/models/blobs/sha256-78b329e716e7e9775973d392cd132b1f1ff1c8287a992887caeb6fd6c56ba9cc",
+    "--alias",
+    "security-local-qwen-instruct",
+    "--host",
+    "0.0.0.0",
+    "--port",
+    "8080",
+    "--ctx-size",
+    "16384",
+    "--threads",
+    "12",
+    "--threads-batch",
+    "12",
+    "--parallel",
+    "1",
+    "--n-predict",
+    "2048",
+    "--jinja",
+    "--no-webui",
+    "--no-agent",
+    "--no-webui-mcp-proxy",
+    "--api-key-file",
+    "/run/local-model.key",
+    "--timeout",
+    "90"
+  ],
+  "image_reference": "ghcr.io/ggml-org/llama.cpp@sha256:8c74db29f1a2bef3f0a331b52c4d6214601dfceed4bee0b94cc48b3b23ff257d",
+  "resources": {
+    "NanoCpus": 12000000000,
+    "Memory": 34359738368,
+    "ReadonlyRootfs": true,
+    "CapDrop": [
+      "ALL"
+    ],
+    "SecurityOpt": [
+      "no-new-privileges"
+    ]
+  },
+  "model_mounts": [
+    {
+      "Type": "volume",
+      "Name": "servicemind-security-models",
+      "Destination": "/models",
+      "RW": false
+    },
+    {
+      "Type": "bind",
+      "Name": null,
+      "Destination": "/run/local-model.key",
+      "RW": false
+    }
+  ]
+}

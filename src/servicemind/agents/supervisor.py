@@ -1,7 +1,9 @@
 import json
-from typing import Any
+from enum import StrEnum
+from typing import Any, cast
 
 from langchain_core.messages import HumanMessage, SystemMessage
+from pydantic import Field, create_model, model_validator
 
 from core import get_model, settings
 from servicemind.domain.supervisor import SupervisorDecision
@@ -37,6 +39,34 @@ class SupervisorAgent:
                 options.append({"action": action, "selected_task_ids": []})
         return options
 
+    @classmethod
+    def decision_schema(cls, state_view: dict[str, Any]) -> type[SupervisorDecision]:
+        options = cls.decision_options(state_view)
+        if not options:
+            raise ValueError("No legal Supervisor decisions are available")
+        actions = tuple(dict.fromkeys(option["action"] for option in options))
+        selections = list({tuple(option["selected_task_ids"]): None for option in options})
+
+        @model_validator(mode="after")
+        def require_legal_pair(decision):
+            if {
+                "action": decision.action,
+                "selected_task_ids": decision.selected_task_ids,
+            } not in options:
+                raise ValueError("Copy an action and selected_task_ids pair from decision_options")
+            return decision
+
+        return create_model(
+            "SupervisorDecision",
+            __base__=SupervisorDecision,
+            __validators__=cast(Any, {"require_legal_pair": require_legal_pair}),
+            action=(StrEnum("LegalSupervisorAction", {a.upper(): a for a in actions}), ...),
+            selected_task_ids=(
+                list[str],
+                Field(max_length=16, json_schema_extra={"enum": [list(s) for s in selections]}),
+            ),
+        )
+
     async def decide(
         self,
         state_view: dict[str, Any],
@@ -44,7 +74,8 @@ class SupervisorAgent:
         policy_feedback: str | None = None,
     ) -> SupervisorDecision:
         model = get_model(settings.DEFAULT_MODEL)
-        runnable = structured_output(model, SupervisorDecision)
+        schema = self.decision_schema(state_view)
+        runnable = structured_output(model, schema)
         # Numbered and cumulative, because the corrections are not alternatives: each
         # one is a rule about the same state that still holds. Told only the most recent
         # one, a model repairs it by breaking the previous -- the oscillation this list
@@ -70,19 +101,21 @@ class SupervisorAgent:
                         "one or more ready evidence task IDs up to max_parallel. For ANALYZE or "
                         "REVIEW, select exactly one matching ready task ID. For every other "
                         "action selected_task_ids must be empty. Use current task status, "
+                        "review feedback and remaining budget. "
                         "Copy both action and selected_task_ids from one decision_options "
                         "entry; never omit selected_task_ids. "
                         "When plan is null and plan is legal, choose plan to create the "
                         "evidence tasks. An empty ready_tasks list and no evidence before "
                         "planning are expected initialization, not reasons to escalate. "
-                        "review feedback and remaining budget. Never invent task IDs. Return "
+                        "Never invent task IDs. "
                         "Prefer progressing ready work. Use REPLAN only for failure, conflict, "
                         "or explicit reviewer feedback; use ESCALATE only when safe progress is "
-                        "not possible. "
-                        "JSON matching SupervisorDecision. rationale_summary must be an auditable "
+                        "not possible. Join dirty evidence before analysis. A passed read-only "
+                        "review is ready to finalize, not a reason to replan. "
+                        "Return JSON matching SupervisorDecision. rationale_summary must be an auditable "
                         "business control rationale, not hidden chain-of-thought."
                         f"{feedback}\nRequired JSON Schema:\n"
-                        f"{json.dumps(SupervisorDecision.model_json_schema())}"
+                        f"{json.dumps(schema.model_json_schema())}"
                     )
                 ),
                 HumanMessage(
@@ -93,7 +126,8 @@ class SupervisorAgent:
                 ),
             ]
         )
-        return SupervisorDecision.model_validate(result)
+        validated = schema.model_validate(result)
+        return SupervisorDecision.model_validate(validated.model_dump())
 
 
 supervisor_agent = SupervisorAgent()

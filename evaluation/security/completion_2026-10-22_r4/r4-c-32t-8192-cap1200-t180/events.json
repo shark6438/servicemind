@@ -1,0 +1,263 @@
+[
+  {
+    "event_type": "run.created",
+    "payload": {
+      "ticket_id": 25,
+      "request_write": false
+    },
+    "created_at": "2026-10-22 14:22:51.998264+00:00"
+  },
+  {
+    "event_type": "route.completed",
+    "payload": {
+      "route": "complex_workflow",
+      "reason_code": "analysis_or_action_required"
+    },
+    "created_at": "2026-10-22 14:22:52.038756+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "plan",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The issue involves multi-factor authentication failure after device change, which suggests a potential issue with the authentication token, device-specific settings, or MFA method configuration. Since no evidence tasks exist and the system is in initial routing stage, a plan is required to create targeted tasks for diagnosing the root cause. The plan will initiate evidence collection to analyze MFA configuration, device registration status, and authentication logs."
+    },
+    "created_at": "2026-10-22 14:23:06.437762+00:00"
+  },
+  {
+    "event_type": "plan.validated",
+    "payload": {
+      "plan_id": "e0d12894-7cf0-495f-8518-2454d37e2c36",
+      "tasks": [
+        {
+          "id": "T1",
+          "agent": "data"
+        },
+        {
+          "id": "T2",
+          "agent": "knowledge"
+        },
+        {
+          "id": "T3",
+          "agent": "analysis"
+        },
+        {
+          "id": "T4",
+          "agent": "reviewer"
+        }
+      ]
+    },
+    "created_at": "2026-10-22 14:23:41.597454+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "dispatch",
+      "selected_task_ids": [
+        "T1",
+        "T2"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "The issue involves a multi-factor authentication failure after device migration, requiring both ticket context and relevant runbooks for analysis. To ensure efficient progress, both initial tasks—retrieving ticket details and fetching knowledge on MFA configuration and device migration—are dispatched in parallel to reduce overall resolution time."
+    },
+    "created_at": "2026-10-22 14:23:54.099068+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "knowledge",
+      "task_id": "T2",
+      "status": "succeeded",
+      "evidence_refs": [
+        "ev-9828b659687293da",
+        "ev-4df07c9e3e7bc91c",
+        "ev-f755ead143076b5d",
+        "ev-e3170b5bb1c7683e",
+        "ev-e649c62a2b8c8dd5",
+        "ev-5fca7f22581163f8",
+        "ev-54a180fd8bf04095",
+        "ev-d3fc05fdf0c5fb0b"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "attempts": 1,
+        "latency_ms": 8425.458776764572
+      },
+      "failure_code": null,
+      "failure_detail": null,
+      "policy_version": "servicemind-agent-policy-v2"
+    },
+    "created_at": "2026-10-22 14:24:02.532845+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "data",
+      "run_id": "67fa2f67-fc76-4b3b-b85a-ee600dfc8da1",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T1",
+      "status": "degraded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "attempts": 2,
+        "latency_ms": 8688.572362065315
+      },
+      "model_name": "openai-compatible",
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-agent-policy-v2",
+      "failure_code": "DATA_PLAN_DEGRADED",
+      "failure_detail": null
+    },
+    "created_at": "2026-10-22 14:24:02.800694+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "join_evidence",
+      "selected_task_ids": [],
+      "confidence": 0.95,
+      "rationale_summary": "The evidence is marked as dirty, indicating potential inconsistencies or incomplete data. Before proceeding with analysis, it is essential to resolve data integrity issues by joining the evidence to ensure accurate and reliable inputs for the analysis task. No further progress can be made until the evidence is cleaned and consolidated."
+    },
+    "created_at": "2026-10-22 14:24:20.660097+00:00"
+  },
+  {
+    "event_type": "evidence.joined",
+    "payload": {
+      "count": 11,
+      "gathered": 11,
+      "dropped": 0,
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967",
+        "ev-9828b659687293da",
+        "ev-4df07c9e3e7bc91c",
+        "ev-f755ead143076b5d",
+        "ev-e3170b5bb1c7683e",
+        "ev-e649c62a2b8c8dd5",
+        "ev-5fca7f22581163f8",
+        "ev-54a180fd8bf04095",
+        "ev-d3fc05fdf0c5fb0b"
+      ]
+    },
+    "created_at": "2026-10-22 14:24:20.666912+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "analyze",
+      "selected_task_ids": [
+        "T3"
+      ],
+      "confidence": 0.95,
+      "rationale_summary": "The ticket indicates a multi-factor authentication (MFA) failure after device migration, with password authentication succeeding. The only ready task, T3, is specifically designed to analyze the ticket and retrieved knowledge to determine if the MFA failure stems from the new device lacking proper MFA configuration. Since the task is ready and directly aligned with the goal, proceeding with analysis is the optimal next step to identify the root cause."
+    },
+    "created_at": "2026-10-22 14:24:34.029428+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "analysis",
+      "run_id": "67fa2f67-fc76-4b3b-b85a-ee600dfc8da1",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T3",
+      "status": "degraded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967",
+        "ev-9828b659687293da",
+        "ev-4df07c9e3e7bc91c",
+        "ev-f755ead143076b5d",
+        "ev-e3170b5bb1c7683e",
+        "ev-e649c62a2b8c8dd5",
+        "ev-5fca7f22581163f8",
+        "ev-54a180fd8bf04095",
+        "ev-d3fc05fdf0c5fb0b"
+      ],
+      "metrics": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "attempts": 1,
+        "latency_ms": 180060.66651456058
+      },
+      "model_name": "openai-compatible",
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-agent-policy-v2",
+      "failure_code": "ANALYSIS_MODEL_FAILURE",
+      "failure_detail": "TimeoutError: Model invocation exhausted its total timeout budget"
+    },
+    "created_at": "2026-10-22 14:27:34.121356+00:00"
+  },
+  {
+    "event_type": "supervisor.decision",
+    "payload": {
+      "action": "review",
+      "selected_task_ids": [
+        "T4"
+      ],
+      "confidence": 0.92,
+      "rationale_summary": "The analysis is complete and the review task T4 is ready. The evidence supports a conservative ITSM triage to the Network Team, and the unresolved question requires human verification before action. Reviewing the analysis ensures alignment with MFA procedures and validates the recommended path before escalation or execution."
+    },
+    "created_at": "2026-10-22 14:27:51.180858+00:00"
+  },
+  {
+    "event_type": "agent.completed",
+    "payload": {
+      "agent_name": "reviewer",
+      "run_id": "67fa2f67-fc76-4b3b-b85a-ee600dfc8da1",
+      "tenant_id": "22222222-2222-4222-8222-222222222222",
+      "user_id": "1557904a-4299-430a-874a-d3d03491224d",
+      "task_id": "T4",
+      "status": "succeeded",
+      "evidence_refs": [
+        "ev-1608ee49246cc7ef",
+        "ev-74293fa53e7db832",
+        "ev-a6e331aca489f967",
+        "ev-9828b659687293da",
+        "ev-4df07c9e3e7bc91c",
+        "ev-f755ead143076b5d",
+        "ev-e3170b5bb1c7683e",
+        "ev-e649c62a2b8c8dd5",
+        "ev-5fca7f22581163f8",
+        "ev-54a180fd8bf04095",
+        "ev-d3fc05fdf0c5fb0b"
+      ],
+      "metrics": {
+        "model_calls": 0,
+        "tool_calls": 0,
+        "attempts": 1,
+        "latency_ms": 25.623506866395473
+      },
+      "model_name": null,
+      "prompt_version": "2026-09-05",
+      "policy_version": "servicemind-review-policy-v6",
+      "failure_code": null,
+      "failure_detail": null
+    },
+    "created_at": "2026-10-22 14:27:51.226775+00:00"
+  },
+  {
+    "event_type": "review.completed",
+    "payload": {
+      "decision": "replan",
+      "feedback": "Degraded analysis cannot authorize an autonomous handoff: the analysis runtime failed, so the run is re-derived from the evidence.",
+      "review_id": "8d296bd0-33a7-4ec6-a9d3-2b04e7a5d481",
+      "policy_version": "servicemind-review-policy-v6",
+      "reason_codes": [
+        "DEGRADED_ANALYSIS"
+      ]
+    },
+    "created_at": "2026-10-22 14:27:51.232426+00:00"
+  }
+]
