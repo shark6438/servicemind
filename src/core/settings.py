@@ -76,6 +76,14 @@ CONTEXT_SYSTEM_RESERVE = 256
 CONTEXT_OUTPUT_RESERVE = 1024
 
 
+class JevRouterMode(StrEnum):
+    """Optional model-backed route advisor. The deterministic rule router is always the fallback."""
+
+    OFF = "off"
+    SHADOW = "shadow"
+    ACTIVE = "active"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(
@@ -345,6 +353,30 @@ class Settings(BaseSettings):
     SERVICEMIND_TOOL_BULKHEAD_LIMIT: int = Field(default=8, ge=1, le=100)
     SERVICEMIND_TOOL_CIRCUIT_FAILURES: int = Field(default=5, ge=1, le=100)
     SERVICEMIND_TOOL_CIRCUIT_RESET_SECONDS: float = Field(default=30, gt=0, le=600)
+
+    # ServiceMind optional routing advisor. ``off`` keeps the request path byte-for-byte
+    # identical to the deterministic rules. When enabled, the raw request text is sent to
+    # the configured external provider; every timeout, error, refusal to spend, or response
+    # that does not match the frozen model/prompt falls back to the rule decision. The
+    # ledger lives under ``.runtime/`` (gitignored) and is the cost authority.
+    SERVICEMIND_JEV_ROUTER_MODE: JevRouterMode = JevRouterMode.OFF
+    SERVICEMIND_JEV_ROUTER_ENDPOINT: str = "https://openrouter.ai/api/alpha/decisions"
+    SERVICEMIND_JEV_ROUTER_REQUEST_MODEL: str = "typesafe/jev-1.14"
+    #: Exact served version observed for all 500 v3.1 responses. A different date means the
+    #: weights may have moved; the router then falls back instead of silently changing routes.
+    SERVICEMIND_JEV_ROUTER_SERVED_MODEL: str = "typesafe/jev-1.14-20261014"
+    SERVICEMIND_JEV_ROUTER_CONFIDENCE_FLOOR: float = Field(default=0.9, ge=0, le=1)
+    SERVICEMIND_JEV_ROUTER_TIMEOUT_SECONDS: float = Field(default=3.0, gt=0, le=10)
+    SERVICEMIND_JEV_ROUTER_MAX_PAYLOAD_BYTES: int = Field(default=12_000, ge=1, le=262_144)
+    SERVICEMIND_JEV_ROUTER_CONTEXT_CEILING: int = Field(default=262_144, ge=1)
+    SERVICEMIND_JEV_ROUTER_PRICE_USD_PER_MILLION_INPUT_TOKENS: float = Field(default=0.042, gt=0)
+    SERVICEMIND_JEV_ROUTER_DAILY_BUDGET_USD: float = Field(default=0.50, gt=0, le=100)
+    SERVICEMIND_JEV_ROUTER_PER_MINUTE_LIMIT: int = Field(default=60, ge=1, le=10_000)
+    SERVICEMIND_JEV_ROUTER_CONCURRENCY_LIMIT: int = Field(default=4, ge=1, le=64)
+    SERVICEMIND_JEV_ROUTER_CIRCUIT_FAILURES: int = Field(default=5, ge=1, le=100)
+    SERVICEMIND_JEV_ROUTER_CIRCUIT_RESET_SECONDS: float = Field(default=60, gt=0, le=600)
+    SERVICEMIND_JEV_ROUTER_LEDGER_DIR: str = ".runtime/jev_router"
+    SERVICEMIND_JEV_ROUTER_LEDGER_TIMEOUT_SECONDS: float = Field(default=1.0, gt=0, le=5)
 
     LANGCHAIN_TRACING_V2: bool = False
     LANGCHAIN_PROJECT: str = "default"

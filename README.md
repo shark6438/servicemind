@@ -55,7 +55,7 @@ a write is bound to a reviewed `ActionIntent` and is verified against GLPI after
 
 | Capability | What it provides |
 | --- | --- |
-| **Governed multi-agent orchestration** | A LangGraph Router/Supervisor plans and dispatches Data, Knowledge, Analysis, Reviewer and Action tasks as a bounded DAG. |
+| **Governed multi-agent orchestration** | A LangGraph Router/Supervisor plans and dispatches Data, Knowledge, Analysis, Reviewer and Action tasks as a bounded DAG. An optional model-backed route advisor (off by default) can only tighten or re-label a route; every timeout, error, budget refusal or malformed response falls back to the deterministic rule router. |
 | **Enterprise evidence retrieval** | Hybrid OpenSearch retrieval, reranking, citations and optional Neo4j Graph-RAG, all filtered by tenant/entity/group ACLs. |
 | **Human-controlled change execution** | Immutable action hashes, reviewer gates, HITL approval, idempotency, read-after-write verification and append-only audit records. |
 | **Model and tool governance** | Provider/model allowlists, cost and timeout limits, semantic caching, a schema-validated Tool Gateway, OPA support and MCP exposure. |
@@ -420,6 +420,11 @@ Everything is environment-driven through [`.env.example`](.env.example). Main gr
   pinned revisions, TEI endpoints, RAG feature gates, Neo4j URI/credentials.
 - **Phase 5 governance** — `SERVICEMIND_{MEMORY,CONTEXT,SKILLS,MODEL_GATEWAY_AUDIT,
   SEMANTIC_CACHE}_ENABLED` feature gates, model allowlists, cost/time ceilings.
+- **Optional route advisor** — `SERVICEMIND_JEV_ROUTER_MODE=off|shadow|active` (default
+  `off`), an inclusive confidence floor, a daily USD budget and a per-day spend journal
+  under `.runtime/jev_router/`. Enabling it sends the raw request text to the configured
+  provider; failures of any kind fall back to the rule router. See
+  [Jev router operations](docs/JEV_ROUTER_PRODUCTION.md).
 
 Feature gates are off by default; read the Phase 4/5 docs before enabling them in a
 target environment.

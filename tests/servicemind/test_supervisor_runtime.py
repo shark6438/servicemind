@@ -399,6 +399,7 @@ def services(
     phase5=None,
     reviewer=None,
     knowledge=None,
+    jev_router=None,
 ):
     return SupervisorRuntimeServices(
         router=FastPathRouter(),
@@ -414,6 +415,7 @@ def services(
         executor=executor or FakeExecutor(),
         repository_factory=FakeRepository,
         **({"phase5": phase5} if phase5 is not None else {}),
+        **({"jev_router": jev_router} if jev_router is not None else {}),
     )
 
 

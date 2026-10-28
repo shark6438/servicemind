@@ -53,6 +53,12 @@ from servicemind.observability.tracing import phase_span
 from servicemind.orchestration.budget import BudgetExceeded, budget_controller
 from servicemind.orchestration.dispatcher import TaskDispatcher, task_dispatcher
 from servicemind.orchestration.dynamic_planner import DynamicPlanner, dynamic_planner
+from servicemind.orchestration.jev_router import (
+    JevRouter,
+    JevRouterConfig,
+    fallback_outcome,
+    route_completed_payload,
+)
 from servicemind.orchestration.phase5_governance import Phase5Governance, phase5_governance
 from servicemind.orchestration.registry import agent_registry
 from servicemind.orchestration.router import FastPathRouter, fast_path_router
@@ -67,6 +73,19 @@ from servicemind.persistence.repository import ServiceMindRepository
 from servicemind.runtime.contracts import AgentInvocationContext
 from servicemind.security.auth import TenantContext
 from servicemind.security.entitlements import AuthorityWithdrawn, require_still_held
+
+
+def _jev_mode() -> str:
+    return str(settings.SERVICEMIND_JEV_ROUTER_MODE)
+
+
+def _jev_config() -> JevRouterConfig | None:
+    return JevRouterConfig.from_settings(settings)
+
+
+#: Production advisor. A bare ``JevRouter()`` is inert; this is the wiring that reads
+#: settings, and it does so only when the mode is not ``off``.
+jev_router = JevRouter(config_factory=_jev_config, mode_provider=_jev_mode)
 
 
 @dataclass(frozen=True)
@@ -84,6 +103,9 @@ class SupervisorRuntimeServices:
     executor: ControlledActionExecutor = controlled_executor
     repository_factory: Callable[[UUID], Any] = ServiceMindRepository
     phase5: Phase5Governance = phase5_governance
+    # Optional advisory layer; ``off`` by default, and the rule router serves every
+    # timeout, error, budget refusal and malformed response.
+    jev_router: JevRouter = jev_router
 
 
 def _context(state: Phase3State) -> TenantContext:
@@ -380,17 +402,34 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
 
     async def route_node(state: Phase3State) -> dict[str, Any]:
         await repository(state).update_run(UUID(state["run_id"]), RunStatus.RUNNING)
-        decision = svc.router.route(state["raw_request"], request_write=state["request_write"])
+        rule_decision = svc.router.route(state["raw_request"], request_write=state["request_write"])
+        try:
+            outcome = await svc.jev_router.decide(
+                raw_request=state["raw_request"],
+                request_write=state["request_write"],
+                fallback=rule_decision,
+                run_id=state["run_id"],
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            # ``JevRouter.decide`` already contains its own fallback. This catch is
+            # containment for a defect in that layer, not an expected path: the route
+            # step must never fail because an advisor failed.
+            outcome = fallback_outcome(rule_decision, "internal_error")
+        decision = outcome.decision
         control = _control(state)
         control.current_stage = "route"
         control.total_steps += 1
         await repository(state).append_event(
             UUID(state["run_id"]),
             "route.completed",
-            {
-                "route": decision.route.value,
-                "reason_code": decision.reason_code,
-            },
+            route_completed_payload(
+                served=decision,
+                rule=rule_decision,
+                outcome=outcome,
+                mode=str(settings.SERVICEMIND_JEV_ROUTER_MODE),
+            ),
         )
         return {
             "route": decision.model_dump(mode="json"),

@@ -167,6 +167,7 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.pytest_env]
 OPENAI_API_KEY = "sk-fake-openai-key"
+SERVICEMIND_JEV_ROUTER_MODE = "off"
 DATABASE_TYPE = "sqlite"
 POSTGRES_AUTO_SETUP = "true"
 SERVICEMIND_MEMORY_ENABLED = "false"
