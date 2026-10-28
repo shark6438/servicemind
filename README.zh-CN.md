@@ -46,7 +46,7 @@ flowchart LR
 
 | 能力 | 提供的价值 |
 | --- | --- |
-| **受治理的多智能体编排** | LangGraph Router/Supervisor 将数据、知识、分析、评审与动作任务编排为有界 DAG。 |
+| **受治理的多智能体编排** | LangGraph Router/Supervisor 将数据、知识、分析、评审与动作任务编排为有界 DAG。可选的模型路由顾问默认关闭，只能收紧或改判路由；超时、异常、预算不足或响应不合法时一律回退确定性规则。 |
 | **企业级证据检索** | OpenSearch 混合检索、重排与引用，外加可选 Neo4j Graph-RAG；全程执行租户、实体、组 ACL。 |
 | **人工控制的变更执行** | 不可变 action hash、Reviewer 门禁、HITL 审批、幂等、回读验证与 append-only 审计。 |
 | **模型与工具治理** | Provider/model 白名单、成本与超时上限、语义缓存、契约校验的 Tool Gateway、OPA 与 MCP 边界。 |
@@ -354,6 +354,10 @@ systemctl --user enable --now servicemind-frontend.service   # 单元见 deploy/
   revision、TEI 端点、RAG 特性开关、Neo4j URI/凭据。
 - **Phase 5 治理** —— `SERVICEMIND_{MEMORY,CONTEXT,SKILLS,MODEL_GATEWAY_AUDIT,
   SEMANTIC_CACHE}_ENABLED` 特性开关、模型白名单、成本/超时上限。
+- **可选路由顾问** —— `SERVICEMIND_JEV_ROUTER_MODE=off|shadow|active`(默认 `off`)、
+  置信度门槛、每日美元预算与 `.runtime/jev_router/` 下的按日账本。启用后原始请求文本
+  会发送给所配置的 provider;任何失败都回退规则路由。见
+  [Jev 路由运维说明](docs/JEV_ROUTER_PRODUCTION.md)。
 
 特性开关默认关闭;在目标环境启用前请先阅读 Phase 4/5 文档。
 
