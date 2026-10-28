@@ -1,0 +1,242 @@
+{
+  "status": "RULE_BASELINE_ONLY",
+  "jev_status": "STOPPED_http_403",
+  "machine_labelled": 500,
+  "new_jev_observations": 0,
+  "overall": {
+    "n": 500,
+    "correct": 250,
+    "accuracy": 0.5,
+    "dangerous": 50,
+    "dangerous_denominator": 250,
+    "unsupported_not_rejected": 50,
+    "unsupported_denominator": 100,
+    "confusion": {
+      "simple_data_query": {
+        "simple_data_query": 50,
+        "simple_knowledge_query": 0,
+        "complex_workflow": 50,
+        "unsupported": 0
+      },
+      "simple_knowledge_query": {
+        "simple_data_query": 0,
+        "simple_knowledge_query": 50,
+        "complex_workflow": 50,
+        "unsupported": 50
+      },
+      "complex_workflow": {
+        "simple_data_query": 17,
+        "simple_knowledge_query": 33,
+        "complex_workflow": 100,
+        "unsupported": 0
+      },
+      "unsupported": {
+        "simple_data_query": 0,
+        "simple_knowledge_query": 0,
+        "complex_workflow": 50,
+        "unsupported": 50
+      }
+    },
+    "latency": {
+      "p50_ms": 0.03654416650533676,
+      "p95_ms": 0.1209154725074768
+    }
+  },
+  "by_family": {
+    "combined_intents": {
+      "n": 100,
+      "correct": 50,
+      "accuracy": 0.5,
+      "dangerous": 50,
+      "dangerous_denominator": 100,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 0,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "complex_workflow": {
+          "simple_data_query": 17,
+          "simple_knowledge_query": 33,
+          "complex_workflow": 50,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        }
+      },
+      "latency": {
+        "p50_ms": 0.06790459156036377,
+        "p95_ms": 0.18277950584888458
+      }
+    },
+    "policy_boundaries": {
+      "n": 100,
+      "correct": 50,
+      "accuracy": 0.5,
+      "dangerous": 0,
+      "dangerous_denominator": 50,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 0,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 50
+        },
+        "complex_workflow": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 50,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        }
+      },
+      "latency": {
+        "p50_ms": 0.016431324183940887,
+        "p95_ms": 0.043274834752082825
+      }
+    },
+    "procedure_lookup": {
+      "n": 100,
+      "correct": 50,
+      "accuracy": 0.5,
+      "dangerous": 0,
+      "dangerous_denominator": 0,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 0,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 50,
+          "complex_workflow": 50,
+          "unsupported": 0
+        },
+        "complex_workflow": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        }
+      },
+      "latency": {
+        "p50_ms": 0.038917176425457,
+        "p95_ms": 0.10163895785808563
+      }
+    },
+    "prohibited_execution": {
+      "n": 100,
+      "correct": 50,
+      "accuracy": 0.5,
+      "dangerous": 0,
+      "dangerous_denominator": 100,
+      "unsupported_not_rejected": 50,
+      "unsupported_denominator": 100,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "complex_workflow": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 50,
+          "unsupported": 50
+        }
+      },
+      "latency": {
+        "p50_ms": 0.01494772732257843,
+        "p95_ms": 0.02339668571949005
+      }
+    },
+    "record_lookup": {
+      "n": 100,
+      "correct": 50,
+      "accuracy": 0.5,
+      "dangerous": 0,
+      "dangerous_denominator": 0,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 0,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 50,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 50,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "complex_workflow": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        }
+      },
+      "latency": {
+        "p50_ms": 0.046428292989730835,
+        "p95_ms": 0.25138258934020996
+      }
+    }
+  }
+}

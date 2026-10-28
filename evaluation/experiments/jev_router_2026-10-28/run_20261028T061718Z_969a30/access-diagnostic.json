@@ -1,0 +1,28 @@
+{
+  "checked_at": "2026-10-28T06:18:30.745499+00:00",
+  "status": "BLOCKED_PROVIDER_REGION",
+  "provider_response": {
+    "title": "Typesafe is not available in your region.",
+    "status": 451
+  },
+  "non_inference_checks": [
+    {
+      "method": "GET",
+      "url": "https://api.typesafe.ai/v1/models",
+      "authenticated": true,
+      "status": 451
+    },
+    {
+      "method": "GET",
+      "url": "https://api.typesafe.ai/openapi.json",
+      "authenticated": false,
+      "status": 451
+    }
+  ],
+  "inference_attempts": 1,
+  "jev_observations": 0,
+  "planned_cases": 212,
+  "credential_validity": "not_verified_due_to_region_rejection",
+  "billing": "No usage returned; USD 0.002752512 remains reserved, not confirmed spend.",
+  "next_requirement": "Provider-supported execution region and reconciliation of the unresolved attempt before further inference."
+}

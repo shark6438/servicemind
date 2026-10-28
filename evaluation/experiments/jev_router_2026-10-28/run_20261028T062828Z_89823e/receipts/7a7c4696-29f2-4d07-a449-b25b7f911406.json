@@ -1,0 +1,28 @@
+{
+  "attempt_id": "7a7c4696-29f2-4d07-a449-b25b7f911406",
+  "status": 200,
+  "provider": "openrouter",
+  "response": {
+    "id": "gen-dec-1793169014-3NcA1R8EKVtCaPoQCibm",
+    "model": "typesafe/jev-1.14-20261014",
+    "provider": "TypeSafe",
+    "usage": {
+      "input_tokens": 749,
+      "output_tokens": 58,
+      "cost": 3.1458e-05
+    },
+    "answers": {
+      "route": {
+        "type": "choice",
+        "choice": "complex_workflow",
+        "probabilities": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0.03,
+          "complex_workflow": 0.97,
+          "unsupported": 0
+        },
+        "confidence": 0.96
+      }
+    }
+  }
+}

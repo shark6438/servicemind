@@ -1,0 +1,59 @@
+{
+  "checked_at": "2026-10-28T07:06:41.241038+00:00",
+  "requests": "read-only GET; no additional model call",
+  "account_status": 200,
+  "key_budget": {
+    "limit": 1,
+    "limit_remaining": 0.993369208,
+    "usage": 0.006630792,
+    "is_free_tier": false
+  },
+  "catalog_status": 200,
+  "catalog": {
+    "id": "typesafe/jev-1.14",
+    "endpoints": [
+      {
+        "name": "TypeSafe | typesafe/jev-1.14-20261014",
+        "provider_name": "TypeSafe",
+        "context_length": 262144,
+        "pricing": {
+          "prompt": "0.000000042",
+          "completion": "0",
+          "discount": 0
+        },
+        "endpoint_fields": [
+          "name",
+          "model_id",
+          "model_name",
+          "context_length",
+          "pricing",
+          "provider_name",
+          "tag",
+          "service_tier",
+          "quantization",
+          "max_completion_tokens",
+          "max_prompt_tokens",
+          "supported_parameters",
+          "supports_tool_choice",
+          "status",
+          "uptime_last_30m",
+          "uptime_last_5m",
+          "uptime_last_1d",
+          "supports_implicit_caching",
+          "native_tools",
+          "supports_voice_cloning",
+          "supports_multiple_audio_references",
+          "supports_image_reference",
+          "supports_diarization",
+          "latency_last_30m",
+          "throughput_last_30m"
+        ]
+      }
+    ]
+  },
+  "wire_code_matches_successful_run": true,
+  "previous_successes": 212,
+  "previous_models": [
+    "typesafe/jev-1.14-20261014"
+  ]
+}

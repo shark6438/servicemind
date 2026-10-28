@@ -1,0 +1,51 @@
+{
+  "checked_at": "2026-10-28T09:21:00.765656+00:00",
+  "new_model_requests": 0,
+  "related_tests_passed": 77,
+  "frozen_case_count": 500,
+  "observations": 500,
+  "test_rows": 260,
+  "test_topics": 13,
+  "all_frozen_input_fields_match": true,
+  "all_decisions_backed_by_validated_receipts": true,
+  "all_request_payload_hashes_match": true,
+  "receipt_http_status_counts": {
+    "200": 500,
+    "403": 1
+  },
+  "dev_prediction_digest_matches": true,
+  "dev_only_threshold_recomputed": 0.9,
+  "selected_at": "2026-10-28T07:41:23.597168+00:00",
+  "first_test_reservation_at": "2026-10-28T07:41:23.604774+00:00",
+  "selection_precedes_first_test": true,
+  "analysis_exactly_reproduced": true,
+  "decision_gates_passed": 8,
+  "initial_final_data_prompt_model_split_selection_statistics_gates_equal": true,
+  "amendment_2_before_settled": 499,
+  "amendment_2_after_settled": 1,
+  "initial_spec_original_bytes_reconstructed_and_hash_matched": true,
+  "current_source_snapshots_archived": true,
+  "pre_amendment_source_content_available": false,
+  "account_reconciliation": {
+    "checked_at": "2026-10-28T09:14:07.905228+00:00",
+    "http_status": 200,
+    "key_budget": {
+      "limit": 1,
+      "limit_remaining": 0.977517694,
+      "usage": 0.022482306,
+      "is_free_tier": false
+    },
+    "response_cost_sum_usd": "0.015820098",
+    "account_increment_since_before_usd": "0.015820098",
+    "difference_usd": "0E-9"
+  },
+  "conservative_all_stage_cost_and_unresolved_usd": "0.036244866",
+  "review_findings": [
+    "synthetic templates shared across dev/test",
+    "degenerate cluster intervals",
+    "p is exact and minimum attainable, not inexact",
+    "5xx zero-cost void requires correction before future paid runs",
+    "checkpoint durability gap between ten-row writes",
+    "recovery probe cost omitted by stage ledger; full budget still under USD 0.05"
+  ]
+}

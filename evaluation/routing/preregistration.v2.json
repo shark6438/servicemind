@@ -1,0 +1,115 @@
+{
+  "version": "v2",
+  "created_at": "2026-10-28",
+  "status": "draft -- S1 and S3 are declared but not yet labelled or frozen; the analyzer refuses (exit 3) until every digest is filled in",
+  "purpose": "Decide whether Jev may replace or augment the entrance router, using only evidence that survives review: frozen strata, pre-declared metrics, pre-declared decision rules, and a test split that is opened once.",
+  "arms": {
+    "r": "existing FastPathRouter, offline",
+    "j": "Jev argmax, one choice question per case",
+    "h": "Jev decides when its confidence >= tau; the rule router decides below tau; tau is chosen on dev only"
+  },
+  "strata": [
+    {
+      "name": "s0_guard",
+      "path": "evaluation/routing/routing.jsonl",
+      "sha256": "d0ebb6c0f5e9e0597f92840b0f825e9985583a87b4d2cc9edd5ad4a4a0f92f93",
+      "role": "regression guard: must not regress; co-evolved with the rules so it cannot prove generalisation",
+      "status": "frozen"
+    },
+    {
+      "name": "s0_hard",
+      "path": "evaluation/routing/routing_hard.v1.jsonl",
+      "sha256": "983de9d409a61597e482ed33bd95b6f1aaaf7b91d48cb0821e3a9447808f3e8f",
+      "role": "hard cases: contract vs boundary reported separately",
+      "status": "frozen"
+    },
+    {
+      "name": "s3_probe_v1",
+      "path": "evaluation/routing/routing_semantic_probe.v1.jsonl",
+      "sha256": "a0d8daec3e7a959abfcf1e08bb0e24978aa0afaf3555a0b5d8334ab879d81503",
+      "role": "assistant-authored probe set, kept for continuity only; excluded from the primary judgement",
+      "status": "frozen"
+    },
+    {
+      "name": "s1_semantic_human",
+      "path": "evaluation/routing/routing_semantic_human.v2.jsonl",
+      "sha256": null,
+      "role": "primary: paraphrased real questions, two annotators, adjudicated",
+      "status": "pending labelling"
+    },
+    {
+      "name": "s3_real_traffic",
+      "path": "evaluation/routing/routing_real_traffic.v1.jsonl",
+      "sha256": null,
+      "role": "primary: real question forms sampled from tickets, two annotators, adjudicated",
+      "status": "pending labelling"
+    }
+  ],
+  "split": {
+    "rule": "each primary stratum is split 50/50 by a fixed seed",
+    "seed": 20261028,
+    "tau_selection": "dev half only; the test half is analysed once and is not used to choose tau"
+  },
+  "thresholds": {
+    "grid": [
+      0.5,
+      0.6,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95,
+      0.99
+    ]
+  },
+  "primary_metrics": [
+    "routing accuracy per stratum against adjudicated labels",
+    "dangerous downgrade rate for complex/unsupported expectations",
+    "hybrid (arm h) accuracy at the pre-registered coverage of 90%"
+  ],
+  "decision_rules": [
+    {
+      "id": "A1",
+      "rule": "dangerous downgrades must not increase versus the rule arm on any stratum"
+    },
+    {
+      "id": "A2",
+      "rule": "no unadjudicated regression on s0_guard or s0_hard; disagreements are adjudicated blind to arm"
+    },
+    {
+      "id": "A3",
+      "rule": "arm h minus arm r accuracy on s1_semantic_human union s3_real_traffic is at least +0.10, with a paired bootstrap 95% CI excluding 0"
+    },
+    {
+      "id": "A4",
+      "rule": "at 90% coverage the hybrid accuracy is higher than the rule arm"
+    },
+    {
+      "id": "A5",
+      "rule": "p95 latency stays at or below 2.0 s per request"
+    },
+    {
+      "id": "A6",
+      "rule": "provider failure or timeout degrades to the rule router with an explicit degraded marker, never silently"
+    }
+  ],
+  "analysis": {
+    "paired_test": "two-sided exact McNemar over discordant pairs",
+    "interval": "paired percentile bootstrap, 10000 iterations",
+    "multiplicity": "Holm correction over the four strata",
+    "reporting": "per-stratum 4x4 confusion matrices; no pooled single accuracy"
+  },
+  "budget": {
+    "usd_cap": 0.3,
+    "measured_cost_per_call_usd": 3.13e-05,
+    "planned_calls": 1000,
+    "stop_rule": "stop immediately when cumulative usage.cost reaches the cap"
+  },
+  "prohibited": [
+    "changing labels after seeing model output",
+    "choosing tau on the test half",
+    "dropping a stratum that turned out badly",
+    "using the assistant-authored probe set as the primary evidence"
+  ]
+}

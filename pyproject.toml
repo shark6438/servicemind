@@ -114,8 +114,8 @@ namespaces = false
 exclude-newer = "14 days"
 # Docling still caps Pillow at 12; retain this security override until its upper bound is updated.
 override-dependencies = ["pillow==13.0.0"]
-# Security fixes verified by the 2026-10-22 assessment; other packages retain the cooldown.
-exclude-newer-package = { streamlit = "2026-10-22T09:20:00Z", langgraph-checkpoint-mongodb = "2026-10-22T09:20:00Z", aiohttp = "2026-10-22T09:20:00Z", certifi = "2026-10-22T09:20:00Z", docling = "2026-10-22T09:20:00Z", docling-slim = "2026-10-22T09:20:00Z", gitpython = "2026-10-22T09:20:00Z", langgraph-sdk = "2026-10-22T09:20:00Z", pillow = "2026-10-22T09:20:00Z", pyjwt = "2026-10-22T09:20:00Z", pymongo = "2026-10-22T09:20:00Z", pypdf = "2026-10-22T09:20:00Z", transformers = "2026-10-22T09:20:00Z", urllib3 = "2026-10-22T09:20:00Z" }
+# Security fixes verified by the 2026-10-22 and 2026-10-28 assessments; other packages retain the cooldown.
+exclude-newer-package = { authlib = "2026-10-28T00:00:00Z", brotli = "2026-10-28T00:00:00Z", brotlicffi = "2026-10-28T00:00:00Z", filelock = "2026-10-28T00:00:00Z", python-discovery = "2026-10-28T00:00:00Z", virtualenv = "2026-10-28T00:00:00Z", streamlit = "2026-10-22T09:20:00Z", langgraph-checkpoint-mongodb = "2026-10-22T09:20:00Z", aiohttp = "2026-10-22T09:20:00Z", certifi = "2026-10-22T09:20:00Z", docling = "2026-10-22T09:20:00Z", docling-slim = "2026-10-22T09:20:00Z", gitpython = "2026-10-22T09:20:00Z", langgraph-sdk = "2026-10-22T09:20:00Z", pillow = "2026-10-22T09:20:00Z", pyjwt = "2026-10-22T09:20:00Z", pymongo = "2026-10-22T09:20:00Z", pypdf = "2026-10-22T09:20:00Z", transformers = "2026-10-22T09:20:00Z", urllib3 = "2026-10-22T09:20:00Z" }
 
 [dependency-groups]
 dev = [

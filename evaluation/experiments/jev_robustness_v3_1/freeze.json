@@ -1,0 +1,124 @@
+{
+  "at": "2026-10-28T07:36:18.518710+00:00",
+  "spec": {
+    "version": "machine-v3.1",
+    "created_at": "2026-10-28T07:36:02.628685+00:00",
+    "status": "amendment frozen before any v3.1 prediction; the v3 stage stopped on its first request with HTTP 403 at the provider's geo gate and observed zero predictions",
+    "scope": "Single-assistant labelled synthetic semantic robustness benchmark; no human/traffic/production claim",
+    "hypothesis": "Jev improves accuracy over unchanged rules on a predeclared bilingual lexical/intent challenge; benefit is conditional on this designed benchmark",
+    "datasets": [
+      {
+        "path": "evaluation/routing/routing_scenarios_machine.v3.jsonl",
+        "sha256": "b23fd9b24e813339fcfb74f51d98153ad3f2448e4838d2d3e439007ee98f367a",
+        "count": 300
+      },
+      {
+        "path": "evaluation/routing/routing_semantic_machine.v3.jsonl",
+        "sha256": "681ac15b3d31114ff75d9b0b7d49ddda82e275661b19823a4b8dc0a567969d0c",
+        "count": 200
+      }
+    ],
+    "frozen_files": {
+      "scripts/build_jev_robustness_dataset.py": "ff6a77c9ad23ccfb486a902e8d64b6ec8af1209bfef59e243012034f4c436118",
+      "scripts/evaluate_jev_robustness.py": "4b13b286783ffb3661a4e60a35c219a3a524a307da4953bb748521fcf77fe0de",
+      "scripts/compare_jev_routing.py": "b604df8ffdba83b4b69187c9460672c5e16f6087adab25e96ea6e53e43002976",
+      "tests/servicemind/test_jev_robustness.py": "38d0da0ec026ff955b557dd4f9c3b09af64d58b1a58e41296dda21e3b9d0fda1",
+      "evaluation/routing/ANNOTATION_GUIDE.machine.v3.md": "195e336fbd220f88f1aa79fec5fdbb08955a312b93c5025e2325c9466d0561a5",
+      "src/servicemind/orchestration/router.py": "9c845ab198c6d9d212e708bbe32d8c70df35315e4c3704dcd7ae6a95c12fa59f",
+      "src/servicemind/domain/routing.py": "c4a22493f53b30c8a35542d1aa0178f6a182198948a2c43bcdb1df377aed2a85",
+      "evaluation/routing/routing.jsonl": "d0ebb6c0f5e9e0597f92840b0f825e9985583a87b4d2cc9edd5ad4a4a0f92f93",
+      "evaluation/routing/routing_hard.v1.jsonl": "983de9d409a61597e482ed33bd95b6f1aaaf7b91d48cb0821e3a9447808f3e8f",
+      "evaluation/routing/routing_semantic_probe.v1.jsonl": "a0d8daec3e7a959abfcf1e08bb0e24978aa0afaf3555a0b5d8334ab879d81503",
+      "evaluation/experiments/jev_router_2026-10-28/run_20261028T062828Z_89823e/report.json": "eab9680689a2cff04d9fa59cc742a3630059071da5dd92d347b0069ca461b74a"
+    },
+    "prompt_hash": "c7178c51d12f1e79e251e263843eb2c8c97a95b5cbfd8b040113da403f46abb3",
+    "model": "typesafe/jev-1.14",
+    "served_model_rule": "Bind first response version; stop on changes",
+    "historical_report": "evaluation/experiments/jev_router_2026-10-28/run_20261028T062828Z_89823e/report.json",
+    "arms": {
+      "rule": "unchanged FastPathRouter",
+      "jev": "unchanged single choice Jev prompt, argmax",
+      "hybrid": "Jev above one dev-selected confidence threshold, rule otherwise"
+    },
+    "split": {
+      "unit": "whole business topic including all scenarios/languages/paraphrases",
+      "algorithm": "SHA256 of 20261028:topic; first floor(n/2) topics per dataset are dev",
+      "dev_rows": 240,
+      "test_rows": 260,
+      "dev_topics": 12,
+      "test_topics": 13,
+      "template_overlap_disclosed": true
+    },
+    "threshold_grid": [
+      0.5,
+      0.6,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95,
+      0.99,
+      1.01
+    ],
+    "threshold_selection": "dev only; exclude candidates that introduce any individual historical guard regression or increase dev dangerous downgrades; maximize dev correct, then minimize danger, then larger threshold. 1.01 is rule-only fallback.",
+    "test_protocol": "Write selection.json, its dev prediction digest and test_observed_at_selection=0 before first test request. No test-based threshold/prompt/label change or paid rerun.",
+    "statistics": {
+      "primary": "Jev minus rule accuracy on the declared fixed-mixture 260-case synthetic test; all constituent results also reported",
+      "secondary": "dev-selected hybrid minus rule on same held-out topics",
+      "bootstrap": "10000 paired topic-block resamples, stratified by dataset, seed 20261028",
+      "test": "two-sided exact topic sign-flip permutation of paired correctness differences",
+      "multiplicity": "Holm across Jev-versus-rule and hybrid-versus-rule topic tests",
+      "supplementary": "row McNemar is descriptive; sibling rows are not independent",
+      "limits": "Topics share templates and annotation author; inference does not establish natural traffic generalisation"
+    },
+    "decision_gates": {
+      "J_accuracy_gain_at_least_10pp": true,
+      "J_cluster_ci_excludes_zero": true,
+      "J_cluster_holm_p_at_most_005": true,
+      "J_danger_not_above_rule": true,
+      "J_prohibited_acceptance_not_above_rule": true,
+      "H_no_individual_historical_regression": true,
+      "latency_p95_at_most_2s": true,
+      "cumulative_budget_ok": true
+    },
+    "budget": {
+      "total_usd_including_history": "0.05",
+      "new_attempt_cap": 500,
+      "historical_ledger": "evaluation/experiments/jev_router_2026-10-28/spend.jsonl",
+      "stage_ledger": "evaluation/experiments/jev_robustness_v3_1/spend.jsonl",
+      "reserve_per_request_usd": "0.011010048",
+      "price_usd_per_million_input": "0.042",
+      "settlement": "OpenRouter usage.cost; all unknown reservations retained; no retry; old ledger stays locked during stage"
+    },
+    "prohibited": [
+      "claiming independent human double annotation or kappa",
+      "calling synthetic scenarios real traffic",
+      "changing data/prompt/labels after new predictions",
+      "choosing threshold on test",
+      "dropping failed cases or unfavourable strata",
+      "treating Jev selection coverage as HTTP-call savings"
+    ],
+    "amendment": {
+      "from_version": "machine-v3",
+      "reason": "The single v3 attempt returned 403 'This model is not available in your region' (failed_routing_step='Gate Endpoints with Geo Restrictions'), and an identical direct request from the same egress IP succeeded 28 minutes later. The rejection is therefore transient, not a policy change, and a single blip would otherwise destroy a ten-minute run.",
+      "evidence": {
+        "v3_failure_receipt": "evaluation/experiments/jev_robustness_v3/receipts/de216860-5c91-4c1a-99ca-8017ddb522b9.json",
+        "recovery_probe_receipt": "evaluation/experiments/jev_region_probe/probe_20261028T073058Z_200.json",
+        "account_unchanged": "usage 0.006630792 at 07:02:13Z and 07:06:41Z; the 403 was not billed"
+      },
+      "changes": [
+        "transient provider rejections (HTTP 403/429/5xx) void the reservation at USD 0 because the response carries no usage, then retry with backoff 10/30/60/120/300/600/900 s",
+        "the run checkpoints every 10 rows and resumes unfinished rows from report.json",
+        "a new stage ledger evaluation/experiments/jev_robustness_v3_1/spend.jsonl"
+      ],
+      "unchanged": [
+        "datasets, splits, prompt, model, threshold grid, threshold selection rule, statistics and decision gates are byte-identical to machine-v3",
+        "the v3 stage directory is kept untouched as the record of the failed attempt"
+      ],
+      "observations_before_amendment": 0
+    }
+  },
+  "spec_sha256": "b24381788f7edcec3e854005d06a955c1e48ebf95c8b0a8614c811e846fb5a43",
+  "note": "Written before new predictions and paid calls; no human review is claimed."
+}

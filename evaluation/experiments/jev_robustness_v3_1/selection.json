@@ -1,0 +1,411 @@
+{
+  "threshold": 0.9,
+  "selection_rule": "max dev correct, then min danger, then larger threshold; no individual historical guard regression and dev danger <= rule required",
+  "dev_count": 240,
+  "test_observed_at_selection": 0,
+  "candidates": [
+    {
+      "threshold": 0.5,
+      "n": 240,
+      "correct": 230,
+      "accuracy": 0.9583333333333334,
+      "dangerous": 10,
+      "dangerous_denominator": 120,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 48,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 48,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 72,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "complex_workflow": {
+          "simple_data_query": 10,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 62,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 48
+        }
+      },
+      "latency": null,
+      "jev_coverage": 0.9916666666666667,
+      "historical_guard_regressions": 4,
+      "eligible": false
+    },
+    {
+      "threshold": 0.6,
+      "n": 240,
+      "correct": 233,
+      "accuracy": 0.9708333333333333,
+      "dangerous": 7,
+      "dangerous_denominator": 120,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 48,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 48,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 72,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "complex_workflow": {
+          "simple_data_query": 7,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 65,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 48
+        }
+      },
+      "latency": null,
+      "jev_coverage": 0.9791666666666666,
+      "historical_guard_regressions": 4,
+      "eligible": false
+    },
+    {
+      "threshold": 0.7,
+      "n": 240,
+      "correct": 240,
+      "accuracy": 1.0,
+      "dangerous": 0,
+      "dangerous_denominator": 120,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 48,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 48,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 72,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "complex_workflow": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 72,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 48
+        }
+      },
+      "latency": null,
+      "jev_coverage": 0.95,
+      "historical_guard_regressions": 4,
+      "eligible": false
+    },
+    {
+      "threshold": 0.75,
+      "n": 240,
+      "correct": 240,
+      "accuracy": 1.0,
+      "dangerous": 0,
+      "dangerous_denominator": 120,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 48,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 48,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 72,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "complex_workflow": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 72,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 48
+        }
+      },
+      "latency": null,
+      "jev_coverage": 0.95,
+      "historical_guard_regressions": 2,
+      "eligible": false
+    },
+    {
+      "threshold": 0.8,
+      "n": 240,
+      "correct": 240,
+      "accuracy": 1.0,
+      "dangerous": 0,
+      "dangerous_denominator": 120,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 48,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 48,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 72,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "complex_workflow": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 72,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 48
+        }
+      },
+      "latency": null,
+      "jev_coverage": 0.95,
+      "historical_guard_regressions": 2,
+      "eligible": false
+    },
+    {
+      "threshold": 0.85,
+      "n": 240,
+      "correct": 240,
+      "accuracy": 1.0,
+      "dangerous": 0,
+      "dangerous_denominator": 120,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 48,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 48,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 72,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "complex_workflow": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 72,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 48
+        }
+      },
+      "latency": null,
+      "jev_coverage": 0.95,
+      "historical_guard_regressions": 0,
+      "eligible": true
+    },
+    {
+      "threshold": 0.9,
+      "n": 240,
+      "correct": 240,
+      "accuracy": 1.0,
+      "dangerous": 0,
+      "dangerous_denominator": 120,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 48,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 48,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 72,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "complex_workflow": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 72,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 48
+        }
+      },
+      "latency": null,
+      "jev_coverage": 0.95,
+      "historical_guard_regressions": 0,
+      "eligible": true
+    },
+    {
+      "threshold": 0.95,
+      "n": 240,
+      "correct": 237,
+      "accuracy": 0.9875,
+      "dangerous": 0,
+      "dangerous_denominator": 120,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 48,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 48,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 69,
+          "complex_workflow": 2,
+          "unsupported": 1
+        },
+        "complex_workflow": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 72,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 48
+        }
+      },
+      "latency": null,
+      "jev_coverage": 0.9375,
+      "historical_guard_regressions": 0,
+      "eligible": true
+    },
+    {
+      "threshold": 0.99,
+      "n": 240,
+      "correct": 202,
+      "accuracy": 0.8416666666666667,
+      "dangerous": 0,
+      "dangerous_denominator": 120,
+      "unsupported_not_rejected": 0,
+      "unsupported_denominator": 48,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 46,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 2,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 36,
+          "complex_workflow": 18,
+          "unsupported": 18
+        },
+        "complex_workflow": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 72,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 0,
+          "unsupported": 48
+        }
+      },
+      "latency": null,
+      "jev_coverage": 0.7291666666666666,
+      "historical_guard_regressions": 0,
+      "eligible": true
+    },
+    {
+      "threshold": 1.01,
+      "n": 240,
+      "correct": 120,
+      "accuracy": 0.5,
+      "dangerous": 24,
+      "dangerous_denominator": 120,
+      "unsupported_not_rejected": 24,
+      "unsupported_denominator": 48,
+      "confusion": {
+        "simple_data_query": {
+          "simple_data_query": 24,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 24,
+          "unsupported": 0
+        },
+        "simple_knowledge_query": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 24,
+          "complex_workflow": 24,
+          "unsupported": 24
+        },
+        "complex_workflow": {
+          "simple_data_query": 7,
+          "simple_knowledge_query": 17,
+          "complex_workflow": 48,
+          "unsupported": 0
+        },
+        "unsupported": {
+          "simple_data_query": 0,
+          "simple_knowledge_query": 0,
+          "complex_workflow": 24,
+          "unsupported": 24
+        }
+      },
+      "latency": null,
+      "jev_coverage": 0.0,
+      "historical_guard_regressions": 0,
+      "eligible": true
+    }
+  ],
+  "selected_at": "2026-10-28T07:41:23.597168+00:00",
+  "spec_sha256": "b24381788f7edcec3e854005d06a955c1e48ebf95c8b0a8614c811e846fb5a43",
+  "dev_predictions_sha256": "25473f96f8a89bbf82ccd5309f4911edc04474334a5b86403930178e4ad7e2fb"
+}
