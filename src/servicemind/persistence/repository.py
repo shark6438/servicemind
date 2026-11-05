@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import and_, cast, func, or_, select, text
 from sqlalchemy.dialects.postgresql import JSONB, insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from servicemind.persistence.database import tenant_session
 from servicemind.persistence.models import (
@@ -27,6 +28,33 @@ class RunCancelled(RuntimeError):
     pass
 
 
+class RunQueueFull(RuntimeError):
+    """The tenant already has its configured maximum runnable task backlog."""
+
+
+async def _ensure_run_queue_capacity(
+    session: AsyncSession, tenant_id: UUID, queue_limit: int | None
+) -> None:
+    if queue_limit is None:
+        return
+    if queue_limit < 1:
+        raise ValueError("run queue limit must be positive")
+    # Counting and insertion share this transaction lock. Different API processes
+    # cannot both observe the final free slot and admit beyond the tenant limit.
+    await session.execute(
+        text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+        {"key": f"servicemind:run-admission:{tenant_id}"},
+    )
+    runnable = await session.scalar(
+        select(func.count(AgentRun.id)).where(
+            AgentRun.tenant_id == tenant_id,
+            AgentRun.status.in_([RunStatus.PENDING.value, RunStatus.RUNNING.value]),
+        )
+    )
+    if int(runnable or 0) >= queue_limit:
+        raise RunQueueFull("Tenant run queue is full")
+
+
 class ServiceMindRepository:
     def __init__(self, tenant_id: UUID) -> None:
         self.tenant_id = tenant_id
@@ -39,6 +67,8 @@ class ServiceMindRepository:
         goal: str,
         request_write: bool,
         access_scope: dict[str, list[int]] | None = None,
+        event_payload: dict[str, Any] | None = None,
+        queue_limit: int | None = None,
     ) -> AgentRun:
         run = AgentRun(
             id=uuid4(),
@@ -52,8 +82,20 @@ class ServiceMindRepository:
             status=RunStatus.PENDING.value,
         )
         async with tenant_session(self.tenant_id) as session:
+            await _ensure_run_queue_capacity(session, self.tenant_id, queue_limit)
             session.add(run)
             await session.flush()
+            if event_payload is not None:
+                session.add(
+                    RunEvent(
+                        tenant_id=self.tenant_id,
+                        run_id=run.id,
+                        sequence=1,
+                        event_type="run.created",
+                        payload=event_payload,
+                    )
+                )
+                await session.flush()
         return run
 
     async def claim_webhook_run(
@@ -66,6 +108,7 @@ class ServiceMindRepository:
         ticket_id: int,
         goal: str,
         event_payload: dict[str, Any],
+        queue_limit: int | None = None,
     ) -> tuple[AgentRun, bool]:
         """Atomically persist a webhook receipt and its deterministic agent run.
 
@@ -96,6 +139,22 @@ class ServiceMindRepository:
             if receipt.action_hash != action_hash:
                 raise RuntimeError("Idempotency key was reused with different action content")
 
+            existing_run = (
+                await session.execute(
+                    select(AgentRun).where(
+                        AgentRun.id == run_id, AgentRun.tenant_id == self.tenant_id
+                    )
+                )
+            ).scalar_one_or_none()
+            if existing_run is not None:
+                # A retry is a lookup, not a new admission. Even a full tenant queue
+                # must return the accepted task rather than tell GLPI to create more.
+                receipt.result = {"run_id": str(existing_run.id)}
+                receipt.completed = True
+                await session.flush()
+                return existing_run, receipt_created is None
+
+            await _ensure_run_queue_capacity(session, self.tenant_id, queue_limit)
             created_run_id = (
                 await session.execute(
                     insert(AgentRun)
@@ -253,13 +312,25 @@ class ServiceMindRepository:
             await session.flush()
             return event
 
-    async def list_events(self, run_id: UUID, after: int = 0) -> list[RunEvent]:
+    async def list_events(
+        self, run_id: UUID, after: int = 0, *, limit: int | None = None
+    ) -> list[RunEvent]:
+        """Read an event page by sequence; callers use the last sequence as cursor.
+
+        ``None`` preserves the legacy full-timeline API. Streaming callers provide a
+        finite page size so long-running tasks cannot materialize all history at once.
+        """
+        if limit is not None and not 1 <= limit <= 1000:
+            raise ValueError("event page limit must be between 1 and 1000")
+        statement = (
+            select(RunEvent)
+            .where(RunEvent.run_id == run_id, RunEvent.sequence > after)
+            .order_by(RunEvent.sequence)
+        )
+        if limit is not None:
+            statement = statement.limit(limit)
         async with tenant_session(self.tenant_id) as session:
-            result = await session.execute(
-                select(RunEvent)
-                .where(RunEvent.run_id == run_id, RunEvent.sequence > after)
-                .order_by(RunEvent.sequence)
-            )
+            result = await session.execute(statement)
             return list(result.scalars())
 
     async def record_tool_invocation(
@@ -284,21 +355,42 @@ class ServiceMindRepository:
             await session.flush()
             return invocation
 
-    async def list_recoverable_runs(self) -> list[AgentRun]:
-        async with tenant_session(self.tenant_id) as session:
-            result = await session.execute(
-                select(AgentRun)
-                .where(
-                    AgentRun.status.in_(
-                        [
-                            RunStatus.PENDING.value,
-                            RunStatus.RUNNING.value,
-                            RunStatus.WAITING_APPROVAL.value,
-                        ]
-                    )
-                )
-                .order_by(AgentRun.created_at)
+    async def list_recoverable_runs(
+        self,
+        *,
+        limit: int | None = None,
+        after_created_at: datetime | None = None,
+        after_run_id: UUID | None = None,
+    ) -> list[AgentRun]:
+        """Scan incomplete runs in stable pages without skipping equal timestamps."""
+        if (after_created_at is None) != (after_run_id is None):
+            raise ValueError("recoverable run cursor requires both values")
+        if limit is not None and not 1 <= limit <= 1000:
+            raise ValueError("recoverable run page limit must be between 1 and 1000")
+        statement = select(AgentRun).where(
+            AgentRun.status.in_(
+                [
+                    RunStatus.PENDING.value,
+                    RunStatus.RUNNING.value,
+                    RunStatus.WAITING_APPROVAL.value,
+                ]
             )
+        )
+        if after_created_at is not None and after_run_id is not None:
+            statement = statement.where(
+                or_(
+                    AgentRun.created_at > after_created_at,
+                    and_(
+                        AgentRun.created_at == after_created_at,
+                        AgentRun.id > after_run_id,
+                    ),
+                )
+            )
+        statement = statement.order_by(AgentRun.created_at, AgentRun.id)
+        if limit is not None:
+            statement = statement.limit(limit)
+        async with tenant_session(self.tenant_id) as session:
+            result = await session.execute(statement)
             return list(result.scalars())
 
     async def get_glpi_integration(self) -> GlpiIntegration | None:

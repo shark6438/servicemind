@@ -7,9 +7,9 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { StatusBadge } from "@/components/ui/status";
 import { apiRequest } from "@/lib/api";
-import { runDetailSchema, runTimelineSchema, type RunDetail } from "@/lib/contracts";
+import { runDetailSchema, type RunDetail } from "@/lib/contracts";
 import { formatDate, readableLabel, safeJson, shortId } from "@/lib/format";
-import { useApi } from "@/hooks/use-api";
+import { useLiveRun } from "@/hooks/use-live-run";
 import { useAuth } from "@/providers/auth-provider";
 
 type Obj = Record<string, unknown>;
@@ -101,8 +101,7 @@ function HumanDecision({ runId, mode, action, onDone }: {
 }
 
 export function RunDetailView({ runId }: { runId: string }) {
-  const run = useApi(`/v1/servicemind/runs/${runId}`, runDetailSchema, { refreshInterval: 10000 });
-  const timeline = useApi(`/v1/servicemind/runs/${runId}/timeline`, runTimelineSchema, { refreshInterval: 10000 });
+  const { run, timeline } = useLiveRun(runId);
   if (run.isLoading) return <section className="page"><LoadingState /></section>;
   if (run.error || !run.data) return <section className="page"><ErrorState error={run.error} retry={() => void run.mutate()} /></section>;
   const data = run.data; const result = data.result ?? {}; const plan = object(result.task_plan);

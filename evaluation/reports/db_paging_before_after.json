@@ -1,0 +1,45 @@
+{
+  "postgres": 160015,
+  "data_shape": {
+    "runs": 120000,
+    "tenants": 5,
+    "live_run_fraction": 0.06,
+    "events_in_timeline": 30000,
+    "event_payload_bytes": 768,
+    "repeats": 5
+  },
+  "before": {
+    "recent_runs": {
+      "median_ms": 28.48,
+      "plan": "Limit>Sort>Bitmap Heap Scan>Bitmap Index Scan",
+      "rows": 100
+    },
+    "recovery_runs": {
+      "median_ms": 11.794,
+      "plan": "Limit>Sort>Bitmap Heap Scan>BitmapAnd>Bitmap Index Scan>Bitmap Index Scan",
+      "rows": 100
+    },
+    "timeline": {
+      "median_fetch_ms": 59.723831713199615,
+      "rows_materialized": 30000,
+      "payload_bytes_materialized": 23040000
+    }
+  },
+  "after": {
+    "recent_runs": {
+      "median_ms": 0.088,
+      "plan": "Limit>Index Scan",
+      "rows": 100
+    },
+    "recovery_runs": {
+      "median_ms": 0.116,
+      "plan": "Limit>Index Scan",
+      "rows": 100
+    },
+    "timeline": {
+      "median_fetch_ms": 0.744059681892395,
+      "rows_materialized": 100,
+      "payload_bytes_materialized": 76800
+    }
+  }
+}

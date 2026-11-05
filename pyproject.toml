@@ -83,6 +83,7 @@ dependencies = [
 [project.scripts]
 servicemind-api = "run_service:main"
 servicemind-outbox = "servicemind.reliability.worker:main"
+servicemind-run-worker = "service.run_worker:main"
 servicemind-webhook-proxy = "service.webhook_proxy:main"
 
 [project.optional-dependencies]

@@ -34,7 +34,7 @@ RAG business evidence into a quality pass.
 - Domain contracts do not import runtime, persistence, HTTP or provider adapters.
 - HTTP entry adapters live under `servicemind.interfaces.http`; repositories and providers
   remain outbound adapters.
-- API, Streamlit, outbox and the Next.js operator console are separate versioned process
+- API, Agent worker, Streamlit, outbox and the Next.js operator console are separate versioned process
   manifests.
 - The inherited top-level instance-agent shell remains load-bearing but sits outside the
   ServiceMind platform dependency graph.

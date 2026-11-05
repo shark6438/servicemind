@@ -16,6 +16,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -125,6 +126,16 @@ class GlpiIntegration(Base):
 
 class AgentRun(Base):
     __tablename__ = "agent_runs"
+    __table_args__ = (
+        Index("ix_agent_runs_tenant_created_id", "tenant_id", "created_at", "id"),
+        Index(
+            "ix_agent_runs_recovery",
+            "tenant_id",
+            "created_at",
+            "id",
+            postgresql_where=text("status IN ('pending', 'running', 'waiting_approval')"),
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id: Mapped[UUID] = mapped_column(
@@ -138,6 +149,10 @@ class AgentRun(Base):
     access_scope: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[str] = mapped_column(
         String(40), default=RunStatus.PENDING.value, nullable=False, index=True
+    )
+    worker_lease_owner: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    worker_lease_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
     result: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)

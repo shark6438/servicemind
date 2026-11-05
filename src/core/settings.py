@@ -1,7 +1,7 @@
 from enum import StrEnum
 from json import loads
 from os import getenv
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 
 from dotenv import find_dotenv
@@ -349,6 +349,16 @@ class Settings(BaseSettings):
     SERVICEMIND_MCP_EXPECTED_ISSUER: str = "servicemind://glpi-mcp"
     SERVICEMIND_MCP_SERVICE_TOKEN: SecretStr | None = None
     SERVICEMIND_REDIS_URL: SecretStr | None = None
+    # Agent run execution. The worker is an opt-in deployment unit: switching it on
+    # requires the `servicemind-run-worker` process and migration 0016.
+    SERVICEMIND_RUN_EXECUTION_MODE: Literal["in_process", "worker"] = Field(
+        default="in_process", pattern="^(in_process|worker)$"
+    )
+    SERVICEMIND_RUN_QUEUE_LIMIT_PER_TENANT: int = Field(default=100, ge=1, le=100_000)
+    SERVICEMIND_RUN_WORKER_PER_TENANT_LIMIT: int = Field(default=2, ge=1, le=32)
+    SERVICEMIND_RUN_WORKER_CONCURRENCY: int = Field(default=4, ge=1, le=32)
+    SERVICEMIND_RUN_WORKER_LEASE_SECONDS: int = Field(default=120, ge=30, le=3600)
+    SERVICEMIND_RUN_WORKER_POLL_SECONDS: float = Field(default=1, ge=0.1, le=30)
     SERVICEMIND_TOOL_RATE_LIMIT_PER_MINUTE: int = Field(default=60, ge=1, le=10_000)
     SERVICEMIND_TOOL_BULKHEAD_LIMIT: int = Field(default=8, ge=1, le=100)
     SERVICEMIND_TOOL_CIRCUIT_FAILURES: int = Field(default=5, ge=1, le=100)

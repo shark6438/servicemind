@@ -1,4 +1,5 @@
 import logging
+from collections.abc import AsyncIterator
 
 from servicemind.domain.models import ApprovalDecision
 from servicemind.orchestration.runtime import (
@@ -7,11 +8,31 @@ from servicemind.orchestration.runtime import (
     get_checkpoint_state,
     resume_run,
 )
-from servicemind.persistence.models import RunStatus
+from servicemind.persistence.models import AgentRun, RunStatus
 from servicemind.persistence.repository import ServiceMindRepository, list_tenant_ids
 from servicemind.security.auth import TenantContext
 
 logger = logging.getLogger(__name__)
+RECOVERY_PAGE_SIZE = 100
+
+
+async def _recoverable_runs(repository: ServiceMindRepository) -> AsyncIterator[AgentRun]:
+    """Bound each database read while scanning a tenant's incomplete runs once."""
+    after_created_at = None
+    after_run_id = None
+    while True:
+        page = await repository.list_recoverable_runs(
+            limit=RECOVERY_PAGE_SIZE,
+            after_created_at=after_created_at,
+            after_run_id=after_run_id,
+        )
+        if not page:
+            return
+        for run in page:
+            yield run
+        if len(page) < RECOVERY_PAGE_SIZE:
+            return
+        after_created_at, after_run_id = page[-1].created_at, page[-1].id
 
 
 def _caller_context(tenant_id, run, integration) -> TenantContext:
@@ -59,7 +80,7 @@ async def recover_incomplete_runs() -> int:
         integration = await repository.get_glpi_integration()
         if integration is None:
             continue
-        for run in await repository.list_recoverable_runs():
+        async for run in _recoverable_runs(repository):
             approval = await repository.get_approval(run.id)
             if run.status == RunStatus.WAITING_APPROVAL.value and approval is None:
                 continue

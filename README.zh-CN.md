@@ -159,7 +159,10 @@ frontend/               # Next.js 16 运维控制台（OIDC、租户范围 API �
 死代码删除。
 
 `pyproject.toml` 已声明构建后端、显式包发现以及安装后的 `servicemind-api` /
-`servicemind-outbox` 入口。[`scripts/audit_project_structure.py`](scripts/audit_project_structure.py)
+`servicemind-outbox` / `servicemind-run-worker` 入口。独立 Agent Worker 的部署与恢复说明见
+[BACKEND_RUN_WORKER.md](docs/BACKEND_RUN_WORKER.md)。本轮改动、验证与模拟数据对照见
+[后端升级报告](docs/BACKEND_UPGRADE_RESULTS_2026-11-05.md)，后续候选方向见
+[后端简历能力复审](docs/BACKEND_RESUME_AUDIT_2026-11-05.md)。[`scripts/audit_project_structure.py`](scripts/audit_project_structure.py)
 是可执行的架构契约,由 CI 的 `architecture-gate` job 执行:它会拒绝包依赖环、领域层向外依赖、
 源码路径注入、不完整的进程清单,以及产品对上游脚手架 import 的**任何增长**。脚手架预算是
 冻结的技术债——`core` 26 处 import 站点、`schema` 1 处——只允许减少。当已提交的报告与代码树

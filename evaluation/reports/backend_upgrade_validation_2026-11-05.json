@@ -1,0 +1,368 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-11-05T22:48:45.009839+08:00",
+  "base_commit": "7a54c3f6ab602c222573e9e57fcc99c83227fb0f",
+  "scope": [
+    "independent_run_worker",
+    "tenant_admission_and_execution_limits",
+    "postgres_paging_and_indexes",
+    "live_sse_and_frontend_subscription",
+    "operational_metrics"
+  ],
+  "paid_model_calls": 0,
+  "new_model_cost_usd": 0,
+  "deployment": {
+    "existing_services_restarted": false,
+    "target_database_migrated": false,
+    "default_execution_mode": "in_process",
+    "worker_enabled_by": "SERVICEMIND_RUN_EXECUTION_MODE=worker"
+  },
+  "checks": [
+    {
+      "name": "python_full_default_suite",
+      "command": "uv run pytest -q",
+      "result": "PASS",
+      "passed": 1637,
+      "skipped": 48,
+      "warnings": 69,
+      "elapsed_seconds": 99.67,
+      "python": "3.14.7",
+      "test_database": "isolated PostgreSQL bench database; application role bench_app with NOSUPERUSER NOBYPASSRLS",
+      "dotenv_disabled": true,
+      "log_sha256": "9265d5d677d9ba9fdf33d7133886b1bff4ebf58128d046c1bd60f1d8e5bc5311"
+    },
+    {
+      "name": "postgres_live_suite",
+      "command": "uv run pytest tests/servicemind -m 'docker and postgres' --run-docker -q",
+      "result": "PASS",
+      "passed": 37,
+      "postgres": "16.15",
+      "database_role": "NOSUPERUSER NOBYPASSRLS",
+      "isolated": true,
+      "log_sha256": "5e7dea42f8ad5bea64682e582e65eb60c6d3bf36a365aef6a4247e5531d8cc37"
+    },
+    {
+      "name": "redis_live_suite",
+      "command": "uv run pytest tests/servicemind -m 'docker and redis' --run-docker -q",
+      "result": "PASS",
+      "passed": 3,
+      "isolated": true,
+      "log_sha256": "eb47a3deacb2a3a6b4169ad665c9b644b5d6a0a6b9f4d4ca040077780f19b951"
+    },
+    {
+      "name": "ruff_check_and_format",
+      "command": "uv run ruff check . && uv run ruff format --check .",
+      "result": "PASS",
+      "python_files": 492
+    },
+    {
+      "name": "pyrefly",
+      "command": "uv run pyrefly check",
+      "result": "PASS",
+      "errors": 0
+    },
+    {
+      "name": "architecture",
+      "command": "uv run python scripts/audit_project_structure.py --check",
+      "result": "PASS",
+      "core_import_budget": 26
+    },
+    {
+      "name": "frontend",
+      "command": "docker run --rm -v /data/shihongye/servicemind/frontend:/app -w /app node:24-bookworm npm run check",
+      "result": "PASS",
+      "unit_tests": 15,
+      "checks": [
+        "eslint",
+        "typecheck",
+        "vitest",
+        "production_build"
+      ],
+      "next_version": "16.4.2",
+      "frozen_dependencies_installed": true
+    },
+    {
+      "name": "migrations",
+      "result": "PASS",
+      "checks": [
+        "empty_database_to_0016",
+        "downgrade_to_0015_and_upgrade_0016",
+        "alembic_check_no_schema_drift"
+      ],
+      "isolated": true
+    },
+    {
+      "name": "worker_entrypoint_bootstrap",
+      "result": "PASS",
+      "checks": [
+        "actual_installed_entrypoint",
+        "empty_scratch_database",
+        "checkpointer_setup",
+        "process_alive",
+        "SIGTERM_exit_0"
+      ],
+      "paid_model_calls": 0
+    },
+    {
+      "name": "worker_process_fault",
+      "result": "PASS",
+      "checks": [
+        "real_subprocess_SIGKILL",
+        "survivor_reclaims_after_test_lease_expiry",
+        "stale_owner_cannot_renew",
+        "completed_run_not_reclaimed"
+      ],
+      "test_lease_seconds": 2,
+      "note": "Correctness test; not a recovery latency benchmark"
+    },
+    {
+      "name": "existing_deployment_read_only_health",
+      "api_health": {
+        "status": "ok"
+      },
+      "frontend_http_status": 200,
+      "note": "Existing deployment only; does not indicate the new build is deployed"
+    }
+  ],
+  "before_after": {
+    "artifact": "evaluation/reports/db_paging_before_after.json",
+    "synthetic": true,
+    "runs": 120000,
+    "events": 30000,
+    "recent_runs_median_ms": [
+      28.48,
+      0.088
+    ],
+    "recovery_runs_median_ms": [
+      11.794,
+      0.116
+    ],
+    "event_fetch_median_ms": [
+      59.724,
+      0.744
+    ],
+    "event_rows_materialized": [
+      30000,
+      100
+    ],
+    "caveat": "Event comparison is full fetch versus first bounded page. Warm synthetic timings exclude real RLS/ACL and index write costs; not end-to-end production speedup."
+  },
+  "limits": [
+    "Default suite skips explicitly enabled external dependency tests; PostgreSQL and Redis selections are run separately.",
+    "Full paid-model/GLPI-write end-to-end flow and all deployed-stack/Neo4j/OpenSearch tests were not rerun.",
+    "External read/model calls may repeat after a crash before checkpoint; business writes still rely on existing idempotency and read-back checks.",
+    "SSE polls PostgreSQL; high connection count capacity is not certified. Post-terminal auxiliary events committed later require a new read.",
+    "Target deployment is not restarted or migrated by this change.",
+    "Tests cover observed behavior and cannot prove absence of all bugs."
+  ],
+  "changed_files": [
+    {
+      "path": "README.md",
+      "sha256": "422bba4c8637c65312b17f8d48610c43266a2a905b8240ec81107470ee1f3672"
+    },
+    {
+      "path": "README.zh-CN.md",
+      "sha256": "4b97deb02180af1ab62b69b3dddb24a414b5e002ac208e248939984f5041baef"
+    },
+    {
+      "path": "deploy/systemd/servicemind-api.service.d/worker.conf",
+      "sha256": "324b3e43f151010f797b16ade1c248b3df564ff8d97a269685e7e3a22292127c"
+    },
+    {
+      "path": "deploy/systemd/servicemind-run-worker.service",
+      "sha256": "45b5fcfeae94d2426fb68ff6bed8af083220e2bbb39284bc43389bdb1634bd67"
+    },
+    {
+      "path": "docs/BACKEND_DB_PAGING_RESULTS.md",
+      "sha256": "84b207a08d0df5bbf7ebdcc361d149f4ed48503006ef5918c592208ea2ec9592"
+    },
+    {
+      "path": "docs/BACKEND_RESUME_AUDIT_2026-11-05.md",
+      "sha256": "7e40773255e2f4506abba212fea2797231a214f2a38cba69c9138471d78884c8"
+    },
+    {
+      "path": "docs/BACKEND_RUN_WORKER.md",
+      "sha256": "69544677ffb59e34a154d502373de1db21b5ca17944f2f8265558f31bc8aced9"
+    },
+    {
+      "path": "docs/BACKEND_UPGRADE_RESULTS_2026-11-05.md",
+      "sha256": "0cd92aab0d900638dc93dc5ddb9228e90f405892a2bfec4e39c677808adc9ece"
+    },
+    {
+      "path": "evaluation/reports/db_paging_before_after.json",
+      "sha256": "0a0303038668bb90ccd33185335d8af7579c441159650d0e89c91b630fca9a62"
+    },
+    {
+      "path": "evaluation/reports/project_structure_latest.md",
+      "sha256": "b4636088cf13714aa45c6b47f4cda616e0ae5d40b59e328aa04a60a58a43a224"
+    },
+    {
+      "path": "frontend/README.md",
+      "sha256": "2ee4ecc524223d3bea1545267333998c207aaa2fc00d4ca1fee84589ae4ca0e3"
+    },
+    {
+      "path": "frontend/src/components/runs/run-detail-view.tsx",
+      "sha256": "38a1360a5c9f339f16798c61be494c56f055c321a9d94d9de623d70f13168747"
+    },
+    {
+      "path": "frontend/src/hooks/use-live-run.test.tsx",
+      "sha256": "9fd249365b3264b648d181de52ef7f2ad270af40f1afc5b0137ba3e354e886dd"
+    },
+    {
+      "path": "frontend/src/hooks/use-live-run.ts",
+      "sha256": "ad978fcbcf6b03e0d11e309bfb2a634d21f70331d4f83a5f78a2a9440d904fcf"
+    },
+    {
+      "path": "frontend/src/lib/api.ts",
+      "sha256": "a4cf5da4a5e1ca7bac92623c89a9437ae8b09957869401c9d201a445af7bc2e2"
+    },
+    {
+      "path": "frontend/src/lib/run-events.test.ts",
+      "sha256": "da99ba0b548dd38b296c0cf06eb88101b346ad70b2ac6ef5bfcc4206c90ad275"
+    },
+    {
+      "path": "frontend/src/lib/run-events.ts",
+      "sha256": "a69a018b2adb3b79bfa37c6e77a75c8f0ce91583717af60113f5b40bc97afce7"
+    },
+    {
+      "path": "migrations/versions/0016_run_queue_paging.py",
+      "sha256": "e29a554f0e8362fdc770d184cf52a9f4b0654ed60ccd34db0fb1ce7e5f40390a"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "3644b7aec73079ea111a0ec696988c5f4f649241c91db7b58d83695028f9868f"
+    },
+    {
+      "path": "scripts/audit_project_structure.py",
+      "sha256": "ac207eb477a6055fdfa75742beec2f129b0cfd287e06d91c32a5060a5dc02235"
+    },
+    {
+      "path": "scripts/benchmark_run_query_paging.py",
+      "sha256": "36c08ac123217c5916f9ca4d20e6e6aa8116463f50b0d64ccd7ca75eb61bc036"
+    },
+    {
+      "path": "src/core/settings.py",
+      "sha256": "cbb803d40dc49cabf25e535820039cb3c8fcaa647585b2b797b4b88146b53ba5"
+    },
+    {
+      "path": "src/service/run_worker.py",
+      "sha256": "44db8e5165a9ba48d7cb09faf7c38d59d267dbf6de1f9cce09e73618ba825f29"
+    },
+    {
+      "path": "src/service/service.py",
+      "sha256": "057872364cef8518c2ae51b148c4048241333caa528f6357fa4e73b3d494ff25"
+    },
+    {
+      "path": "src/servicemind/api.py",
+      "sha256": "25e1ed3675e820c281430d76d6492809a0057ab784a13d64656a82527c1d93e6"
+    },
+    {
+      "path": "src/servicemind/observability/http.py",
+      "sha256": "66add6d472a1832b7a8ae124e6ad4a38e207f92932356096e162855f460bc993"
+    },
+    {
+      "path": "src/servicemind/observability/metrics.py",
+      "sha256": "56850eaa40c3d160e0a21064fa03fd9181da617a450321bc9a7a7ad38a78f11d"
+    },
+    {
+      "path": "src/servicemind/observability/tracing.py",
+      "sha256": "f1d6ebf420da22a3d0999082b059ae2df405b39dae67d3606592126c29710e42"
+    },
+    {
+      "path": "src/servicemind/orchestration/execution_config.py",
+      "sha256": "3f9c59bfd9d1d23eca5455067ab38bac4913c6b6e46d72d21ebdf8523db0a630"
+    },
+    {
+      "path": "src/servicemind/orchestration/recovery.py",
+      "sha256": "f3d765aa1814302337fd7f97ef824ca3972a083cba1327b1a27f6b6d99acd8ed"
+    },
+    {
+      "path": "src/servicemind/orchestration/run_worker.py",
+      "sha256": "99f2c9564ab28be0d30e137da24923c61eebe3cf0bb8181f1adf16235f3a8b0f"
+    },
+    {
+      "path": "src/servicemind/orchestration/supervisor_workflow.py",
+      "sha256": "9376e842511daae21de7599ffd7f5a141529c617cdbee03bbe3c3fb752a509fe"
+    },
+    {
+      "path": "src/servicemind/persistence/models.py",
+      "sha256": "667f60eaf98aabd1b684eba03d72fd1df09e7e18f452e76b63715601809b8156"
+    },
+    {
+      "path": "src/servicemind/persistence/repository.py",
+      "sha256": "ff4455a30db7ccb098704f99de0e079bd4b7172712a7518b022988fa2fe56b27"
+    },
+    {
+      "path": "src/servicemind/persistence/run_queue.py",
+      "sha256": "9ebe09c8da5221037484dbe708b71be1c7704094118896eba25557fd0e5c42ff"
+    },
+    {
+      "path": "tests/servicemind/test_execution_metrics.py",
+      "sha256": "baf1ffb69098a895edd4562b96fc7393d4541824590888a90046c3f8e5e07494"
+    },
+    {
+      "path": "tests/servicemind/test_http_metrics.py",
+      "sha256": "30937f8997bcf7bd8bcb2fe3bce436814aa3dbdc045ed0862edf9324a356f52c"
+    },
+    {
+      "path": "tests/servicemind/test_operations_api.py",
+      "sha256": "789e7b4a160d43ca0789f70db8c6734f170323481ad5639957ef4f3d2d611aca"
+    },
+    {
+      "path": "tests/servicemind/test_recovery.py",
+      "sha256": "94cab44bf0409a1ab3c4c490652f040737f710a25db11d5c47474d6106f998f4"
+    },
+    {
+      "path": "tests/servicemind/test_repository_paging.py",
+      "sha256": "05f0c77861bf8430664245ec6e04f92bdcdd9b256ddbf0fbe3ee07f9c503acd7"
+    },
+    {
+      "path": "tests/servicemind/test_run_admission.py",
+      "sha256": "90de661e689813de927485e76547bf34b71ade04aa445317d1adb0e65eb8cc67"
+    },
+    {
+      "path": "tests/servicemind/test_run_queue_postgres.py",
+      "sha256": "bc641f6a977e5c922b38f8667a13e89cf3535d50f23358630e6f8c3ebab343bd"
+    },
+    {
+      "path": "tests/servicemind/test_run_worker.py",
+      "sha256": "de7127975cdad76db74a771805cceb780f7aac06b4bef4e00ffd87c31f258d4f"
+    },
+    {
+      "path": "tests/servicemind/test_sse_live_stream.py",
+      "sha256": "9d7badc05cbe20b5092bd72bb10f2d705371d22f6d343735d262231fab0d3425"
+    }
+  ],
+  "pre_push_review": {
+    "recorded_at": "2026-11-05T23:08:26.122579+08:00",
+    "independent_backend_regression": {
+      "passed": 84,
+      "command": "uv run pytest -q tests/servicemind/test_run_worker.py tests/servicemind/test_recovery.py tests/servicemind/test_phase7_principal_invariants.py tests/servicemind/test_operations_api.py"
+    },
+    "fresh_postgres_full_selection": {
+      "passed": 37,
+      "restricted_role": true,
+      "log_sha256": "4aa0fe4dfcbf226d3d327e6213a4321c1660addbf01706283484d8a5d338eadc"
+    },
+    "ci_matrix_syntax": {
+      "python": [
+        "3.12",
+        "3.13"
+      ],
+      "result": "PASS"
+    },
+    "new_postgres_tests": {
+      "passed": 10,
+      "after_timing_fix_queue_tests_passed": 4
+    },
+    "test_stability_fix": "Start short lease after child confirms execution lock, poll PostgreSQL expiry instead of fixed sleep.",
+    "markdown_lint": "PASS; fixed MD028 in upgrade report",
+    "offline_gate_report_consistency": "PASS; historical load FAIL remains unchanged and disclosed",
+    "frontend_dependency_audit": {
+      "unsuppressed_high": 0,
+      "unsuppressed_critical": 0
+    },
+    "configured_secret_and_large_file_scan": "PASS",
+    "audit_document": "docs/BACKEND_RESUME_AUDIT_2026-11-05.md"
+  }
+}

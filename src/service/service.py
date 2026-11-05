@@ -64,7 +64,9 @@ from servicemind.mcp.server import (
     shutdown_mcp_tasks,
 )
 from servicemind.mcp.tasks import InMemoryMcpTaskStore, PostgresMcpTaskStore
+from servicemind.observability.http import HttpMetricsMiddleware
 from servicemind.observability.tracing import configure_telemetry, shutdown_telemetry
+from servicemind.orchestration.execution_config import RunExecutionConfig, configure_run_execution
 from servicemind.orchestration.recovery import recover_incomplete_runs
 from servicemind.orchestration.supervisor_workflow import configure_supervisor_checkpointer
 from servicemind.orchestration.workflow import configure_phase2_checkpointer
@@ -161,7 +163,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                 agent.checkpointer = saver
                 # Set store for long-term memory (cross-conversation knowledge)
                 agent.store = store
-            if settings.DATABASE_TYPE == "postgres":
+            if (
+                settings.DATABASE_TYPE == "postgres"
+                and settings.SERVICEMIND_RUN_EXECUTION_MODE == "in_process"
+            ):
                 # Recovery can involve GLPI, RAG and model calls. Run it under the
                 # application lifecycle without blocking readiness for every queued
                 # historical run.
@@ -562,6 +567,13 @@ async def health_check():
 
 def create_app() -> FastAPI:
     """Compose the HTTP application from independently testable routers."""
+    configure_run_execution(
+        RunExecutionConfig(
+            mode=settings.SERVICEMIND_RUN_EXECUTION_MODE,
+            per_tenant_limit=settings.SERVICEMIND_RUN_WORKER_PER_TENANT_LIMIT,
+            queue_limit=settings.SERVICEMIND_RUN_QUEUE_LIMIT_PER_TENANT,
+        )
+    )
     application = FastAPI(
         lifespan=lifespan,
         generate_unique_id_function=custom_generate_unique_id,
@@ -582,6 +594,7 @@ def create_app() -> FastAPI:
     application.include_router(mcp_router)
     application.include_router(mcp_metadata_router)
     application.add_middleware(RequestLimitsMiddleware)
+    application.add_middleware(HttpMetricsMiddleware)
     return application
 
 

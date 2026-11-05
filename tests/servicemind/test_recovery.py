@@ -1,9 +1,12 @@
+from datetime import UTC, datetime
 from types import SimpleNamespace
+from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
 
 from servicemind.persistence.models import RunStatus
+from servicemind.persistence.repository import ServiceMindRepository
 
 
 def _fixture(monkeypatch, *, checkpoint: dict, resume_raises=None):
@@ -34,7 +37,7 @@ def _fixture(monkeypatch, *, checkpoint: dict, resume_raises=None):
         async def get_glpi_integration(self):
             return SimpleNamespace(entity_id=1)
 
-        async def list_recoverable_runs(self):
+        async def list_recoverable_runs(self, **kwargs):
             return [run]
 
         async def get_approval(self, run_id):
@@ -73,6 +76,27 @@ def _fixture(monkeypatch, *, checkpoint: dict, resume_raises=None):
         failed=failed,
         tenant_id=tenant_id,
     )
+
+
+@pytest.mark.asyncio
+async def test_recovery_scans_bounded_pages_without_revisiting_blocked_runs(monkeypatch) -> None:
+    from servicemind.orchestration import recovery
+
+    monkeypatch.setattr(recovery, "RECOVERY_PAGE_SIZE", 2)
+    fixed = datetime(2025, 1, 1, tzinfo=UTC)
+    runs = [SimpleNamespace(id=UUID(int=value), created_at=fixed) for value in range(1, 6)]
+    calls = []
+
+    class Repository:
+        async def list_recoverable_runs(self, *, limit, after_created_at, after_run_id):
+            calls.append((limit, after_created_at, after_run_id))
+            return [run for run in runs if after_run_id is None or run.id > after_run_id][:limit]
+
+    observed = [
+        run async for run in recovery._recoverable_runs(cast(ServiceMindRepository, Repository()))
+    ]
+    assert observed == runs
+    assert calls == [(2, None, None), (2, fixed, runs[1].id), (2, fixed, runs[3].id)]
 
 
 @pytest.mark.asyncio

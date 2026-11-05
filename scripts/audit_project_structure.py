@@ -195,6 +195,7 @@ def build_report() -> dict[str, Any]:
         ROOT / "deploy/systemd/servicemind-api.service",
         ROOT / "deploy/systemd/servicemind-streamlit.service",
         ROOT / "deploy/systemd/servicemind-outbox.service",
+        ROOT / "deploy/systemd/servicemind-run-worker.service",
         ROOT / "deploy/systemd/servicemind-frontend.service",
     ]
     units_present = all(path.is_file() for path in unit_paths)
@@ -215,7 +216,8 @@ def build_report() -> dict[str, Any]:
         and (SRC / "pages/1_Memory_Review.py").is_file(),
         "installed_process_entrypoints": project_scripts.get("servicemind-api")
         == "run_service:main"
-        and project_scripts.get("servicemind-outbox") == "servicemind.reliability.worker:main",
+        and project_scripts.get("servicemind-outbox") == "servicemind.reliability.worker:main"
+        and project_scripts.get("servicemind-run-worker") == "service.run_worker:main",
         "tests_use_installed_distribution": "pythonpath" not in pytest_options
         and "--import-mode=importlib" in pytest_options.get("addopts", []),
         "fastapi_application_factory": _has_function(SRC / "service/service.py", "create_app"),
@@ -325,7 +327,7 @@ RAG business evidence into a quality pass.
 - Domain contracts do not import runtime, persistence, HTTP or provider adapters.
 - HTTP entry adapters live under `servicemind.interfaces.http`; repositories and providers
   remain outbound adapters.
-- API, Streamlit, outbox and the Next.js operator console are separate versioned process
+- API, Agent worker, Streamlit, outbox and the Next.js operator console are separate versioned process
   manifests.
 - The inherited top-level instance-agent shell remains load-bearing but sits outside the
   ServiceMind platform dependency graph.

@@ -4,6 +4,7 @@ import hmac
 import json
 import logging
 import re
+import time
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from typing import Any, Literal
@@ -38,6 +39,7 @@ from servicemind.interfaces.http.memory_review import router as memory_review_ro
 from servicemind.interfaces.http.operations import router as operations_router
 from servicemind.interfaces.http.webhook_limits import webhook_admission
 from servicemind.model_gateway.gateway import model_error_code
+from servicemind.orchestration.execution_config import get_run_execution_config
 from servicemind.orchestration.runtime import (
     ResumeBlocked,
     ResumeScope,
@@ -48,7 +50,8 @@ from servicemind.orchestration.runtime import (
     start_run,
 )
 from servicemind.persistence.models import ActionIntentRecord, AgentRun, RunStatus
-from servicemind.persistence.repository import RunCancelled, ServiceMindRepository
+from servicemind.persistence.repository import RunCancelled, RunQueueFull, ServiceMindRepository
+from servicemind.persistence.run_queue import RunQueue
 from servicemind.security.auth import TenantContext, TenantContextDependency
 from servicemind.security.crypto import CredentialCipher
 from servicemind.security.run_access import require_run_access, run_scope
@@ -59,6 +62,26 @@ phase2_router = APIRouter(prefix="/v1/servicemind", tags=["ServiceMind Phase 2"]
 phase2_router.include_router(knowledge_router)
 phase2_router.include_router(memory_review_router)
 phase2_router.include_router(operations_router)
+
+# One query never loads an unbounded run history. Polling the durable event log also
+# works when the API serving this connection is not the process executing the run.
+SSE_EVENT_BATCH_SIZE = 100
+SSE_POLL_INTERVAL_SECONDS = 0.5
+SSE_HEARTBEAT_INTERVAL_SECONDS = 15.0
+SSE_QUIESCENT_GRACE_SECONDS = 1.0
+SSE_SESSION_MAX_SECONDS = 60.0
+_SSE_PAUSED_STATUSES = {
+    RunStatus.WAITING_APPROVAL.value,
+    RunStatus.WAITING_REVIEW.value,
+}
+_SSE_TERMINAL_EVENTS = {
+    "run.succeeded",
+    "run.failed",
+    "run.cancelled",
+    "run.rejected",
+    "run.abstained",
+    "run.escalation_accepted",
+}
 
 
 class GlpiHealth(BaseModel):
@@ -303,20 +326,30 @@ async def receive_glpi_webhook(
     body_hash = hashlib.sha256(body).hexdigest()
     idempotency_key = f"glpi-webhook:{x_glpi_signature}"
     deterministic_run_id = webhook_run_id(webhook.tenant_id, x_glpi_signature)
-    run, duplicate = await repository.claim_webhook_run(
-        idempotency_key=idempotency_key,
-        action_hash=body_hash,
-        run_id=deterministic_run_id,
-        thread_id=f"glpi-webhook-{deterministic_run_id}",
-        ticket_id=webhook.ticket_id,
-        goal=glpi_webhook_goal(webhook.event),
-        event_payload={
-            "event": webhook.event,
-            "ticket_id": webhook.ticket_id,
-            "entity_id": webhook.entity_id,
-        },
-    )
-    if not duplicate:
+    try:
+        run, duplicate = await repository.claim_webhook_run(
+            idempotency_key=idempotency_key,
+            action_hash=body_hash,
+            run_id=deterministic_run_id,
+            thread_id=f"glpi-webhook-{deterministic_run_id}",
+            ticket_id=webhook.ticket_id,
+            goal=glpi_webhook_goal(webhook.event),
+            event_payload={
+                "event": webhook.event,
+                "ticket_id": webhook.ticket_id,
+                "entity_id": webhook.entity_id,
+            },
+            **(
+                {"queue_limit": get_run_execution_config().queue_limit}
+                if get_run_execution_config().mode == "worker"
+                else {}
+            ),
+        )
+    except RunQueueFull as exc:
+        raise HTTPException(
+            status_code=429, detail="Tenant run queue is full", headers={"Retry-After": "5"}
+        ) from exc
+    if not duplicate and get_run_execution_config().mode == "in_process":
         background_tasks.add_task(_process_webhook_run, run, context)
     return WebhookAccepted(accepted=True, duplicate=duplicate, run_id=run.id)
 
@@ -329,22 +362,39 @@ async def create_run(
 ) -> RunView:
     context.require_role("analyst")
     repository = ServiceMindRepository(context.tenant_id)
-    run = await repository.create_run(
-        user_id=context.user_id,
-        ticket_id=request.ticket_id,
-        goal=request.goal,
-        request_write=request.request_write,
-        access_scope=run_scope(context),
-    )
-    await repository.append_event(
-        run.id,
-        "run.created",
-        {"ticket_id": request.ticket_id, "request_write": request.request_write},
-    )
+    admission: dict[str, Any] = {}
+    if get_run_execution_config().mode == "worker":
+        admission = {
+            "event_payload": {
+                "ticket_id": request.ticket_id,
+                "request_write": request.request_write,
+            },
+            "queue_limit": get_run_execution_config().queue_limit,
+        }
+    try:
+        run = await repository.create_run(
+            user_id=context.user_id,
+            ticket_id=request.ticket_id,
+            goal=request.goal,
+            request_write=request.request_write,
+            access_scope=run_scope(context),
+            **admission,
+        )
+    except RunQueueFull as exc:
+        raise HTTPException(
+            status_code=429, detail="Tenant run queue is full", headers={"Retry-After": "5"}
+        ) from exc
+    if get_run_execution_config().mode == "in_process":
+        await repository.append_event(
+            run.id,
+            "run.created",
+            {"ticket_id": request.ticket_id, "request_write": request.request_write},
+        )
     # HTTP 202 is a real asynchronous boundary. Returning the durable run identity
     # immediately lets the console poll its timeline while the workflow advances;
     # recovery owns PENDING/RUNNING records if the process exits mid-run.
-    background_tasks.add_task(_process_webhook_run, run, context)
+    if get_run_execution_config().mode == "in_process":
+        background_tasks.add_task(_process_webhook_run, run, context)
     return _run_view(run)
 
 
@@ -378,6 +428,27 @@ async def approve_run(
     if run.status != RunStatus.WAITING_APPROVAL.value:
         return _run_view(run, action)
 
+    if get_run_execution_config().mode == "worker":
+        # Approval still executes under the HTTP requester's fresh decision. Hold
+        # the same graph lock the worker uses before persisting that decision, so a
+        # worker scanning the newly RUNNING row cannot resume it concurrently.
+        async with RunQueue(context.tenant_id).execution_guard(
+            run_id, per_tenant_limit=get_run_execution_config().per_tenant_limit
+        ) as locked:
+            if not locked:
+                raise HTTPException(status_code=503, detail="Run execution capacity is busy")
+            return await _complete_approval(run, request, context, repository, action)
+    return await _complete_approval(run, request, context, repository, action)
+
+
+async def _complete_approval(
+    run: AgentRun,
+    request: ApprovalRequest,
+    context: TenantContext,
+    repository: ServiceMindRepository,
+    action: ActionIntentRecord,
+) -> RunView:
+    run_id = run.id
     # Resolve the resume scope *before* anything is written. Recording the approval
     # first would persist a decision, flip the action to APPROVED and enqueue its
     # outbox event -- all for a resume that can then refuse, leaving an approved
@@ -483,8 +554,8 @@ async def approve_run(
 
     stored = await repository.get_run(run_id)
     assert stored is not None
-    action = await repository.get_action_intent(run_id)
-    return _run_view(stored, action)
+    stored_action = await repository.get_action_intent(run_id)
+    return _run_view(stored, stored_action)
 
 
 @phase2_router.post("/runs/{run_id}:cancel")
@@ -525,6 +596,23 @@ async def resolve_review_escalation(
     require_run_access(run, context)
     if run.status != RunStatus.WAITING_REVIEW.value:
         raise HTTPException(status_code=409, detail="Run is not waiting for human review")
+    if get_run_execution_config().mode == "worker":
+        async with RunQueue(context.tenant_id).execution_guard(
+            run_id, per_tenant_limit=get_run_execution_config().per_tenant_limit
+        ) as locked:
+            if not locked:
+                raise HTTPException(status_code=503, detail="Run execution capacity is busy")
+            return await _complete_review_resolution(run, request, context, repository)
+    return await _complete_review_resolution(run, request, context, repository)
+
+
+async def _complete_review_resolution(
+    run: AgentRun,
+    request: ReviewResolutionRequest,
+    context: TenantContext,
+    repository: ServiceMindRepository,
+) -> RunView:
+    run_id = run.id
     # Same ordering as the approval endpoint, for the same reason: a decision that
     # cannot be applied must not be recorded, or the retry finds a run that looks
     # decided and an escalation that never advanced.
@@ -586,6 +674,7 @@ async def resolve_review_escalation(
 @phase2_router.get("/runs/{run_id}/events", response_class=StreamingResponse)
 async def stream_run_events(
     run_id: UUID,
+    request: Request,
     context: TenantContextDependency,
     last_event_id: str | None = Header(default=None, alias="Last-Event-ID"),
 ) -> StreamingResponse:
@@ -598,14 +687,69 @@ async def stream_run_events(
     after = _event_cursor(last_event_id)
 
     async def generate() -> AsyncGenerator[str, None]:
-        for event in await repository.list_events(run_id, after):
-            payload = {
-                "sequence": event.sequence,
-                "type": event.event_type,
-                "payload": event.payload,
-                "created_at": event.created_at.isoformat(),
-            }
-            yield f"id: {event.sequence}\nevent: {event.event_type}\ndata: {json.dumps(payload)}\n\n"
-        yield "event: end\ndata: {}\n\n"
+        cursor = after
+        session_started = last_frame_at = time.monotonic()
+        quiescent_since: float | None = None
+        terminal_seen = False
+        while True:
+            if await request.is_disconnected():
+                return
+            if time.monotonic() - session_started >= SSE_SESSION_MAX_SECONDS:
+                # A timed-out session is not proof that all events were committed.
+                # Native SSE clients reconnect with their last received event ID.
+                yield "retry: 1000\n\n"
+                return
+            events = await repository.list_events(run_id, cursor, limit=SSE_EVENT_BATCH_SIZE)
+            for event in events:
+                if await request.is_disconnected():
+                    return
+                payload = {
+                    "sequence": event.sequence,
+                    "type": event.event_type,
+                    "payload": event.payload,
+                    "created_at": event.created_at.isoformat(),
+                }
+                yield (
+                    f"id: {event.sequence}\nevent: {event.event_type}"
+                    f"\ndata: {json.dumps(payload)}\n\n"
+                )
+                cursor = event.sequence
+                last_frame_at = time.monotonic()
+                if event.event_type in _SSE_TERMINAL_EVENTS:
+                    terminal_seen = True
+            if len(events) == SSE_EVENT_BATCH_SIZE:
+                continue
+            if terminal_seen:
+                # Post-run hooks can append events after run.succeeded/failed. Drain
+                # every committed page before ending, including the rest of the page
+                # containing the terminal event.
+                yield "event: end\ndata: {}\n\n"
+                return
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+            # A terminal status can commit before its event. Keep waiting for that
+            # marker rather than treating an arbitrary quiet period as completion.
+            # Paused runs close this subscription; approval/resolution starts a new
+            # execution phase that clients can subscribe to separately.
+            current = await repository.get_run(run_id)
+            if current is None:
+                yield "event: end\ndata: {}\n\n"
+                return
+            if current.status in _SSE_PAUSED_STATUSES:
+                now = time.monotonic()
+                if quiescent_since is None:
+                    quiescent_since = now
+                if now - quiescent_since >= SSE_QUIESCENT_GRACE_SECONDS:
+                    yield "event: end\ndata: {}\n\n"
+                    return
+            else:
+                quiescent_since = None
+            if time.monotonic() - last_frame_at >= SSE_HEARTBEAT_INTERVAL_SECONDS:
+                yield ": keep-alive\n\n"
+                last_frame_at = time.monotonic()
+            await asyncio.sleep(SSE_POLL_INTERVAL_SECONDS)
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

@@ -62,7 +62,9 @@ class _Repository:
             access_scope={"entity_ids": [], "group_ids": []},
         )
 
-    async def list_events(self, run_id: UUID, after: int) -> list[SimpleNamespace]:
+    async def list_events(
+        self, run_id: UUID, after: int, *, limit: int | None = None
+    ) -> list[SimpleNamespace]:
         return [
             SimpleNamespace(
                 sequence=after + 1,
@@ -190,7 +192,9 @@ class _EventRepository:
             access_scope={"entity_ids": [], "group_ids": []},
         )
 
-    async def list_events(self, run_id: UUID, after: int) -> list[SimpleNamespace]:
+    async def list_events(
+        self, run_id: UUID, after: int, *, limit: int | None = None
+    ) -> list[SimpleNamespace]:
         type(self).cursors.append(after)
         return [
             SimpleNamespace(

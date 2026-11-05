@@ -24,6 +24,21 @@ export async function apiRequest<T>(path: string, getToken: () => Promise<string
   return schema.parse(await response.json());
 }
 
+export async function apiEventStream(path: string, getToken: () => Promise<string>, signal: AbortSignal, lastEventId: number): Promise<Response> {
+  const token = await getToken();
+  signal.throwIfAborted();
+  const response = await fetch(`${publicConfig.apiUrl}${path}`, {
+    signal, cache: "no-store",
+    headers: { Accept: "text/event-stream", Authorization: `Bearer ${token}`,
+      ...(lastEventId > 0 ? { "Last-Event-ID": String(lastEventId) } : {}) },
+  });
+  if (!response.ok) throw new ApiError(await parseError(response), response.status);
+  if (!response.headers.get("content-type")?.includes("text/event-stream") || !response.body) {
+    throw new Error("运行事件流格式无效");
+  }
+  return response;
+}
+
 export async function publicRequest<T>(url: string, schema: ZodType<T>): Promise<T> {
   const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) throw new ApiError(await parseError(response), response.status);

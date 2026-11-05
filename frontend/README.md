@@ -11,6 +11,18 @@ Next.js 16 / React 19 control plane for the ServiceMind ITSM agent workflow. The
 - The console has no direct GLPI write path. It can only request a governed ServiceMind run and decide already-frozen actions.
 - The generic instance-agent `/agui` endpoint is deliberately excluded because it is outside the ServiceMind business-agent boundary.
 
+## Run progress
+
+The run detail page subscribes to the authenticated `/runs/{id}/events` SSE endpoint
+while a run is pending or running. It merges events by their durable sequence number
+and refreshes the run snapshot as progress arrives. Fetch streaming carries the bearer
+token without putting it in the URL; each reconnect refreshes the token and sends
+`Last-Event-ID`. Changing runs or leaving the page aborts the previous subscription.
+
+SWR retains the canonical run/timeline snapshots and a 10-second polling fallback.
+The server's bounded streaming sessions reconnect automatically. A phase-ending event
+refreshes both snapshots; later post-run audit events remain visible through polling.
+
 ## Local configuration
 
 Copy `.env.local.example` to `.env.local` only when the defaults do not match the deployment. All variables are public endpoint identifiers; no client secret belongs in this application.

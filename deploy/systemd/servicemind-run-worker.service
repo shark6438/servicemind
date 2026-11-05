@@ -1,0 +1,20 @@
+[Unit]
+Description=ServiceMind independent Agent run worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/data1/servicemind
+Environment=PYTHONUNBUFFERED=1
+Environment=SERVICEMIND_RUN_EXECUTION_MODE=worker
+Environment=SERVICEMIND_OTEL_SERVICE_NAME=servicemind-run-worker
+ExecStart=%h/data1/servicemind/.venv/bin/servicemind-run-worker
+Restart=on-failure
+RestartSec=2s
+TimeoutStopSec=40s
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

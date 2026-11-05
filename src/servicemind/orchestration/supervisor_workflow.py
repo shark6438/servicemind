@@ -49,6 +49,7 @@ from servicemind.harness.executor import ControlledActionExecutor, controlled_ex
 from servicemind.integrations.glpi.client import GlpiAPIError
 from servicemind.model_gateway.contracts import ModelCallContext, ModelPurpose, ModelRisk
 from servicemind.model_gateway.gateway import model_call_scope, model_error_code
+from servicemind.observability.metrics import record_route
 from servicemind.observability.tracing import phase_span
 from servicemind.orchestration.budget import BudgetExceeded, budget_controller
 from servicemind.orchestration.dispatcher import TaskDispatcher, task_dispatcher
@@ -402,6 +403,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
 
     async def route_node(state: Phase3State) -> dict[str, Any]:
         await repository(state).update_run(UUID(state["run_id"]), RunStatus.RUNNING)
+        route_started = time.perf_counter()
         rule_decision = svc.router.route(state["raw_request"], request_write=state["request_write"])
         try:
             outcome = await svc.jev_router.decide(
@@ -418,6 +420,7 @@ def build_supervisor_graph(services: SupervisorRuntimeServices | None = None):
             # step must never fail because an advisor failed.
             outcome = fallback_outcome(rule_decision, "internal_error")
         decision = outcome.decision
+        record_route(time.perf_counter() - route_started, decision.route.value, outcome.source)
         control = _control(state)
         control.current_stage = "route"
         control.total_steps += 1
