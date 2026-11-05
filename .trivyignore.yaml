@@ -1,2 +1,35 @@
-# The refreshed runtime image no longer needs the previous OpenSSL exceptions.
-vulnerabilities: []
+# 作用域限定的镜像扫描豁免：只覆盖一条 CVE，且自己会到期。
+#
+# 为什么是豁免，而不是升级掉它
+#   这条命中的载体是 distroless 运行时基础镜像自带的 libz.so.1.3.1
+#   （zlib1g 1:1.3.dfsg+really1.3.1-1+b1）。Trivy 漏洞库标注 FixedVersion 为空，
+#   即 Debian 侧没有发布修复版本；2026-11-05 重新拉取上游
+#   gcr.io/distroless/nodejs24-debian13:nonroot 得到的新摘要
+#   sha256:b8cec4b2f2126ff7bd034ec9ac207ffb3272667dfdc48376e3b035d3270549ba
+#   里，zlib1g 仍是同一个版本。Dockerfile 里没有"换一个已修复的摘要"可做。
+#
+# 为什么本镜像没有触发路径
+#   镜像内唯一的可执行 ELF 是 /nodejs/bin/node，其余都是库。实测：
+#
+#     readelf -d /nodejs/bin/node | grep NEEDED
+#       -> libdl, libstdc++, libm, libgcc_s, libpthread, libc, ld-linux
+#       -> 不含 libz.so.1，也不含 libcrypto.so.3
+#     process.versions.zlib -> 1.3.2.1-motley-285e94b（Node 自带，与系统 libz 无关）
+#
+#   全镜像扫描 DT_NEEDED 后，系统 libz.so.1 的唯一消费者是 libcrypto.so.3；
+#   而加载 libcrypto.so.3 的只有 libssl.so.3 和 engines-3/ 下的 OpenSSL 引擎插件。
+#   镜像里没有任何进程加载 libssl/libcrypto（node 不链接它们，也没有 openssl
+#   可执行文件）。因此这条 CVE 的触发面（gz* write 在 write() 失败后越界写）
+#   在本镜像中没有到达路径。
+#
+# 到期之后
+#   expired_at 过后 Trivy 会重新报出这条，CI 随之变红——这是有意的，用来强制复查
+#   上游是否已经用修复后的 Debian 包重建；重建了就删除本条并把 Dockerfile 的基础
+#   镜像摘要换成新的。
+vulnerabilities:
+  - id: CVE-2026-76844
+    statement: >-
+      载体是 distroless 基础镜像自带的 zlib1g；镜像唯一可执行进程 /nodejs/bin/node
+      不链接 libz.so.1，自带 zlib 1.3.2.1。系统 libz 仅被 libcrypto 引用，而镜像内
+      没有任何进程加载 libcrypto/libssl，无触发路径。上游 distroless 重建后应删除本条。
+    expired_at: 2026-12-05
