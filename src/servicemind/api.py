@@ -7,7 +7,7 @@ import re
 import time
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 import httpx
@@ -50,7 +50,12 @@ from servicemind.orchestration.runtime import (
     start_run,
 )
 from servicemind.persistence.models import ActionIntentRecord, AgentRun, RunStatus
-from servicemind.persistence.repository import RunCancelled, RunQueueFull, ServiceMindRepository
+from servicemind.persistence.repository import (
+    RunCancelled,
+    RunQueueFull,
+    RunSubmissionConflict,
+    ServiceMindRepository,
+)
 from servicemind.persistence.run_queue import RunQueue
 from servicemind.security.auth import TenantContext, TenantContextDependency
 from servicemind.security.crypto import CredentialCipher
@@ -359,20 +364,26 @@ async def create_run(
     request: CreateRunRequest,
     background_tasks: BackgroundTasks,
     context: TenantContextDependency,
+    idempotency_key: Annotated[
+        str | None,
+        Header(alias="Idempotency-Key", min_length=1, max_length=128, pattern=r"^[!-~]+$"),
+    ] = None,
 ) -> RunView:
     context.require_role("analyst")
     repository = ServiceMindRepository(context.tenant_id)
     admission: dict[str, Any] = {}
-    if get_run_execution_config().mode == "worker":
+    if get_run_execution_config().mode == "worker" or idempotency_key is not None:
         admission = {
             "event_payload": {
                 "ticket_id": request.ticket_id,
                 "request_write": request.request_write,
             },
-            "queue_limit": get_run_execution_config().queue_limit,
         }
+    if get_run_execution_config().mode == "worker":
+        admission["queue_limit"] = get_run_execution_config().queue_limit
+    created = True
     try:
-        run = await repository.create_run(
+        payload: dict[str, Any] = dict(
             user_id=context.user_id,
             ticket_id=request.ticket_id,
             goal=request.goal,
@@ -380,11 +391,21 @@ async def create_run(
             access_scope=run_scope(context),
             **admission,
         )
+        if idempotency_key is not None:
+            run, created = await repository.create_run_idempotent(
+                idempotency_key=idempotency_key, **payload
+            )
+            if not created:
+                require_run_access(run, context)
+        else:
+            run = await repository.create_run(**payload)
+    except RunSubmissionConflict as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except RunQueueFull as exc:
         raise HTTPException(
             status_code=429, detail="Tenant run queue is full", headers={"Retry-After": "5"}
         ) from exc
-    if get_run_execution_config().mode == "in_process":
+    if get_run_execution_config().mode == "in_process" and idempotency_key is None:
         await repository.append_event(
             run.id,
             "run.created",
@@ -393,7 +414,7 @@ async def create_run(
     # HTTP 202 is a real asynchronous boundary. Returning the durable run identity
     # immediately lets the console poll its timeline while the workflow advances;
     # recovery owns PENDING/RUNNING records if the process exits mid-run.
-    if get_run_execution_config().mode == "in_process":
+    if get_run_execution_config().mode == "in_process" and created:
         background_tasks.add_task(_process_webhook_run, run, context)
     return _run_view(run)
 

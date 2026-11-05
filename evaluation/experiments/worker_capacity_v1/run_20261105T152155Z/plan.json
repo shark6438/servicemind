@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "seed": 20261105,
+  "capacity": {
+    "workers": [
+      1,
+      2
+    ],
+    "per_worker_concurrency": 2,
+    "per_tenant_limit": 4,
+    "tenants": 2,
+    "offer_seconds": 20,
+    "offer_rate_per_second": 12
+  },
+  "fake_graph": {
+    "model_wait_seconds": 0.25,
+    "tool_wait_seconds": 0.05,
+    "tool_wait_count": 2,
+    "synthetic_idempotent_effect": true
+  },
+  "fairness": {
+    "noisy_burst": 24,
+    "steady_requests": 8,
+    "steady_interval_seconds": 0.5,
+    "per_tenant_limit": 1
+  },
+  "faults": [
+    "api_process_SIGKILL",
+    "worker_process_SIGKILL"
+  ],
+  "source_sha256": {
+    "scripts/benchmark_worker_capacity.py": "fb35468598e70057b8e50cbaf15efb07f80fd2863067f5bbc2da82adba8f666c",
+    "src/servicemind/orchestration/run_worker.py": "99f2c9564ab28be0d30e137da24923c61eebe3cf0bb8181f1adf16235f3a8b0f",
+    "src/servicemind/persistence/run_queue.py": "9ebe09c8da5221037484dbe708b71be1c7704094118896eba25557fd0e5c42ff",
+    "src/servicemind/api.py": "463d36085d6832c7cd393a3bbec0c96ab01afc8c4f349fe262cb8aff202b6a6d",
+    "src/servicemind/persistence/repository.py": "362c0ecce0224596570353564332b186d51f4c29d52117472ba5484c5af890d1"
+  }
+}

@@ -1,3 +1,5 @@
+import hashlib
+import json
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -19,6 +21,7 @@ from servicemind.persistence.models import (
     IdempotencyRecord,
     RunEvent,
     RunStatus,
+    RunSubmissionRecord,
     Tenant,
     ToolInvocation,
 )
@@ -30,6 +33,20 @@ class RunCancelled(RuntimeError):
 
 class RunQueueFull(RuntimeError):
     """The tenant already has its configured maximum runnable task backlog."""
+
+
+class RunSubmissionConflict(ValueError):
+    """A retry key was reused for a different validated request body."""
+
+
+def _run_request_hash(ticket_id: int, goal: str, request_write: bool) -> str:
+    payload = json.dumps(
+        {"ticket_id": ticket_id, "goal": goal, "request_write": request_write},
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(payload.encode()).hexdigest()
 
 
 async def _ensure_run_queue_capacity(
@@ -97,6 +114,99 @@ class ServiceMindRepository:
                 )
                 await session.flush()
         return run
+
+    async def create_run_idempotent(
+        self,
+        *,
+        idempotency_key: str,
+        user_id: str,
+        ticket_id: int,
+        goal: str,
+        request_write: bool,
+        access_scope: dict[str, list[int]] | None = None,
+        event_payload: dict[str, Any] | None = None,
+        queue_limit: int | None = None,
+    ) -> tuple[AgentRun, bool]:
+        """Commit one task, initial event and user retry receipt as a single unit.
+
+        The receipt lookup precedes capacity admission, so a successful submission
+        remains replayable when the queue fills. The caller must re-check current
+        access before returning an existing run; a key is never an access token.
+        """
+        if not 1 <= len(idempotency_key) <= 128 or any(
+            not 33 <= ord(character) <= 126 for character in idempotency_key
+        ):
+            raise ValueError("Idempotency-Key must contain 1..128 visible ASCII characters")
+        request_hash = _run_request_hash(ticket_id, goal, request_write)
+        namespace = json.dumps(
+            [str(self.tenant_id), user_id, idempotency_key], separators=(",", ":")
+        )
+        lock_key = f"servicemind:run-submission:{hashlib.sha256(namespace.encode()).hexdigest()}"
+        async with tenant_session(self.tenant_id) as session:
+            await session.execute(
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"), {"key": lock_key}
+            )
+            receipt = (
+                await session.execute(
+                    select(RunSubmissionRecord).where(
+                        RunSubmissionRecord.tenant_id == self.tenant_id,
+                        RunSubmissionRecord.user_id == user_id,
+                        RunSubmissionRecord.idempotency_key == idempotency_key,
+                    )
+                )
+            ).scalar_one_or_none()
+            if receipt is not None:
+                if receipt.request_hash != request_hash:
+                    raise RunSubmissionConflict(
+                        "Idempotency-Key was reused with different request content"
+                    )
+                run = (
+                    await session.execute(
+                        select(AgentRun).where(
+                            AgentRun.id == receipt.run_id, AgentRun.tenant_id == self.tenant_id
+                        )
+                    )
+                ).scalar_one()
+                return run, False
+
+            await _ensure_run_queue_capacity(session, self.tenant_id, queue_limit)
+            run = AgentRun(
+                id=uuid4(),
+                tenant_id=self.tenant_id,
+                user_id=user_id,
+                thread_id=str(uuid4()),
+                ticket_id=ticket_id,
+                goal=goal,
+                request_write=request_write,
+                access_scope=access_scope,
+                status=RunStatus.PENDING.value,
+            )
+            session.add(run)
+            await session.flush()
+            session.add(
+                RunEvent(
+                    tenant_id=self.tenant_id,
+                    run_id=run.id,
+                    sequence=1,
+                    event_type="run.created",
+                    payload=(
+                        event_payload
+                        if event_payload is not None
+                        else {"ticket_id": ticket_id, "request_write": request_write}
+                    ),
+                )
+            )
+            session.add(
+                RunSubmissionRecord(
+                    tenant_id=self.tenant_id,
+                    user_id=user_id,
+                    idempotency_key=idempotency_key,
+                    request_hash=request_hash,
+                    run_id=run.id,
+                )
+            )
+            await session.flush()
+            return run, True
 
     async def claim_webhook_run(
         self,

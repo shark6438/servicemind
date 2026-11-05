@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { apiRequest } from "@/lib/api";
 import { runDetailSchema } from "@/lib/contracts";
 import { useAuth } from "@/providers/auth-provider";
@@ -14,22 +14,35 @@ export function CreateRunForm() {
   const [requestWrite, setRequestWrite] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submission = useRef<{ body: string; key: string } | null>(null);
+  const submitting = useRef(false);
   const canCreate = roles.has("analyst");
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+    if (!canCreate || submitting.current) return;
+    submitting.current = true;
     setError(null);
     setPending(true);
+    let navigating = false;
     try {
+      const body = JSON.stringify({ ticket_id: Number(ticketId), goal, request_write: requestWrite });
+      // A response can be lost after the server commits. Retrying the unchanged
+      // intent must retain its key instead of creating another paid Agent run.
+      if (submission.current?.body !== body) submission.current = { body, key: crypto.randomUUID() };
       const run = await apiRequest("/v1/servicemind/runs", getToken, runDetailSchema, {
         method: "POST",
-        body: JSON.stringify({ ticket_id: Number(ticketId), goal, request_write: requestWrite }),
+        headers: { "Idempotency-Key": submission.current.key },
+        body,
       });
       router.push(`/runs/${run.id}`);
+      navigating = true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "运行创建失败");
     } finally {
-      setPending(false);
+      // Keep the form locked until navigation unmounts it. A second click during
+      // route loading must not turn a successful submission into a new intent.
+      if (!navigating) { submitting.current = false; setPending(false); }
     }
   }
 

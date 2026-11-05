@@ -294,6 +294,29 @@ class IdempotencyRecord(Base):
     )
 
 
+class RunSubmissionRecord(Base):
+    """A user-scoped retry key bound atomically to one accepted Agent run."""
+
+    __tablename__ = "run_submissions"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "user_id", "idempotency_key", name="uq_run_submission_key"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True
+    )
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    run_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="CASCADE"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
 class KnowledgeDocumentRecord(Base):
     __tablename__ = "knowledge_documents"
     __table_args__ = (

@@ -199,6 +199,7 @@ schema|client|voice` + `streamlit_app.py`), so those layers are load-bearing and
 The optional independent Agent worker is documented in [BACKEND_RUN_WORKER.md](docs/BACKEND_RUN_WORKER.md).
 The [backend upgrade report](docs/BACKEND_UPGRADE_RESULTS_2026-11-05.md) records the changes, validation and synthetic before/after comparison.
 The [backend resume audit](docs/BACKEND_RESUME_AUDIT_2026-11-05.md) ranks follow-up work from the current implementation.
+The [resume-focused follow-up results](docs/BACKEND_RESUME_RESULTS_2026-11-05.md) cover request idempotency and measured Worker scaling.
 [`scripts/audit_project_structure.py`](scripts/audit_project_structure.py) is the executable
 architecture contract, run by CI's `architecture-gate` job: it rejects package cycles,
 outward domain imports, source-tree path injection, incomplete process manifests, and any

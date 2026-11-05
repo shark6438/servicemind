@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-11-05T23:36:11.489835+08:00",
+  "base_commit": "620c4802d2d6825ed7c4940db201ae0a6f72e58e",
+  "scope": [
+    "ordinary_run_submission_idempotency",
+    "frontend_retry_intent_keys",
+    "real_process_synthetic_worker_capacity_and_fault_benchmark",
+    "resume_evidence_documentation"
+  ],
+  "paid_model_calls": 0,
+  "provider_cost_usd": 0,
+  "checks": [
+    {
+      "name": "python_default_suite",
+      "command": "uv run pytest -q",
+      "passed": 1649,
+      "skipped": 54,
+      "python": "3.14.7",
+      "log_sha256": "1c9156f70a1f7da82a355868a8f5d8fa63a8e68311c89992e5d031fb31a6d941"
+    },
+    {
+      "name": "postgres_full_selection",
+      "command": "uv run pytest tests/servicemind -m 'docker and postgres' --run-docker -q",
+      "passed": 43,
+      "isolated": true,
+      "role": "NOSUPERUSER NOBYPASSRLS",
+      "log_sha256": "9faf5b60e270ef8c48d3a544c05ae355d3a93c7351d8976fbd23345844b37450"
+    },
+    {
+      "name": "frontend",
+      "command": "docker run --rm -v /data/shihongye/servicemind/frontend:/app -w /app node:24-bookworm npm run check",
+      "passed_unit_tests": 19,
+      "lint": "PASS",
+      "typecheck": "PASS",
+      "production_build": "PASS",
+      "next": "16.4.2",
+      "log_sha256": "4da708a8713faaa7e0135899c750982ee801394dc1e9ba0c3a4d24711a437205"
+    },
+    {
+      "name": "idempotency_specific",
+      "http_tests_passed": 9,
+      "postgres_tests_passed": 6,
+      "before_after_test": "tests/servicemind/test_run_submission_postgres.py::test_100_repeated_submissions_before_and_after_keyed_admission",
+      "requests_per_arm": 100,
+      "queue_limit_per_arm": 200,
+      "created_without_key": 100,
+      "created_with_same_key": 1,
+      "all_http_statuses": 202
+    },
+    {
+      "name": "schema_migration",
+      "revision": "0017_run_submission_idempotency",
+      "upgrade": "PASS",
+      "downgrade_0016_and_reupgrade": "PASS",
+      "alembic_check": "PASS"
+    },
+    {
+      "name": "static_checks",
+      "ruff_check": "PASS",
+      "ruff_format": "PASS",
+      "python_files": 497,
+      "pyrefly_errors": 0,
+      "architecture_check": "PASS",
+      "markdown_lint": "PASS"
+    },
+    {
+      "name": "benchmark_helpers",
+      "passed": 3
+    },
+    {
+      "name": "independent_benchmark_recomputation",
+      "http_records": 514,
+      "capacity_tasks": 480,
+      "checks": [
+        "all_status_202",
+        "unique_run_ids",
+        "effects_and_attempts",
+        "inclusive_quantiles",
+        "throughput_from_raw_timestamps",
+        "plan_hash",
+        "source_hashes"
+      ],
+      "result": "PASS"
+    }
+  ],
+  "capacity_artifact": "evaluation/experiments/worker_capacity_v1/run_20261105T152630Z/report.json",
+  "capacity_plan_sha256": "8dc29beba4e43cfffcb1ad8a746c228394aaa9bc16089f32f5c36b27e830816e",
+  "capacity_source_drift": [],
+  "capacity_summary": [
+    {
+      "workers": 1,
+      "tasks": 240,
+      "throughput_per_second": 4.588211,
+      "queue_p95_seconds": 30.525206,
+      "api_headers_p95_ms": 20.11513,
+      "drain_seconds": 32.388669
+    },
+    {
+      "workers": 2,
+      "tasks": 240,
+      "throughput_per_second": 9.326332,
+      "queue_p95_seconds": 5.096133,
+      "api_headers_p95_ms": 18.409767,
+      "drain_seconds": 5.815439
+    }
+  ],
+  "throughput_ratio_two_over_one": 2.0326728653063255,
+  "fault_checks": {
+    "all_capacity_requests_accepted_and_completed": true,
+    "no_duplicate_capacity_attempts": true,
+    "tenant_limits_respected": true,
+    "api_restart_does_not_restart_task": true,
+    "worker_kill_recovered_once": true
+  },
+  "deployment": {
+    "target_database_migrated": false,
+    "services_restarted": false,
+    "migration_required_before_new_form_use": "0017_run_submission_idempotency"
+  },
+  "limitations": [
+    "Default suite skips explicitly enabled external dependency tests; PostgreSQL selection is run separately.",
+    "Capacity uses real HTTP, PostgreSQL RLS, RunWorker and RunQueue but simulated auth and graph body; not model or production capacity.",
+    "Each capacity arm is one measured run on a shared host; worker count increases total execution slots from2to4.",
+    "Fairness scenario has no steady-only control; no zero-impact claim.",
+    "Worker fault uses3-second test lease and is injected before synthetic effect; excludes real checkpoint or post-external-write recovery.",
+    "Legacy in_process retains postcommit BackgroundTasks handoff window; durable polling requires worker mode.",
+    "The100-to1dedup test does not estimate production cost savings."
+  ],
+  "changed_files": [
+    {
+      "path": "README.md",
+      "sha256": "0297e5d17c616543a5709c32d4b90676e0764d76eb156007d6b283d238343d2c"
+    },
+    {
+      "path": "README.zh-CN.md",
+      "sha256": "9408b770278c08311e61f2a0ff1928698b5e367c3919232a66c11988e7b99a0e"
+    },
+    {
+      "path": "docs/BACKEND_RESUME_AUDIT_2026-11-05.md",
+      "sha256": "e313ba7b2313a89e2a81f4b04888f583ff79ef8c402d4604755364e454903693"
+    },
+    {
+      "path": "docs/BACKEND_RESUME_RESULTS_2026-11-05.md",
+      "sha256": "4573957d5035d85a441996c266cb7d6a37f62909b26d03dad7fbd70318ba6ca9"
+    },
+    {
+      "path": "docs/BACKEND_RUN_WORKER.md",
+      "sha256": "c3143d5d27d0a92bfca1649027a5265c7ca636279fba900b92d6a612355c28e2"
+    },
+    {
+      "path": "docs/RUN_SUBMISSION_IDEMPOTENCY.md",
+      "sha256": "07bf37b488453e615bae01ee41f4627a11335b47fcf21205f4e3cc5ade640982"
+    },
+    {
+      "path": "docs/WORKER_CAPACITY_BENCHMARK_V1.md",
+      "sha256": "ce20288dd1c86f4a030f4f073f3e7dea6426fcb6b852ad5cb1ab629eff198803"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152010Z/failure.json",
+      "sha256": "62ebc09b1fb4bd9edd23088a9adc5830b50a6ec7bf8d6590d295ddb7e0756ccd"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152010Z/plan.json",
+      "sha256": "04219cdfd0d7a08d03ced2533d013eae6d6acee04e86e0b345b5e7683e4ffd45"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152155Z/backlog.jsonl",
+      "sha256": "6022ead972a4fffd096c22b2bebe202ab76778ae0b18ebcacf1d3ca3b1b8d3ca"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152155Z/measurement_context.json",
+      "sha256": "0878b8833a10c2af6cdd1634a437a0f388d68b4c4bf6c172aeef7b9ad5152f4e"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152155Z/plan.json",
+      "sha256": "8dc29beba4e43cfffcb1ad8a746c228394aaa9bc16089f32f5c36b27e830816e"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152155Z/report.json",
+      "sha256": "b80030d6672f6b7f154b6540c14a291b9b1922b0a16bd2f255f14a386885b31f"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152155Z/requests.jsonl",
+      "sha256": "ca42f31bf4a1b8d0d576699bf60525e897c0a57bde984ee53bdfa131198cef44"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152630Z/artifact_integrity.json",
+      "sha256": "5f9e141de1d4e4508bd50018cc548cc46714bb3b4aa2fad142509dd5ee48ec8e"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152630Z/backlog.jsonl",
+      "sha256": "73927126485f45ad27416324c10cc66c7b37b81ee2a9a8b2986915b20c0d600e"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152630Z/measurement_context.json",
+      "sha256": "f5a7b56e7f12f94d0f462a2460f428dcfb1ffdfafbb0abfc97fa658c7ae9dd15"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152630Z/plan.json",
+      "sha256": "8dc29beba4e43cfffcb1ad8a746c228394aaa9bc16089f32f5c36b27e830816e"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152630Z/report.json",
+      "sha256": "ee0679ad4fe3e6530d119db326a6027fd57e582eeb07f4226b350c844c2d8f9f"
+    },
+    {
+      "path": "evaluation/experiments/worker_capacity_v1/run_20261105T152630Z/requests.jsonl",
+      "sha256": "c11354e20f3544222b6f7d9e6189e519d4cb8a7afc9c2fb11c94baeb9ef4e207"
+    },
+    {
+      "path": "evaluation/reports/worker_capacity_v1.json",
+      "sha256": "8d3e51ff81b7b497a5eb976aa72df62457582b32145a10cc304f877e5a3ab181"
+    },
+    {
+      "path": "frontend/README.md",
+      "sha256": "8d33093df95c808a3380c55a6b8b1655af3aeeb4f88485cc2237ce8106115710"
+    },
+    {
+      "path": "frontend/src/components/runs/create-run-form.test.tsx",
+      "sha256": "d17c7219564d762a69237399e534ff56ee3ae5751d29ce1ec0224a93931345ff"
+    },
+    {
+      "path": "frontend/src/components/runs/create-run-form.tsx",
+      "sha256": "47a78f95205e1e4d1be04f03b63e20f6bade882922427eb75e563140d09f18fd"
+    },
+    {
+      "path": "migrations/versions/0017_run_submission_idempotency.py",
+      "sha256": "f53c694e51141f9899fd930d6cf62bc9e00a05122a0bdd9bf6747e55f6fd4973"
+    },
+    {
+      "path": "scripts/benchmark_worker_capacity.py",
+      "sha256": "fb35468598e70057b8e50cbaf15efb07f80fd2863067f5bbc2da82adba8f666c"
+    },
+    {
+      "path": "src/service/service.py",
+      "sha256": "49a9c761d86bb6aa2e283caefce7d53192d718331a6e77d14a3c16622dccae7e"
+    },
+    {
+      "path": "src/servicemind/api.py",
+      "sha256": "463d36085d6832c7cd393a3bbec0c96ab01afc8c4f349fe262cb8aff202b6a6d"
+    },
+    {
+      "path": "src/servicemind/persistence/models.py",
+      "sha256": "35f7f11186d218706691de23b5db229932d2d45b8b482643f6a2dc4c1fb4649a"
+    },
+    {
+      "path": "src/servicemind/persistence/repository.py",
+      "sha256": "362c0ecce0224596570353564332b186d51f4c29d52117472ba5484c5af890d1"
+    },
+    {
+      "path": "tests/servicemind/test_run_submission_api.py",
+      "sha256": "412fd4c7ae7d8244fbba86a2273c3017f608849782da0caf13a6652a9021594a"
+    },
+    {
+      "path": "tests/servicemind/test_run_submission_postgres.py",
+      "sha256": "d076ebb0ec65f7dbeb339f553084e33ccd4d18cdfe287c41c6993bbdf864038c"
+    },
+    {
+      "path": "tests/servicemind/test_worker_capacity_benchmark.py",
+      "sha256": "e85eb56ec9cbd398cdc69ea23cf1812e589b4e43f7176f6fa774a23e0e518a29"
+    }
+  ]
+}

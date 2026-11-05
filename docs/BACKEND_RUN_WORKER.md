@@ -8,6 +8,9 @@ Agent run 可以由独立进程执行。API 在 PostgreSQL 中提交任务和初
 API 与 Worker 必须使用相同的 ServiceMind 数据库、LangGraph checkpointer 数据库、
 身份提供方配置，以及相同的租户执行额度。先在目标数据库执行迁移：
 
+当前版本还包含任务提交幂等迁移 `0017_run_submission_idempotency`，新版表单会发送幂等键；
+应升级至完整的迁移 head，而非只应用 Worker 最初的 0016。
+
 ```bash
 uv sync --frozen
 uv run alembic upgrade head

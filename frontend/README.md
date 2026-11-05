@@ -11,6 +11,15 @@ Next.js 16 / React 19 control plane for the ServiceMind ITSM agent workflow. The
 - The console has no direct GLPI write path. It can only request a governed ServiceMind run and decide already-frozen actions.
 - The generic instance-agent `/agui` endpoint is deliberately excluded because it is outside the ServiceMind business-agent boundary.
 
+## Run submission retries
+
+The create-run form sends an `Idempotency-Key` for each submitted request body.
+An unchanged retry after a network or API error reuses that key; changing the submitted
+body generates a new key. A synchronous guard prevents repeated clicks before React
+updates the pending button, and the form stays locked while a successful submission
+navigates to its run. Keys live in the mounted form's memory; a new form starts a new
+submission. The API still checks current tenant/user permissions on a replay.
+
 ## Run progress
 
 The run detail page subscribes to the authenticated `/runs/{id}/events` SSE endpoint
